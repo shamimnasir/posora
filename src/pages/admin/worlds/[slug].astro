@@ -1,0 +1,162 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { isLoggedIn } from '../../../lib/auth';
+import { db, selectWorld, type AdminWorld } from '../../../lib/db';
+
+export const prerender = false;
+
+if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
+
+const { slug } = Astro.params;
+const creating = slug === 'new';
+
+let world: AdminWorld | null = null;
+if (!creating) {
+  world = await selectWorld(db()!, slug!);
+  if (!world) return Astro.redirect('/admin/worlds');
+}
+
+/** A blank world, so the create and edit forms are the same component. */
+const blank: AdminWorld = {
+  slug: '', bn: '', en: '', tag: '', hue: '#5A6BD4',
+  age: '৬+', dep: '', phase: 'ফেজ ১', intro: '',
+  keys: [], keyCats: [], cats: [], missions: [], missionCats: [],
+  open: false, status: 'draft', sort: 0, updatedAt: 0,
+};
+const w = world ?? blank;
+---
+
+<Admin title={creating ? 'নতুন ভুবন' : w.bn} section="worlds">
+  <div class="a-wrap">
+    <div class="spread" style="margin-bottom:18px">
+      <div>
+        <h1 class="a-h">{creating ? 'নতুন ভুবন' : w.bn}</h1>
+        <p class="a-sub" style="margin:0">
+          <a href="/admin/worlds">← সব ভুবন</a>
+          {!creating && <> · <a href={`/${w.slug}?preview=1`} target="_blank" rel="noopener">প্রিভিউ ↗</a></>}
+        </p>
+      </div>
+      {
+        !creating && (
+          <button class="btn btn-danger" type="button" id="delete">মুছে ফেলো</button>
+        )
+      }
+    </div>
+
+    <form id="editor" novalidate>
+      <div class="card">
+        <h2>পরিচয়</h2>
+        <div class="grid">
+          <label class="f">
+            <span>স্লাগ (URL)</span>
+            <input type="text" id="f-slug" value={w.slug} readonly={!creating} required
+              pattern="[a-z0-9-]{2,40}" placeholder="space" />
+          </label>
+          <label class="f">
+            <span>বাংলা নাম</span>
+            <input type="text" id="f-bn" value={w.bn} required />
+          </label>
+          <label class="f">
+            <span>English name</span>
+            <input type="text" id="f-en" value={w.en} />
+          </label>
+          <label class="f">
+            <span>ট্যাগলাইন</span>
+            <input type="text" id="f-tag" value={w.tag} />
+          </label>
+        </div>
+        <div class="grid">
+          <label class="f">
+            <span>বয়স</span>
+            <input type="text" id="f-age" value={w.age} />
+          </label>
+          <label class="f">
+            <span>নির্ভরতা</span>
+            <input type="text" id="f-dep" value={w.dep} />
+          </label>
+          <label class="f">
+            <span>ফেজ</span>
+            <input type="text" id="f-phase" value={w.phase} />
+          </label>
+          <label class="f">
+            <span>ক্রম</span>
+            <input type="number" id="f-sort" value={String(w.sort)} />
+          </label>
+        </div>
+        <div class="row" style="margin-bottom:14px">
+          <label class="f" style="margin:0">
+            <span>রঙ</span>
+            <span class="row">
+              <input type="color" id="f-hue-picker" value={w.hue} />
+              <input type="text" id="f-hue" value={w.hue} style="width:120px" pattern="#[0-9a-fA-F]{6}" />
+            </span>
+          </label>
+          <label class="f" style="margin:0">
+            <span>অবস্থা</span>
+            <select id="f-status">
+              <option value="published" selected={w.status === 'published'}>লাইভ</option>
+              <option value="draft" selected={w.status === 'draft'}>খসড়া</option>
+            </select>
+          </label>
+          <label class="f" style="margin:0">
+            <span>নিজস্ব এক্সপ্লোরার</span>
+            <select id="f-open">
+              <option value="false" selected={!w.open}>না (সাধারণ পেজ)</option>
+              <option value="true" selected={w.open}>হ্যাঁ (কোডে তৈরি)</option>
+            </select>
+          </label>
+        </div>
+        <label class="f">
+          <span>ভূমিকা</span>
+          <textarea id="f-intro" rows="4">{w.intro}</textarea>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="spread" style="margin-bottom:14px">
+          <h2 style="margin:0">বিভাগ ও আইটেম</h2>
+          <button class="btn btn-sm" type="button" data-add="cat">+ বিভাগ</button>
+        </div>
+        <div id="cats"></div>
+        <p class="note" id="cats-empty" hidden>এখনো কোনো বিভাগ নেই।</p>
+      </div>
+
+      <div class="card">
+        <div class="spread" style="margin-bottom:14px">
+          <h2 style="margin:0">মূল ইন্টারঅ্যাকশন</h2>
+          <button class="btn btn-sm" type="button" data-add="key">+ ইন্টারঅ্যাকশন</button>
+        </div>
+        <p class="note" style="margin:0 0 12px">
+          প্রতিটির সাথে যে বিভাগে এটি সত্যিই কাজ করে সেটি বেছে দাও। “এখনো নেই” দিলে সাইটে
+          নিষ্ক্রিয় দেখাবে।
+        </p>
+        <div id="keys"></div>
+      </div>
+
+      <div class="card">
+        <div class="spread" style="margin-bottom:14px">
+          <h2 style="margin:0">মিশন</h2>
+          <button class="btn btn-sm" type="button" data-add="mission">+ মিশন</button>
+        </div>
+        <div id="missions"></div>
+      </div>
+
+      <div class="savebar">
+        <span class="status" id="status">অপরিবর্তিত</span>
+        <div class="row">
+          <button class="btn" type="button" id="revert">বাতিল</button>
+          <button class="btn btn-primary" type="submit" id="save">
+            {creating ? 'তৈরি করো' : 'সংরক্ষণ করো'}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {/* Initial state for the client editor. Not executable: CSP-safe. */}
+  <script is:inline type="application/json" id="world-data" set:html={JSON.stringify({ world: w, creating })} />
+</Admin>
+
+<script>
+  import '../../../scripts/world-editor';
+</script>

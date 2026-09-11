@@ -2,10 +2,25 @@
 import Base from '../layouts/Base.astro';
 import HeroOrbit from '../components/HeroOrbit.astro';
 import WorldCard from '../components/WorldCard.astro';
-import { worlds, totals } from '../data/worlds';
-import { bodyById } from '../data/space';
+import { getWorlds, getBody, computeTotals } from '../lib/content';
+import { isLoggedIn } from '../lib/auth';
 import { bn } from '../lib/bn';
-const saturn = bodyById('saturn')!;
+
+// Content now comes from D1 at request time, so this route can't be prerendered.
+export const prerender = false;
+
+// Drafts are visible only to a logged-in admin who asks for them.
+const wantsPreview = Astro.url.searchParams.get('preview') === '1';
+const preview = wantsPreview && (await isLoggedIn(Astro));
+
+const worlds = await getWorlds({ includeDrafts: preview, fresh: preview });
+const totals = computeTotals(worlds);
+const saturn = (await getBody('saturn'))!;
+
+Astro.response.headers.set(
+  'cache-control',
+  preview ? 'private, no-store' : 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
+);
 ---
 <Base title="পসরা" description="শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা - মহাকাশ, বিজ্ঞান, গণিত, ভাষা, প্রকৃতি। প্রতিটি জিনিস ছোঁয়া যায়, ঘোরানো যায়, খেলা যায়।">
 
@@ -62,7 +77,7 @@ const saturn = bodyById('saturn')!;
     </div>
   </section>
 
-  <section class="sec wrap depth" style={`--w:${worlds[0].hue}`}>
+  <section class="sec wrap depth" style={`--w:${worlds[0]?.hue ?? '#5A6BD4'}`}>
     <div class="sec-h">
       <h2>একই জিনিস, তিন গভীরতা</h2>
       <p>শিশু আর বড় একই পাতায় আসে - বদলায় শুধু লেখার স্তর। নিজে বদলে দেখো:</p>

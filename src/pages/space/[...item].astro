@@ -1,18 +1,21 @@
 ---
 import Base from '../../layouts/Base.astro';
 import SpaceExplorer from '../../components/explorer/SpaceExplorer.astro';
-import { bodies, bodyById, DEFAULT_BODY } from '../../data/space';
-import { worldBySlug } from '../../data/worlds';
+import { DEFAULT_BODY } from '../../data/space';
+import { getBodies, getWorld } from '../../lib/content';
 
-export function getStaticPaths() {
-  return [{ params: { item: undefined } }, ...bodies.map((b) => ({ params: { item: b.id } }))];
-}
-const world = worldBySlug('space')!;
-const cur = bodyById(Astro.params.item ?? DEFAULT_BODY)!;
+export const prerender = false;
+
+const world = await getWorld('space');
+const bodies = await getBodies();
+const cur = bodies.find((b) => b.id === (Astro.params.item ?? DEFAULT_BODY));
+if (!cur) return Astro.rewrite('/404');
+
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
 const title = Astro.params.item ? `${cur.bn} · মহাকাশ` : 'মহাকাশ';
 const description = `${cur.bn} (${cur.en}) - ${cur.tagline}। ${cur.l1}`;
 ---
-<Base title={title} description={description} hue={world.hue} bare>
+<Base title={title} description={description} hue={world?.hue ?? '#5A6BD4'} bare>
   <div class="wrap page">
     <SpaceExplorer current={cur} />
     <p class="back"><a href="/#worlds">← সব ভুবন</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ?</a></p>

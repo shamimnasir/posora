@@ -1,0 +1,51 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { isLoggedIn } from '../../lib/auth';
+import { dbEnv } from '../../lib/db';
+
+export const prerender = false;
+
+if (await isLoggedIn(Astro)) return Astro.redirect('/admin');
+
+const env = dbEnv();
+const notReady = !env.DB || !env.ADMIN_PASSWORD_HASH;
+const error = Astro.url.searchParams.get('e');
+const messages: Record<string, string> = {
+  bad: 'পাসওয়ার্ড মেলেনি।',
+  locked: 'অনেকবার ভুল হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করো।',
+  setup: 'অ্যাডমিন এখনো সেটআপ হয়নি।',
+};
+---
+
+<Admin title="লগইন" bare>
+  <div class="a-wrap login-box">
+    <div class="card">
+      <h1 class="a-h">পসরা অ্যাডমিন</h1>
+      <p class="a-sub">সাইট পরিচালনা করতে লগইন করো।</p>
+
+      {
+        notReady ? (
+          <>
+            <p class="err">
+              {!env.DB
+                ? 'D1 ডেটাবেস বাঁধা হয়নি (binding `DB`)।'
+                : 'ADMIN_PASSWORD_HASH সিক্রেট সেট করা হয়নি।'}
+            </p>
+            <p class="note">README-এর “Admin setup” অংশ দেখো।</p>
+          </>
+        ) : (
+          <form method="post" action="/api/admin/login">
+            <label class="f">
+              <span>পাসওয়ার্ড</span>
+              <input type="password" name="password" autocomplete="current-password" required autofocus />
+            </label>
+            {error && <p class="err">{messages[error] ?? 'লগইন ব্যর্থ হয়েছে।'}</p>}
+            <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">
+              লগইন
+            </button>
+          </form>
+        )
+      }
+    </div>
+  </div>
+</Admin>

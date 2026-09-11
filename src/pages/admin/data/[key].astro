@@ -1,0 +1,62 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { isLoggedIn } from '../../../lib/auth';
+import { db, getDataset } from '../../../lib/db';
+import { isDatasetKey } from '../../../lib/content';
+
+export const prerender = false;
+
+if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
+
+const { key } = Astro.params;
+if (!key || !isDatasetKey(key)) return Astro.redirect('/admin/data');
+
+const value = await getDataset<unknown>(db()!, key);
+const text = value === null ? '' : JSON.stringify(value, null, 2);
+---
+
+<Admin title={key} section="data">
+  <div class="a-wrap">
+    <div class="spread" style="margin-bottom:18px">
+      <div>
+        <h1 class="a-h">{key}</h1>
+        <p class="a-sub" style="margin:0"><a href="/admin/data">← সব ডেটা</a></p>
+      </div>
+      <span class="note" id="size"></span>
+    </div>
+
+    {
+      value === null && (
+        <div class="card">
+          <p class="err" style="margin:0">
+            এই ডেটাসেট এখনো ডেটাবেসে নেই। <a href="/admin">ড্যাশবোর্ড</a> থেকে আমদানি করো।
+          </p>
+        </div>
+      )
+    }
+
+    <div class="card">
+      <h2>JSON</h2>
+      <textarea class="code" id="doc" spellcheck="false">{text}</textarea>
+      <p class="note">
+        সংরক্ষণের আগে গঠন যাচাই করা হয়। ভুল JSON হলে কিছুই বদলাবে না।
+      </p>
+      <p id="msg"></p>
+    </div>
+
+    <div class="savebar">
+      <span class="status" id="status">অপরিবর্তিত</span>
+      <div class="row">
+        <button class="btn" type="button" id="format">সাজাও</button>
+        <button class="btn" type="button" id="revert">বাতিল</button>
+        <button class="btn btn-primary" type="button" id="save">সংরক্ষণ করো</button>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline type="application/json" id="dataset-key" set:html={JSON.stringify(key)} />
+</Admin>
+
+<script>
+  import '../../../scripts/dataset-editor';
+</script>

@@ -1,0 +1,57 @@
+---
+/**
+ * Admin chrome. Deliberately does not extend Base: no analytics, no public
+ * header/footer, and noindex so the panel never reaches a search engine.
+ */
+import { Font } from 'astro:assets';
+import '../styles/admin.css';
+
+interface Props {
+  title: string;
+  /** Which nav item to mark current. Omit on the login screen. */
+  section?: 'dashboard' | 'worlds' | 'data' | 'activity';
+  /** Hide the nav entirely (login). */
+  bare?: boolean;
+}
+const { title, section, bare = false } = Astro.props;
+
+const nav = [
+  { key: 'dashboard', href: '/admin', label: 'ড্যাশবোর্ড' },
+  { key: 'worlds', href: '/admin/worlds', label: 'ভুবন' },
+  { key: 'data', href: '/admin/data', label: 'ডেটা' },
+  { key: 'activity', href: '/admin/activity', label: 'কার্যক্রম' },
+] as const;
+---
+
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} · পসরা অ্যাডমিন</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <Font cssVariable="--font-body" preload={[{ subset: 'bengali', weight: 400 }]} />
+  </head>
+  <body class="admin">
+    {
+      !bare && (
+        <header class="a-top">
+          <span class="brand">পসরা</span>
+          <nav>
+            {nav.map((n) => (
+              <a href={n.href} aria-current={section === n.key ? 'page' : undefined}>
+                {n.label}
+              </a>
+            ))}
+          </nav>
+          <a class="btn btn-sm" href="/" target="_blank" rel="noopener">সাইট দেখো ↗</a>
+          <form method="post" action="/api/admin/logout">
+            <button class="btn btn-sm" type="submit">লগআউট</button>
+          </form>
+        </header>
+      )
+    }
+    <slot />
+  </body>
+</html>

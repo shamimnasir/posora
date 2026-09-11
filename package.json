@@ -8,7 +8,11 @@
     "build": "astro build",
     "preview": "astro build && wrangler dev",
     "deploy": "astro build && wrangler deploy",
-    "check": "astro check"
+    "check": "astro check",
+    "admin:hash": "node scripts/hash-password.mjs",
+    "db:create": "wrangler d1 create posora",
+    "db:migrate": "wrangler d1 migrations apply posora --remote",
+    "db:migrate:local": "wrangler d1 migrations apply posora --local"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.1",

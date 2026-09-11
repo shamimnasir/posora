@@ -1,7 +1,11 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "astro-dev", "runtimeExecutable": "npx", "runtimeArgs": ["astro", "dev", "--port", "4321"], "port": 4321 },
-    { "name": "wrangler-preview", "runtimeExecutable": "npx", "runtimeArgs": ["wrangler", "dev", "--port", "8787"], "port": 8787 }
+    {
+      "name": "posora",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "port": 8787
+    }
   ]
 }

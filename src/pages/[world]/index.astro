@@ -1,13 +1,24 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { worlds, itemCount } from '../../data/worlds';
+import { getWorld, itemCount } from '../../lib/content';
+import { isLoggedIn } from '../../lib/auth';
 import { bn, pad2 } from '../../lib/bn';
 import { heroFor } from '../../data/heroes';
 
-export function getStaticPaths() {
-  return worlds.filter((w) => !w.open).map((w) => ({ params: { world: w.slug }, props: { w } }));
-}
-const { w } = Astro.props;
+export const prerender = false;
+
+const wantsPreview = Astro.url.searchParams.get('preview') === '1';
+const preview = wantsPreview && (await isLoggedIn(Astro));
+
+const w = await getWorld(Astro.params.world!, { includeDrafts: preview, fresh: preview });
+// Unknown slug, a draft without preview, or a world with its own bespoke
+// explorer (space) - none of which this generic template should render.
+if (!w || w.open) return Astro.rewrite('/404');
+
+Astro.response.headers.set(
+  'cache-control',
+  preview ? 'private, no-store' : 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
+);
 const first = w.cats[0];
 const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i) }));
 ---
