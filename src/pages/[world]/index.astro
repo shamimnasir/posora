@@ -20,7 +20,7 @@ Astro.response.headers.set(
   preview ? 'private, no-store' : 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
 );
 const first = w.cats[0];
-const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i) }));
+const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i), lab: c.lab, labAnchors: c.labAnchors }));
 ---
 <Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue}>
   <div class="wrap page" id="world" data-slug={w.slug}>
@@ -62,13 +62,15 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
         <div class="items" id="c-items">
           <div class="items-h">
             <div>
-              <p class="items-h-t">এই বিভাগে যা যা যোগ হবে</p>
-              <p class="items-h-s">এখনও লেখা হয়নি - নিচের ★ চেপে বলো কোনটা আগে বানাবো</p>
+              <p class="items-h-t" id="items-h-t">{first.lab ? 'এই বিভাগে যা যা আছে - সবকটাই কাজ করে' : 'এই বিভাগে যা যা যোগ হবে'}</p>
+              <p class="items-h-s" id="items-h-s">{first.lab ? 'নিচে যেকোনোটায় ক্লিক করো - সরাসরি সেই টুলে চলে যাবে' : 'এখনও লেখা হয়নি - নিচের ★ চেপে বলো কোনটা আগে বানাবো'}</p>
             </div>
             <span class="star-count" id="star-count" hidden><b id="star-n">০</b>টা বলেছ</span>
           </div>
           <div class="chips" id="chips">
-            {first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
+            {first.lab
+              ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
+              : first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
           </div>
           <p class="toast" id="star-toast" role="status" aria-live="polite"></p>
         </div>
@@ -169,6 +171,9 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .chip[aria-pressed="true"] .star { color: var(--sun); transform: scale(1.3) rotate(-12deg); }
   .toast { margin-top: 0.7rem; font-size: 12.5px; font-weight: 600; color: var(--brand-ink); opacity: 0; transition: opacity 0.25s ease; }
   .toast.show { opacity: 1; }
+  .chip-real { border-style: solid; background: color-mix(in oklab, var(--ok) 12%, var(--panel)); border-color: color-mix(in oklab, var(--ok) 36%, var(--line)); color: var(--ink); font-weight: 600; }
+  .chip-real:hover { background: color-mix(in oklab, var(--ok) 20%, var(--panel)); transform: translateY(-1px); }
+  .chip-real .check { color: var(--ok); font-size: 13px; }
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
   .spec { padding: 0.3rem 0.95rem 0.5rem; }
   .row { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
@@ -213,7 +218,7 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   import { toggleStar, isStarred, getProgress } from '../../lib/progress';
   import { bn, pad2 } from '../../lib/bn';
   import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
-  type Cat = { n: string; items: string[]; play: string; hero: HeroSpec };
+  type Cat = { n: string; items: string[]; play: string; hero: HeroSpec; lab?: string; labAnchors?: string[] };
   const root = document.getElementById('world')!;
   const slug = root.dataset.slug!;
   const cats: Cat[] = JSON.parse(document.getElementById('world-data')!.textContent!);
@@ -231,7 +236,21 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   });
   ctl.addEventListener('input', () => hero?.setParam(+ctl.value / 100));
 
+  const itemsHT = document.getElementById('items-h-t')!, itemsHS = document.getElementById('items-h-s')!;
   function renderChips(c: Cat) {
+    starCount.hidden = !!c.lab || getProgress().stars.length === 0;
+    if (c.lab) {
+      itemsHT.textContent = 'এই বিভাগে যা যা আছে - সবকটাই কাজ করে';
+      itemsHS.textContent = 'নিচে যেকোনোটায় ক্লিক করো - সরাসরি সেই টুলে চলে যাবে';
+      chips.replaceChildren(...c.items.map((it, j) => {
+        const a = document.createElement('a'); a.className = 'chip chip-real'; a.href = `${c.lab}#${c.labAnchors![j]}`;
+        a.innerHTML = `<span class="check" aria-hidden="true">✓</span>`; a.append(it);
+        return a;
+      }));
+      return;
+    }
+    itemsHT.textContent = 'এই বিভাগে যা যা যোগ হবে';
+    itemsHS.textContent = 'এখনও লেখা হয়নি - নিচের ★ চেপে বলো কোনটা আগে বানাবো';
     chips.replaceChildren(...c.items.map((it) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.key = `${slug}:${c.n}:${it}`;
       b.innerHTML = `<span class="star" aria-hidden="true">★</span>`; b.append(it);

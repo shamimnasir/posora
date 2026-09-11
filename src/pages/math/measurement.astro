@@ -1,0 +1,475 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#C0473E';
+const items = [
+  { id: 'length', n: 'দৈর্ঘ্য' },
+  { id: 'weight', n: 'ওজন' },
+  { id: 'volume', n: 'আয়তন' },
+  { id: 'clock', n: 'সময় ও ঘড়ি' },
+  { id: 'calendar', n: 'ক্যালেন্ডার' },
+  { id: 'temperature', n: 'তাপমাত্রা' },
+  { id: 'convert', n: 'একক রূপান্তর' },
+  { id: 'estimate', n: 'আন্দাজ করা' },
+];
+---
+<Base
+  title="পরিমাপ"
+  description="দৈর্ঘ্য, ওজন, আয়তন, সময়, ক্যালেন্ডার, তাপমাত্রা, একক রূপান্তর আর আন্দাজ করা - ৮টি সত্যিকারের কাজ-করা টুল, নিজে হাত দিয়ে মেপে দেখো।"
+  hue={HUE}
+>
+  <div class="wrap page">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/math/">গণিত</a> <span>/</span> পরিমাপ</p>
+
+    <header class="head">
+      <p class="eyebrow">গণিত ভুবন · বিভাগ পরিচিতি</p>
+      <h1>পরিমাপ</h1>
+      <p class="lede">৮টা জিনিস - প্রতিটাই সত্যিকারের কাজ করে। সংখ্যা লেখো, টেনে দেখো, নিজের হাতে মেপে দেখো - উত্তর সবসময় সত্যি হিসাব থেকে আসে।</p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        {items.map((it) => <a href={`#${it.id}`} class="pill pill-w">{it.n}</a>)}
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- 1. দৈর্ঘ্য -->
+      <section class="tool card" id="length">
+        <h2><span class="no">০১</span> দৈর্ঘ্য</h2>
+        <p class="how">নিচের কাঁটাটা টেনে সরাও - রুলারে ঠিক কত সেন্টিমিটারে আছো তা লেখা হবে।</p>
+        <div class="ruler-wrap" id="ruler-wrap">
+          <svg id="ruler-svg" viewBox="0 0 640 92" role="img" aria-label="রুলার, ০ থেকে ৩০ সেন্টিমিটার"></svg>
+        </div>
+        <p class="readout">এখন তুমি আছো: <b id="ruler-val" class="num">০.০</b> সেমি</p>
+      </section>
+
+      <!-- 2. ওজন -->
+      <section class="tool card" id="weight">
+        <h2><span class="no">০২</span> ওজন</h2>
+        <p class="how">দুই পাশে গ্রাম সংখ্যা লেখো - দাঁড়িপাল্লা সত্যিকারের পার্থক্য অনুযায়ী হেলে যাবে।</p>
+        <div class="scale-wrap">
+          <svg id="scale-svg" viewBox="0 0 400 200" role="img" aria-label="দাঁড়িপাল্লা"></svg>
+          <div class="scale-inputs">
+            <label>বাম পাশ <input type="number" id="w-left" min="0" max="2000" value="250" inputmode="numeric" /> গ্রাম</label>
+            <label>ডান পাশ <input type="number" id="w-right" min="0" max="2000" value="400" inputmode="numeric" /> গ্রাম</label>
+          </div>
+        </div>
+        <p class="readout" id="w-readout"></p>
+      </section>
+
+      <!-- 3. আয়তন -->
+      <section class="tool card" id="volume">
+        <h2><span class="no">০৩</span> আয়তন</h2>
+        <p class="how">স্লাইডার টানো - মাপার পাত্রে পানি ভরবে, গ্র্যাজুয়েশন দাগ দেখে ঠিক আয়তনটা পড়ে নাও।</p>
+        <div class="vol-wrap">
+          <svg id="vol-svg" viewBox="0 0 200 260" role="img" aria-label="গ্র্যাজুয়েটেড সিলিন্ডার"></svg>
+          <div class="vol-ctl">
+            <input type="range" id="vol-slider" min="0" max="1000" step="10" value="350" aria-label="পানির আয়তন" />
+            <p class="readout">আয়তন: <b id="vol-val" class="num">৩৫০</b> মিলিলিটার (<span id="vol-l" class="num">০.৩৫</span> লিটার)</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. সময় ও ঘড়ি -->
+      <section class="tool card" id="clock">
+        <h2><span class="no">০৪</span> সময় ও ঘড়ি</h2>
+        <p class="how">ঘণ্টা আর মিনিটের কাঁটা টেনে ঘোরাও - নিচে ডিজিটাল সময় সত্যিকারের হিসাবে বদলাবে।</p>
+        <div class="clock-wrap">
+          <svg id="clock-svg" viewBox="0 0 260 260" role="img" aria-label="অ্যানালগ ঘড়ি, কাঁটা টেনে ঘোরাও"></svg>
+          <p class="readout">এখন বাজে: <b id="clock-val" class="num">-</b></p>
+        </div>
+      </section>
+
+      <!-- 5. ক্যালেন্ডার -->
+      <section class="tool card" id="calendar">
+        <h2><span class="no">০৫</span> ক্যালেন্ডার</h2>
+        <p class="how">মাস বদলাও - দিনগুলো সপ্তাহের ঠিক বারেই বসবে, আজকের দিনটা রঙিন হয়ে দেখাবে।</p>
+        <div class="cal-wrap">
+          <div class="cal-nav">
+            <button type="button" id="cal-prev" aria-label="আগের মাস">←</button>
+            <b id="cal-title"></b>
+            <button type="button" id="cal-next" aria-label="পরের মাস">→</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <p class="readout" id="cal-info"></p>
+        </div>
+      </section>
+
+      <!-- 6. তাপমাত্রা -->
+      <section class="tool card" id="temperature">
+        <h2><span class="no">০৬</span> তাপমাত্রা</h2>
+        <p class="how">স্লাইডার টানো - থার্মোমিটারের পারদ উঠবে-নামবে, সেলসিয়াস আর ফারেনহাইট দুটোই হিসাব হয়ে দেখাবে।</p>
+        <div class="temp-wrap">
+          <svg id="temp-svg" viewBox="0 0 120 260" role="img" aria-label="থার্মোমিটার"></svg>
+          <div class="temp-ctl">
+            <input type="range" id="temp-slider" min="-20" max="120" value="25" aria-label="তাপমাত্রা" />
+            <p class="readout"><b id="temp-c" class="num">২৫</b> °সে &nbsp;=&nbsp; <b id="temp-f" class="num">৭৭.০</b> °ফা</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. একক রূপান্তর -->
+      <section class="tool card" id="convert">
+        <h2><span class="no">০৭</span> একক রূপান্তর</h2>
+        <p class="how">সংখ্যা লেখো, এককগুলো বেছে নাও - সঠিক রূপান্তর সঙ্গে সঙ্গে হিসাব হয়ে আসবে।</p>
+        <div class="conv-wrap">
+          <div class="conv-row">
+            <input type="number" id="conv-n" value="5" inputmode="decimal" aria-label="সংখ্যা" />
+            <select id="conv-kind" aria-label="কোন ধরনের একক"></select>
+          </div>
+          <div class="conv-row">
+            <select id="conv-from" aria-label="কোন একক থেকে"></select>
+            <span class="conv-eq">=</span>
+            <select id="conv-to" aria-label="কোন এককে"></select>
+          </div>
+          <p class="readout" id="conv-out"></p>
+        </div>
+      </section>
+
+      <!-- 8. আন্দাজ করা -->
+      <section class="tool card" id="estimate">
+        <h2><span class="no">০৮</span> আন্দাজ করা</h2>
+        <p class="how">প্রশ্ন পড়ে নিজের আন্দাজ লেখো, তারপর আসল উত্তর দেখো - কতটা কাছাকাছি ছিলে তা বলে দেবে।</p>
+        <div class="est-wrap">
+          <p class="est-q" id="est-q"></p>
+          <div class="est-row">
+            <input type="number" id="est-guess" inputmode="decimal" aria-label="তোমার আন্দাজ" placeholder="তোমার আন্দাজ" />
+            <span id="est-unit" class="est-unit"></span>
+            <button type="button" class="btn btn-primary" id="est-check">উত্তর দেখাও</button>
+            <button type="button" class="btn" id="est-next">নতুন প্রশ্ন</button>
+          </div>
+          <p class="readout" id="est-out"></p>
+        </div>
+      </section>
+    </div>
+
+    <p class="back"><a href="/math/">← গণিত ভুবনে ফিরে যাও</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 60ch; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); }
+  .readout b { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+
+  /* ruler */
+  .ruler-wrap { overflow-x: auto; padding-bottom: 4px; }
+  #ruler-svg { width: 100%; min-width: 560px; max-width: 640px; height: auto; display: block; touch-action: none; cursor: grab; }
+
+  /* scale */
+  .scale-wrap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.2rem; align-items: center; }
+  #scale-svg { width: 100%; height: auto; }
+  .scale-inputs { display: flex; flex-direction: column; gap: 0.7rem; }
+  .scale-inputs label { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; font-size: 13.5px; color: var(--ink-2); }
+
+  /* volume */
+  .vol-wrap { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 1.4rem; align-items: center; }
+  #vol-svg { width: 100%; height: auto; justify-self: center; }
+  .vol-ctl input[type="range"] { width: 100%; accent-color: var(--w); }
+
+  /* clock */
+  .clock-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+  #clock-svg { width: 220px; height: 220px; touch-action: none; }
+
+  /* calendar */
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
+  .cal-nav button { width: 32px; height: 32px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line-soft); font-size: 16px; }
+  .cal-nav button:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel)); }
+  .cal-nav b { font-family: var(--font-display); font-size: 17px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-grid .wd { text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); padding-bottom: 4px; }
+  .cal-grid .d { aspect-ratio: 1; display: grid; place-items: center; border-radius: 8px; font-size: 13.5px; background: var(--panel-2); font-variant-numeric: tabular-nums; }
+  .cal-grid .d.empty { background: transparent; }
+  .cal-grid .d.today { background: var(--w); color: var(--on-brand); font-weight: 700; }
+
+  /* temperature */
+  .temp-wrap { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 1.4rem; align-items: center; }
+  #temp-svg { width: 100%; height: auto; justify-self: center; }
+  .temp-ctl input[type="range"] { width: 100%; accent-color: var(--w); }
+
+  /* convert */
+  .conv-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.7rem; flex-wrap: wrap; }
+  .conv-eq { color: var(--muted); font-weight: 700; }
+  #conv-out b { font-size: 20px; }
+
+  /* estimate */
+  .est-q { font-size: 15.5px; font-weight: 600; margin-bottom: 0.9rem; }
+  .est-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .est-unit { color: var(--muted); font-size: 13.5px; }
+
+  input[type="number"], select {
+    font: inherit; font-size: 14.5px; padding: 0.45rem 0.65rem; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); width: 8rem;
+  }
+  input[type="number"]:focus, select:focus { outline: 2px solid var(--w); outline-offset: 1px; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 640px) {
+    .scale-wrap, .vol-wrap, .temp-wrap { grid-template-columns: 1fr; }
+    .vol-wrap svg, .temp-wrap svg { justify-self: start; }
+  }
+</style>
+
+<script>
+  import { bn, bnNum } from '../../lib/bn';
+
+  const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const el = (tag: string, attrs: Record<string, string | number>) => {
+    const n = document.createElementNS(SVGNS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
+    return n;
+  };
+  const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+
+  /* ---------- 1. ruler ---------- */
+  (function ruler() {
+    const svg = $<SVGSVGElement>('#ruler-svg');
+    const PAD = 20, W = 600, H = 92, PXCM = W / 30;
+    svg.appendChild(el('rect', { x: PAD, y: 10, width: W, height: 40, rx: 4, fill: 'var(--panel-2)', stroke: 'var(--line)' }));
+    for (let cm = 0; cm <= 30; cm++) {
+      const x = PAD + cm * PXCM;
+      const tall = cm % 5 === 0;
+      svg.appendChild(el('line', { x1: x, y1: 10, x2: x, y2: 10 + (tall ? 24 : 14), stroke: '#333', 'stroke-width': tall ? 1.4 : 0.8 }));
+      if (tall) {
+        const t = el('text', { x, y: 62, 'font-size': 11, 'text-anchor': 'middle', fill: 'var(--ink-2)' });
+        t.textContent = bn(cm); svg.appendChild(t);
+      }
+    }
+    const marker = el('g', { style: 'cursor:grab' });
+    const tri = el('polygon', { points: '0,72 10,88 -10,88', fill: 'var(--w)' });
+    const line = el('line', { x1: 0, y1: 10, x2: 0, y2: 72, stroke: 'var(--w)', 'stroke-width': 2 });
+    marker.append(line, tri); svg.appendChild(marker);
+    const out = $('#ruler-val');
+    let cm = 12.5;
+    const place = () => { const x = PAD + cm * PXCM; marker.setAttribute('transform', `translate(${x},0)`); out.textContent = bn(cm.toFixed(1)); };
+    place();
+    let dragging = false;
+    const toCm = (clientX: number) => { const r = svg.getBoundingClientRect(); const x = ((clientX - r.left) / r.width) * W - PAD; return clamp(Math.round((x / PXCM) * 10) / 10, 0, 30); };
+    svg.addEventListener('pointerdown', (e) => { dragging = true; cm = toCm(e.clientX); place(); svg.setPointerCapture(e.pointerId); });
+    svg.addEventListener('pointermove', (e) => { if (dragging) { cm = toCm(e.clientX); place(); } });
+    svg.addEventListener('pointerup', () => { dragging = false; });
+  })();
+
+  /* ---------- 2. scale ---------- */
+  (function scale() {
+    const svg = $<SVGSVGElement>('#scale-svg');
+    const post = el('rect', { x: 195, y: 40, width: 10, height: 110, fill: '#8a8f96' }); svg.appendChild(post);
+    svg.appendChild(el('polygon', { points: '160,150 240,150 220,170 180,170', fill: '#8a8f96' }));
+    const beam = el('g', {}); svg.appendChild(beam);
+    beam.appendChild(el('rect', { x: 30, y: 45, width: 340, height: 8, rx: 4, fill: '#556' }));
+    const panL = el('g', {}); const panR = el('g', {});
+    const mkPan = (g: SVGGElement | Element, x: number) => {
+      g.appendChild(el('line', { x1: x, y1: 49, x2: x - 35, y2: 100, stroke: '#999', 'stroke-width': 1.4 }));
+      g.appendChild(el('line', { x1: x, y1: 49, x2: x + 35, y2: 100, stroke: '#999', 'stroke-width': 1.4 }));
+      const pan = el('ellipse', { cx: x, cy: 104, rx: 42, ry: 10, fill: 'var(--w)', 'fill-opacity': 0.85 });
+      g.appendChild(pan);
+      const label = el('text', { x, y: 108, 'font-size': 12, 'text-anchor': 'middle', fill: '#fff', 'font-weight': 700 });
+      g.appendChild(label);
+      return label;
+    };
+    beam.append(panL, panR);
+    const lLabel = mkPan(panL, 60), rLabel = mkPan(panR, 340);
+    const lIn = $<HTMLInputElement>('#w-left'), rIn = $<HTMLInputElement>('#w-right'), out = $('#w-readout');
+    const MAX_ANGLE = 16, MAX_DIFF = 800;
+    function update() {
+      const L = clamp(+lIn.value || 0, 0, 2000), R = clamp(+rIn.value || 0, 0, 2000);
+      lLabel.textContent = bn(L) + ' g'; rLabel.textContent = bn(R) + ' g';
+      const diff = clamp(R - L, -MAX_DIFF, MAX_DIFF);
+      const ang = (diff / MAX_DIFF) * MAX_ANGLE;
+      beam.setAttribute('transform', `rotate(${ang} 200 49)`);
+      if (L === R) out.innerHTML = `<b>সমান!</b> দুই পাশে ঠিক ${bn(L)} গ্রাম করে।`;
+      else out.innerHTML = `<b>${L > R ? 'বাম' : 'ডান'} পাশ ভারী</b> - পার্থক্য ${bn(Math.abs(R - L))} গ্রাম।`;
+    }
+    lIn.addEventListener('input', update); rIn.addEventListener('input', update); update();
+  })();
+
+  /* ---------- 3. volume ---------- */
+  (function volume() {
+    const svg = $<SVGSVGElement>('#vol-svg');
+    const X = 60, TOP = 20, BOTTOM = 240, W = 80, MAXML = 1000;
+    svg.appendChild(el('rect', { x: X, y: TOP, width: W, height: BOTTOM - TOP, rx: 6, fill: 'none', stroke: 'var(--line)', 'stroke-width': 2 }));
+    for (let m = 0; m <= MAXML; m += 100) {
+      const y = BOTTOM - (m / MAXML) * (BOTTOM - TOP);
+      svg.appendChild(el('line', { x1: X, y1: y, x2: X + 12, y2: y, stroke: '#8a8f96', 'stroke-width': 1.2 }));
+      const t = el('text', { x: X - 6, y: y + 4, 'font-size': 10, 'text-anchor': 'end', fill: 'var(--muted)' }); t.textContent = bn(m); svg.appendChild(t);
+    }
+    const water = el('rect', { x: X + 2, y: BOTTOM, width: W - 4, height: 0, fill: 'var(--w)', 'fill-opacity': 0.75 }); svg.appendChild(water);
+    const slider = $<HTMLInputElement>('#vol-slider'), val = $('#vol-val'), lit = $('#vol-l');
+    function update() {
+      const ml = +slider.value; const h = (ml / MAXML) * (BOTTOM - TOP);
+      water.setAttribute('y', String(BOTTOM - h)); water.setAttribute('height', String(h));
+      val.textContent = bn(ml); lit.textContent = bn((ml / 1000).toFixed(2));
+    }
+    slider.addEventListener('input', update); update();
+  })();
+
+  /* ---------- 4. clock ---------- */
+  (function clockTool() {
+    const svg = $<SVGSVGElement>('#clock-svg'); const C = 130, R = 110;
+    svg.appendChild(el('circle', { cx: C, cy: C, r: R, fill: 'var(--panel-2)', stroke: 'var(--line)', 'stroke-width': 2 }));
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+      const x1 = C + Math.cos(a) * (R - 10), y1 = C + Math.sin(a) * (R - 10);
+      const x2 = C + Math.cos(a) * (R - 20), y2 = C + Math.sin(a) * (R - 20);
+      svg.appendChild(el('line', { x1, y1, x2, y2, stroke: '#556', 'stroke-width': 2 }));
+      const lx = C + Math.cos(a) * (R - 32), ly = C + Math.sin(a) * (R - 32);
+      const t = el('text', { x: lx, y: ly + 4, 'font-size': 12, 'text-anchor': 'middle', fill: 'var(--ink-2)' }); t.textContent = bn(i === 0 ? 12 : i); svg.appendChild(t);
+    }
+    const hourHand = el('line', { x1: C, y1: C, x2: C, y2: C - 50, stroke: 'var(--ink)', 'stroke-width': 5, 'stroke-linecap': 'round' });
+    const minHand = el('line', { x1: C, y1: C, x2: C, y2: C - 78, stroke: 'var(--w)', 'stroke-width': 3.5, 'stroke-linecap': 'round' });
+    const hub = el('circle', { cx: C, cy: C, r: 5, fill: 'var(--ink)' });
+    const hourGrab = el('circle', { cx: C, cy: C - 50, r: 12, fill: 'transparent', style: 'cursor:grab' });
+    const minGrab = el('circle', { cx: C, cy: C - 78, r: 12, fill: 'transparent', style: 'cursor:grab' });
+    svg.append(hourHand, minHand, hub, hourGrab, minGrab);
+
+    let hour = 10, minute = 35;
+    const out = $('#clock-val');
+    function render() {
+      const hAngle = (hour % 12) * 30 + minute * 0.5 - 90;
+      const mAngle = minute * 6 - 90;
+      hourHand.setAttribute('transform', `rotate(${hAngle + 90} ${C} ${C})`);
+      minHand.setAttribute('transform', `rotate(${mAngle + 90} ${C} ${C})`);
+      const hx = C + Math.cos((hAngle * Math.PI) / 180) * 50, hy = C + Math.sin((hAngle * Math.PI) / 180) * 50;
+      const mx = C + Math.cos((mAngle * Math.PI) / 180) * 78, my = C + Math.sin((mAngle * Math.PI) / 180) * 78;
+      hourGrab.setAttribute('cx', String(hx)); hourGrab.setAttribute('cy', String(hy));
+      minGrab.setAttribute('cx', String(mx)); minGrab.setAttribute('cy', String(my));
+      out.textContent = `${bn(hour === 0 ? 12 : hour)}:${bn(String(minute).padStart(2, '0'))}`;
+    }
+    function angleFromEvent(clientX: number, clientY: number) {
+      const r = svg.getBoundingClientRect();
+      const scale = 260 / r.width;
+      const x = (clientX - r.left) * scale, y = (clientY - r.top) * scale;
+      let a = (Math.atan2(y - C, x - C) * 180) / Math.PI + 90;
+      if (a < 0) a += 360;
+      return a;
+    }
+    let dragTarget: 'hour' | 'minute' | null = null;
+    function bind(handle: SVGCircleElement, which: 'hour' | 'minute') {
+      handle.addEventListener('pointerdown', (e) => { dragTarget = which; svg.setPointerCapture(e.pointerId); });
+    }
+    bind(hourGrab as SVGCircleElement, 'hour'); bind(minGrab as SVGCircleElement, 'minute');
+    svg.addEventListener('pointermove', (e) => {
+      if (!dragTarget) return;
+      const a = angleFromEvent(e.clientX, e.clientY);
+      if (dragTarget === 'minute') minute = Math.round(a / 6) % 60;
+      else hour = Math.round(a / 30) % 12;
+      render();
+    });
+    svg.addEventListener('pointerup', () => { dragTarget = null; });
+    render();
+  })();
+
+  /* ---------- 5. calendar ---------- */
+  (function calendar() {
+    const WD = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহ', 'শুক্র', 'শনি'];
+    const MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+    const today = new Date();
+    let y = today.getFullYear(), m = today.getMonth();
+    const grid = $('#cal-grid'), title = $('#cal-title'), info = $('#cal-info');
+    function render() {
+      grid.replaceChildren();
+      WD.forEach((w) => { const d = document.createElement('div'); d.className = 'wd'; d.textContent = w; grid.appendChild(d); });
+      const first = new Date(y, m, 1), startDow = first.getDay(), daysInMonth = new Date(y, m + 1, 0).getDate();
+      for (let i = 0; i < startDow; i++) { const d = document.createElement('div'); d.className = 'd empty'; grid.appendChild(d); }
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = document.createElement('div'); d.className = 'd';
+        const isToday = y === today.getFullYear() && m === today.getMonth() && day === today.getDate();
+        if (isToday) d.classList.add('today');
+        d.textContent = bn(day); grid.appendChild(d);
+      }
+      title.textContent = `${MONTHS[m]} ${bn(y)}`;
+      info.innerHTML = `এই মাসে <b>${bn(daysInMonth)}</b> দিন আছে - ১ তারিখ পড়েছে <b>${WD[startDow]}বার</b>।`;
+    }
+    $('#cal-prev').addEventListener('click', () => { m--; if (m < 0) { m = 11; y--; } render(); });
+    $('#cal-next').addEventListener('click', () => { m++; if (m > 11) { m = 0; y++; } render(); });
+    render();
+  })();
+
+  /* ---------- 6. temperature ---------- */
+  (function temperature() {
+    const svg = $<SVGSVGElement>('#temp-svg');
+    const TOP = 15, BOTTOM = 220, MINC = -20, MAXC = 120;
+    svg.appendChild(el('rect', { x: 45, y: TOP, width: 16, height: BOTTOM - TOP, rx: 8, fill: 'var(--panel-2)', stroke: 'var(--line)' }));
+    svg.appendChild(el('circle', { cx: 53, cy: 238, r: 18, fill: 'var(--panel-2)', stroke: 'var(--line)' }));
+    const REF = [[0, 'বরফ গলে'], [37, 'শরীরের তাপ'], [100, 'পানি ফোটে']] as const;
+    for (const [c, label] of REF) {
+      const y = BOTTOM - ((c - MINC) / (MAXC - MINC)) * (BOTTOM - TOP);
+      svg.appendChild(el('line', { x1: 61, y1: y, x2: 72, y2: y, stroke: '#8a8f96', 'stroke-width': 1 }));
+      const t = el('text', { x: 76, y: y + 3, 'font-size': 8.5, fill: 'var(--muted)' }); t.textContent = `${bn(c)}° ${label}`; svg.appendChild(t);
+    }
+    const mercury = el('rect', { x: 49, y: BOTTOM, width: 8, height: 0, fill: 'var(--w)' });
+    const bulb = el('circle', { cx: 53, cy: 238, r: 13, fill: 'var(--w)' });
+    svg.append(mercury, bulb);
+    const slider = $<HTMLInputElement>('#temp-slider'), cOut = $('#temp-c'), fOut = $('#temp-f');
+    function update() {
+      const c = +slider.value; const h = ((c - MINC) / (MAXC - MINC)) * (BOTTOM - TOP);
+      mercury.setAttribute('y', String(BOTTOM - h)); mercury.setAttribute('height', String(h));
+      cOut.textContent = bn(c); fOut.textContent = bn(((c * 9) / 5 + 32).toFixed(1));
+    }
+    slider.addEventListener('input', update); update();
+  })();
+
+  /* ---------- 7. unit convert ---------- */
+  (function convert() {
+    type Unit = { label: string; factor: number };
+    const KINDS: Record<string, { label: string; units: Unit[] }> = {
+      length: { label: 'দৈর্ঘ্য', units: [ { label: 'মিলিমিটার (mm)', factor: 0.001 }, { label: 'সেন্টিমিটার (cm)', factor: 0.01 }, { label: 'মিটার (m)', factor: 1 }, { label: 'কিলোমিটার (km)', factor: 1000 } ] },
+      weight: { label: 'ওজন', units: [ { label: 'মিলিগ্রাম (mg)', factor: 0.000001 }, { label: 'গ্রাম (g)', factor: 0.001 }, { label: 'কিলোগ্রাম (kg)', factor: 1 } ] },
+      volume: { label: 'আয়তন', units: [ { label: 'মিলিলিটার (mL)', factor: 0.001 }, { label: 'লিটার (L)', factor: 1 } ] },
+    };
+    const kindSel = $<HTMLSelectElement>('#conv-kind'), fromSel = $<HTMLSelectElement>('#conv-from'), toSel = $<HTMLSelectElement>('#conv-to'), n = $<HTMLInputElement>('#conv-n'), out = $('#conv-out');
+    Object.entries(KINDS).forEach(([k, v]) => { const o = document.createElement('option'); o.value = k; o.textContent = v.label; kindSel.appendChild(o); });
+    function fillUnits() {
+      const kind = KINDS[kindSel.value];
+      [fromSel, toSel].forEach((sel) => sel.replaceChildren(...kind.units.map((u, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = u.label; return o; })));
+      toSel.selectedIndex = Math.min(1, kind.units.length - 1);
+    }
+    function update() {
+      const kind = KINDS[kindSel.value]; const from = kind.units[+fromSel.value], to = kind.units[+toSel.value];
+      const val = +n.value || 0; const result = (val * from.factor) / to.factor;
+      out.innerHTML = `<b>${bnNum(Number(result.toPrecision(6)))}</b> ${to.label.split(' ')[0]}`;
+    }
+    kindSel.addEventListener('change', () => { fillUnits(); update(); });
+    [fromSel, toSel, n].forEach((x) => x.addEventListener('input', update));
+    fillUnits(); update();
+  })();
+
+  /* ---------- 8. estimate ---------- */
+  (function estimate() {
+    const Q = [
+      { q: 'একটা A4 কাগজের লম্বা দিকটা কত সেন্টিমিটার হতে পারে?', unit: 'সেমি', answer: 29.7 },
+      { q: 'একটা সাধারণ ঘরের দরজার উচ্চতা কত সেন্টিমিটার হতে পারে?', unit: 'সেমি', answer: 205 },
+      { q: 'একটা মুরগির ডিমের ওজন কত গ্রাম হতে পারে?', unit: 'গ্রাম', answer: 55 },
+      { q: 'একটা ক্রিকেট বলের ওজন কত গ্রাম হতে পারে?', unit: 'গ্রাম', answer: 160 },
+      { q: 'ঢাকা থেকে চট্টগ্রাম সড়কপথে কত কিলোমিটার দূরে?', unit: 'কিমি', answer: 264 },
+      { q: 'একটা এক লিটারের পানির বোতল কত সেন্টিমিটার লম্বা হতে পারে?', unit: 'সেমি', answer: 22 },
+    ];
+    const qEl = $('#est-q'), unitEl = $('#est-unit'), guess = $<HTMLInputElement>('#est-guess'), out = $('#est-out');
+    let cur = Q[0];
+    function pick() { cur = Q[Math.floor(Math.random() * Q.length)]; qEl.textContent = cur.q; unitEl.textContent = cur.unit; guess.value = ''; out.textContent = ''; }
+    $('#est-check').addEventListener('click', () => {
+      const g = +guess.value; if (!guess.value) { out.textContent = 'আগে একটা সংখ্যা লেখো।'; return; }
+      const diff = Math.abs(g - cur.answer); const pct = (diff / cur.answer) * 100;
+      const tier = pct < 5 ? 'দারুণ! প্রায় ঠিক ধরেছ' : pct < 20 ? 'বেশ কাছাকাছি' : pct < 50 ? 'কাছাকাছি, আরেকটু চেষ্টা করো' : 'অনেক দূরে, আবার আন্দাজ করো';
+      out.innerHTML = `আসল উত্তর: <b>${bnNum(cur.answer)} ${cur.unit}</b> - তোমার আন্দাজ থেকে পার্থক্য <b>${bnNum(Number(diff.toFixed(1)))} ${cur.unit}</b>। ${tier}!`;
+    });
+    $('#est-next').addEventListener('click', pick);
+    pick();
+  })();
+</script>

@@ -1,5 +1,5 @@
 /** The 11 worlds - structure from PLAN.md. Only `open: true` worlds have a live explorer. */
-export type Category = { n: string; items: string[]; play: string };
+export type Category = { n: string; items: string[]; play: string; lab?: string; labAnchors?: string[] };
 export type World = {
   slug: string; bn: string; en: string; tag: string; hue: string;
   age: string; dep: string; phase: string; intro: string; keys: string[];
@@ -1069,7 +1069,18 @@ export const worlds: World[] = [
      "একক রূপান্তর",
      "আন্দাজ করা"
     ],
-    "play": "স্লাইডার টানলে দাঁড়িপাল্লার এক পাশের ওজন বাড়ে - পাল্লা হেলে যায়, সমান হলে সোজা থাকে।"
+    "play": "নিচে ক্লিক করলে সরাসরি সত্যিকারের টুলে চলে যাবে - রুলার, দাঁড়িপাল্লা, ঘড়ি সবকিছুই আসল সংখ্যা দিয়ে কাজ করে।",
+    "lab": "/math/measurement/",
+    "labAnchors": [
+     "length",
+     "weight",
+     "volume",
+     "clock",
+     "calendar",
+     "temperature",
+     "convert",
+     "estimate"
+    ]
    },
    {
     "n": "টাকা-পয়সা",
