@@ -12,13 +12,11 @@
   // One-time setup before the contact form can send email:
   //   npx wrangler email sending enable posora.com
   "send_email": [{ "name": "EMAIL" }],
-  // Admin panel content store. `database_id` below MUST be replaced with the id
-  // printed by `wrangler d1 create` before deploying - the placeholder only works
-  // for local `wrangler dev`. Setup:
-  //   npx wrangler d1 create posora
+  // Admin panel content store. The binding name `DB` is what src/lib/db.ts reads -
+  // it is deliberately not the database name. Schema changes:
   //   npx wrangler d1 migrations apply posora --remote
   "d1_databases": [
-    { "binding": "DB", "database_name": "posora", "database_id": "local-placeholder-id", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "posora", "database_id": "88792376-d23c-475b-8b26-4c49afb1344c", "migrations_dir": "migrations" }
   ],
   "vars": { "CONTACT_TO": "support@posora.com", "CONTACT_FROM": "no-reply@posora.com" },
   "observability": { "enabled": true }

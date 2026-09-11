@@ -43,7 +43,6 @@ before, so a database problem can never take posora.com down.
 ### One-time setup
 
 ```bash
-npx wrangler d1 create posora        # paste the printed database_id into wrangler.jsonc
 npm run db:migrate                   # create the tables on the remote database
 npm run admin:hash 'a long passphrase'
 npx wrangler secret put ADMIN_PASSWORD_HASH   # paste the pbkdf2$... line
