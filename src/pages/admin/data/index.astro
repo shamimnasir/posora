@@ -1,0 +1,63 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { isLoggedIn } from '../../../lib/auth';
+import { db } from '../../../lib/db';
+import { DATASET_KEYS } from '../../../lib/content';
+
+export const prerender = false;
+
+if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
+
+const d = db()!;
+const { results } = await d
+  .prepare('SELECT key, length(json) AS size, updated_at FROM datasets')
+  .all<{ key: string; size: number; updated_at: number }>();
+const byKey = new Map(results.map((r) => [r.key, r]));
+
+const labels: Record<string, string> = {
+  space: 'মহাকাশ · গ্রহ ও চাঁদ',
+  math: 'গণিত · টুল ও সংখ্যা',
+  language: 'ভাষা · বর্ণ, কার, ফলা, যুক্তাক্ষর',
+  heroes: 'হিরো · ভুবনের ছবি-সেটিংস',
+};
+const when = (ms?: number) =>
+  ms ? new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }).format(ms) : 'আমদানি হয়নি';
+const kb = (n?: number) => (n ? `${(n / 1024).toFixed(1)} KB` : '—');
+---
+
+<Admin title="ডেটা" section="data">
+  <div class="a-wrap">
+    <h1 class="a-h">ডেটা</h1>
+    <p class="a-sub">
+      ভুবনের বাইরের কনটেন্ট। এগুলো JSON হিসেবে সম্পাদনা করা হয় — গঠন ভুল হলে সংরক্ষণ হবে না।
+    </p>
+
+    <div class="card">
+      <table class="a-list">
+        <thead>
+          <tr><th>ডেটাসেট</th><th>আকার</th><th>সম্পাদিত</th><th /></tr>
+        </thead>
+        <tbody>
+          {
+            DATASET_KEYS.map((k) => {
+              const row = byKey.get(k);
+              return (
+                <tr>
+                  <td>
+                    <a class="nm" href={`/admin/data/${k}`}>{k}</a>
+                    <span class="note"> · {labels[k]}</span>
+                  </td>
+                  <td class="note">{kb(row?.size)}</td>
+                  <td class="note">{when(row?.updated_at)}</td>
+                  <td style="text-align:right">
+                    <a class="btn btn-sm" href={`/admin/data/${k}`}>সম্পাদনা</a>
+                  </td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Admin>

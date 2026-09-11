@@ -1,5 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
+
+// Rendered on demand so the runtime world/space routes can Astro.rewrite() into
+// it when a slug is unknown or still a draft - a prerendered route can't be a
+// rewrite target from an on-demand one.
+export const prerender = false;
+Astro.response.status = 404;
 ---
 <Base title="পাওয়া যায়নি" description="এই পাতাটি নেই।">
   <div class="wrap nf">

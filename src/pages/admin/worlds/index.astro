@@ -1,0 +1,77 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { isLoggedIn } from '../../../lib/auth';
+import { db, selectWorlds } from '../../../lib/db';
+import { itemCount } from '../../../lib/content';
+import { bn } from '../../../lib/bn';
+
+export const prerender = false;
+
+if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
+
+const all = await selectWorlds(db()!, false);
+const when = (ms: number) =>
+  ms ? new Intl.DateTimeFormat('bn-BD', { dateStyle: 'short' }).format(ms) : '—';
+---
+
+<Admin title="ভুবন" section="worlds">
+  <div class="a-wrap">
+    <div class="spread" style="margin-bottom:18px">
+      <div>
+        <h1 class="a-h">ভুবন</h1>
+        <p class="a-sub" style="margin:0">{bn(all.length)}টি ভুবন। খসড়া শুধু অ্যাডমিনে দেখা যায়।</p>
+      </div>
+      <a class="btn btn-primary" href="/admin/worlds/new">নতুন ভুবন</a>
+    </div>
+
+    {
+      all.length === 0 ? (
+        <div class="card">
+          <p>ডেটাবেস খালি। <a href="/admin">ড্যাশবোর্ড</a> থেকে কনটেন্ট আমদানি করো।</p>
+        </div>
+      ) : (
+        <div class="card">
+          <table class="a-list">
+            <thead>
+              <tr>
+                <th>ভুবন</th><th>ফেজ</th><th>বিভাগ</th><th>আইটেম</th>
+                <th>সম্পাদিত</th><th>অবস্থা</th><th />
+              </tr>
+            </thead>
+            <tbody>
+              {all.map((w) => (
+                <tr>
+                  <td>
+                    <span class="swatch" style={`background:${w.hue}`} />
+                    <a class="nm" href={`/admin/worlds/${w.slug}`}>{w.bn}</a>
+                    <span class="note"> · {w.en}</span>
+                  </td>
+                  <td class="note">{w.phase}</td>
+                  <td>{bn(w.cats.length)}</td>
+                  <td>{bn(itemCount(w))}</td>
+                  <td class="note">{when(w.updatedAt)}</td>
+                  <td>
+                    <span class={`pill ${w.status === 'published' ? 'live' : 'draft'}`}>
+                      {w.status === 'published' ? 'লাইভ' : 'খসড়া'}
+                    </span>
+                  </td>
+                  <td style="text-align:right;white-space:nowrap">
+                    <form method="post" action="/api/admin/publish" style="display:inline">
+                      <input type="hidden" name="slug" value={w.slug} />
+                      <input type="hidden" name="status" value={w.status === 'published' ? 'draft' : 'published'} />
+                      <input type="hidden" name="back" value="/admin/worlds" />
+                      <button class="btn btn-sm" type="submit">
+                        {w.status === 'published' ? 'খসড়া করো' : 'প্রকাশ করো'}
+                      </button>
+                    </form>
+                    <a class="btn btn-sm" href={`/${w.slug}${w.status === 'draft' ? '?preview=1' : ''}`} target="_blank" rel="noopener">দেখো ↗</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</Admin>

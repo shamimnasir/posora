@@ -1,0 +1,125 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { isLoggedIn } from '../../lib/auth';
+import { db, recentAudit, selectWorlds } from '../../lib/db';
+import { computeTotals, itemCount } from '../../lib/content';
+import { bn, bnNum } from '../../lib/bn';
+
+export const prerender = false;
+
+if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
+
+const d = db()!;
+const all = await selectWorlds(d, false);
+const seeded = all.length > 0;
+const live = all.filter((w) => w.status === 'published');
+const drafts = all.filter((w) => w.status === 'draft');
+const totals = computeTotals(live);
+const activity = await recentAudit(d, 6);
+
+const when = (ms: number) => new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }).format(ms);
+const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
+---
+
+<Admin title="ড্যাশবোর্ড" section="dashboard">
+  <div class="a-wrap">
+    <h1 class="a-h">ড্যাশবোর্ড</h1>
+    <p class="a-sub">
+      {seeded ? `শেষ সম্পাদনা: ${lastEdit ? when(lastEdit) : '—'}` : 'ডেটাবেস এখনো খালি।'}
+    </p>
+
+    {
+      !seeded && (
+        <div class="card">
+          <h2>প্রথম ধাপ</h2>
+          <p>
+            ডেটাবেসে এখনো কোনো ভুবন নেই। নিচের বোতামে ক্লিক করলে <code>src/data/</code>-এর বর্তমান সব
+            কনটেন্ট D1-এ চলে আসবে। এতে সাইটের কিছুই বদলাবে না — শুধু সম্পাদনাযোগ্য হবে।
+          </p>
+          <button class="btn btn-primary" id="seed" type="button">কনটেন্ট আমদানি করো</button>
+          <p class="note" id="seed-out"></p>
+        </div>
+      )
+    }
+
+    <div class="stat-row" style="margin-bottom:18px">
+      <div class="s"><b>{bn(live.length)}</b><span>লাইভ ভুবন</span></div>
+      <div class="s"><b>{bn(drafts.length)}</b><span>খসড়া</span></div>
+      <div class="s"><b>{bn(totals.cats)}</b><span>বিভাগ</span></div>
+      <div class="s"><b>{bnNum(totals.items)}</b><span>আইটেম</span></div>
+    </div>
+
+    <div class="card">
+      <div class="spread" style="margin-bottom:14px">
+        <h2 style="margin:0">ভুবনসমূহ</h2>
+        <a class="btn btn-sm" href="/admin/worlds">সব দেখো →</a>
+      </div>
+      {
+        seeded ? (
+          <table class="a-list">
+            <thead>
+              <tr><th>নাম</th><th>বিভাগ</th><th>আইটেম</th><th>অবস্থা</th></tr>
+            </thead>
+            <tbody>
+              {all.slice(0, 6).map((w) => (
+                <tr>
+                  <td>
+                    <span class="swatch" style={`background:${w.hue}`} />
+                    <a class="nm" href={`/admin/worlds/${w.slug}`}>{w.bn}</a>
+                  </td>
+                  <td>{bn(w.cats.length)}</td>
+                  <td>{bn(itemCount(w))}</td>
+                  <td>
+                    <span class={`pill ${w.status === 'published' ? 'live' : 'draft'}`}>
+                      {w.status === 'published' ? 'লাইভ' : 'খসড়া'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p class="note">আমদানির পরে এখানে তালিকা দেখা যাবে।</p>
+        )
+      }
+    </div>
+
+    {
+      activity.length > 0 && (
+        <div class="card">
+          <h2>সাম্প্রতিক কার্যক্রম</h2>
+          <table class="a-list">
+            <tbody>
+              {activity.map((a) => (
+                <tr>
+                  <td style="width:44%"><code>{a.action}</code> {a.target && <b>{a.target}</b>}</td>
+                  <td class="note" style="padding-top:11px">{a.detail ?? ''}</td>
+                  <td style="text-align:right;white-space:nowrap" class="note">{when(a.at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</Admin>
+
+<script>
+  const btn = document.getElementById('seed') as HTMLButtonElement | null;
+  const out = document.getElementById('seed-out');
+  btn?.addEventListener('click', async () => {
+    btn.disabled = true;
+    if (out) out.textContent = 'আমদানি চলছে…';
+    try {
+      const res = await fetch('/api/admin/seed', { method: 'POST' });
+      const data = (await res.json()) as { ok?: boolean; created?: number; error?: string };
+      if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      if (out) out.textContent = `${data.created}টি ভুবন আমদানি হয়েছে। পেজ রিলোড হচ্ছে…`;
+      location.reload();
+    } catch (e) {
+      btn.disabled = false;
+      if (out) out.textContent = `ব্যর্থ: ${(e as Error).message}`;
+    }
+  });
+</script>

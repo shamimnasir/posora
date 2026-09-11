@@ -1,0 +1,60 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { isLoggedIn } from '../../lib/auth';
+import { db, recentAudit } from '../../lib/db';
+
+export const prerender = false;
+
+if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
+
+const rows = await recentAudit(db()!, 200);
+const when = (ms: number) =>
+  new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }).format(ms);
+
+const labels: Record<string, string> = {
+  'login.ok': 'লগইন',
+  'login.failed': 'ব্যর্থ লগইন',
+  'world.save': 'ভুবন সংরক্ষণ',
+  'world.create': 'নতুন ভুবন',
+  'world.delete': 'ভুবন মোছা',
+  'world.publish': 'প্রকাশ',
+  'world.unpublish': 'খসড়ায় ফেরত',
+  'dataset.save': 'ডেটা সংরক্ষণ',
+  seed: 'কনটেন্ট আমদানি',
+  'seed.force': 'জোরপূর্বক আমদানি',
+};
+---
+
+<Admin title="কার্যক্রম" section="activity">
+  <div class="a-wrap">
+    <h1 class="a-h">কার্যক্রম</h1>
+    <p class="a-sub">সাম্প্রতিক {rows.length}টি ঘটনা। ব্যর্থ লগইনও এখানে থাকে।</p>
+
+    <div class="card">
+      {
+        rows.length === 0 ? (
+          <p class="note" style="margin:0">এখনো কিছু ঘটেনি।</p>
+        ) : (
+          <table class="a-list">
+            <thead>
+              <tr><th>ঘটনা</th><th>লক্ষ্য</th><th>বিস্তারিত</th><th>সময়</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr>
+                  <td>
+                    <b>{labels[r.action] ?? r.action}</b>
+                    {r.action === 'login.failed' && <span class="pill draft" style="margin-inline-start:8px">সতর্কতা</span>}
+                  </td>
+                  <td class="note">{r.target ?? '—'}</td>
+                  <td class="note">{r.detail ?? '—'}</td>
+                  <td class="note" style="white-space:nowrap">{when(r.at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      }
+    </div>
+  </div>
+</Admin>
