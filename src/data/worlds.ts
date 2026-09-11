@@ -6,6 +6,8 @@ export type World = {
   /** Category index each `keys[i]` is demonstrated by right now, or null if not built yet. */
   keyCats: (number | null)[];
   open: boolean; cats: Category[]; missions: { n: string; d: string }[];
+  /** Category index each `missions[i]` can genuinely be tried on right now, or null if not built yet. */
+  missionCats: (number | null)[];
 };
 export const worlds: World[] = [
  {
@@ -122,6 +124,11 @@ export const worlds: World[] = [
   ],
   "keyCats": [
    null,
+   null,
+   null,
+   null
+  ],
+  "missionCats": [
    null,
    null,
    null
@@ -270,6 +277,11 @@ export const worlds: World[] = [
   "keyCats": [
    0,
    3,
+   6,
+   null
+  ],
+  "missionCats": [
+   null,
    6,
    null
   ]
@@ -431,6 +443,11 @@ export const worlds: World[] = [
    1,
    3,
    4
+  ],
+  "missionCats": [
+   null,
+   4,
+   3
   ]
  },
  {
@@ -603,6 +620,11 @@ export const worlds: World[] = [
    7,
    null,
    2
+  ],
+  "missionCats": [
+   null,
+   null,
+   null
   ]
  },
  {
@@ -780,6 +802,11 @@ export const worlds: World[] = [
    1,
    2,
    7
+  ],
+  "missionCats": [
+   1,
+   2,
+   6
   ]
  },
  {
@@ -942,6 +969,11 @@ export const worlds: World[] = [
    3,
    2,
    0
+  ],
+  "missionCats": [
+   1,
+   3,
+   2
   ]
  },
  {
@@ -1113,6 +1145,11 @@ export const worlds: World[] = [
    1,
    5,
    6
+  ],
+  "missionCats": [
+   5,
+   null,
+   null
   ]
  },
  {
@@ -1310,6 +1347,11 @@ export const worlds: World[] = [
    2,
    3,
    9
+  ],
+  "missionCats": [
+   6,
+   3,
+   9
   ]
  },
  {
@@ -1472,6 +1514,11 @@ export const worlds: World[] = [
    2,
    1,
    null
+  ],
+  "missionCats": [
+   0,
+   1,
+   5
   ]
  },
  {
@@ -1654,6 +1701,11 @@ export const worlds: World[] = [
    0,
    2,
    1
+  ],
+  "missionCats": [
+   null,
+   0,
+   8
   ]
  },
  {
@@ -1801,6 +1853,11 @@ export const worlds: World[] = [
    3,
    1,
    5
+  ],
+  "missionCats": [
+   1,
+   null,
+   null
   ]
  }
 ];

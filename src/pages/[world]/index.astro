@@ -81,7 +81,17 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
         <section class="card">
           <div class="card-h"><span class="lbl">মিশন</span></div>
           <div class="miss">
-            {w.missions.map((m, i) => <div class="m"><span class="mb">{pad2(i + 1)}</span><div><b>{m.n}</b><p>{m.d}</p></div></div>)}
+            {w.missions.map((m, i) => w.missionCats[i] !== null ? (
+              <button type="button" class="m mission-jump" data-cat={w.missionCats[i]}>
+                <span class="mb">{pad2(i + 1)}</span>
+                <div><b>{m.n}</b><p>{m.d}</p><span class="try">এখনই চেষ্টা করো →</span></div>
+              </button>
+            ) : (
+              <div class="m m-soon">
+                <span class="mb">{pad2(i + 1)}</span>
+                <div><b>{m.n}</b><p>{m.d}</p><span class="try soon">শীঘ্রই আসছে</span></div>
+              </div>
+            ))}
           </div>
         </section>
         <a class="card cta" href="/space/">
@@ -150,11 +160,17 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .key-soon small { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; }
   .intro { padding: 0.7rem 0.95rem 0.95rem; font-size: 13.5px; color: var(--ink-2); }
   .miss { padding: 0.3rem 0.95rem 0.7rem; }
-  .m { display: flex; gap: 0.7rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line-soft); }
+  .m { display: flex; gap: 0.7rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line-soft); width: 100%; text-align: left; }
   .m:last-child { border-bottom: 0; }
+  .mission-jump { cursor: pointer; border-radius: 8px; transition: background 0.15s ease, transform 0.15s ease; }
+  .mission-jump:hover { background: color-mix(in oklab, var(--w) 8%, transparent); transform: translateX(-2px); }
+  .m-soon { opacity: 0.72; }
   .mb { width: 26px; height: 26px; border-radius: 8px; flex: none; display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; background: color-mix(in oklab, var(--w) 18%, var(--panel)); color: var(--w); border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); }
+  .m-soon .mb { background: transparent; color: var(--muted); border-style: dashed; }
   .m b { font-size: 14px; display: block; }
   .m p { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .try { display: inline-block; margin-top: 0.3rem; font-size: 11.5px; font-weight: 700; color: var(--w); }
+  .try.soon { font-weight: 500; color: var(--muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; }
   .cta { padding: 0.9rem 0.95rem; display: flex; flex-direction: column; gap: 0.15rem; background: var(--brand-soft); border-color: transparent; transition: transform 0.15s ease; }
   .cta:hover { transform: translateY(-2px); }
   .cta b { font-family: var(--font-display); color: var(--brand-ink); font-size: 16px; }
@@ -208,6 +224,10 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   }
   rail.forEach((b) => b.addEventListener('click', () => show(+b.dataset.i!)));
   root.querySelectorAll<HTMLButtonElement>('.key-jump').forEach((b) => b.addEventListener('click', () => {
+    show(+b.dataset.cat!);
+    root.querySelector('.stage')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }));
+  root.querySelectorAll<HTMLButtonElement>('.mission-jump').forEach((b) => b.addEventListener('click', () => {
     show(+b.dataset.cat!);
     root.querySelector('.stage')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   }));
