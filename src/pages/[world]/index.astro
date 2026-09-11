@@ -60,10 +60,17 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
           </div>
         </div>
         <div class="items" id="c-items">
-          <p class="items-h"><span class="lbl">এই বিভাগে যা থাকবে</span><span class="lbl">আগে চাও? তারা দাও ★</span></p>
+          <div class="items-h">
+            <div>
+              <p class="items-h-t">এই বিভাগে যা যা যোগ হবে</p>
+              <p class="items-h-s">এখনও লেখা হয়নি - নিচের ★ চেপে বলো কোনটা আগে বানাবো</p>
+            </div>
+            <span class="star-count" id="star-count" hidden><b id="star-n">০</b>টা বলেছ</span>
+          </div>
           <div class="chips" id="chips">
             {first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
           </div>
+          <p class="toast" id="star-toast" role="status" aria-live="polite"></p>
         </div>
       </section>
 
@@ -149,13 +156,19 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .play { font-size: 14.5px; color: var(--ink-2); padding-left: 0.85rem; border-left: 2px solid color-mix(in oklab, var(--w) 50%, var(--line)); }
   .play b { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--w); }
   .items { border-top: 1px solid var(--line-soft); padding: 1rem 1.4rem 1.25rem; }
-  .items-h { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.7rem; }
+  .items-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.85rem; }
+  .items-h-t { font-weight: 700; font-size: 14.5px; }
+  .items-h-s { font-size: 12.5px; color: var(--muted); margin-top: 0.15rem; }
+  .star-count { flex: none; display: flex; align-items: baseline; gap: 0.3rem; font-size: 12px; color: var(--sun); background: color-mix(in oklab, var(--sun) 14%, var(--panel)); border: 1px solid color-mix(in oklab, var(--sun) 40%, var(--line)); border-radius: 999px; padding: 0.3rem 0.7rem; white-space: nowrap; }
+  .star-count b { font-family: var(--font-display); font-size: 14px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 13.5px; padding: 5px 12px 5px 9px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
+  .chip { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13.5px; padding: 6px 13px 6px 10px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
   .chip:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel)); border-color: color-mix(in oklab, var(--w) 34%, var(--line)); transform: translateY(-1px); }
-  .chip .star { color: var(--line); font-size: 12px; transition: color 0.15s ease, transform 0.2s ease; }
-  .chip[aria-pressed="true"] { border-color: color-mix(in oklab, var(--sun) 60%, var(--line)); background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: var(--ink); }
-  .chip[aria-pressed="true"] .star { color: var(--sun); transform: scale(1.25) rotate(-12deg); }
+  .chip .star { color: var(--line); font-size: 15px; line-height: 1; transition: color 0.15s ease, transform 0.2s ease; }
+  .chip[aria-pressed="true"] { border-color: color-mix(in oklab, var(--sun) 60%, var(--line)); background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: var(--ink); font-weight: 600; }
+  .chip[aria-pressed="true"] .star { color: var(--sun); transform: scale(1.3) rotate(-12deg); }
+  .toast { margin-top: 0.7rem; font-size: 12.5px; font-weight: 600; color: var(--brand-ink); opacity: 0; transition: opacity 0.25s ease; }
+  .toast.show { opacity: 1; }
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
   .spec { padding: 0.3rem 0.95rem 0.5rem; }
   .row { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
@@ -197,8 +210,8 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
 </style>
 
 <script>
-  import { toggleStar, isStarred } from '../../lib/progress';
-  import { pad2 } from '../../lib/bn';
+  import { toggleStar, isStarred, getProgress } from '../../lib/progress';
+  import { bn, pad2 } from '../../lib/bn';
   import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
   type Cat = { n: string; items: string[]; play: string; hero: HeroSpec };
   const root = document.getElementById('world')!;
@@ -206,6 +219,8 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   const cats: Cat[] = JSON.parse(document.getElementById('world-data')!.textContent!);
   const rail = [...root.querySelectorAll<HTMLButtonElement>('.rail-list [data-i]')];
   const chips = document.getElementById('chips')!;
+  const starCount = document.getElementById('star-count')!, starN = document.getElementById('star-n')!, starToast = document.getElementById('star-toast')!;
+  let toastTimer = 0;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const host = document.getElementById('hero-host')!, ctl = document.getElementById('ctl') as HTMLInputElement, ctlLabel = document.getElementById('ctl-label')!;
   let hero: HeroHandle | null = null, curCat = 0;
@@ -223,6 +238,11 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
       b.setAttribute('aria-pressed', String(isStarred(b.dataset.key)));
       return b;
     }));
+  }
+  function renderStarCount() {
+    const n = getProgress().stars.length;
+    starCount.hidden = n === 0;
+    starN.textContent = bn(n);
   }
   function show(i: number) {
     const c = cats[i]; curCat = i; applyHero(c.hero);
@@ -244,8 +264,15 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   }));
   chips.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return;
+    const itemName = b.textContent!.replace('★', '').trim();
     const on = toggleStar(b.dataset.key!); b.setAttribute('aria-pressed', String(on));
     if (on && !reduced) b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 });
+    renderStarCount();
+    starToast.textContent = on ? `"${itemName}" এখন তোমার তালিকায় - আমরা এটাই আগে বানাবো` : `"${itemName}" তালিকা থেকে সরানো হলো`;
+    starToast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => starToast.classList.remove('show'), 2600);
   });
   renderChips(cats[0]);
+  renderStarCount();
 </script>

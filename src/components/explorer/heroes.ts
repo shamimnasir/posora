@@ -209,7 +209,7 @@ const SCENES: Record<string, Builder> = {
     const wheel = new Group(); wheel.rotation.x = 0.5; root.add(wheel);
     cols.forEach((c, i) => { const s = sector(2.6, (i / 6) * Math.PI * 2, Math.PI / 3, c, 0.2); wheel.add(s); const a = (i + 0.5) / 6 * Math.PI * 2; const sp = v === 'fruit' ? emojiSprite(fruits[i], 0.9) : textSprite(names[i], font, '#111820', 1.1); sp.position.set(Math.cos(a) * 2, 0.4, -Math.sin(a) * 2); wheel.add(sp); });
     wheel.add(new Mesh(new CylinderGeometry(0.5, 0.5, 0.3, 32), std('#ffffff')));
-    return { label: 'ঋতু ঘোরাও', update(_t, _dt, p) { wheel.rotation.y += (p * Math.PI * 2 - wheel.rotation.y) * 0.08; } };
+    return { label: 'ঋতু ঘোরাও', update(t, _dt, p) { wheel.rotation.y += (p * Math.PI * 2 - wheel.rotation.y) * 0.08; wheel.rotation.z = 0.5 + Math.sin(t * 0.4) * 0.025; } };
   },
 
   plate({ root, hue, v }) {
@@ -226,10 +226,11 @@ const SCENES: Record<string, Builder> = {
     const g = new Group(); root.add(g); const cubeG = new BoxGeometry(0.36, 0.36, 0.36); const m4 = new Matrix4();
     if (v === 'wave') { const N = 12; const im = new InstancedMesh(cubeG, std(hue), N * N); g.add(im); return { label: 'ঢেউ', update(t, _dt, p) { for (let i = 0; i < N * N; i++) { const x = i % N - N / 2 + 0.5, z = Math.floor(i / N) - N / 2 + 0.5; const h = 0.5 + Math.sin(x * 0.6 + t * 2) * Math.cos(z * 0.6 * (0.5 + p) + t) * (0.5 + p); m4.makeScale(1, h * 3, 1); m4.setPosition(x * 0.4, h * 0.55 - 1, z * 0.4); im.setMatrixAt(i, m4); } im.instanceMatrix.needsUpdate = true; } }; }
     const units = new InstancedMesh(cubeG, std(GOLD), 9), rods = new InstancedMesh(new BoxGeometry(0.36, 3.6, 0.36), std(hue), 9), flats = new InstancedMesh(new BoxGeometry(3.6, 0.36, 3.6), std(darken(hue, 0.3)), 9); g.add(units, rods, flats); g.position.set(-1.5, -1.6, 0);
-    return { label: 'সংখ্যা', update(_t, _dt, p) {
+    return { label: 'সংখ্যা', update(t, _dt, p) {
       const n = Math.round(p * 999); const h = Math.floor(n / 100), tn = Math.floor(n / 10) % 10, u = n % 10;
       for (let i = 0; i < 9; i++) { flats.setMatrixAt(i, i < h ? m4.makeTranslation(0.5, i * 0.4 + 0.18, 0) : m4.makeScale(0, 0, 0)); rods.setMatrixAt(i, i < tn ? m4.makeTranslation(3 + i * 0.4, 1.8, 0) : m4.makeScale(0, 0, 0)); units.setMatrixAt(i, i < u ? m4.makeTranslation(3 + (i % 3) * 0.4, Math.floor(i / 3) * 0.4 + 0.18, 1.2) : m4.makeScale(0, 0, 0)); }
       flats.instanceMatrix.needsUpdate = rods.instanceMatrix.needsUpdate = units.instanceMatrix.needsUpdate = true;
+      g.rotation.y = Math.sin(t * 0.35) * 0.05; g.position.y = Math.sin(t * 0.9) * 0.015; // idle sway - the stack never sits dead still
     } };
   },
 
@@ -250,7 +251,7 @@ const SCENES: Record<string, Builder> = {
     const beam = new Group(); beam.position.y = -0.2; root.add(beam); beam.add(new Mesh(new BoxGeometry(4.6, 0.12, 0.3), std('#8a8f96')));
     const pan = (x: number) => { const g = new Group(); g.position.x = x; const p = new Mesh(new CylinderGeometry(0.8, 0.7, 0.1, 24), std(lighten(hue, 0.4))); p.position.y = -1.1; g.add(p); [-0.3, 0.3].forEach((dx) => { const s = new Mesh(new CylinderGeometry(0.02, 0.02, 1.1, 6), std('#999')); s.position.set(dx, -0.55, 0); g.add(s); }); beam.add(g); return { g, p }; };
     const L = pan(-2), R = pan(2); const wL = new Mesh(new BoxGeometry(0.6, 0.6, 0.6), std(GOLD)); wL.position.y = -0.75; L.g.add(wL); const wR = new Mesh(new BoxGeometry(0.6, 0.6, 0.6), std(hue)); wR.position.y = -0.75; R.g.add(wR);
-    return { label: 'ওজন', update(_t, _dt, p) { const diff = p - 0.5; wR.scale.setScalar(0.6 + p * 0.9); beam.rotation.z += ((-diff * 0.5) - beam.rotation.z) * 0.08; L.g.rotation.z = -beam.rotation.z; R.g.rotation.z = -beam.rotation.z; } };
+    return { label: 'ওজন', update(t, _dt, p) { const diff = p - 0.5; wR.scale.setScalar(0.6 + p * 0.9); const target = -diff * 0.5 + Math.sin(t * 1.1) * 0.015; beam.rotation.z += (target - beam.rotation.z) * 0.08; L.g.rotation.z = -beam.rotation.z; R.g.rotation.z = -beam.rotation.z; } };
   },
 
   coins({ root, hue, v }) {
@@ -263,7 +264,7 @@ const SCENES: Record<string, Builder> = {
   bars({ root, hue, v }) {
     const N = 7; const bars: Mesh[] = []; for (let i = 0; i < N; i++) { const b = new Mesh(new BoxGeometry(0.55, 1, 0.55), std(i === N - 1 ? GOLD : hue)); b.position.x = (i - N / 2 + 0.5) * 0.8; root.add(b); bars.push(b); }
     root.add(new Mesh(new BoxGeometry(6.2, 0.06, 1.2), std('#8a8f96')).translateY(-1.5));
-    return { label: v === 'compound' ? 'বছর' : 'বাড়ো', update(_t, _dt, p) { bars.forEach((b, i) => { const h = v === 'compound' ? 0.3 + Math.pow(1 + p * 0.6, i) * 0.4 : 0.3 + (0.4 + Math.sin(i * 1.3) * 0.3) * p * 3.5; const hh = Math.min(h, 3.6); b.scale.y += (hh - b.scale.y) * 0.1; b.position.y = -1.5 + b.scale.y / 2; }); } };
+    return { label: v === 'compound' ? 'বছর' : 'বাড়ো', update(t, _dt, p) { bars.forEach((b, i) => { const h = v === 'compound' ? 0.3 + Math.pow(1 + p * 0.6, i) * 0.4 : 0.3 + (0.4 + Math.sin(i * 1.3) * 0.3) * p * 3.5; const hh = Math.min(h, 3.6) + Math.sin(t * 1.3 + i) * 0.025; b.scale.y += (hh - b.scale.y) * 0.1; b.position.y = -1.5 + b.scale.y / 2; }); } };
   },
 
   rocket({ root, hue }) {
@@ -325,7 +326,7 @@ export function mountHero(host: HTMLElement, spec: HeroSpec): HeroHandle {
   const font = getComputedStyle(document.body).fontFamily;
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' }); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   const scene = new Scene(); const camera = new PerspectiveCamera(42, 1, 0.1, 100); camera.position.set(0, 1.9, 6.2); camera.lookAt(0, 0.1, 0);
-  scene.add(new AmbientLight('#ffffff', 0.85)); const key = new DirectionalLight('#ffffff', 1.4); key.position.set(3, 6, 4); scene.add(key); const fill = new DirectionalLight('#cfe2ff', 0.5); fill.position.set(-4, 2, -3); scene.add(fill);
+  scene.add(new AmbientLight('#ffffff', 0.55)); const key = new DirectionalLight('#ffffff', 1.75); key.position.set(3, 6, 4); scene.add(key); const fill = new DirectionalLight('#cfe2ff', 0.4); fill.position.set(-4, 2, -3); scene.add(fill); const rim = new DirectionalLight('#ffe8c2', 0.55); rim.position.set(-2, 1.5, -5); scene.add(rim);
   const user = new Group(); scene.add(user); let root = new Group(); user.add(root);
   let cur: SceneObj | null = null, param = spec.p ?? 0.5, popStart = performance.now();
 
@@ -336,6 +337,7 @@ export function mountHero(host: HTMLElement, spec: HeroSpec): HeroHandle {
   }
   const firstLabel = build(spec);
 
+  const IDLE_YAW = 0.22; // rad/s - a full turn every ~28s: enough to read as alive within a glance, never dizzying
   let dragging = false, lx = 0, ly = 0, vx = 0, vy = 0, yaw = 0, pitch = 0;
   host.addEventListener('pointerdown', (e) => { dragging = true; lx = e.clientX; ly = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
   host.addEventListener('pointermove', (e) => { if (!dragging) return; vx = (e.clientX - lx) * 0.006; vy = (e.clientY - ly) * 0.006; lx = e.clientX; ly = e.clientY; yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); });
@@ -346,8 +348,13 @@ export function mountHero(host: HTMLElement, spec: HeroSpec): HeroHandle {
   new ResizeObserver(resize).observe(host); resize();
   function frame(now: number) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now; if (!reduced || dragging) t += dt;
-    if (!dragging) { yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); vx *= 0.92; vy *= 0.92; }
-    user.rotation.set(pitch, yaw, 0); const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(1 - Math.pow(1 - pop, 3));
+    if (!dragging) {
+      yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); vx *= 0.92; vy *= 0.92;
+      if (!reduced && Math.abs(vx) < 0.002) yaw += dt * IDLE_YAW; // drag momentum fades into a steady idle turntable
+    }
+    user.rotation.set(pitch, yaw, 0);
+    user.position.y = reduced ? 0 : Math.sin(t * 0.55) * 0.045; // faint breathing bob - a still photo never does this
+    const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(1 - Math.pow(1 - pop, 3));
     cur?.update(t, reduced && !dragging ? 0 : dt, param); renderer.render(scene, camera);
     raf = visible && !document.hidden ? requestAnimationFrame(frame) : 0;
   }
