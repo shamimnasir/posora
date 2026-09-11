@@ -10,11 +10,12 @@
  * the real meshes, so what you click is what you get.
  */
 import {
-  WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Color, Vector2, Vector3, MathUtils,
+  WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, MeshBasicMaterial, Color, Vector2, Vector3, MathUtils,
   SphereGeometry, RingGeometry, ShaderMaterial, BufferGeometry, Float32BufferAttribute,
   LineLoop, LineBasicMaterial, Points, PointsMaterial, AdditiveBlending, DoubleSide, Raycaster,
 } from 'three';
 import type { Visual, Moon, Body } from '../../data/space';
+import { FACTS, EARTH_DIAMETER_KM } from '../../data/space';
 
 /* ---------- shaders (Ashima simplex noise, MIT) ---------- */
 const NOISE = /* glsl */ `
@@ -131,6 +132,8 @@ export type Pick =
   | { kind: 'self' };
 
 export type CosmosHandle = {
+  /** Park a true-to-scale Earth beside the focused body. */
+  compareEarth(on: boolean): void;
   showSystem(): void;
   focusBody(id: string): void;
   focusMoon(index: number): void;
@@ -174,6 +177,32 @@ export function mountCosmos(
   const user = new Group(); scene.add(user);              // drag-orbit
   const systemG = new Group(); user.add(systemG);         // level: system
   const bodyG = new Group(); user.add(bodyG);             // level: body / moon
+
+  /* ---------- asteroid belt: the real gap between Mars and Jupiter ---------- */
+  const beltGeo = new BufferGeometry();
+  {
+    const N = 900, pos = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const r = 10.2 + Math.random() * 3.4, a = Math.random() * Math.PI * 2;
+      pos[i * 3] = Math.cos(a) * r; pos[i * 3 + 1] = (Math.random() - 0.5) * 0.5; pos[i * 3 + 2] = Math.sin(a) * r;
+    }
+    beltGeo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+  }
+  const belt = new Points(beltGeo, new PointsMaterial({ color: 0xa89a86, size: 0.11, sizeAttenuation: true, transparent: true, opacity: 0.75 }));
+  systemG.add(belt);
+
+  /* ---------- a comet on a stretched orbit, tail always pointing away from the sun ---------- */
+  const comet = new Group(); systemG.add(comet);
+  const cometHead = new Mesh(new SphereGeometry(0.16, 12, 12), new MeshBasicMaterial({ color: 0xdfefff }));
+  comet.add(cometHead);
+  const tailGeo = new BufferGeometry();
+  {
+    const N = 26, pos = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) { pos[i * 3] = i * 0.34; pos[i * 3 + 1] = 0; pos[i * 3 + 2] = 0; }
+    tailGeo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+  }
+  const cometTail = new Points(tailGeo, new PointsMaterial({ color: 0x9fd8ff, size: 0.16, sizeAttenuation: true, transparent: true, opacity: 0.55 }));
+  comet.add(cometTail);
 
   /* ---------- system view ---------- */
   // Real order, log-compressed distance so Neptune is reachable and Mercury isn't inside the sun.
@@ -221,10 +250,29 @@ export function mountCosmos(
   }));
   bodyG.add(glow);
   const extras = new Group(); bodyG.add(extras);
+
+  /* ---------- the size comparison: a true-to-scale Earth parked beside it ---------- */
+  const cmpG = new Group(); cmpG.visible = false; bodyG.add(cmpG);
+  const earthBody = all.find((b) => b.id === 'earth');
+  const cmpEarth = new Mesh(new SphereGeometry(1, 40, 40), planetMaterial(earthBody?.visual ?? all[0].visual));
+  cmpG.add(cmpEarth);
+  const cmpLabel = document.createElement('div');
+  cmpLabel.className = 'cmp-label'; cmpLabel.innerHTML = '<b>পৃথিবী</b>';
+  labelsEl.appendChild(cmpLabel);
+  let cmpOn = false;
   type MoonRef = { mesh: Mesh; period: number; r: number; a0: number; label: HTMLElement; tilt: number };
   let moonRefs: MoonRef[] = [];
   const moonGeo = new SphereGeometry(1, 28, 28);
   let curId = startId, maxR = 0, spin = 0;
+
+  function layoutCompare(b: Body) {
+    // Both drawn from real mean diameters: this body is radius 1, Earth scales against it.
+    const d = FACTS[b.id]?.diameterKm ?? EARTH_DIAMETER_KM;
+    const rel = EARTH_DIAMETER_KM / d;
+    const r = Math.max(0.012, rel);          // keep Earth visible even beside the Sun
+    cmpEarth.scale.setScalar(r);
+    cmpEarth.position.set(1 + r + Math.max(0.35, r * 0.5), 0, 0);
+  }
 
   function buildBody(b: Body) {
     extras.clear();
@@ -246,6 +294,7 @@ export function mountCosmos(
       const ring = new Mesh(rg, rm); ring.rotation.x = Math.PI / 2;
       const rp = new Group(); rp.rotation.z = MathUtils.degToRad(b.visual.tilt); rp.add(ring); extras.add(rp);
     }
+    layoutCompare(b);
     maxR = 0;
     b.moons.forEach((m: Moon, i: number) => {
       maxR = Math.max(maxR, m.r);
@@ -373,6 +422,11 @@ export function mountCosmos(
 
     // system bodies on their orbits
     if (systemG.visible) {
+      belt.rotation.y = t * 0.02;
+      const ca = t * 0.16;
+      const cx = Math.cos(ca) * 17, cz = Math.sin(ca) * 9;     // stretched, comet-ish orbit
+      comet.position.set(cx, Math.sin(ca * 0.5) * 1.6, cz);
+      comet.lookAt(0, 0, 0); comet.rotateY(Math.PI);            // tail points away from the sun
       for (const s of sysRefs) {
         const a = s.a0 + (reduced ? 0 : t * s.speed);
         s.mesh.position.set(Math.cos(a) * s.r, 0, Math.sin(a) * s.r);
@@ -386,6 +440,8 @@ export function mountCosmos(
 
     // focused body + moons
     if (bodyG.visible) {
+      if (cmpOn) { cmpEarth.rotation.y += dt * 0.25; cmpEarth.getWorldPosition(moonWorld); project(moonWorld, cmpLabel, false); }
+      else cmpLabel.style.opacity = '0';
       if (!reduced || dragging) planet.rotation.y += spin * dt * (idle > 4 ? 1 : 0.6);
       const pop = Math.min(1, (now - popStart) / 500); const sc = 1 - Math.pow(1 - pop, 3);
       planet.scale.setScalar(sc);
@@ -402,6 +458,7 @@ export function mountCosmos(
       });
     } else {
       for (const m of moonRefs) m.label.style.opacity = '0';
+      cmpLabel.style.opacity = '0';
     }
 
     // eased camera - this is the "zoom"
@@ -426,6 +483,13 @@ export function mountCosmos(
   start();
 
   return {
+    compareEarth(on: boolean) {
+      cmpOn = on; cmpG.visible = on;
+      const b = all.find((x) => x.id === curId); if (b) layoutCompare(b);
+      if (on) { const r = cmpEarth.scale.x; camWant = Math.max(camWant, 2.6 + r * 2 + cmpEarth.position.x); }
+      else camWant = 5.2 + maxR * (host.clientWidth < 700 ? 0.22 : 0.5);
+      start();
+    },
     showSystem() { showSystem(); start(); },
     focusBody(id) { focusBody(id); start(); },
     focusMoon(i) { focusMoon(i); start(); },

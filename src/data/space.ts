@@ -332,3 +332,40 @@ export const BRANCHES: Record<string, Branch[]> = {
 };
 
 export const branchesFor = (id: string): Branch[] => BRANCHES[id] ?? [];
+
+/* ---------------------------------------------------------------------------
+ * Hard numbers for the comparison tools. Diameters are the published mean
+ * values in km. `nearestKm` is the *closest approach* to Earth, which is the
+ * figure people actually mean when they ask "how far is Mars" - it swings a
+ * lot over an orbit, so the UI says "সবচেয়ে কাছে এলে" rather than pretending
+ * it is fixed. Moon and Sun use their real mean distance instead.
+ * ------------------------------------------------------------------------- */
+export type Facts = { diameterKm: number; nearestKm: number };
+
+export const FACTS: Record<string, Facts> = {
+  sun: { diameterKm: 1_392_700, nearestKm: 149_600_000 },
+  mercury: { diameterKm: 4_879, nearestKm: 77_000_000 },
+  venus: { diameterKm: 12_104, nearestKm: 38_000_000 },
+  earth: { diameterKm: 12_742, nearestKm: 0 },
+  moon: { diameterKm: 3_475, nearestKm: 384_400 },
+  mars: { diameterKm: 6_779, nearestKm: 54_600_000 },
+  jupiter: { diameterKm: 139_820, nearestKm: 588_000_000 },
+  saturn: { diameterKm: 116_460, nearestKm: 1_200_000_000 },
+  uranus: { diameterKm: 50_724, nearestKm: 2_600_000_000 },
+  neptune: { diameterKm: 49_244, nearestKm: 4_300_000_000 },
+  pluto: { diameterKm: 2_377, nearestKm: 4_280_000_000 },
+};
+
+export const EARTH_DIAMETER_KM = 12_742;
+
+/** Real cruising speeds, for "how long would it take to get there". */
+export const SPEEDS = [
+  { id: 'car', bn: 'গাড়িতে', kmh: 100 },
+  { id: 'plane', bn: 'প্লেনে', kmh: 900 },
+  { id: 'rocket', bn: 'রকেটে', kmh: 58_500 },     // New Horizons' launch speed
+  { id: 'light', bn: 'আলোর বেগে', kmh: 1_079_252_849 },
+] as const;
+
+export const factsFor = (id: string): Facts | undefined => FACTS[id];
+/** (D₁/D₂)³ - how many of the smaller body fit inside the bigger one. */
+export const fitsInside = (bigKm: number, smallKm: number) => Math.pow(bigKm / smallKm, 3);
