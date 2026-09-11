@@ -3,6 +3,8 @@ export type Category = { n: string; items: string[]; play: string };
 export type World = {
   slug: string; bn: string; en: string; tag: string; hue: string;
   age: string; dep: string; phase: string; intro: string; keys: string[];
+  /** Category index each `keys[i]` is demonstrated by right now, or null if not built yet. */
+  keyCats: (number | null)[];
   open: boolean; cats: Category[]; missions: { n: string; d: string }[];
 };
 export const worlds: World[] = [
@@ -117,6 +119,12 @@ export const worlds: World[] = [
     "n": "রাতের আকাশ",
     "d": "আজ রাতে ঢাকার আকাশে কী কী দেখা যাবে"
    }
+  ],
+  "keyCats": [
+   null,
+   null,
+   null,
+   null
   ]
  },
  {
@@ -258,6 +266,12 @@ export const worlds: World[] = [
     "n": "ছায়া ধাঁধা",
     "d": "ছায়া দেখে বস্তুর আকার বলো"
    }
+  ],
+  "keyCats": [
+   0,
+   3,
+   6,
+   null
   ]
  },
  {
@@ -411,6 +425,12 @@ export const worlds: World[] = [
     "n": "রঙিন বিক্রিয়া",
     "d": "তিনটি উপাদানে সবচেয়ে বেশি ফেনা"
    }
+  ],
+  "keyCats": [
+   2,
+   1,
+   3,
+   4
   ]
  },
  {
@@ -577,6 +597,12 @@ export const worlds: World[] = [
     "n": "গাছ চেনো",
     "d": "পাতা দেখে গাছের নাম বলো"
    }
+  ],
+  "keyCats": [
+   0,
+   7,
+   null,
+   2
   ]
  },
  {
@@ -748,6 +774,12 @@ export const worlds: World[] = [
     "n": "শহর বাঁচাও",
     "d": "দূষণ কমানোর ৫টি সিদ্ধান্ত"
    }
+  ],
+  "keyCats": [
+   3,
+   1,
+   2,
+   7
   ]
  },
  {
@@ -904,6 +936,12 @@ export const worlds: World[] = [
     "n": "উৎস খোঁজো",
     "d": "খাবার দেখে বলো কোন গাছ বা প্রাণী থেকে এলো"
    }
+  ],
+  "keyCats": [
+   1,
+   3,
+   2,
+   0
   ]
  },
  {
@@ -1069,6 +1107,12 @@ export const worlds: World[] = [
     "n": "নামতার ঝড়",
     "d": "৬০ সেকেন্ডে কত পারো - শুধু ঐচ্ছিক খেলায় টাইমার"
    }
+  ],
+  "keyCats": [
+   0,
+   1,
+   5,
+   6
   ]
  },
  {
@@ -1260,6 +1304,12 @@ export const worlds: World[] = [
     "n": "স্ক্যাম ধরো",
     "d": "১০টি অফারের কোনগুলো ফাঁদ, চিনে ফেলো"
    }
+  ],
+  "keyCats": [
+   6,
+   2,
+   3,
+   9
   ]
  },
  {
@@ -1416,6 +1466,12 @@ export const worlds: World[] = [
     "n": "ছড়া মিলাও",
     "d": "ছন্দে মিল আছে এমন শব্দ খুঁজে বের করো"
    }
+  ],
+  "keyCats": [
+   0,
+   2,
+   1,
+   null
   ]
  },
  {
@@ -1592,6 +1648,12 @@ export const worlds: World[] = [
     "n": "সপ্তাহের রুটিন",
     "d": "নিজের একটি রুটিন বানিয়ে ৭ দিন চালাও"
    }
+  ],
+  "keyCats": [
+   null,
+   0,
+   2,
+   1
   ]
  },
  {
@@ -1733,9 +1795,16 @@ export const worlds: World[] = [
     "n": "প্রথম প্রোগ্রাম",
     "d": "৫টি ব্লক দিয়ে গোলকধাঁধা পার করাও"
    }
+  ],
+  "keyCats": [
+   0,
+   3,
+   1,
+   5
   ]
  }
 ];
+
 export const worldBySlug = (slug: string) => worlds.find((w) => w.slug === slug);
 export const itemCount = (w: World) => w.cats.reduce((s, c) => s + c.items.length, 0);
 export const totals = {

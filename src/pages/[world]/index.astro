@@ -69,7 +69,13 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
         </section>
         <section class="card">
           <div class="card-h"><span class="lbl">এই ভুবনে যা যা করা যাবে</span></div>
-          <div class="keys">{w.keys.map((k) => <span class="pill pill-w">{k}</span>)}</div>
+          <div class="keys">
+            {w.keys.map((k, i) => w.keyCats[i] !== null ? (
+              <button type="button" class="pill pill-w key-jump" data-cat={w.keyCats[i]}>{k}</button>
+            ) : (
+              <span class="pill key-soon">{k}<small>শীঘ্রই</small></span>
+            ))}
+          </div>
           <p class="intro">{w.intro}</p>
         </section>
         <section class="card">
@@ -136,6 +142,12 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .k { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); }
   .v { font-size: 13px; font-weight: 700; text-align: right; }
   .keys { display: flex; flex-wrap: wrap; gap: 6px; padding: 0.8rem 0.95rem 0; }
+  .key-jump { cursor: pointer; transition: transform 0.15s ease, background 0.15s ease; }
+  .key-jump:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 22%, var(--panel)); }
+  .key-jump:active { transform: translateY(0); }
+  .key-soon { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 5px 12px; border-radius: 9px;
+    background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: default; }
+  .key-soon small { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; }
   .intro { padding: 0.7rem 0.95rem 0.95rem; font-size: 13.5px; color: var(--ink-2); }
   .miss { padding: 0.3rem 0.95rem 0.7rem; }
   .m { display: flex; gap: 0.7rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line-soft); }
@@ -195,6 +207,10 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
     if (!reduced) root.querySelector('.scene-t')!.animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
   }
   rail.forEach((b) => b.addEventListener('click', () => show(+b.dataset.i!)));
+  root.querySelectorAll<HTMLButtonElement>('.key-jump').forEach((b) => b.addEventListener('click', () => {
+    show(+b.dataset.cat!);
+    root.querySelector('.stage')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }));
   chips.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return;
     const on = toggleStar(b.dataset.key!); b.setAttribute('aria-pressed', String(on));
