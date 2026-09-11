@@ -1,0 +1,18 @@
+---
+/**
+ * Google Analytics (GA4), property G-Z0XR1TFYSJ.
+ * Two external scripts only - no inline script anywhere (the site's CSP is
+ * `script-src 'self' https://www.googletagmanager.com`, no 'unsafe-inline'):
+ * gtag.js itself, and this component's own <script> body, which Astro
+ * compiles to a separate same-origin module file (NOT `define:vars`, which
+ * Astro always inlines and the CSP would silently block).
+ */
+---
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Z0XR1TFYSJ"></script>
+<script>
+  declare global { interface Window { dataLayer: unknown[][] } }
+  window.dataLayer = window.dataLayer || [];
+  function gtag(...args: unknown[]) { window.dataLayer.push(args); }
+  gtag('js', new Date());
+  gtag('config', 'G-Z0XR1TFYSJ');
+</script>

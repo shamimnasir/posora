@@ -4,6 +4,7 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import WhatsAppFab from '../components/WhatsAppFab.astro';
+import Analytics from '../components/Analytics.astro';
 
 interface Props {
   title: string;
@@ -37,6 +38,7 @@ const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হো
     {/* Preload only the Bengali faces the first paint needs; Latin + other weights load on demand. */}
     <Font cssVariable="--font-body" preload={[{ subset: 'bengali', weight: 400 }]} />
     <Font cssVariable="--font-display" preload={[{ subset: 'bengali' }]} />
+    <Analytics />
   </head>
   <body style={hue ? `--w:${hue}` : undefined}>
     <Header />
