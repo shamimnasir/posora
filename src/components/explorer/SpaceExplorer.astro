@@ -176,35 +176,39 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
   .stage-h h1 { font-size: clamp(2rem, 4vw, 2.8rem); letter-spacing: -0.01em; line-height: 1.15; font-weight: 800; margin-top: 0.1rem; }
   .tag { color: var(--muted); font-size: 14px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; padding-top: 0.4rem; }
-  .scene { position: relative; flex: 1; min-height: min(62vh, 560px); display: grid; place-items: center;
-    background: radial-gradient(ellipse at 50% 45%, color-mix(in oklab, var(--w) 10%, var(--sunk)) 0%, var(--sunk) 55%, color-mix(in oklab, var(--sunk) 70%, #000) 100%); }
-  .host { position: absolute; inset: 0; cursor: grab; touch-action: none; }
+  .scene { position: relative; flex: 1; min-height: min(62vh, 560px); display: grid; place-items: center; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 22%, #141c2e) 0%, #0c1220 52%, #05070e 100%); }
+  .host { position: absolute; inset: 0; cursor: grab; touch-action: none; overflow: hidden; }
   .host.dragging { cursor: grabbing; }
   .host canvas { width: 100%; height: 100%; }
   .labels { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
-  .labels :global(.moon-label), .labels :global(.sky-label) { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); margin-top: -22px;
+  .labels :global(.moon-label), .labels :global(.sky-label), .labels :global(.cmp-label) {
+    position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); margin-top: -24px;
     display: flex; flex-direction: column; align-items: center; line-height: 1.15; transition: opacity 0.25s ease; will-change: transform; cursor: pointer;
-    padding: 2px 8px; border-radius: 999px; background: color-mix(in oklab, var(--panel) 70%, transparent); border: 1px solid transparent; }
-  .labels :global(.moon-label:hover), .labels :global(.sky-label:hover) { border-color: color-mix(in oklab, var(--w) 55%, var(--line)); background: var(--panel); }
-  .labels :global(.moon-label b), .labels :global(.sky-label b) { font-family: var(--font-display); font-size: 13.5px; color: var(--ink); }
-  .labels :global(.moon-label span) { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    padding: 3px 10px; border-radius: 999px; background: rgba(9, 14, 24, 0.72); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(4px); white-space: nowrap; }
+  .labels :global(.cmp-label) { cursor: default; }
+  .labels :global(.moon-label:hover), .labels :global(.sky-label:hover) { border-color: color-mix(in oklab, var(--w) 70%, #fff); background: rgba(9, 14, 24, 0.92); }
+  .labels :global(.moon-label b), .labels :global(.sky-label b), .labels :global(.cmp-label b) { font-family: var(--font-display); font-size: 13px; color: #f2f6fb; }
+  .labels :global(.moon-label span) { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(226, 235, 245, 0.62); }
   /* zoom breadcrumb */
   .zoombar { position: absolute; top: 10px; left: 12px; z-index: 3; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-  .crumb { font-size: 12.5px; font-weight: 600; color: var(--ink-2); background: color-mix(in oklab, var(--panel) 82%, transparent); border: 1px solid var(--line-soft); padding: 0.22rem 0.7rem; border-radius: 999px; backdrop-filter: blur(6px); transition: background 0.15s ease; }
-  .crumb:hover { background: var(--panel); }
+  .crumb { font-size: 12.5px; font-weight: 600; color: #e6eef8; background: rgba(9, 14, 24, 0.6); border: 1px solid rgba(255, 255, 255, 0.16); padding: 0.22rem 0.7rem; border-radius: 999px; backdrop-filter: blur(6px); transition: background 0.15s ease; }
+  .crumb:hover { background: rgba(9, 14, 24, 0.9); }
   .crumb.cur { background: var(--w); color: #fff; border-color: transparent; }
-  .zoombar .sep { color: var(--muted); font-size: 12px; }
+  .zoombar .sep { color: rgba(226, 235, 245, 0.5); font-size: 12px; }
 
   /* branch strip revealed by clicking the body */
-  .branchbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: 0.7rem 1rem 0.8rem;
-    background: linear-gradient(to top, color-mix(in oklab, var(--panel) 92%, transparent) 62%, transparent);
-    display: flex; flex-direction: column; gap: 0.45rem; }
-  .branch-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .branch-chips button { font-size: 13px; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 999px;
-    background: color-mix(in oklab, var(--w) 16%, var(--panel)); border: 1px solid color-mix(in oklab, var(--w) 42%, var(--line)); color: var(--ink); transition: transform 0.15s ease, background 0.15s ease; }
-  .branch-chips button:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 28%, var(--panel)); }
+  .branchbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 1.6rem 1rem 0.9rem;
+    background: linear-gradient(to top, rgba(5, 7, 14, 0.94) 45%, rgba(5, 7, 14, 0.72) 72%, transparent);
+    display: flex; flex-direction: column; gap: 0.5rem; }
+  .branchbar .lbl { color: rgba(226, 235, 245, 0.66); }
+  .branch-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .branch-chips button { font-size: 13px; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 999px; line-height: 1.3;
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.24); color: #f2f6fb; backdrop-filter: blur(4px);
+    transition: transform 0.15s ease, background 0.15s ease; }
+  .branch-chips button:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.2); }
   .branch-chips button[aria-pressed="true"] { background: var(--w); color: #fff; border-color: transparent; }
-  .hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--muted); background: var(--panel); padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line-soft); pointer-events: none; transition: opacity 0.4s ease; }
+  .hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #d7e2f0; background: rgba(9, 14, 24, 0.72); padding: 3px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); pointer-events: none; transition: opacity 0.4s ease; z-index: 2; }
   .actions { display: flex; justify-content: center; gap: 6px; padding: 0.75rem; border-top: 1px solid var(--line-soft); background: var(--panel-2); }
   .actions button { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.05rem; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease; }
   .actions button:hover { background: var(--panel); transform: translateY(-1px); }
@@ -335,7 +339,7 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     crumbMoon.hidden = crumbSep2.hidden = !showMoonCrumb;
     if (moonName) crumbMoon.textContent = moonName;
     $('#scene-hint').textContent = l === 'system' ? 'যেকোনো গ্রহে ক্লিক করো' : l === 'moon' ? 'পিছিয়ে যেতে উপরে গ্রহের নামে চাপো' : 'গ্রহে ক্লিক করো - ভেতরের বিষয়গুলো খুলবে';
-    $('#scene-hint').style.opacity = '1';
+    $('#scene-hint').style.opacity = branchesOpen ? '0' : '1';  // never fight the open branch strip
   }
 
   /* ---- branches: what clicking the body opens up ---- */

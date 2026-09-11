@@ -283,8 +283,8 @@ export function mountCosmos(
     spin = b.visual.spin;
     const gm = glow.material as ShaderMaterial;
     gm.uniforms.uGlow.value.set(b.visual.glow);
-    gm.uniforms.uStrength.value = b.visual.type === 'sun' ? 1.6 : 0.9;
-    glow.scale.setScalar(b.visual.type === 'sun' ? 1.25 : 1.1);
+    gm.uniforms.uStrength.value = b.visual.type === 'sun' ? 1.5 : 0.45;
+    glow.scale.setScalar(b.visual.type === 'sun' ? 1.22 : 1.045);
     if (b.visual.ring) {
       const rg = new RingGeometry(b.visual.ring.inner, b.visual.ring.outer, 160, 1);
       const rm = new ShaderMaterial({
@@ -332,12 +332,20 @@ export function mountCosmos(
     systemG.visible = true; bodyG.visible = false;
     camDist = 6; camWant = 30; camTargetWant.set(0, 0, 0); pitchWant = 0.35;
   }
+  /** Distance at which the outermost orbit still fits on screen, from the real frustum. */
+  function fitDistance(radius: number): number {
+    const vHalf = Math.tan(MathUtils.degToRad(camera.fov / 2));
+    const hHalf = vHalf * Math.min(camera.aspect, 2.2);
+    const need = (radius * 1.22) / Math.max(hHalf, 0.2);
+    return Math.max(3.4, need);
+  }
+
   function focusBody(id: string) {
     const b = all.find((x) => x.id === id); if (!b) return;
     curId = id; buildBody(b); popStart = performance.now();
     setLevel('body'); followMoon = -1;
     systemG.visible = false; bodyG.visible = true;
-    camDist = Math.max(camDist, 18); camWant = 5.2 + maxR * (host.clientWidth < 700 ? 0.22 : 0.5);
+    camDist = Math.max(camDist, 18); camWant = fitDistance(Math.max(maxR, 1.35));
     camTargetWant.set(0, 0, 0); pitchWant = 0.24;
   }
   function focusMoon(i: number) {
@@ -350,7 +358,7 @@ export function mountCosmos(
     followMoon = -1; setLevel('body'); camTargetWant.set(0, 0, 0);
     if (focus === 'ring') { camWant = 3.4 + maxR * 0.3; pitchWant = 0.06; }
     else if (focus === 'close') { camWant = 2.1; pitchWant = 0.3; }
-    else { camWant = 5.2 + maxR * (host.clientWidth < 700 ? 0.22 : 0.5); pitchWant = 0.24; }
+    else { camWant = fitDistance(Math.max(maxR, 1.35)); pitchWant = 0.24; }
   }
 
   /* ---------- input: drag to orbit, click to dive ---------- */
@@ -400,16 +408,20 @@ export function mountCosmos(
   function resize() {
     const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height);
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    if (level === 'body' && !cmpOn) camWant = fitDistance(Math.max(maxR, 1.35));
   }
   new ResizeObserver(resize).observe(host); resize();
 
   const tmp = new Vector3(), moonWorld = new Vector3();
+  const LABEL_PAD = 34; // keep the pill fully inside, not just its anchor point
   function project(v: Vector3, elm: HTMLElement, hide: boolean) {
     tmp.copy(v).project(camera);
-    const on = !hide && tmp.z < 1;
+    const px = ((tmp.x + 1) / 2) * w, py = ((1 - tmp.y) / 2) * h;
+    const inside = px > LABEL_PAD && px < w - LABEL_PAD && py > LABEL_PAD && py < h - 12;
+    const on = !hide && tmp.z < 1 && inside;
     elm.style.opacity = on ? '1' : '0';
     elm.style.pointerEvents = on ? 'auto' : 'none';
-    elm.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px)`;
+    elm.style.transform = `translate(${px}px, ${py}px)`;
   }
 
   function frameLoop(now: number) {
@@ -445,7 +457,7 @@ export function mountCosmos(
       if (!reduced || dragging) planet.rotation.y += spin * dt * (idle > 4 ? 1 : 0.6);
       const pop = Math.min(1, (now - popStart) / 500); const sc = 1 - Math.pow(1 - pop, 3);
       planet.scale.setScalar(sc);
-      glow.scale.setScalar(((planet.material as ShaderMaterial).uniforms.uType.value === 0 ? 1.25 : 1.1) * sc);
+      glow.scale.setScalar(((planet.material as ShaderMaterial).uniforms.uType.value === 0 ? 1.22 : 1.045) * sc);
       (planet.material as ShaderMaterial).uniforms.uTime.value = t;
       moonRefs.forEach((m, i) => {
         const a = m.a0 + (reduced ? 0 : t * (Math.PI * 2) / m.period);
@@ -487,7 +499,7 @@ export function mountCosmos(
       cmpOn = on; cmpG.visible = on;
       const b = all.find((x) => x.id === curId); if (b) layoutCompare(b);
       if (on) { const r = cmpEarth.scale.x; camWant = Math.max(camWant, 2.6 + r * 2 + cmpEarth.position.x); }
-      else camWant = 5.2 + maxR * (host.clientWidth < 700 ? 0.22 : 0.5);
+      else camWant = fitDistance(Math.max(maxR, 1.35));
       start();
     },
     showSystem() { showSystem(); start(); },
