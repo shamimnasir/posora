@@ -1,0 +1,120 @@
+/** ভাষা ভুবন - বর্ণমালা, কার, ফলা, যুক্তবর্ণ. `mid` = never begins a word (shown with an in-word example). */
+export type Letter = { ch: string; name: string; roman: string; word: string; emoji: string; mid?: boolean; note?: string };
+export type Kar = { sign: string; name: string; roman: string; word: string; emoji: string };
+export type Fola = { sign: string; name: string; word: string; emoji: string; base: string };
+export type Conjunct = { ch: string; parts: [string, string]; word: string; emoji: string };
+
+export const vowels: Letter[] = [
+  { ch: 'অ', name: 'অ', roman: 'ô', word: 'অজগর', emoji: '🐍' },
+  { ch: 'আ', name: 'আ', roman: 'a', word: 'আম', emoji: '🥭' },
+  { ch: 'ই', name: 'হ্রস্ব ই', roman: 'i', word: 'ইঁদুর', emoji: '🐭' },
+  { ch: 'ঈ', name: 'দীর্ঘ ঈ', roman: 'ī', word: 'ঈগল', emoji: '🦅' },
+  { ch: 'উ', name: 'হ্রস্ব উ', roman: 'u', word: 'উট', emoji: '🐪' },
+  { ch: 'ঊ', name: 'দীর্ঘ ঊ', roman: 'ū', word: 'ঊষা', emoji: '🌅' },
+  { ch: 'ঋ', name: 'ঋ', roman: 'ri', word: 'ঋষি', emoji: '🧘' },
+  { ch: 'এ', name: 'এ', roman: 'e', word: 'একতারা', emoji: '🪕' },
+  { ch: 'ঐ', name: 'ঐ', roman: 'oi', word: 'ঐরাবত', emoji: '🐘' },
+  { ch: 'ও', name: 'ও', roman: 'o', word: 'ওল', emoji: '🥔' },
+  { ch: 'ঔ', name: 'ঔ', roman: 'ou', word: 'ঔষধ', emoji: '💊' },
+];
+
+export const consonants: Letter[] = [
+  { ch: 'ক', name: 'ক', roman: 'kô', word: 'কলা', emoji: '🍌' },
+  { ch: 'খ', name: 'খ', roman: 'khô', word: 'খরগোশ', emoji: '🐰' },
+  { ch: 'গ', name: 'গ', roman: 'gô', word: 'গরু', emoji: '🐄' },
+  { ch: 'ঘ', name: 'ঘ', roman: 'ghô', word: 'ঘড়ি', emoji: '⏰' },
+  { ch: 'ঙ', name: 'উঁঅ', roman: 'ngô', word: 'ব্যাঙ', emoji: '🐸', mid: true, note: 'শব্দের শুরুতে বসে না' },
+  { ch: 'চ', name: 'চ', roman: 'chô', word: 'চাঁদ', emoji: '🌙' },
+  { ch: 'ছ', name: 'ছ', roman: 'chhô', word: 'ছাতা', emoji: '☂️' },
+  { ch: 'জ', name: 'বর্গীয় জ', roman: 'jô', word: 'জাহাজ', emoji: '🚢' },
+  { ch: 'ঝ', name: 'ঝ', roman: 'jhô', word: 'ঝর্ণা', emoji: '🏞️' },
+  { ch: 'ঞ', name: 'ইঁঅ', roman: 'nyô', word: 'মিঞা', emoji: '👴', mid: true, note: 'শব্দের শুরুতে বসে না' },
+  { ch: 'ট', name: 'ট', roman: 'ṭô', word: 'টমেটো', emoji: '🍅' },
+  { ch: 'ঠ', name: 'ঠ', roman: 'ṭhô', word: 'ঠোঁট', emoji: '👄' },
+  { ch: 'ড', name: 'ড', roman: 'ḍô', word: 'ডিম', emoji: '🥚' },
+  { ch: 'ঢ', name: 'ঢ', roman: 'ḍhô', word: 'ঢাক', emoji: '🥁' },
+  { ch: 'ণ', name: 'মূর্ধন্য ণ', roman: 'ṇô', word: 'হরিণ', emoji: '🦌', mid: true, note: 'শব্দের শুরুতে বসে না' },
+  { ch: 'ত', name: 'ত', roman: 'tô', word: 'তালা', emoji: '🔒' },
+  { ch: 'থ', name: 'থ', roman: 'thô', word: 'থালা', emoji: '🍽️' },
+  { ch: 'দ', name: 'দ', roman: 'dô', word: 'দরজা', emoji: '🚪' },
+  { ch: 'ধ', name: 'ধ', roman: 'dhô', word: 'ধান', emoji: '🌾' },
+  { ch: 'ন', name: 'দন্ত্য ন', roman: 'nô', word: 'নৌকা', emoji: '⛵' },
+  { ch: 'প', name: 'প', roman: 'pô', word: 'পাখি', emoji: '🐦' },
+  { ch: 'ফ', name: 'ফ', roman: 'phô', word: 'ফুল', emoji: '🌸' },
+  { ch: 'ব', name: 'ব', roman: 'bô', word: 'বই', emoji: '📖' },
+  { ch: 'ভ', name: 'ভ', roman: 'bhô', word: 'ভালুক', emoji: '🐻' },
+  { ch: 'ম', name: 'ম', roman: 'mô', word: 'মাছ', emoji: '🐟' },
+  { ch: 'য', name: 'অন্তঃস্থ য', roman: 'jô', word: 'যাদু', emoji: '🪄' },
+  { ch: 'র', name: 'র', roman: 'rô', word: 'রকেট', emoji: '🚀' },
+  { ch: 'ল', name: 'ল', roman: 'lô', word: 'লাউ', emoji: '🥒' },
+  { ch: 'শ', name: 'তালব্য শ', roman: 'shô', word: 'শাপলা', emoji: '🪷' },
+  { ch: 'ষ', name: 'মূর্ধন্য ষ', roman: 'shô', word: 'ষাঁড়', emoji: '🐂' },
+  { ch: 'স', name: 'দন্ত্য স', roman: 'sô', word: 'সূর্য', emoji: '☀️' },
+  { ch: 'হ', name: 'হ', roman: 'hô', word: 'হাতি', emoji: '🐘' },
+  { ch: 'ড়', name: 'ড-এ শূন্য ড়', roman: 'ṛô', word: 'গাড়ি', emoji: '🚗', mid: true, note: 'শব্দের শুরুতে বসে না' },
+  { ch: 'ঢ়', name: 'ঢ-এ শূন্য ঢ়', roman: 'ṛhô', word: 'আষাঢ়', emoji: '🌧️', mid: true, note: 'শব্দের শুরুতে বসে না' },
+  { ch: 'য়', name: 'অন্তঃস্থ য়', roman: 'yô', word: 'পায়রা', emoji: '🕊️', mid: true, note: 'শব্দের শুরুতে বসে না' },
+  { ch: 'ৎ', name: 'খণ্ড ত', roman: 't', word: 'হঠাৎ', emoji: '⚡', mid: true, note: 'শব্দের শেষে বসে' },
+  { ch: 'ং', name: 'অনুস্বার', roman: 'ng', word: 'রং', emoji: '🎨', mid: true, note: 'অন্য বর্ণের পরে বসে' },
+  { ch: 'ঃ', name: 'বিসর্গ', roman: 'h', word: 'দুঃখ', emoji: '😢', mid: true, note: 'অন্য বর্ণের পরে বসে' },
+  { ch: 'ঁ', name: 'চন্দ্রবিন্দু', roman: '~', word: 'চাঁদ', emoji: '🌙', mid: true, note: 'বর্ণের মাথায় বসে, নাকি সুর দেয়' },
+];
+
+/** কার - vowel signs. অ has no sign (inherent), shown first for completeness. */
+export const kars: Kar[] = [
+  { sign: '', name: 'অ (কার নেই)', roman: 'ô', word: 'কলম', emoji: '🖊️' },
+  { sign: 'া', name: 'আ-কার', roman: 'a', word: 'কাক', emoji: '🐦‍⬛' },
+  { sign: 'ি', name: 'হ্রস্ব ই-কার', roman: 'i', word: 'কিশমিশ', emoji: '🍇' },
+  { sign: 'ী', name: 'দীর্ঘ ঈ-কার', roman: 'ī', word: 'কীট', emoji: '🐛' },
+  { sign: 'ু', name: 'হ্রস্ব উ-কার', roman: 'u', word: 'কুকুর', emoji: '🐕' },
+  { sign: 'ূ', name: 'দীর্ঘ ঊ-কার', roman: 'ū', word: 'কূপ', emoji: '🕳️' },
+  { sign: 'ৃ', name: 'ঋ-কার', roman: 'ri', word: 'কৃষক', emoji: '👨‍🌾' },
+  { sign: 'ে', name: 'এ-কার', roman: 'e', word: 'কেক', emoji: '🍰' },
+  { sign: 'ৈ', name: 'ঐ-কার', roman: 'oi', word: 'কৈ মাছ', emoji: '🐟' },
+  { sign: 'ো', name: 'ও-কার', roman: 'o', word: 'কোকিল', emoji: '🐦' },
+  { sign: 'ৌ', name: 'ঔ-কার', roman: 'ou', word: 'কৌটা', emoji: '🫙' },
+];
+
+export const folas: Fola[] = [
+  { sign: '্র', name: 'র-ফলা', base: 'ক', word: 'ক্রিকেট', emoji: '🏏' },
+  { sign: '্য', name: 'য-ফলা', base: 'ব', word: 'ব্যাগ', emoji: '🎒' },
+  { sign: '্ব', name: 'ব-ফলা', base: 'শ', word: 'বিশ্ব', emoji: '🌍' },
+  { sign: '্ম', name: 'ম-ফলা', base: 'স', word: 'স্মৃতি', emoji: '💭' },
+  { sign: '্ল', name: 'ল-ফলা', base: 'গ', word: 'গ্লাস', emoji: '🥛' },
+  { sign: '্ন', name: 'ন-ফলা', base: 'স', word: 'স্নান', emoji: '🛁' },
+];
+
+export const conjuncts: Conjunct[] = [
+  { ch: 'ক্ষ', parts: ['ক', 'ষ'], word: 'ক্ষেত', emoji: '🌾' },
+  { ch: 'জ্ঞ', parts: ['জ', 'ঞ'], word: 'জ্ঞান', emoji: '🧠' },
+  { ch: 'ঙ্গ', parts: ['ঙ', 'গ'], word: 'বঙ্গ', emoji: '🇧🇩' },
+  { ch: 'ঙ্ক', parts: ['ঙ', 'ক'], word: 'অঙ্ক', emoji: '🔢' },
+  { ch: 'ন্ত', parts: ['ন', 'ত'], word: 'শান্ত', emoji: '😌' },
+  { ch: 'ন্দ', parts: ['ন', 'দ'], word: 'আনন্দ', emoji: '🎉' },
+  { ch: 'ন্ধ', parts: ['ন', 'ধ'], word: 'বন্ধু', emoji: '🤝' },
+  { ch: 'ন্ন', parts: ['ন', 'ন'], word: 'অন্ন', emoji: '🍚' },
+  { ch: 'স্থ', parts: ['স', 'থ'], word: 'সুস্থ', emoji: '💪' },
+  { ch: 'স্ত', parts: ['স', 'ত'], word: 'হস্ত', emoji: '✋' },
+  { ch: 'ষ্ট', parts: ['ষ', 'ট'], word: 'মিষ্টি', emoji: '🍬' },
+  { ch: 'ষ্ঠ', parts: ['ষ', 'ঠ'], word: 'শ্রেষ্ঠ', emoji: '🏆' },
+  { ch: 'ত্ত', parts: ['ত', 'ত'], word: 'উত্তর', emoji: '🧭' },
+  { ch: 'দ্ধ', parts: ['দ', 'ধ'], word: 'যুদ্ধ', emoji: '⚔️' },
+  { ch: 'দ্ব', parts: ['দ', 'ব'], word: 'দ্বীপ', emoji: '🏝️' },
+  { ch: 'ম্ব', parts: ['ম', 'ব'], word: 'লম্বা', emoji: '🦒' },
+  { ch: 'ম্প', parts: ['ম', 'প'], word: 'কম্পাস', emoji: '🧭' },
+  { ch: 'ল্প', parts: ['ল', 'প'], word: 'গল্প', emoji: '📚' },
+  { ch: 'শ্চ', parts: ['শ', 'চ'], word: 'পশ্চিম', emoji: '🌇' },
+  { ch: 'শ্র', parts: ['শ', 'র'], word: 'শ্রমিক', emoji: '👷' },
+  { ch: 'ত্র', parts: ['ত', 'র'], word: 'ছাত্র', emoji: '🎓' },
+  { ch: 'ক্র', parts: ['ক', 'র'], word: 'ক্রিকেট', emoji: '🏏' },
+  { ch: 'প্র', parts: ['প', 'র'], word: 'প্রজাপতি', emoji: '🦋' },
+  { ch: 'গ্ধ', parts: ['গ', 'ধ'], word: 'দুগ্ধ', emoji: '🥛' },
+  { ch: 'হ্ম', parts: ['হ', 'ম'], word: 'ব্রহ্মপুত্র', emoji: '🏞️' },
+  { ch: 'ঞ্চ', parts: ['ঞ', 'চ'], word: 'পঞ্চ', emoji: '🖐️' },
+  { ch: 'ঞ্জ', parts: ['ঞ', 'জ'], word: 'গঞ্জ', emoji: '🏘️' },
+  { ch: 'ক্ত', parts: ['ক', 'ত'], word: 'রক্ত', emoji: '🩸' },
+  { ch: 'ব্দ', parts: ['ব', 'দ'], word: 'শব্দ', emoji: '🔊' },
+  { ch: 'ন্ম', parts: ['ন', 'ম'], word: 'জন্ম', emoji: '👶' },
+];
+
+export const langCounts = { vowels: vowels.length, consonants: consonants.length, kars: kars.length, folas: folas.length, conjuncts: conjuncts.length };

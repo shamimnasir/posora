@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "posora",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "./dist", "binding": "ASSETS" },
+  "routes": [
+    { "pattern": "posora.com", "custom_domain": true },
+    { "pattern": "www.posora.com", "custom_domain": true }
+  ],
+  // One-time setup before the contact form can send email:
+  //   npx wrangler email sending enable posora.com
+  "send_email": [{ "name": "EMAIL" }],
+  "vars": { "CONTACT_TO": "support@posora.com", "CONTACT_FROM": "no-reply@posora.com" },
+  "observability": { "enabled": true }
+}

@@ -1,0 +1,173 @@
+---
+import Base from '../layouts/Base.astro';
+import HeroOrbit from '../components/HeroOrbit.astro';
+import WorldCard from '../components/WorldCard.astro';
+import { worlds, totals } from '../data/worlds';
+import { bodyById } from '../data/space';
+import { bn } from '../lib/bn';
+const saturn = bodyById('saturn')!;
+---
+<Base title="পসরা" description="শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা - মহাকাশ, বিজ্ঞান, গণিত, ভাষা, প্রকৃতি। প্রতিটি জিনিস ছোঁয়া যায়, ঘোরানো যায়, খেলা যায়।">
+
+  <section class="hero wrap">
+    <div class="copy">
+      <p class="eyebrow" style="--w:var(--brand)">বাংলায় · শিশু ও বড়দের জন্য</p>
+      <h1>শেখা হোক <em>খেলার মতো</em></h1>
+      <p class="lede">{bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস - প্রতিটি ছোঁয়া যায়, ঘোরানো যায়, ভাঙা যায়। পড়ে নয়, নেড়েচেড়ে শেখা।</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="/space/">মহাকাশে যাও →</a>
+        <a class="btn" href="#worlds">সব ভুবন দেখো</a>
+      </div>
+      <p class="hint">পাশের গ্রহগুলো ঘুরছে - যেকোনোটায় ক্লিক করো।</p>
+    </div>
+    <HeroOrbit />
+  </section>
+
+  <section class="stats wrap" id="stats">
+    {[
+      [totals.worlds, 'ভুবন'], [totals.cats, 'বিভাগ'], [totals.items, 'ক্লিকযোগ্য জিনিস'], [3, 'পড়ার গভীরতা'],
+    ].map(([n, l]) => (
+      <div class="stat"><b class="num" data-count={n}>০</b><span class="lbl">{l}</span></div>
+    ))}
+  </section>
+
+  <section class="sec wrap" id="worlds">
+    <div class="sec-h">
+      <h2>{bn(totals.worlds)}টি ভুবন</h2>
+      <p>প্রতিটি ভুবনের প্রতিটি বিভাগে একটা জীবন্ত থ্রিডি মডেল - টেনে ঘোরাও, স্লাইডার বদলাও। মহাকাশে পুরো পাঠ খোলা; বাকিগুলোতে যেটা আগে চাও তাতে তারা দাও।</p>
+    </div>
+    <div class="grid">
+      {worlds.map((w, i) => <WorldCard w={w} i={i} />)}
+    </div>
+  </section>
+
+  <section class="sec wrap how">
+    <div class="sec-h">
+      <h2>প্রতিটি ভুবন একই ভাবে চলে</h2>
+      <p>একবার শিখে নিলে সব ভুবনে হাত চলে।</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <svg viewBox="0 0 120 80" aria-hidden="true"><rect x="4" y="4" width="34" height="72" rx="6"/><rect x="9" y="12" width="24" height="10" rx="3" class="hi"/><rect x="9" y="27" width="24" height="10" rx="3"/><rect x="9" y="42" width="24" height="10" rx="3"/><rect x="44" y="4" width="72" height="72" rx="6"/></svg>
+        <h3>বাঁয়ে বেছে নাও</h3><p>তালিকা থেকে একটা জিনিস - গ্রহ, মৌল, বর্ণ বা প্রাণী।</p>
+      </div>
+      <div class="step">
+        <svg viewBox="0 0 120 80" aria-hidden="true"><rect x="4" y="4" width="112" height="72" rx="6"/><circle cx="60" cy="40" r="22" class="hi"/><ellipse cx="60" cy="40" rx="36" ry="10" transform="rotate(-20 60 40)"/><circle cx="92" cy="26" r="4" class="hi"/></svg>
+        <h3>মাঝে ঘোরাও, টানো</h3><p>টেনে ঘোরাও, স্লাইডার বদলাও, জোড়া দাও - নিজে দেখো কী হয়।</p>
+      </div>
+      <div class="step">
+        <svg viewBox="0 0 120 80" aria-hidden="true"><rect x="4" y="4" width="112" height="72" rx="6"/><rect x="12" y="14" width="60" height="6" rx="3"/><rect x="12" y="26" width="44" height="6" rx="3" class="hi"/><rect x="12" y="38" width="52" height="6" rx="3"/><rect x="12" y="54" width="96" height="14" rx="5" class="hi"/></svg>
+        <h3>ডানে পড়ো, মিশন করো</h3><p>তোমার বয়স অনুযায়ী লেখা, তারপর ছোট চ্যালেঞ্জ - জ্ঞানবিন্দু জমে।</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap depth" style={`--w:${worlds[0].hue}`}>
+    <div class="sec-h">
+      <h2>একই জিনিস, তিন গভীরতা</h2>
+      <p>শিশু আর বড় একই পাতায় আসে - বদলায় শুধু লেখার স্তর। নিজে বদলে দেখো:</p>
+    </div>
+    <div class="demo card" id="depth-demo">
+      <div class="demo-h">
+        <span class="orb" style="width:44px;height:44px;--w:#c9a15e"></span>
+        <div><b>{saturn.bn}</b><span class="lbl">{saturn.tagline}</span></div>
+        <div class="seg" role="tablist" aria-label="পড়ার গভীরতা">
+          <button role="tab" aria-selected="true" data-l="l1">ছোট <small>৫–৮</small></button>
+          <button role="tab" aria-selected="false" data-l="l2">মাঝারি <small>৯–১২</small></button>
+          <button role="tab" aria-selected="false" data-l="l3">বড় <small>১৩+</small></button>
+        </div>
+      </div>
+      <p class="demo-t" data-l1={saturn.l1} data-l2={saturn.l2} data-l3={saturn.l3}>{saturn.l1}</p>
+    </div>
+  </section>
+
+  <section class="sec wrap contact">
+    <div class="card cbox">
+      <div>
+        <h2>প্রশ্ন? পরামর্শ? স্কুলের জন্য চাই?</h2>
+        <p>সরাসরি হোয়াটসঅ্যাপে বলো, বা ইমেইল করো। সাধারণত এক দিনের মধ্যে উত্তর দিই।</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://wa.me/8801771553141" rel="noopener">হোয়াটসঅ্যাপ ০১৭৭১-৫৫৩১৪১</a>
+        <a class="btn" href="/contact/">ফর্মে লেখো</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: 2rem; padding-block: clamp(2rem, 6vw, 4.5rem) 1rem; }
+  .copy { display: flex; flex-direction: column; gap: 1.1rem; }
+  h1 { font-size: clamp(2.4rem, 5.6vw, 4.2rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; }
+  h1 em { font-style: normal; color: var(--brand); position: relative; white-space: nowrap; }
+  h1 em::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0.08em; height: 0.18em; background: var(--sun); opacity: 0.55; border-radius: 4px; z-index: -1; }
+  .lede { font-size: clamp(1.05rem, 1.6vw, 1.25rem); color: var(--ink-2); max-width: 34ch; }
+  .cta { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .hint { font-size: 13px; color: var(--muted); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 1rem; }
+  .stat { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.1rem; }
+  .stat b { font-family: var(--font-display); font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 800; line-height: 1.1; color: var(--brand-ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.9rem; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; }
+  .step { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .step svg { width: 120px; height: 80px; fill: var(--panel-2); stroke: var(--line); stroke-width: 1.5; margin-bottom: 0.5rem; }
+  .step svg .hi { fill: color-mix(in oklab, var(--brand) 28%, var(--panel)); stroke: var(--brand); }
+  .step h3 { font-size: 18px; }
+  .step p { color: var(--muted); font-size: 14.5px; }
+  .demo { padding: 1.25rem 1.5rem 1.5rem; }
+  .demo-h { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .demo-h b { font-family: var(--font-display); font-size: 22px; display: block; line-height: 1.1; }
+  .seg { margin-left: auto; display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px; }
+  .seg button { padding: 0.35rem 0.9rem; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--muted); display: flex; gap: 0.3rem; align-items: baseline; }
+  .seg button small { font-size: 11px; font-weight: 500; }
+  .seg button[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .demo-t { font-size: 17px; max-width: 70ch; min-height: 3.4em; color: var(--ink-2); }
+  .cbox { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.75rem 2rem; background: var(--brand-soft); border-color: transparent; }
+  .cbox h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .cbox p { color: var(--ink-2); max-width: 44ch; }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; text-align: center; }
+    .copy { align-items: center; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: 1fr; }
+    .cbox { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+
+<script>
+  import { bn } from '../lib/bn';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // count-up stats
+  const io = new IntersectionObserver((ents) => {
+    for (const en of ents) {
+      if (!en.isIntersecting) continue;
+      const el = en.target as HTMLElement; const target = +el.dataset.count!; io.unobserve(el);
+      if (reduced) { el.textContent = bn(target); continue; }
+      const t0 = performance.now(), dur = 900;
+      const tick = (now: number) => { const p = Math.min(1, (now - t0) / dur); el.textContent = bn(Math.round(target * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }
+  }, { threshold: 0.5 });
+  document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => io.observe(el));
+
+  // card tilt
+  if (!reduced && matchMedia('(hover: hover)').matches) {
+    document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((card) => {
+      card.addEventListener('pointermove', (e) => {
+        const b = card.getBoundingClientRect(); const x = (e.clientX - b.left) / b.width - 0.5; const y = (e.clientY - b.top) / b.height - 0.5;
+        card.style.setProperty('--ry', `${x * 8}deg`); card.style.setProperty('--rx', `${-y * 8}deg`);
+      });
+      card.addEventListener('pointerleave', () => { card.style.setProperty('--ry', '0deg'); card.style.setProperty('--rx', '0deg'); });
+    });
+  }
+
+  // depth demo
+  const demo = document.getElementById('depth-demo')!;
+  const text = demo.querySelector<HTMLElement>('.demo-t')!;
+  demo.querySelectorAll<HTMLButtonElement>('[data-l]').forEach((b) => b.addEventListener('click', () => {
+    demo.querySelectorAll('[data-l]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    text.textContent = text.dataset[b.dataset.l as 'l1' | 'l2' | 'l3']!;
+    if (!reduced) text.animate([{ opacity: 0.2, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
+  }));
+</script>

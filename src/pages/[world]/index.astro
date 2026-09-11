@@ -1,0 +1,204 @@
+---
+import Base from '../../layouts/Base.astro';
+import { worlds, itemCount } from '../../data/worlds';
+import { bn, pad2 } from '../../lib/bn';
+import { heroFor } from '../../data/heroes';
+
+export function getStaticPaths() {
+  return worlds.filter((w) => !w.open).map((w) => ({ params: { world: w.slug }, props: { w } }));
+}
+const { w } = Astro.props;
+const first = w.cats[0];
+const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i) }));
+---
+<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue}>
+  <div class="wrap page" id="world" data-slug={w.slug}>
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> {w.bn}</p>
+    <div class="xp">
+      <aside class="rail card" aria-label="বিভাগের তালিকা">
+        <div class="card-h"><span class="lbl">বিভাগ</span><span class="lbl num">{bn(w.cats.length)}টি</span></div>
+        <div class="rail-list" role="tablist">
+          {w.cats.map((c, i) => (
+            <button role="tab" type="button" data-i={i} aria-selected={i === 0 ? 'true' : 'false'}>
+              <span class="no">{pad2(i + 1)}</span>
+              <span class="rt"><span class="nm">{c.n}</span><span class="tg">{bn(c.items.length)} আইটেম</span></span>
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <section class="stage card" aria-live="polite">
+        <header class="stage-h">
+          <div>
+            <p class="eyebrow">ভুবন · {w.en}</p>
+            <h1>{w.bn}</h1>
+            <p class="tag">{w.tag}</p>
+          </div>
+          <span class="pill soon">{w.phase}-এ খুলছে</span>
+        </header>
+        <div class="scene">
+          <div class="hero3d" id="hero-host" role="img" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
+            <canvas></canvas>
+            <p class="hint" id="hero-hint">টেনে ঘোরাও</p>
+          </div>
+          <label class="ctl"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-label="মডেল নিয়ন্ত্রণ" /></label>
+          <div class="scene-t">
+            <p class="lbl">বিভাগ <span id="c-no">০১</span></p>
+            <h2 id="c-name">{first.n}</h2>
+            <p class="play" id="c-play"><b>পর্দায়</b>{first.play}</p>
+          </div>
+        </div>
+        <div class="items" id="c-items">
+          <p class="items-h"><span class="lbl">এই বিভাগে যা থাকবে</span><span class="lbl">আগে চাও? তারা দাও ★</span></p>
+          <div class="chips" id="chips">
+            {first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
+          </div>
+        </div>
+      </section>
+
+      <aside class="info">
+        <section class="card">
+          <div class="card-h"><span class="lbl">ভুবন পরিচিতি</span></div>
+          <div class="spec">
+            <div class="row"><span class="k">বয়স উপযোগিতা</span><span class="v">{w.age}</span></div>
+            <div class="row"><span class="k">বিভাগ</span><span class="v">{bn(w.cats.length)}</span></div>
+            <div class="row"><span class="k">শেখার আইটেম</span><span class="v">{bn(itemCount(w))}+</span></div>
+            <div class="row"><span class="k">পূর্বশর্ত</span><span class="v">{w.dep}</span></div>
+            <div class="row"><span class="k">নির্মাণ ফেজ</span><span class="v">{w.phase}</span></div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-h"><span class="lbl">এই ভুবনে যা যা করা যাবে</span></div>
+          <div class="keys">{w.keys.map((k) => <span class="pill pill-w">{k}</span>)}</div>
+          <p class="intro">{w.intro}</p>
+        </section>
+        <section class="card">
+          <div class="card-h"><span class="lbl">মিশন</span></div>
+          <div class="miss">
+            {w.missions.map((m, i) => <div class="m"><span class="mb">{pad2(i + 1)}</span><div><b>{m.n}</b><p>{m.d}</p></div></div>)}
+          </div>
+        </section>
+        <a class="card cta" href="/space/">
+          <span class="lbl">এখনই খেলতে চাও?</span>
+          <b>মহাকাশ ভুবন খোলা আছে →</b>
+        </a>
+      </aside>
+    </div>
+    <script is:inline type="application/json" id="world-data" set:html={JSON.stringify(payload)}></script>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 2rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .xp { display: grid; grid-template-columns: 250px minmax(0, 1fr) 292px; gap: 0.85rem; align-items: start; }
+  .xp > * { min-width: 0; }
+  .rail { overflow: hidden; }
+  .card-h { padding: 0.7rem 0.95rem; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; }
+  .rail-list { padding: 6px; display: flex; flex-direction: column; gap: 2px; max-height: 620px; overflow-y: auto; }
+  .rail-list button { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; padding: 8px 10px; border-radius: 11px; border-left: 3px solid transparent; transition: background 0.15s ease; }
+  .rail-list button:hover { background: var(--panel-2); }
+  .rail-list button[aria-selected="true"] { background: color-mix(in oklab, var(--w) 12%, var(--panel)); border-left-color: var(--w); }
+  .no { font-family: var(--font-mono); font-size: 10px; color: var(--w); width: 20px; }
+  .rt { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+  .nm { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
+  .tg { font-size: 11.5px; color: var(--muted); }
+  .stage { display: flex; flex-direction: column; min-height: 620px; overflow: hidden; }
+  .stage-h { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem 0; flex-wrap: wrap; align-items: flex-start; }
+  .stage-h h1 { font-size: clamp(1.7rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+  .tag { color: var(--muted); font-size: 14px; }
+  .soon { background: color-mix(in oklab, var(--sun) 22%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 50%, var(--line)); font-weight: 600; }
+  .scene { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); grid-template-rows: auto auto; gap: 0.6rem 1.5rem; align-items: center; padding: 1rem 1.4rem 1.25rem; }
+  .hero3d { position: relative; grid-row: 1; aspect-ratio: 4 / 3; max-height: 480px; width: 100%; border-radius: 14px; background: radial-gradient(ellipse at 50% 70%, color-mix(in oklab, var(--w) 12%, var(--panel-2)) 0%, var(--panel-2) 60%, transparent 85%); cursor: grab; touch-action: none; overflow: hidden; }
+  .hero3d.dragging { cursor: grabbing; }
+  .hero3d canvas { width: 100%; height: 100%; }
+  .hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--muted); background: var(--panel); padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line-soft); pointer-events: none; transition: opacity 0.4s ease; }
+  .ctl { grid-row: 2; grid-column: 1; display: flex; align-items: center; gap: 0.75rem; }
+  .ctl .lbl { white-space: nowrap; min-width: 6ch; color: var(--w); }
+  .ctl input { flex: 1; accent-color: var(--w); height: 4px; cursor: pointer; }
+  .scene-t { grid-row: 1 / 3; grid-column: 2; }
+  .scene-t h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); margin: 0.2rem 0 0.6rem; }
+  .play { font-size: 14.5px; color: var(--ink-2); padding-left: 0.85rem; border-left: 2px solid color-mix(in oklab, var(--w) 50%, var(--line)); }
+  .play b { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--w); }
+  .items { border-top: 1px solid var(--line-soft); padding: 1rem 1.4rem 1.25rem; }
+  .items-h { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.7rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 13.5px; padding: 5px 12px 5px 9px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
+  .chip:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel)); border-color: color-mix(in oklab, var(--w) 34%, var(--line)); transform: translateY(-1px); }
+  .chip .star { color: var(--line); font-size: 12px; transition: color 0.15s ease, transform 0.2s ease; }
+  .chip[aria-pressed="true"] { border-color: color-mix(in oklab, var(--sun) 60%, var(--line)); background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: var(--ink); }
+  .chip[aria-pressed="true"] .star { color: var(--sun); transform: scale(1.25) rotate(-12deg); }
+  .info { display: flex; flex-direction: column; gap: 0.85rem; }
+  .spec { padding: 0.3rem 0.95rem 0.5rem; }
+  .row { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
+  .row:last-child { border-bottom: 0; }
+  .k { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); }
+  .v { font-size: 13px; font-weight: 700; text-align: right; }
+  .keys { display: flex; flex-wrap: wrap; gap: 6px; padding: 0.8rem 0.95rem 0; }
+  .intro { padding: 0.7rem 0.95rem 0.95rem; font-size: 13.5px; color: var(--ink-2); }
+  .miss { padding: 0.3rem 0.95rem 0.7rem; }
+  .m { display: flex; gap: 0.7rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line-soft); }
+  .m:last-child { border-bottom: 0; }
+  .mb { width: 26px; height: 26px; border-radius: 8px; flex: none; display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; background: color-mix(in oklab, var(--w) 18%, var(--panel)); color: var(--w); border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); }
+  .m b { font-size: 14px; display: block; }
+  .m p { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .cta { padding: 0.9rem 0.95rem; display: flex; flex-direction: column; gap: 0.15rem; background: var(--brand-soft); border-color: transparent; transition: transform 0.15s ease; }
+  .cta:hover { transform: translateY(-2px); }
+  .cta b { font-family: var(--font-display); color: var(--brand-ink); font-size: 16px; }
+  @media (max-width: 1080px) {
+    .xp { grid-template-columns: 1fr; }
+    .rail-list { flex-direction: row; overflow-x: auto; max-height: none; }
+    .rail-list button { width: auto; flex: none; border-left: 0; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; }
+    .rail-list button[aria-selected="true"] { border-bottom-color: var(--w); }
+    .rail-list .tg { display: none; }
+    .stage { min-height: 0; }
+  }
+  @media (max-width: 760px) { .scene { grid-template-columns: 1fr; } .scene-t { grid-row: 3; grid-column: 1; } .hero3d { max-height: none; } }
+</style>
+
+<script>
+  import { toggleStar, isStarred } from '../../lib/progress';
+  import { pad2 } from '../../lib/bn';
+  import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
+  type Cat = { n: string; items: string[]; play: string; hero: HeroSpec };
+  const root = document.getElementById('world')!;
+  const slug = root.dataset.slug!;
+  const cats: Cat[] = JSON.parse(document.getElementById('world-data')!.textContent!);
+  const rail = [...root.querySelectorAll<HTMLButtonElement>('.rail-list [data-i]')];
+  const chips = document.getElementById('chips')!;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const host = document.getElementById('hero-host')!, ctl = document.getElementById('ctl') as HTMLInputElement, ctlLabel = document.getElementById('ctl-label')!;
+  let hero: HeroHandle | null = null, curCat = 0;
+  const applyHero = (spec: HeroSpec) => { if (!hero) return; ctlLabel.textContent = hero.set(spec); ctl.value = String(Math.round((spec.p ?? 0.5) * 100)); };
+  import('../../components/explorer/heroes').then(({ mountHero }) => {
+    hero = mountHero(host, cats[0].hero); ctlLabel.textContent = hero.set(cats[curCat].hero); ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
+    host.addEventListener('pointerdown', () => { document.getElementById('hero-hint')!.style.opacity = '0'; }, { once: true });
+  });
+  ctl.addEventListener('input', () => hero?.setParam(+ctl.value / 100));
+
+  function renderChips(c: Cat) {
+    chips.replaceChildren(...c.items.map((it) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.key = `${slug}:${c.n}:${it}`;
+      b.innerHTML = `<span class="star" aria-hidden="true">★</span>`; b.append(it);
+      b.setAttribute('aria-pressed', String(isStarred(b.dataset.key)));
+      return b;
+    }));
+  }
+  function show(i: number) {
+    const c = cats[i]; curCat = i; applyHero(c.hero);
+    rail.forEach((b) => b.setAttribute('aria-selected', String(+b.dataset.i! === i)));
+    document.getElementById('c-no')!.textContent = pad2(i + 1);
+    document.getElementById('c-name')!.textContent = c.n;
+    document.getElementById('c-play')!.innerHTML = `<b>পর্দায়</b>${c.play}`;
+    renderChips(c);
+    if (!reduced) root.querySelector('.scene-t')!.animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
+  }
+  rail.forEach((b) => b.addEventListener('click', () => show(+b.dataset.i!)));
+  chips.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return;
+    const on = toggleStar(b.dataset.key!); b.setAttribute('aria-pressed', String(on));
+    if (on && !reduced) b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 });
+  });
+  renderChips(cats[0]);
+</script>

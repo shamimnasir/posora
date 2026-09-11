@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import SpaceExplorer from '../../components/explorer/SpaceExplorer.astro';
+import { bodies, bodyById, DEFAULT_BODY } from '../../data/space';
+import { worldBySlug } from '../../data/worlds';
+
+export function getStaticPaths() {
+  return [{ params: { item: undefined } }, ...bodies.map((b) => ({ params: { item: b.id } }))];
+}
+const world = worldBySlug('space')!;
+const cur = bodyById(Astro.params.item ?? DEFAULT_BODY)!;
+const title = Astro.params.item ? `${cur.bn} · মহাকাশ` : 'মহাকাশ';
+const description = `${cur.bn} (${cur.en}) - ${cur.tagline}। ${cur.l1}`;
+---
+<Base title={title} description={description} hue={world.hue} bare>
+  <div class="wrap page">
+    <SpaceExplorer current={cur} />
+    <p class="back"><a href="/#worlds">← সব ভুবন</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ?</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3.5rem; }
+  .back { margin-top: 1.5rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+</style>

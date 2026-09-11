@@ -1,0 +1,120 @@
+---
+import { worlds } from '../data/worlds';
+const data = worlds.map((w) => ({ slug: w.slug, bn: w.bn, hue: w.hue, open: w.open }));
+---
+<div class="orbit" id="hero-orbit" data-worlds={JSON.stringify(data)}>
+  <canvas aria-hidden="true"></canvas>
+  <ul class="sr-only">
+    {worlds.map((w) => <li><a href={`/${w.slug}/`}>{w.bn}</a></li>)}
+  </ul>
+</div>
+
+<style>
+  .orbit { position: relative; aspect-ratio: 1; width: min(100%, 560px); margin-inline: auto; touch-action: manipulation; }
+  canvas { width: 100%; height: 100%; }
+</style>
+
+<script>
+  type W = { slug: string; bn: string; hue: string; open: boolean };
+  const host = document.getElementById('hero-orbit')!;
+  const canvas = host.querySelector('canvas')!;
+  const ctx = canvas.getContext('2d')!;
+  const worlds: W[] = JSON.parse(host.dataset.worlds!);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dark = () => matchMedia('(prefers-color-scheme: dark)').matches;
+  // Astro hashes self-hosted family names - read the resolved stacks instead of hard-coding them.
+  const bodyFont = getComputedStyle(document.body).fontFamily;
+
+  // Three rings, 3 / 4 / 4 worlds, inner ring spins fastest.
+  const rings = [
+    { r: 0.34, speed: 0.10, n: 3 },
+    { r: 0.64, speed: 0.065, n: 4 },
+    { r: 0.94, speed: 0.045, n: 4 },
+  ];
+  type Orb = W & { ring: number; a0: number; r: number; x: number; y: number; hover: number };
+  const orbs: Orb[] = [];
+  let k = 0;
+  rings.forEach((ring, ri) => {
+    for (let i = 0; i < ring.n; i++, k++) {
+      const w = worlds[k];
+      orbs.push({ ...w, ring: ri, a0: (i / ring.n) * Math.PI * 2 + ri * 0.7, r: w.open ? 24 : 18, x: 0, y: 0, hover: 0 });
+    }
+  });
+
+  let size = 0, dpr = 1, t0 = performance.now(), hovered: Orb | null = null;
+  let px = -1e4, py = -1e4, visible = true, raf = 0, fontReady = false;
+
+  function resize() {
+    const rect = host.getBoundingClientRect();
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    size = Math.round(rect.width);
+    canvas.width = size * dpr; canvas.height = size * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(performance.now());
+  }
+
+  function draw(now: number) {
+    const t = reduced ? 0 : (now - t0) / 1000;
+    const c = size / 2, R = size / 2 - 58, k = size < 430 ? 0.78 : 1; // tighter on phones
+    const isDark = dark();
+    ctx.clearRect(0, 0, size, size);
+
+    // orbit rings
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = isDark ? 'rgba(150,170,190,.22)' : 'rgba(40,60,80,.16)';
+    rings.forEach((ring) => { ctx.beginPath(); ctx.arc(c, c, ring.r * R, 0, Math.PI * 2); ctx.stroke(); });
+
+    // centre sun
+    const g = ctx.createRadialGradient(c, c, 0, c, c, 70);
+    g.addColorStop(0, 'rgba(240,180,41,.55)'); g.addColorStop(0.35, 'rgba(240,180,41,.18)'); g.addColorStop(1, 'rgba(240,180,41,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, 70, 0, Math.PI * 2); ctx.fill();
+    const sg = ctx.createRadialGradient(c - 6, c - 8, 2, c, c, 26);
+    sg.addColorStop(0, '#fff3c4'); sg.addColorStop(0.5, '#f0b429'); sg.addColorStop(1, '#d98b12');
+    ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(c, c, 24 * k + Math.sin(t * 1.4) * 1.2, 0, Math.PI * 2); ctx.fill();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    // orbs
+    let nearest: Orb | null = null, nd = 1e9;
+    for (const o of orbs) {
+      const ring = rings[o.ring];
+      const a = o.a0 + t * ring.speed;
+      o.x = c + Math.cos(a) * ring.r * R;
+      o.y = c + Math.sin(a) * ring.r * R * 0.92; // slight tilt
+      const d = Math.hypot(px - o.x, py - o.y);
+      if (d < o.r + 14 && d < nd) { nd = d; nearest = o; }
+    }
+    hovered = nearest;
+    canvas.style.cursor = hovered ? 'pointer' : 'default';
+
+    // draw back-to-front by y for a hint of depth
+    for (const o of [...orbs].sort((a, b) => a.y - b.y)) {
+      o.hover += ((o === hovered ? 1 : 0) - o.hover) * (reduced ? 1 : 0.18);
+      const r = o.r * k * (1 + o.hover * 0.28);
+      if (o.open) { // halo for the open world
+        ctx.strokeStyle = o.hue; ctx.globalAlpha = 0.35 + 0.25 * Math.sin(t * 2.2); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(o.x, o.y, r + 7, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+      }
+      const og = ctx.createRadialGradient(o.x - r * 0.35, o.y - r * 0.4, r * 0.1, o.x, o.y, r);
+      og.addColorStop(0, '#ffffff'); og.addColorStop(0.18, o.hue + 'e6'); og.addColorStop(0.75, o.hue); og.addColorStop(1, '#00000055');
+      ctx.fillStyle = og; ctx.beginPath(); ctx.arc(o.x, o.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = isDark ? '#e6edf4' : '#111820';
+      ctx.font = `${o.hover > 0.5 ? 700 : 500} ${k < 1 ? 11 : 12.5}px ${bodyFont}`;
+      ctx.fillText(o.bn, o.x, o.y + r + 13);
+    }
+  }
+
+  function loop(now: number) {
+    if (!visible || document.hidden) { raf = 0; return; }
+    draw(now); raf = requestAnimationFrame(loop);
+  }
+  const start = () => { if (!raf && !reduced) raf = requestAnimationFrame(loop); };
+
+  host.addEventListener('pointermove', (e) => { const b = canvas.getBoundingClientRect(); px = e.clientX - b.left; py = e.clientY - b.top; if (reduced) draw(performance.now()); });
+  host.addEventListener('pointerleave', () => { px = py = -1e4; if (reduced) draw(performance.now()); });
+  host.addEventListener('click', (e) => { const b = canvas.getBoundingClientRect(); px = e.clientX - b.left; py = e.clientY - b.top; draw(performance.now()); if (hovered) location.href = `/${hovered.slug}/`; });
+  new ResizeObserver(resize).observe(host);
+  new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) start(); }).observe(host);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
+  document.fonts.load(`500 12px ${bodyFont}`).then(() => { fontReady = true; resize(); start(); });
+  resize(); start();
+</script>

@@ -1,0 +1,37 @@
+---
+import type { World } from '../data/worlds';
+import { itemCount } from '../data/worlds';
+import { bn, pad2 } from '../lib/bn';
+interface Props { w: World; i: number }
+const { w, i } = Astro.props;
+---
+<a class="wcard" href={`/${w.slug}/`} style={`--w:${w.hue}`} data-tilt>
+  <span class="orb" style="width:52px;height:52px"></span>
+  <span class="no lbl">{pad2(i + 1)}</span>
+  <span class="name">{w.bn}</span>
+  <span class="tag">{w.tag}</span>
+  <span class="meta">
+    <span class="pill pill-w">{bn(w.cats.length)} বিভাগ · {bn(itemCount(w))} আইটেম</span>
+    {w.open ? <span class="pill open">পুরো পাঠ খোলা</span> : <span class="pill open">থ্রিডি খোলা · {w.phase}</span>}
+  </span>
+</a>
+
+<style>
+  .wcard {
+    --rx: 0deg; --ry: 0deg;
+    position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 1rem; row-gap: 0.15rem;
+    padding: 1.1rem 1.15rem 1.15rem; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--shadow-sm);
+    transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)); transition: transform 0.12s ease-out, box-shadow 0.2s ease, border-color 0.2s ease;
+    will-change: transform;
+  }
+  .wcard:hover { box-shadow: var(--shadow-lg); border-color: color-mix(in oklab, var(--w) 45%, var(--line)); }
+  .orb { grid-row: 1 / 4; align-self: start; transition: transform 0.25s ease; }
+  .wcard:hover .orb { transform: scale(1.08) rotate(-6deg); }
+  .no { position: absolute; top: 0.9rem; right: 1rem; }
+  .name { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.25; }
+  .tag { color: var(--muted); font-size: 13.5px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.55rem; }
+  .pill { font-size: 12px; }
+  .open { background: var(--brand-soft); color: var(--brand-ink); border-color: transparent; font-weight: 600; }
+  .soon { color: var(--muted); }
+</style>

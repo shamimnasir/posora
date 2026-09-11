@@ -1,0 +1,83 @@
+---
+import Base from '../layouts/Base.astro';
+const wa = 'https://wa.me/8801771553141';
+---
+<Base title="যোগাযোগ" description="পসরা নিয়ে প্রশ্ন, পরামর্শ বা স্কুলের জন্য যোগাযোগ - হোয়াটসঅ্যাপ ০১৭৭১-৫৫৩১৪১ বা support@posora.com">
+  <div class="wrap page">
+    <div class="cols">
+      <div class="intro">
+        <p class="eyebrow" style="--w:var(--brand)">যোগাযোগ</p>
+        <h1>বলো, শুনছি।</h1>
+        <p class="lede">প্রশ্ন, পরামর্শ, ভুল ধরা, বা স্কুল-কোচিংয়ের জন্য চাই - যেভাবে সুবিধা সেভাবেই লেখো। সাধারণত এক দিনের মধ্যে উত্তর দিই।</p>
+        <div class="ways">
+          <a class="way" href={wa} target="_blank" rel="noopener">
+            <span class="ic wa" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="22" height="22"><path fill="currentColor" d="M16 3C8.8 3 3 8.8 3 16c0 2.4.6 4.6 1.8 6.6L3 29l6.6-1.7C11.5 28.4 13.7 29 16 29c7.2 0 13-5.8 13-13S23.2 3 16 3zm0 23.6c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.5 10.5 0 0 1 5.4 16C5.4 10.2 10.2 5.4 16 5.4S26.6 10.2 26.6 16 21.8 26.6 16 26.6zm5.8-7.9c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.6-.9-.8-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.2 1.3 3.4c.2.2 2.3 3.5 5.6 4.9.8.3 1.4.5 1.9.7.8.3 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg>
+            </span>
+            <span><b>হোয়াটসঅ্যাপ</b><span class="num">০১৭৭১-৫৫৩১৪১</span></span>
+          </a>
+          <a class="way" href="mailto:support@posora.com">
+            <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3 8 9 6 9-6"/></svg></span>
+            <span><b>ইমেইল</b><span>support@posora.com</span></span>
+          </a>
+        </div>
+      </div>
+
+      <form class="card form" id="cform" novalidate>
+        <label>তোমার নাম <input name="name" required minlength="2" maxlength="80" autocomplete="name" /></label>
+        <label>ইমেইল বা ফোন <input name="contact" required minlength="5" maxlength="120" autocomplete="email" inputmode="email" /></label>
+        <label>কী বলতে চাও <textarea name="message" required minlength="5" maxlength="2000" rows="6"></textarea></label>
+        <label class="hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off" /></label>
+        <button class="btn btn-primary" type="submit">পাঠাও</button>
+        <p class="msg" id="fmsg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: clamp(2rem, 5vw, 4rem) 3rem; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; margin: 0.3rem 0 0.8rem; }
+  .lede { color: var(--ink-2); font-size: 1.1rem; max-width: 40ch; margin-bottom: 1.5rem; }
+  .ways { display: flex; flex-direction: column; gap: 0.6rem; }
+  .way { display: flex; align-items: center; gap: 0.9rem; padding: 0.85rem 1rem; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .way:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .way > span:last-child { display: flex; flex-direction: column; line-height: 1.3; }
+  .way b { font-family: var(--font-display); font-size: 17px; }
+  .way > span:last-child span { color: var(--muted); font-size: 14px; }
+  .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-ink); flex: none; }
+  .ic.wa { background: #25d366; color: #062b14; }
+  .form { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  label { display: flex; flex-direction: column; gap: 0.35rem; font-weight: 600; font-size: 14px; }
+  input, textarea { font: inherit; font-size: 15px; padding: 0.6rem 0.8rem; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
+  .hp { position: absolute; left: -9999px; }
+  .msg { font-size: 14px; color: var(--muted); min-height: 1.5em; }
+  .msg.ok { color: var(--ok); font-weight: 600; }
+  .msg.err { color: var(--danger); }
+  .msg a { text-decoration: underline; }
+  @media (max-width: 800px) { .cols { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  const form = document.getElementById('cform') as HTMLFormElement;
+  const msg = document.getElementById('fmsg')!;
+  const btn = form.querySelector('button')!;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const fd = Object.fromEntries(new FormData(form)) as Record<string, string>;
+    btn.disabled = true; msg.className = 'msg'; msg.textContent = 'পাঠানো হচ্ছে…';
+    try {
+      const r = await fetch('/api/contact', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(fd) });
+      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (r.ok && j.ok) { msg.className = 'msg ok'; msg.textContent = 'পৌঁছে গেছে! শিগগিরই উত্তর দিচ্ছি।'; form.reset(); }
+      else throw new Error(j.error ?? String(r.status));
+    } catch {
+      const text = encodeURIComponent(`নাম: ${fd.name}\nযোগাযোগ: ${fd.contact}\n\n${fd.message}`);
+      msg.className = 'msg err';
+      msg.innerHTML = `এখন পাঠানো গেল না। <a href="https://wa.me/8801771553141?text=${text}" target="_blank" rel="noopener">হোয়াটসঅ্যাপে পাঠাও</a> বা <a href="mailto:support@posora.com?subject=${encodeURIComponent('পসরা')}&body=${text}">ইমেইল করো</a> - লেখাটা সঙ্গে যাবে।`;
+    } finally { btn.disabled = false; }
+  });
+</script>

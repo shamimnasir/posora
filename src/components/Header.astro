@@ -1,0 +1,59 @@
+---
+const path = Astro.url.pathname;
+const nav = [
+  { href: '/#worlds', label: 'ভুবন' },
+  { href: '/space/', label: 'মহাকাশ', active: path.startsWith('/space') },
+  { href: '/contact/', label: 'যোগাযোগ', active: path.startsWith('/contact') },
+];
+---
+<header class="hdr">
+  <div class="wrap row">
+    <a href="/" class="brand" aria-label="পসরা - হোম">
+      <span class="glyph" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="34" height="34"><rect width="64" height="64" rx="16" fill="var(--brand)"/><circle cx="32" cy="32" r="13" fill="var(--on-brand)"/><ellipse cx="32" cy="32" rx="26" ry="8" fill="none" stroke="var(--on-brand)" stroke-width="3" transform="rotate(-22 32 32)"/><circle cx="52" cy="24" r="4" fill="var(--sun)"/></svg>
+      </span>
+      <span class="word">পসরা<small>জ্ঞানের পসরা</small></span>
+    </a>
+    <nav aria-label="প্রধান">
+      {nav.map((n) => <a href={n.href} aria-current={n.active ? 'page' : undefined}>{n.label}</a>)}
+    </nav>
+    <div class="xp" id="xp-pill" hidden aria-live="polite">
+      <span class="lbl">জ্ঞানবিন্দু</span>
+      <b class="num" id="xp-val">০</b>
+    </div>
+  </div>
+</header>
+
+<style>
+  .hdr { position: sticky; top: 0; z-index: 20; background: color-mix(in oklab, var(--paper) 82%, transparent); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--line-soft); }
+  .row { display: flex; align-items: center; gap: 1.5rem; height: 62px; }
+  .brand { display: flex; align-items: center; gap: 0.6rem; }
+  .word { font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1; display: flex; flex-direction: column; gap: 2px; }
+  .word small { font-family: var(--font-body); font-weight: 500; font-size: 10.5px; color: var(--muted); letter-spacing: 0.04em; }
+  nav { display: flex; gap: 0.25rem; margin-left: auto; }
+  nav a { padding: 0.4rem 0.8rem; border-radius: 999px; font-weight: 600; font-size: 15px; color: var(--ink-2); transition: background 0.15s ease, color 0.15s ease; }
+  nav a:hover { background: var(--panel-2); color: var(--ink); }
+  nav a[aria-current="page"] { background: var(--brand-soft); color: var(--brand-ink); }
+  .xp { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.3rem 0.85rem; border-radius: 999px; background: var(--panel); border: 1px solid var(--line-soft); }
+  .xp[hidden] { display: none; }
+  .xp b { font-family: var(--font-display); font-size: 17px; color: var(--brand-ink); }
+  @media (max-width: 640px) {
+    .word small { display: none; }
+    nav a { padding: 0.35rem 0.6rem; font-size: 14px; }
+    .xp .lbl { display: none; }
+    .row { gap: 0.75rem; }
+  }
+</style>
+
+<script>
+  import { getProgress } from '../lib/progress';
+  import { bn } from '../lib/bn';
+  const pill = document.getElementById('xp-pill')!;
+  const val = document.getElementById('xp-val')!;
+  const render = (xp: number) => { val.textContent = bn(xp); pill.hidden = xp === 0; };
+  render(getProgress().xp);
+  window.addEventListener('posora:progress', (e) => {
+    render((e as CustomEvent).detail.xp);
+    pill.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], { duration: 320, easing: 'ease-out' });
+  });
+</script>

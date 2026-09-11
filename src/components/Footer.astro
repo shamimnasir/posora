@@ -1,0 +1,38 @@
+---
+import { totals } from '../data/worlds';
+import { bn } from '../lib/bn';
+---
+<footer class="ftr">
+  <div class="wrap grid">
+    <div>
+      <p class="brand">পসরা</p>
+      <p class="muted">শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। {bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস - প্রতিটি ছোঁয়া যায়।</p>
+    </div>
+    <div>
+      <p class="lbl">যোগাযোগ</p>
+      <a href="mailto:support@posora.com">support@posora.com</a>
+      <a href="https://wa.me/8801771553141" rel="noopener">হোয়াটসঅ্যাপ: ০১৭৭১-৫৫৩১৪১</a>
+    </div>
+    <div>
+      <p class="lbl">ভুবন</p>
+      <a href="/space/">মহাকাশ - এখন খোলা</a>
+      <a href="/#worlds">বাকি ভুবনগুলো শীঘ্রই</a>
+    </div>
+  </div>
+  <div class="wrap fine">
+    <span>© {bn(new Date().getFullYear())} পসরা · posora.com</span>
+    <span>কোনো ব্যক্তিগত তথ্য সংগ্রহ করা হয় না - অগ্রগতি শুধু তোমার ডিভাইসে থাকে।</span>
+  </div>
+</footer>
+
+<style>
+  .ftr { border-top: 1px solid var(--line-soft); background: var(--paper-2); margin-top: 3rem; padding: 3rem 0 2rem; }
+  .grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 2rem; }
+  .grid > div { display: flex; flex-direction: column; gap: 0.4rem; }
+  .brand { font-family: var(--font-display); font-weight: 800; font-size: 24px; }
+  .muted { color: var(--muted); max-width: 42ch; }
+  .grid a { color: var(--ink-2); font-weight: 500; }
+  .grid a:hover { color: var(--brand-ink); }
+  .fine { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--muted); }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+</style>

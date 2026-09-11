@@ -1,0 +1,49 @@
+---
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppFab from '../components/WhatsAppFab.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** World accent colour, applied as --w on <body>. */
+  hue?: string;
+  /** Hide the global footer (explorer pages have their own status bar). */
+  bare?: boolean;
+}
+const { title, description, hue, bare = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হোক খেলার মতো' : `${title} · পসরা`;
+---
+<!doctype html>
+<html lang="bn" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#e9edf2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c1116" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="bn_BD" />
+    <meta property="og:site_name" content="পসরা" />
+    {/* Preload only the Bengali faces the first paint needs; Latin + other weights load on demand. */}
+    <Font cssVariable="--font-body" preload={[{ subset: 'bengali', weight: 400 }]} />
+    <Font cssVariable="--font-display" preload={[{ subset: 'bengali' }]} />
+  </head>
+  <body style={hue ? `--w:${hue}` : undefined}>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    {!bare && <Footer />}
+    <WhatsAppFab />
+  </body>
+</html>
