@@ -2,6 +2,7 @@
 const path = Astro.url.pathname;
 const nav = [
   { href: '/#worlds', label: 'ভুবন' },
+  { href: '/today/', label: 'আজ', active: path.startsWith('/today') },
   { href: '/space/', label: 'মহাকাশ', active: path.startsWith('/space') },
   { href: '/printables/', label: 'ছাপার প্যাক', active: path.startsWith('/printables') },
   { href: '/family/', label: 'পরিবার', active: path.startsWith('/family') },

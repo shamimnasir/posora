@@ -22,8 +22,22 @@ export type Progress = {
   days: string[];
   /** Best result per mission, "world:index" to 1..3 stars. */
   missions: Record<string, number>;
+  /**
+   * Streak freezes in hand. Earned at a milestone, spent automatically on a
+   * missed day, never bought. The moment one of these can be purchased the
+   * site is selling a child anxiety, so there is deliberately no code path
+   * that adds to this except `grantFreeze`, called from a milestone.
+   */
+  freezes: number;
+  /** Streak milestones already celebrated, so day 7 is a moment exactly once. */
+  marks: number[];
+  /** Today's goal counters. `d` is the date they belong to; a new date resets. */
+  today: { d: string; items: number; done: string[] };
 };
-const EMPTY: Progress = { xp: 0, seen: {}, stars: [], awards: [], best: {}, days: [], missions: {} };
+const EMPTY: Progress = {
+  xp: 0, seen: {}, stars: [], awards: [], best: {}, days: [], missions: {},
+  freezes: 0, marks: [], today: { d: '', items: 0, done: [] },
+};
 const XP_PER_ITEM = 10;
 
 function read(): Progress {
@@ -31,7 +45,12 @@ function read(): Progress {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(EMPTY);
     const p = JSON.parse(raw) as Partial<Progress>;
-    return { xp: p.xp ?? 0, seen: p.seen ?? {}, stars: p.stars ?? [], awards: p.awards ?? [], best: p.best ?? {}, days: p.days ?? [], missions: p.missions ?? {} };
+    return {
+      xp: p.xp ?? 0, seen: p.seen ?? {}, stars: p.stars ?? [], awards: p.awards ?? [],
+      best: p.best ?? {}, days: p.days ?? [], missions: p.missions ?? {},
+      freezes: p.freezes ?? 0, marks: p.marks ?? [],
+      today: p.today ?? { d: '', items: 0, done: [] },
+    };
   } catch {
     return structuredClone(EMPTY);
   }
@@ -43,6 +62,11 @@ function write(p: Progress) {
 
 export const getProgress = read;
 
+/** Move `today` on to the given date, zeroing it if it belonged to another day. */
+function rollToday(p: Progress, today: string): void {
+  if (p.today.d !== today) p.today = { d: today, items: 0, done: [] };
+}
+
 /** Mark an item as discovered. Returns true the first time. */
 export function markSeen(world: string, id: string): boolean {
   const p = read();
@@ -50,6 +74,8 @@ export function markSeen(world: string, id: string): boolean {
   if (list.includes(id)) return false;
   list.push(id);
   p.xp += XP_PER_ITEM;
+  rollToday(p, dayKey(new Date()));
+  p.today.items++;
   write(p);
   return true;
 }
@@ -105,20 +131,119 @@ export function setMission(key: string, stars: number): boolean {
 }
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-/**
- * Note today's visit and return the run of consecutive days ending today.
- * A day is counted where the learner is, from the device clock; nothing is sent.
- */
-export function touchDay(): number {
-  const p = read();
-  const today = dayKey(new Date());
-  if (p.days[p.days.length - 1] !== today) { p.days.push(today); if (p.days.length > 60) p.days.splice(0, p.days.length - 60); write(p); }
-  let n = 1;
-  for (let i = p.days.length - 1; i > 0; i--) {
-    const a = new Date(p.days[i]!), b = new Date(p.days[i - 1]!);
-    if (Math.round((a.getTime() - b.getTime()) / 86400000) === 1) n++; else break;
+const dayGap = (from: string, to: string) => Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86400000);
+/** Walk back through the visit list and count the unbroken run ending at the last day. */
+function runLength(days: string[]): number {
+  let n = days.length ? 1 : 0;
+  for (let i = days.length - 1; i > 0; i--) {
+    if (dayGap(days[i - 1]!, days[i]!) === 1) n++; else break;
   }
   return n;
+}
+
+/** Most freezes a learner can hold, and the widest gap they can cover. */
+export const MAX_FREEZES = 2;
+
+export type DayResult = {
+  /** The run of consecutive days ending today, after any freeze was spent. */
+  streak: number;
+  /** Days since the previous visit; 0 when this is a repeat visit the same day. */
+  gap: number;
+  /** True the very first time this browser ever opened the site. */
+  firstEver: boolean;
+  /** A streak ended. `brokeAt` is how long it had been. */
+  broke: boolean;
+  brokeAt: number;
+  /** A freeze was spent to cover the missed days, so the run survived. */
+  froze: boolean;
+};
+
+/**
+ * Note today's visit and report what it did to the streak.
+ *
+ * A day is counted where the learner is, from the device clock; nothing is
+ * sent anywhere. Missing a day normally ends the run, which is the entire
+ * point: a streak with nothing at stake is a number, not a habit. A freeze in
+ * hand is spent automatically to cover the gap, and the missed dates are
+ * written into the list so the run reads as continuous afterwards.
+ */
+export function openDay(): DayResult {
+  const p = read();
+  const today = dayKey(new Date());
+  const last = p.days[p.days.length - 1];
+  const firstEver = p.days.length === 0;
+
+  if (last === today) return { streak: runLength(p.days), gap: 0, firstEver: false, broke: false, brokeAt: 0, froze: false };
+
+  const gap = last ? dayGap(last, today) : 0;
+  const missed = gap > 1 ? gap - 1 : 0;
+  let broke = false, brokeAt = 0, froze = false;
+
+  if (missed > 0) {
+    const had = runLength(p.days);
+    if (missed <= p.freezes) {
+      // Cover every missed date so the run stays whole, and spend the freezes.
+      p.freezes -= missed;
+      for (let i = missed; i >= 1; i--) {
+        const d = new Date(today); d.setDate(d.getDate() - i);
+        p.days.push(dayKey(d));
+      }
+      froze = true;
+    } else {
+      broke = true; brokeAt = had;
+      // The run is over, so the milestones are back on the table.
+      p.marks = [];
+    }
+  }
+
+  p.days.push(today);
+  if (p.days.length > 400) p.days.splice(0, p.days.length - 400);
+  rollToday(p, today);
+  write(p);
+  return { streak: runLength(p.days), gap, firstEver, broke, brokeAt, froze };
+}
+
+/** The dates this browser visited, oldest first. Read-only, for the calendar. */
+export const visitDays = (): string[] => read().days.slice();
+
+/** Freezes in hand. */
+export const freezeCount = (): number => read().freezes;
+
+/** Earn a freeze. Only a streak milestone calls this; nothing can buy one. */
+export function grantFreeze(): number {
+  const p = read();
+  p.freezes = Math.min(MAX_FREEZES, p.freezes + 1);
+  write(p);
+  return p.freezes;
+}
+
+/** Record that a streak milestone has been celebrated. True the first time. */
+export function markMilestone(n: number): boolean {
+  const p = read();
+  if (p.marks.includes(n)) return false;
+  p.marks.push(n);
+  write(p);
+  return true;
+}
+
+/* ---------- today's goal ---------- */
+
+/** Today's counters, rolled forward if the stored ones belong to an older day. */
+export function todayState(): { items: number; done: string[] } {
+  const p = read();
+  const today = dayKey(new Date());
+  if (p.today.d !== today) return { items: 0, done: [] };
+  return { items: p.today.items, done: p.today.done.slice() };
+}
+
+/** Mark one of today's tasks finished. Returns true the first time today. */
+export function finishTask(id: string): boolean {
+  const p = read();
+  rollToday(p, dayKey(new Date()));
+  if (p.today.done.includes(id)) return false;
+  p.today.done.push(id);
+  write(p);
+  return true;
 }
 
 /** Star a not-yet-built item ("আগে এটা চাই"). Toggles; returns new state. */

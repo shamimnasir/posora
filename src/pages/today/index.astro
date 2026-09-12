@@ -1,0 +1,637 @@
+---
+/**
+ * আজকের পসরা - the day.
+ *
+ * Everything on this page is generated from the reading that already exists
+ * and seeded from today's date in Dhaka, so every child in the country opens
+ * the same আজকের জিনিস and the same questions, nobody had to write them, and
+ * tomorrow is genuinely different from today. See src/lib/daily.ts for why
+ * that matters more than any badge.
+ *
+ * The goal is three small things and then it says stop. That is deliberate.
+ */
+import Base from '../../layouts/Base.astro';
+import { getWorlds } from '../../lib/content';
+import { buildCorpus } from '../../lib/corpus';
+import { dhakaDay, dayLabel, dailyItem, dailyPool, oddRounds, MILESTONES, DAILY_QUIZ_LENGTH } from '../../lib/daily';
+import { getMember, hasPlan, activeChild } from '../../lib/members';
+import { bn } from '../../lib/bn';
+
+export const prerender = false;
+// The day rolls over in Dhaka, so the edge may hold a page for an hour but
+// never across midnight there.
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=1800');
+
+const key = dhakaDay();
+const worlds = await getWorlds();
+const { entries, cats } = await buildCorpus(worlds);
+
+const item = dailyItem(entries, key);
+const pool = dailyPool(cats, key);
+const odds = oddRounds(cats, key, 5);
+
+const member = await getMember(Astro);
+const plan = hasPlan(member);
+const child = plan ? activeChild(Astro, member) : null;
+
+const world = item ? worlds.find((w) => w.slug === item.w) : null;
+const bootstrap = { key, w: item?.w ?? '', k: item?.key ?? '', quiz: pool, odd: odds };
+
+const pageUrl = new URL('/today/', Astro.site ?? 'https://posora.com').href;
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
+      { '@type': 'ListItem', position: 2, name: 'আজ', item: pageUrl },
+    ],
+  },
+];
+---
+<Base
+  title="আজ"
+  description={`আজকের পসরা - দিনের একটা জিনিস, পাঁচটা প্রশ্ন আর একটা খেলা। ${item ? `আজ ${item.n}।` : ''} রোজ নতুন, সবার জন্য একই।`}
+  schema={schema}
+>
+  <div class="wrap page" id="today" data-key={key} data-plan={plan ? '1' : '0'} data-child={child?.id}>
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> আজ</p>
+
+    {/* ---------- the goal ---------- */}
+    <section class="card goal" id="goal">
+      <div class="ghead">
+        <div>
+          <p class="eyebrow">আজকের লক্ষ্য</p>
+          <h1>তিনটা কাজ, তারপর ছুটি</h1>
+          <p class="lede">{dayLabel(key)}. তিনটাই হয়ে গেলে আজকের মতো শেষ - কালকে আবার নতুন কিছু থাকবে।</p>
+        </div>
+        <div class="streakbox">
+          <span class="flame" id="flame">🔥</span>
+          <b class="num" id="st-n">১</b>
+          <span class="lbl">দিন টানা</span>
+          <span class="frz" id="frz" hidden><span aria-hidden="true">❄️</span> <b id="frz-n">০</b> বরফ</span>
+        </div>
+      </div>
+
+      <div class="ring-row">
+        <div class="ringwrap">
+          <svg viewBox="0 0 140 140" class="ring" role="img" aria-labelledby="ring-lab">
+            <title id="ring-lab">আজকের অগ্রগতি</title>
+            <g transform="rotate(-90 70 70)">
+              {[0, 1, 2].map((i) => (
+                <>
+                  <circle class="trk" cx="70" cy="70" r="54" stroke-dasharray="103.1 236.2" stroke-dashoffset={-i * 113.1} />
+                  <circle class="fil" data-seg={i} cx="70" cy="70" r="54" stroke-dasharray="0 339.3" stroke-dashoffset={-i * 113.1} />
+                </>
+              ))}
+            </g>
+          </svg>
+          <div class="ringmid"><b id="ring-n">০</b><span>/ ৩</span></div>
+        </div>
+        <ol class="parts" id="parts">
+          {['new', 'quiz', 'play'].map((id) => (
+            <li data-part={id}>
+              <span class="tick" aria-hidden="true">✓</span>
+              <span class="pt"><b class="pl"></b><small class="ph"></small></span>
+              <span class="pn num"></span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <p class="gmsg" id="gmsg" role="status" aria-live="polite"></p>
+    </section>
+
+    <div class="cols">
+      <div class="main">
+        {/* ---------- আজকের জিনিস ---------- */}
+        {item ? (
+          <section class="card thing" style={`--w:${item.hue}`}>
+            <div class="card-h">
+              <span class="lbl">আজকের জিনিস</span>
+              <a class="lbl wlink" href={`/${item.w}/`}>{item.wn} →</a>
+            </div>
+            <div class="th-top">
+              <span class="th-e" aria-hidden="true">{item.emoji ?? '✨'}</span>
+              <div>
+                <h2>{item.n}</h2>
+                <p class="th-c">{item.c}</p>
+              </div>
+            </div>
+            <div class="th-chips">{item.d.chips.map((c) => <span class="pill">{c}</span>)}</div>
+            <p class="th-text">{item.d.l1}</p>
+            <p class="th-fun"><span class="lbl">মজার তথ্য</span>{item.d.fun}</p>
+            <div class="th-go">
+              <a class="btn btn-primary" href={item.w === 'space' ? `/space/${item.key}/` : `/${item.w}/?cat=${item.ci}`}>
+                {item.w === 'space' ? 'মডেল দেখো' : 'ভুবনে গিয়ে দেখো'} →
+              </a>
+              {world && <span class="th-note">{bn(world.cats.length)} বিভাগ, {bn(world.cats.reduce((s, c) => s + c.items.length, 0))} আইটেম</span>}
+            </div>
+          </section>
+        ) : (
+          <section class="card thing">
+            <div class="card-h"><span class="lbl">আজকের জিনিস</span></div>
+            <p class="th-text">আজকের জিনিস বের করা গেল না। <a href="/#worlds">ভুবনগুলো</a> থেকে যেকোনোটা খুলে দেখো।</p>
+          </section>
+        )}
+
+        {/* ---------- আজকের পরখ ---------- */}
+        <section class="card quiz" id="quiz" data-n={DAILY_QUIZ_LENGTH}>
+          <div class="card-h">
+            <span class="lbl">আজকের পরখ</span>
+            <span class="lbl num" id="q-pos">{bn(1)} / {bn(DAILY_QUIZ_LENGTH)}</span>
+          </div>
+          {pool.length >= DAILY_QUIZ_LENGTH ? (
+            <>
+              <p class="qintro" id="q-intro">একটা বিষয়ের ছোট কথাটা দেখানো হবে, নামটা ফাঁকা। কোনটার কথা বলছে, বেছে নাও। যেগুলো তুমি আগে খুলে দেখেছ, সেগুলোই আগে আসবে।</p>
+              <div class="qlist" id="qlist">
+                {pool.map((q, i) => (
+                  <div class="qq" data-qi={i} data-k={q.k} data-a={q.answer} data-w={q.w} data-ci={q.ci} hidden>
+                    <p class="qp">{q.prompt}</p>
+                    <div class="qopts">
+                      {q.options.map((o, j) => <button type="button" class="qo" data-j={j}>{o}</button>)}
+                    </div>
+                    <p class="qwhy" hidden></p>
+                  </div>
+                ))}
+              </div>
+              <div class="qfoot">
+                <button type="button" class="btn btn-primary" id="q-go">শুরু করো</button>
+                <span class="qscore" id="q-score" hidden><b>০</b> ঠিক</span>
+              </div>
+              <div class="qdone" id="q-done" hidden>
+                <p class="qd-h">আজকের পরখ শেষ</p>
+                <p class="qd-s" id="qd-s"></p>
+              </div>
+            </>
+          ) : (
+            <p class="qintro">আজকের প্রশ্ন তৈরি হয়নি। <a href="/#worlds">ভুবন</a> থেকে যেকোনো বিভাগে যাচাই দেওয়া যাবে।</p>
+          )}
+        </section>
+
+        {/* ---------- কোনটা আলাদা ---------- */}
+        <section class="card odd" id="odd">
+          <div class="card-h">
+            <span class="lbl">কোনটা আলাদা</span>
+            <span class="lbl num" id="o-pos">{bn(1)} / {bn(odds.length)}</span>
+          </div>
+          {odds.length ? (
+            <>
+              <p class="qintro">চারটার মধ্যে তিনটা একই দলের, একটা নয়। কোনটা আলাদা?</p>
+              <div id="olist">
+                {odds.map((o, i) => (
+                  <div class="oo" data-oi={i} data-a={o.answer} hidden>
+                    <div class="oopts">
+                      {o.options.map((t, j) => <button type="button" class="oo-b" data-j={j}>{t}</button>)}
+                    </div>
+                    <p class="qwhy" data-why={o.because} hidden></p>
+                  </div>
+                ))}
+              </div>
+              <div class="qfoot">
+                <button type="button" class="btn btn-primary" id="o-go">শুরু করো</button>
+                <span class="qscore" id="o-score" hidden><b>০</b> ঠিক</span>
+              </div>
+              <div class="qdone" id="o-done" hidden>
+                <p class="qd-h">শেষ!</p>
+                <p class="qd-s" id="od-s"></p>
+              </div>
+            </>
+          ) : (
+            <p class="qintro">আজকের রাউন্ড তৈরি হয়নি।</p>
+          )}
+        </section>
+      </div>
+
+      {/* ---------- rail ---------- */}
+      <aside class="rail">
+        <section class="card cal">
+          <div class="card-h"><span class="lbl">শেষ চার সপ্তাহ</span><span class="lbl num" id="cal-n"></span></div>
+          <div class="cells" id="cells" aria-hidden="true">
+            {Array.from({ length: 28 }, (_, i) => <span class="cell" data-back={27 - i}></span>)}
+          </div>
+          <p class="calfoot" id="calfoot">প্রতিদিন যেদিন তুমি পসরায় আসবে, একটা ঘর ভরবে।</p>
+        </section>
+
+        <section class="card mile">
+          <div class="card-h"><span class="lbl">ধারার ধাপ</span><span class="lbl" id="mile-next"></span></div>
+          <ol class="ml">
+            {MILESTONES.map((m) => (
+              <li data-at={m.at}>
+                <span class="me" aria-hidden="true">{m.emoji}</span>
+                <span class="mt"><b>{m.name}</b><small>{m.note}</small></span>
+              </li>
+            ))}
+          </ol>
+          <p class="mlfoot">বরফ দিয়ে একদিন না এলেও ধারা টেকে। বরফ কেনা যায় না, শুধু জেতা যায়।</p>
+        </section>
+
+        {/* The card addressed to the adult. It appears only once a week of real
+            visits exists, because before that there is nothing to show them. */}
+        <section class="card parent" id="parent" hidden>
+          <div class="card-h"><span class="lbl">বাড়ির বড়দের জন্য</span></div>
+          <h3 id="p-h">সাত দিন টানা হয়ে গেছে</h3>
+          <p id="p-p">এই হিসাবটা এখন শুধু এই ব্রাউজারে আছে. নতুন ফোনে বা ট্যাবে গেলে হারিয়ে যাবে। একটা পরিবার অ্যাকাউন্ট খুললে যেকোনো যন্ত্র থেকে একই হিসাব দেখা যাবে।</p>
+          <div class="p-btns">
+            <a class="btn btn-primary" href="/account/" id="p-go">অ্যাকাউন্ট খোলো</a>
+            <button type="button" class="btn" id="p-no">এখন নয়</button>
+          </div>
+          <p class="p-fine">শুধু বড়দের ইমেইল লাগে। শিশুর কোনো তথ্য চাওয়া হয় না।</p>
+        </section>
+
+        <section class="card wl">
+          <div class="card-h"><span class="lbl">ভুবনে যাও</span></div>
+          <div class="wls">
+            {worlds.map((w) => (
+              <a class="wl-a" href={w.open ? '/space/' : `/${w.slug}/`} style={`--w:${w.hue}`}>
+                <span class="orb" style="width:10px;height:10px"></span>{w.bn}
+              </a>
+            ))}
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+    <p class="award-toast" id="toast" role="status" aria-live="polite" hidden></p>
+  </div>
+
+  <script type="application/json" id="today-data" set:html={JSON.stringify(bootstrap)} is:inline />
+</Base>
+
+<style>
+  .page { padding-block: 1.25rem 4rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 1rem; display: flex; gap: 0.4rem; }
+  .crumbs a:hover { color: var(--brand); }
+  .card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--line-soft); }
+  .wlink:hover { color: var(--brand); }
+
+  /* ---- goal ---- */
+  .goal { padding: 1.4rem 1.5rem 1.3rem; }
+  .ghead { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; }
+  .ghead h1 { font-size: clamp(1.5rem, 3.4vw, 2.05rem); margin-top: 0.3rem; }
+  .lede { color: var(--muted); margin-top: 0.45rem; max-width: 46ch; font-size: 15px; }
+  .streakbox { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; gap: 0 0.5rem; align-items: center; padding: 0.6rem 1rem; border-radius: var(--r-sm); background: var(--panel-2); border: 1px solid var(--line-soft); }
+  .flame { font-size: 26px; grid-row: 1 / 3; transition: transform 0.3s ease; }
+  .flame.pop { transform: scale(1.35); }
+  .streakbox b { font-size: 26px; font-weight: 800; line-height: 1; align-self: end; }
+  .streakbox .lbl { align-self: start; }
+  .frz { grid-column: 1 / 3; font-size: 12.5px; color: var(--ink-2); margin-top: 0.35rem; }
+
+  .ring-row { display: flex; gap: 1.75rem; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; }
+  .ringwrap { position: relative; width: 132px; height: 132px; flex: none; }
+  .ring { width: 132px; height: 132px; }
+  .ring circle { fill: none; stroke-width: 11; stroke-linecap: round; }
+  .ring .trk { stroke: var(--sunk); }
+  .ring .fil { stroke: var(--brand); transition: stroke-dasharray 0.5s cubic-bezier(.4,1.4,.5,1); }
+  .ringmid { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 0.15rem; flex-direction: column; pointer-events: none; }
+  .ringmid b { font-size: 30px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ringmid span { font-size: 12px; color: var(--muted); }
+
+  .parts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; min-width: 230px; }
+  .parts li { display: grid; grid-template-columns: 24px 1fr auto; gap: 0.7rem; align-items: center; padding: 0.55rem 0.8rem; border-radius: var(--r-sm); background: var(--panel-2); border: 1px solid var(--line-soft); }
+  .parts li.on { background: color-mix(in oklab, var(--brand) 10%, var(--panel)); border-color: color-mix(in oklab, var(--brand) 30%, var(--line-soft)); }
+  .tick { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; color: transparent; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+  .parts li.on .tick { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+  .pt { display: flex; flex-direction: column; }
+  .pt b { font-size: 14.5px; font-weight: 600; }
+  .pt small { font-size: 12px; color: var(--muted); }
+  .pn { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .gmsg { margin-top: 0.9rem; font-size: 14px; color: var(--brand); font-weight: 600; min-height: 1.2em; }
+
+  /* ---- columns ---- */
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.1rem; margin-top: 1.1rem; align-items: start; }
+  .main { display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+  .rail { display: flex; flex-direction: column; gap: 1.1rem; position: sticky; top: 76px; }
+  @media (max-width: 1000px) { .cols { grid-template-columns: 1fr; } .rail { position: static; } }
+
+  /* ---- today's thing ---- */
+  .th-top { display: flex; gap: 1rem; align-items: center; padding: 1.1rem 1.1rem 0.5rem; }
+  .th-e { font-size: 40px; line-height: 1; flex: none; }
+  .th-top h2 { font-size: clamp(1.3rem, 3vw, 1.75rem); }
+  .th-c { font-size: 13px; color: var(--muted); margin-top: 0.15rem; }
+  .th-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.4rem 1.1rem 0; }
+  .th-text { padding: 0.8rem 1.1rem 0; font-size: 16px; line-height: 1.75; color: var(--ink-2); }
+  .th-fun { margin: 0.9rem 1.1rem 0; padding: 0.7rem 0.9rem; border-radius: var(--r-sm); background: color-mix(in oklab, var(--sun) 12%, var(--panel-2)); font-size: 14.5px; display: flex; flex-direction: column; gap: 0.2rem; }
+  .th-go { display: flex; gap: 0.9rem; align-items: center; flex-wrap: wrap; padding: 1.1rem; }
+  .th-note { font-size: 12.5px; color: var(--muted); }
+
+  /* ---- quiz + odd ---- */
+  .qintro { padding: 1rem 1.1rem 0; font-size: 14.5px; color: var(--muted); line-height: 1.6; }
+  .qq, .oo { padding: 1rem 1.1rem 0; }
+  .qp { font-size: 16px; line-height: 1.8; color: var(--ink); margin-bottom: 0.9rem; }
+  .qopts, .oopts { display: grid; gap: 0.5rem; }
+  .oopts { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .qo, .oo-b { text-align: right; padding: 0.7rem 1rem; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--panel-2); font-size: 15px; font-weight: 600; transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease; }
+  .qo { text-align: start; }
+  .oo-b { text-align: center; }
+  .qo:hover, .oo-b:hover { border-color: var(--brand); transform: translateY(-1px); }
+  .qo.right, .oo-b.right { background: color-mix(in oklab, var(--ok) 16%, var(--panel)); border-color: var(--ok); color: var(--ok); }
+  .qo.wrong, .oo-b.wrong { background: color-mix(in oklab, var(--danger) 14%, var(--panel)); border-color: var(--danger); color: var(--danger); }
+  .qo.lock, .oo-b.lock { pointer-events: none; }
+  .qwhy { margin-top: 0.75rem; font-size: 14px; color: var(--ink-2); padding: 0.6rem 0.8rem; border-radius: var(--r-sm); background: var(--panel-2); }
+  .qwhy a { color: var(--brand); font-weight: 600; }
+  .qfoot { display: flex; gap: 1rem; align-items: center; padding: 1.1rem; }
+  .qscore { font-size: 14px; color: var(--muted); }
+  .qscore b { color: var(--ink); font-size: 17px; }
+  .qdone { padding: 0 1.1rem 1.2rem; }
+  .qd-h { font-weight: 700; font-size: 17px; }
+  .qd-s { font-size: 14.5px; color: var(--muted); margin-top: 0.3rem; line-height: 1.6; }
+
+  /* ---- calendar ---- */
+  .cells { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 1rem 1.1rem 0.6rem; }
+  .cell { aspect-ratio: 1; border-radius: 4px; background: var(--sunk); }
+  .cell.on { background: var(--brand); }
+  .cell.frz { background: color-mix(in oklab, var(--brand) 40%, #7fd4ff); }
+  .cell.today { outline: 2px solid var(--sun); outline-offset: 1px; }
+  .calfoot, .mlfoot { padding: 0 1.1rem 1rem; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+  /* ---- milestones ---- */
+  .ml { list-style: none; margin: 0; padding: 0.8rem 1.1rem 0.4rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .ml li { display: grid; grid-template-columns: 26px 1fr; gap: 0.65rem; align-items: start; opacity: 0.45; }
+  .ml li.on { opacity: 1; }
+  .me { font-size: 19px; line-height: 1.2; }
+  .mt { display: flex; flex-direction: column; }
+  .mt b { font-size: 14px; }
+  .mt small { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+  /* ---- parent ---- */
+  .parent { border-color: color-mix(in oklab, var(--sun) 45%, var(--line-soft)); }
+  .parent h3 { font-size: 1.05rem; padding: 1rem 1.1rem 0; }
+  .parent p { padding: 0.4rem 1.1rem 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+  .p-btns { display: flex; gap: 0.6rem; padding: 1rem 1.1rem 0; flex-wrap: wrap; }
+  .p-fine { font-size: 12px; color: var(--muted); padding: 0.7rem 1.1rem 1.1rem; }
+
+  /* ---- world links ---- */
+  .wls { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 1rem 1.1rem 1.1rem; }
+  .wl-a { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 13px; font-weight: 600; }
+  .wl-a:hover { border-color: var(--w); color: var(--w); }
+
+  .fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 40; }
+  .award-toast { position: fixed; left: 50%; bottom: 2rem; transform: translate(-50%, 1rem); z-index: 50; opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease; background: var(--ink); color: var(--paper); padding: 0.7rem 1.2rem; border-radius: 999px; font-weight: 600; font-size: 14.5px; box-shadow: var(--shadow-lg); }
+  .award-toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+
+<script>
+  import { getProgress, markSeen, addXp, finishTask, todayState, visitDays, freezeCount, setProgressScope } from '../../lib/progress';
+  import { goalParts, goalDone, goalMet, MILESTONES, nextMilestone, GOAL_NEW_ITEMS, DAILY_QUIZ_LENGTH, type DailyQuestion, type OddRound } from '../../lib/daily';
+  import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
+  import { confetti, chime } from '../../lib/game';
+  import { bn } from '../../lib/bn';
+  import { track, trackParentPrompt } from '../../lib/track';
+  import { pushSeen } from '../../lib/sync';
+
+  const root = document.getElementById('today')!;
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const data = JSON.parse(document.getElementById('today-data')!.textContent!) as {
+    key: string; w: string; k: string; quiz: DailyQuestion[]; odd: OddRound[];
+  };
+  const childId = root.dataset.child || null;
+  setProgressScope(childId);
+
+  const day = beginSession(data.w || undefined);
+  const fx = confetti($<HTMLCanvasElement>('#fx'));
+
+  /* ---- toast ---- */
+  const toastEl = $('#toast');
+  let toastT = 0;
+  function toast(text: string) {
+    toastEl.hidden = false; toastEl.textContent = text; toastEl.classList.add('show');
+    clearTimeout(toastT);
+    toastT = window.setTimeout(() => { toastEl.classList.remove('show'); window.setTimeout(() => { toastEl.hidden = true; }, 300); }, 2800);
+  }
+
+  /* ---- the goal ring ---- */
+  const SEG = 103.1, C = 339.3;
+  const fills = [...root.querySelectorAll<SVGCircleElement>('.fil')];
+  const partEls = [...root.querySelectorAll<HTMLElement>('.parts li')];
+  function renderGoal() {
+    const t = todayState();
+    const parts = goalParts(t.items, t.done);
+    parts.forEach((p, i) => {
+      const frac = p.of ? Math.min(1, p.n / p.of) : 0;
+      fills[i]!.style.strokeDasharray = `${(SEG * frac).toFixed(1)} ${C}`;
+      const li = partEls[i]!;
+      li.classList.toggle('on', p.done);
+      li.querySelector('.pl')!.textContent = p.label;
+      li.querySelector('.ph')!.textContent = p.hint;
+      li.querySelector('.pn')!.textContent = p.of > 1 ? `${bn(p.n)}/${bn(p.of)}` : p.done ? 'হয়েছে' : 'বাকি';
+    });
+    const n = goalDone(parts);
+    $('#ring-n').textContent = bn(n);
+    const msg = $('#gmsg');
+    msg.textContent = goalMet(parts)
+      ? 'আজকের তিনটাই শেষ। কাল আবার নতুন জিনিস, নতুন প্রশ্ন।'
+      : n === 0 ? '' : `আর ${bn(3 - n)}টা বাকি।`;
+    return parts;
+  }
+
+  /** The one celebration a day, fired by whichever activity completes the set. */
+  function checkGoal() {
+    renderGoal();
+    if (!goalJustMet()) return;
+    const r = root.getBoundingClientRect();
+    fx.burst(window.innerWidth / 2, window.innerHeight * 0.4, getComputedStyle(root).getPropertyValue('--brand') || '#15544c', true);
+    chime('win');
+    toast('🎉 আজকের লক্ষ্য পূরণ!');
+    void r;
+  }
+
+  /* ---- streak, calendar, milestones ---- */
+  $('#st-n').textContent = bn(day.streak);
+  function renderStreak() {
+    const f = freezeCount();
+    const frz = $('#frz');
+    frz.hidden = f === 0;
+    if (f > 0) $('#frz-n').textContent = bn(f);
+    const next = nextMilestone(day.streak);
+    $('#mile-next').textContent = next ? `পরের ধাপ ${bn(next.at)} দিনে` : 'সব ধাপ পার';
+    root.querySelectorAll<HTMLElement>('.ml li').forEach((li) => {
+      li.classList.toggle('on', day.streak >= +(li.dataset.at ?? 0));
+    });
+  }
+  function renderCalendar() {
+    const days = new Set(visitDays());
+    const today = new Date();
+    let on = 0;
+    root.querySelectorAll<HTMLElement>('.cell').forEach((c) => {
+      const back = +(c.dataset.back ?? 0);
+      const d = new Date(today); d.setDate(d.getDate() - back);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const hit = days.has(k);
+      c.classList.toggle('on', hit);
+      c.classList.toggle('today', back === 0);
+      if (hit) on++;
+    });
+    $('#cal-n').textContent = `${bn(on)} দিন`;
+    $('#calfoot').textContent = on <= 1
+      ? 'প্রতিদিন যেদিন তুমি পসরায় আসবে, একটা ঘর ভরবে।'
+      : `শেষ চার সপ্তাহে ${bn(on)} দিন এসেছ।`;
+  }
+
+  // A streak that ended says so plainly, once, and then moves on.
+  if (day.broke && day.brokeAt >= 3) toast(`ধারা ভেঙেছে ${bn(day.brokeAt)} দিনে। আজ থেকে আবার শুরু।`);
+  if (day.froze) toast('❄️ একটা বরফ খরচ হলো, ধারা টিকে গেছে।');
+
+  const mile = reachedMilestone(day.streak);
+  if (mile) {
+    window.setTimeout(() => {
+      fx.burst(window.innerWidth / 2, window.innerHeight * 0.35, '#f0b429', true);
+      chime('win');
+      toast(`${mile.emoji} ${mile.name} টানা! ${mile.note}`);
+      track('milestone', { at: mile.at });
+      renderStreak();
+    }, 700);
+  }
+
+  /* ---- আজকের জিনিস counts as reading it ---- */
+  if (data.w && data.k && markSeen(data.w, data.k)) {
+    // Opening this page is opening that item: the whole reading is right there.
+    noteItem(data.w);
+    if (childId) pushSeen(data.w, data.k);
+  }
+
+  /* ---- আজকের পরখ ---- */
+  const qCard = root.querySelector<HTMLElement>('#quiz');
+  if (qCard && data.quiz.length >= DAILY_QUIZ_LENGTH) {
+    const seen = new Set<string>();
+    for (const list of Object.values(getProgress().seen)) for (const k of list) seen.add(k);
+    // Prefer questions about things this child has actually opened. The server
+    // sent a rotating slice of the catalogue and learned nothing about them.
+    const order = data.quiz.map((_q, i) => i).sort((a, b) => Number(seen.has(data.quiz[b]!.k)) - Number(seen.has(data.quiz[a]!.k)));
+    const chosen = order.slice(0, DAILY_QUIZ_LENGTH);
+    const blocks = [...qCard.querySelectorAll<HTMLElement>('.qq')];
+    let qi = 0, right = 0, answered = false;
+
+    const showQ = () => {
+      blocks.forEach((b) => { b.hidden = true; });
+      const b = blocks[chosen[qi]!]!;
+      b.hidden = false;
+      $('#q-pos').textContent = `${bn(qi + 1)} / ${bn(DAILY_QUIZ_LENGTH)}`;
+      answered = false;
+    };
+    const finishQuiz = () => {
+      blocks.forEach((b) => { b.hidden = true; });
+      $('#q-done').hidden = false;
+      $('#qd-s').textContent = `${bn(DAILY_QUIZ_LENGTH)}টার মধ্যে ${bn(right)}টা ঠিক। ${right === DAILY_QUIZ_LENGTH ? 'একটাও ভুল নয়!' : 'কাল আবার নতুন পাঁচটা।'}`;
+      $('#q-go').hidden = true;
+      addXp(right * 5 + (right === DAILY_QUIZ_LENGTH ? 15 : 0));
+      finishTask('quiz');
+      noteAct();
+      track('daily_quiz_done', { right, total: DAILY_QUIZ_LENGTH });
+      chime(right >= 3 ? 'win' : 'ok');
+      checkGoal();
+    };
+
+    qCard.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.qo');
+      if (!btn || answered) return;
+      answered = true;
+      const block = btn.closest<HTMLElement>('.qq')!;
+      const want = +(block.dataset.a ?? 0), got = +(btn.dataset.j ?? 0);
+      block.querySelectorAll<HTMLButtonElement>('.qo').forEach((o, j) => {
+        o.classList.add('lock');
+        if (j === want) o.classList.add('right');
+        else if (j === got) o.classList.add('wrong');
+      });
+      const ok = got === want;
+      if (ok) right++;
+      chime(ok ? 'ok' : 'no');
+      const why = block.querySelector<HTMLElement>('.qwhy')!;
+      why.hidden = false;
+      const w = block.dataset.w, ci = block.dataset.ci;
+      const name = block.querySelectorAll('.qo')[want]!.textContent ?? '';
+      why.innerHTML = ok
+        ? `ঠিক! <a href="/${w}/?cat=${ci}">${name}</a> সম্পর্কে আরও পড়তে পারো।`
+        : `উত্তর <b>${name}</b>. <a href="/${w}/?cat=${ci}">গিয়ে পড়ে আসো →</a>`;
+      const score = $('#q-score');
+      score.hidden = false;
+      score.querySelector('b')!.textContent = bn(right);
+      window.setTimeout(() => { qi++; if (qi >= DAILY_QUIZ_LENGTH) finishQuiz(); else showQ(); }, ok ? 1200 : 2600);
+    });
+    $('#q-go').addEventListener('click', () => {
+      $('#q-go').hidden = true;
+      $('#q-intro').hidden = true;
+      showQ();
+    });
+    if (todayState().done.includes('quiz')) {
+      $('#q-go').textContent = 'আজকের পরখ হয়ে গেছে';
+      $('#q-go').setAttribute('disabled', 'true');
+    }
+  }
+
+  /* ---- কোনটা আলাদা ---- */
+  const oCard = root.querySelector<HTMLElement>('#odd');
+  if (oCard && data.odd.length) {
+    const blocks = [...oCard.querySelectorAll<HTMLElement>('.oo')];
+    let oi = 0, right = 0, answered = false;
+    const showO = () => {
+      blocks.forEach((b) => { b.hidden = true; });
+      blocks[oi]!.hidden = false;
+      $('#o-pos').textContent = `${bn(oi + 1)} / ${bn(blocks.length)}`;
+      answered = false;
+    };
+    const finishOdd = () => {
+      blocks.forEach((b) => { b.hidden = true; });
+      $('#o-done').hidden = false;
+      $('#od-s').textContent = `${bn(blocks.length)}টার মধ্যে ${bn(right)}টা ঠিক।`;
+      $('#o-go').hidden = true;
+      addXp(right * 5);
+      finishTask('play');
+      noteAct();
+      track('daily_odd_done', { right, total: blocks.length });
+      chime('win');
+      checkGoal();
+    };
+    oCard.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.oo-b');
+      if (!btn || answered) return;
+      answered = true;
+      const block = btn.closest<HTMLElement>('.oo')!;
+      const want = +(block.dataset.a ?? 0), got = +(btn.dataset.j ?? 0);
+      block.querySelectorAll<HTMLButtonElement>('.oo-b').forEach((o, j) => {
+        o.classList.add('lock');
+        if (j === want) o.classList.add('right');
+        else if (j === got) o.classList.add('wrong');
+      });
+      const ok = got === want;
+      if (ok) right++;
+      chime(ok ? 'ok' : 'no');
+      const why = block.querySelector<HTMLElement>('.qwhy')!;
+      why.hidden = false;
+      why.textContent = why.dataset.why ?? '';
+      const score = $('#o-score');
+      score.hidden = false;
+      score.querySelector('b')!.textContent = bn(right);
+      window.setTimeout(() => { oi++; if (oi >= blocks.length) finishOdd(); else showO(); }, ok ? 1100 : 2400);
+    });
+    $('#o-go').addEventListener('click', () => { $('#o-go').hidden = true; showO(); });
+    if (todayState().done.includes('play')) {
+      $('#o-go').textContent = 'আজকের খেলা হয়ে গেছে';
+      $('#o-go').setAttribute('disabled', 'true');
+    }
+  }
+
+  /* ---- the card for the adult ---- */
+  const DISMISS = 'posora:parent-prompt';
+  const parent = $('#parent');
+  const signedIn = root.dataset.plan === '1' || !!childId;
+  const dismissed = +(localStorage.getItem(DISMISS) ?? 0);
+  if (!signedIn && day.streak >= 7 && day.streak > dismissed) {
+    parent.hidden = false;
+    $('#p-h').textContent = `${bn(day.streak)} দিন টানা হয়ে গেছে`;
+    trackParentPrompt('shown', day.streak);
+    $('#p-go').addEventListener('click', () => trackParentPrompt('followed', day.streak));
+    $('#p-no').addEventListener('click', () => {
+      parent.hidden = true;
+      // Silenced until the streak is meaningfully longer, not silenced forever.
+      localStorage.setItem(DISMISS, String(day.streak + 7));
+      trackParentPrompt('dismissed', day.streak);
+    });
+  }
+
+  renderGoal();
+  renderStreak();
+  renderCalendar();
+  $('#flame').classList.add('pop');
+  window.setTimeout(() => $('#flame').classList.remove('pop'), 400);
+  void GOAL_NEW_ITEMS; void MILESTONES;
+</script>

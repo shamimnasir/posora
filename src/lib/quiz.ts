@@ -11,6 +11,7 @@
  * sees the same quiz twice and a result can be compared with an earlier one.
  */
 import type { ItemDetail } from '../data/explorer-types';
+import { rng, hash, shuffle } from './rand';
 
 export type Question = {
   /** Index of the item the question is about. */
@@ -27,27 +28,8 @@ export const QUIZ_LENGTH = 8;
 export const OPTIONS = 4;
 export const BLANK = '______';
 
-/* mulberry32: small, deterministic, good enough for shuffling a quiz */
-function rng(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function hash(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return h >>> 0;
-}
-function shuffle<T>(arr: T[], r: () => number): T[] {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j]!, a[i]!]; }
-  return a;
-}
+/* The seeded generator, the hash and the shuffle now live in ./rand, because
+   the daily activities need exactly the same three and two copies would drift. */
 
 /** Blank out the item's name wherever the reading uses it, including inflected forms. */
 export function blankOut(text: string, name: string): string {

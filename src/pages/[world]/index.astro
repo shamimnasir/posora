@@ -194,6 +194,11 @@ const schema = [
             <span class="pl-lvl"><b id="pl-lvl">স্তর ১</b><span id="pl-title">নবীন</span><span class="pl-bar" aria-hidden="true"><i id="pl-bar"></i></span></span>
             <span class="pl-xp">⚡ <b id="pl-xp">০</b> জ্ঞানবিন্দু</span>
             <span class="pl-streak">🔥 <b id="pl-days">১</b> দিন</span>
+            {/* Today's three things, and a way to the day's own page. The dots
+                are the whole goal: filled, filled, empty means one left. */}
+            <a class="pl-goal" id="pl-goal" href="/today/" title="আজকের লক্ষ্য - তিনটা কাজ">
+              <span class="pg" aria-hidden="true"><i></i><i></i><i></i></span>আজ
+            </a>
             <button type="button" class="pl-sound" id="pl-sound" aria-pressed="true" aria-label="খেলার শব্দ">🔔</button>
             <span class="xp-float" id="xp-float" aria-hidden="true"></span>
           </div>
@@ -544,6 +549,12 @@ const schema = [
   .pl-bar i { display: block; height: 100%; width: 0; background: var(--w); transition: width 0.6s ease; }
   .pl-sound { cursor: pointer; transition: background 0.15s ease; }
   .pl-sound[aria-pressed="false"] { opacity: 0.55; text-decoration: line-through; }
+  .pl-goal { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 12.5px; padding: 0.3rem 0.75rem; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: border-color 0.15s ease, color 0.15s ease; }
+  .pl-goal:hover { border-color: var(--w); color: var(--w); }
+  .pl-goal.met { background: color-mix(in oklab, var(--w) 14%, var(--panel)); border-color: color-mix(in oklab, var(--w) 40%, var(--line-soft)); color: var(--w); font-weight: 700; }
+  .pg { display: inline-flex; gap: 3px; }
+  .pg i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); display: block; transition: background 0.25s ease, transform 0.25s ease; }
+  .pg i.on { background: var(--w); transform: scale(1.15); }
   .xp-float { position: absolute; left: 0; top: 0; pointer-events: none; font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--w); opacity: 0; }
   .xp-float.go { animation: xpfloat 1.1s ease-out forwards; }
   @keyframes xpfloat { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-34px); } }
@@ -851,8 +862,10 @@ const schema = [
 </style>
 
 <script>
-  import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, setMission, touchDay } from '../../lib/progress';
+  import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, setMission, finishTask, todayState, freezeCount } from '../../lib/progress';
   import { levelOf, AWARDS, awardKey, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
+  import { goalParts, goalDone, goalMet } from '../../lib/daily';
+  import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
   import { bn, pad2 } from '../../lib/bn';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import { setProgressScope } from '../../lib/progress';
@@ -938,8 +951,9 @@ const schema = [
   ctlX.addEventListener('input', () => { hero?.setExplode(+ctlX.value / 100); countPlay(); });
   host.addEventListener('pointerdown', countPlay);
 
-  /* ---- the player bar: points, title, days in a row ---- */
-  const streakDays = touchDay();
+  /* ---- the player bar: points, title, days in a row, today's three things ---- */
+  const day = beginSession(slug);
+  const streakDays = day.streak;
   const fx = confetti($<HTMLCanvasElement>('#fx'));
   const worldHue = getComputedStyle(root).getPropertyValue('--w').trim() || '#3E8E5A';
   function renderPlayer() {
@@ -950,6 +964,31 @@ const schema = [
     $('#pl-xp').textContent = bn(xp);
     $('#pl-days').textContent = bn(streakDays);
     $('.pl-lvl').title = lv.next === null ? 'সর্বোচ্চ স্তর' : `পরের স্তরে যেতে আর ${bn(lv.next - xp)} জ্ঞানবিন্দু`;
+    renderGoalPill();
+  }
+  /** The three dots: today's goal, small enough to live on the bar. */
+  function renderGoalPill() {
+    const t = todayState();
+    const parts = goalParts(t.items, t.done);
+    const dots = [...root.querySelectorAll<HTMLElement>('.pg i')];
+    parts.forEach((p, i) => dots[i]?.classList.toggle('on', p.done));
+    const pill = $('#pl-goal');
+    pill.classList.toggle('met', goalMet(parts));
+    pill.title = goalMet(parts)
+      ? 'আজকের তিনটাই শেষ'
+      : `আজকের লক্ষ্য: ${parts.filter((p) => !p.done).map((p) => p.label).join(', ')}`;
+  }
+  /**
+   * Finishing the day's third thing is the one celebration a day gets, and it
+   * can happen here as easily as on /today/, because a mission counts.
+   */
+  function checkGoal() {
+    renderGoalPill();
+    if (!goalJustMet()) return;
+    const r = host.getBoundingClientRect();
+    fx.burst(r.width / 2, r.height * 0.45, worldHue, true);
+    chime('win');
+    toast('🎉 আজকের লক্ষ্য পূরণ! কাল আবার নতুন কিছু।');
   }
   /** "+১০" drifting up from the points pill. */
   function floatXp(n: number) {
@@ -1057,9 +1096,14 @@ const schema = [
       onDone(r) {
         addXp(r.points);
         const improved = setMission(missionKeys[i]!, r.stars);
+        // A finished mission is the day's "একটা খেলা", the same as a খোঁজার
+        // খেলা or কোনটা আলাদা. The child picks which one it was.
+        finishTask('play');
+        noteAct();
         renderMissions(); renderPlayer(); checkAwards();
         track('mission_done', { world: slug, mission: mi, stars: r.stars, points: r.points, seconds: r.seconds });
         if (improved && r.stars === 3) toast('🎖️ তিন তারা! নিখুঁত মিশন');
+        checkGoal();
       },
       onClose() { renderMissions(); renderPlayer(); },
     });
@@ -1139,9 +1183,12 @@ const schema = [
     qRes.hidden = false;
     const r = host.getBoundingClientRect(); fx.burst(r.width / 2, r.height * 0.45, worldHue, true);
     chime('win');
+    finishTask('play');
+    noteAct();
     renderQuestBtn(); renderPlayer();
     track('quest_done', { world: slug, category: c.n, stars, mistakes: quest.mistakes, seconds: Math.round(ms / 1000) });
     checkAwards();
+    checkGoal();
   }
   qStart.addEventListener('click', questStart);
   $('#q-quit').addEventListener('click', () => questQuit());
@@ -1368,8 +1415,10 @@ const schema = [
     if (mark && markSeen(slug, keyOf(curCat, ii))) {
       chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`)?.classList.add('done');
       if (childId) pushSeen(slug, keyOf(curCat, ii));
+      noteItem(slug);
       renderProgress(); renderGlance(); renderRecords();
       floatXp(10);
+      checkGoal();
       if (readCount(curCat) === c.items.length) {
         // the whole category has been opened: that is worth a moment
         const r = host.getBoundingClientRect(); fx.burst(r.width / 2, r.height * 0.45, worldHue, true);
@@ -1396,7 +1445,7 @@ const schema = [
       hero.setItems(heroItems(c), curItem);
     }
     renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
-    if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); renderProgress(); renderGlance(); renderRecords(); renderChips(); } }
+    if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); noteItem(slug); renderProgress(); renderGlance(); renderRecords(); renderChips(); checkGoal(); } }
     // the gated features follow the category
     const extras = $('#extras');
     extras.hidden = !readable(c);
@@ -1511,7 +1560,7 @@ const schema = [
   });
 
   renderChips(); renderRead(); renderCrumbs(); renderGlance(); renderRecords();
-  if (readable(cats[0])) { if (markSeen(slug, keyOf(0, 0)) && childId) pushSeen(slug, keyOf(0, 0)); }
+  if (readable(cats[0])) { if (markSeen(slug, keyOf(0, 0)) && childId) { pushSeen(slug, keyOf(0, 0)); noteItem(slug); } }
   renderProgress();
   renderChips();
   $('#extras').hidden = !readable(cats[0]);
@@ -1522,4 +1571,22 @@ const schema = [
   // counted, so the totals are not skewed toward whatever happens to be first
   trackCategory(slug, cats[0].n);
   if (readable(cats[0])) trackItem(slug, cats[0].n, cats[0].items[0]);
+
+  /* ---- what today did to the streak ---- */
+  if (day.froze) toast(`❄️ একটা বরফ খরচ হলো, ${bn(streakDays)} দিনের ধারা টিকে গেছে`);
+  else if (day.broke && day.brokeAt >= 3) toast(`ধারা ভেঙেছে ${bn(day.brokeAt)} দিনে। আজ থেকে আবার শুরু।`);
+  const mile = reachedMilestone(streakDays);
+  if (mile) {
+    window.setTimeout(() => {
+      const r = host.getBoundingClientRect(); fx.burst(r.width / 2, r.height * 0.4, '#f0b429', true);
+      chime('win');
+      toast(`${mile.emoji} ${mile.name} টানা! ${mile.note}`);
+      track('milestone', { at: mile.at });
+    }, 900);
+  }
+  void freezeCount; void goalDone;
+
+  /* ---- ?cat=N lands straight on a category, which is how /today/ links in ---- */
+  const wantCat = Number(new URLSearchParams(location.search).get('cat'));
+  if (Number.isInteger(wantCat) && wantCat > 0 && wantCat < cats.length) showCat(wantCat);
 </script>
