@@ -20,9 +20,20 @@ import {
   CircleGeometry, TetrahedronGeometry, IcosahedronGeometry, PlaneGeometry,
   MeshStandardMaterial, MeshBasicMaterial, DoubleSide, Vector3,
 } from 'three';
+// Seeded, so a species always grows the same way: the variation between trees
+// is deliberate, and a tree must not reshuffle itself on every repaint.
+import { rng } from '../../lib/rand';
 
+/**
+ * Roughness 0.75 rather than 0.6, and metalness flat zero.
+ *
+ * These figures are bark, leaf, cloth and clay. The old settings gave every
+ * one of them a faint sheen that reads as plastic, which was invisible while
+ * there was no environment map to reflect and became obvious the moment there
+ * was one. Anything that genuinely is metal or glazed passes its own values.
+ */
 const std = (color: string | Color, o: Record<string, unknown> = {}) =>
-  new MeshStandardMaterial({ color: color as Color, roughness: 0.6, metalness: 0.05, ...o });
+  new MeshStandardMaterial({ color: color as Color, roughness: 0.75, metalness: 0, ...o });
 const glow = (color: string, opacity = 0.4) =>
   new MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
 
@@ -32,46 +43,171 @@ export type Figure = (g: Group) => void;
 const put = (g: Group, m: Mesh, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) => {
   m.position.set(x, y, z); m.rotation.set(rx, ry, rz); g.add(m); return m;
 };
+/** 24x16 rather than 16x12: these are the hero of the screen now, and a
+ *  faceted silhouette is the first thing that gives cheap 3D away. */
 const ball = (g: Group, c: string, r: number, x = 0, y = 0, z = 0) =>
-  put(g, new Mesh(new SphereGeometry(r, 16, 12), std(c)), x, y, z);
+  put(g, new Mesh(new SphereGeometry(r, 24, 16), std(c)), x, y, z);
 const box = (g: Group, c: string, w: number, h: number, d: number, x = 0, y = 0, z = 0, rz = 0) =>
   put(g, new Mesh(new BoxGeometry(w, h, d), std(c)), x, y, z, 0, 0, rz);
 const rod = (g: Group, c: string, r: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
-  put(g, new Mesh(new CylinderGeometry(r, r, h, 10), std(c)), x, y, z, rx, 0, rz);
+  put(g, new Mesh(new CylinderGeometry(r, r, h, 14), std(c)), x, y, z, rx, 0, rz);
+/** A tapered rod: a trunk, a branch, a stalk. Nothing in nature is a cylinder. */
+const taper = (g: Group, c: string, rTop: number, rBot: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
+  put(g, new Mesh(new CylinderGeometry(rTop, rBot, h, 12), std(c)), x, y, z, rx, 0, rz);
 const cone = (g: Group, c: string, r: number, h: number, x = 0, y = 0, z = 0, rz = 0) =>
   put(g, new Mesh(new ConeGeometry(r, h, 12), std(c)), x, y, z, 0, 0, rz);
 const disc = (g: Group, c: string, r: number, x = 0, y = 0, z = 0, rx = -Math.PI / 2) =>
   put(g, new Mesh(new CircleGeometry(r, 24), std(c, { side: DoubleSide })), x, y, z, rx);
 
 /* ---------- trees and plants ---------- */
-/** A trunk with a rounded crown: the default shape of a Bangladeshi shade tree. */
-const broadleaf = (crown: string, trunk = '#7a4f2a', h = 0.55, spread = 0.42): Figure => (g) => {
-  rod(g, trunk, 0.055, h, 0, h / 2);
-  ball(g, crown, spread, 0, h + spread * 0.62);
-  ball(g, crown, spread * 0.62, spread * 0.5, h + spread * 0.3);
-  ball(g, crown, spread * 0.58, -spread * 0.52, h + spread * 0.38);
-};
-/** A bare stem with a fan of stiff blades: palms and their relatives. */
-const palm = (leaf: string, trunk = '#8a6a44', h = 0.85): Figure => (g) => {
-  rod(g, trunk, 0.05, h, 0, h / 2);
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2;
-    const b = new Mesh(new ConeGeometry(0.07, 0.5, 5), std(leaf));
-    b.position.set(Math.cos(a) * 0.2, h + 0.16, Math.sin(a) * 0.2);
-    b.rotation.set(Math.cos(a) * 1.0, 0, -Math.sin(a) * 1.0);
-    g.add(b);
+/**
+ * A Bangladeshi shade tree.
+ *
+ * The old version of this was a brown cylinder with three green spheres on
+ * top: a lollipop, and the same lollipop for all fourteen trees with only the
+ * green changed. It is the thing on this site a player would have pointed at
+ * first, and fairly.
+ *
+ * A tree reads as a tree because of three things, none of which need a model
+ * file: the trunk **tapers** and leans a little; the crown sits on **branches**
+ * that fan out rather than on a single stick; and the foliage is **many blobs
+ * of slightly different size, height and green**, so the silhouette is ragged
+ * instead of a circle. `seed` makes each species lean and clump differently,
+ * so a grove is not one tree stamped fourteen times.
+ */
+const broadleaf = (crown: string, trunk = '#7a4f2a', h = 0.55, spread = 0.42, seed = 1): Figure => (g) => {
+  const r = rng(seed * 977 + 13);
+  const lean = (r() - 0.5) * 0.12;
+  const bark = new Color(trunk);
+  const leaf = new Color(crown);
+
+  // Trunk: thick at the root, thin at the fork, leaning slightly off vertical.
+  taper(g, trunk, 0.042, 0.075, h, 0, h / 2, 0, lean);
+  // A flare where it meets the ground, which is what stops it looking pushed in.
+  put(g, new Mesh(new CylinderGeometry(0.075, 0.12, 0.09, 12), std(bark.clone().multiplyScalar(0.88))), 0, 0.045, 0);
+
+  // Three branches out of the fork, each carrying its own clump of crown.
+  const forkY = h * 0.94;
+  const arms = 3;
+  for (let i = 0; i < arms; i++) {
+    const a = (i / arms) * Math.PI * 2 + r() * 0.9;
+    const len = spread * (0.62 + r() * 0.3);
+    const tilt = 0.5 + r() * 0.25;
+    const br = new Mesh(new CylinderGeometry(0.016, 0.036, len, 8), std(bark.clone().multiplyScalar(0.94)));
+    br.position.set(Math.cos(a) * len * 0.3, forkY + len * 0.34, Math.sin(a) * len * 0.3);
+    br.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
+    g.add(br);
+  }
+
+  // Crown: one big mass plus five smaller ones pushed out along the branches,
+  // each a shade off the last so the light finds edges inside the canopy.
+  const cy = h + spread * 0.66;
+  const blob = (x: number, y: number, z: number, rad: number, shade: number) => {
+    const m = new Mesh(
+      new IcosahedronGeometry(rad, 2),
+      std(leaf.clone().offsetHSL(0, 0, shade)),
+    );
+    m.position.set(x, y, z);
+    m.rotation.set(r() * 3, r() * 3, r() * 3);
+    // Squashed a little: a canopy is wider than it is tall.
+    m.scale.set(1, 0.82 + r() * 0.14, 1);
+    g.add(m);
+    return m;
+  };
+  blob(0, cy, 0, spread * 0.92, 0);
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + r() * 1.2;
+    const d = spread * (0.5 + r() * 0.42);
+    blob(Math.cos(a) * d, cy + (r() - 0.5) * spread * 0.55, Math.sin(a) * d,
+      spread * (0.4 + r() * 0.26), (r() - 0.45) * 0.075);
   }
 };
+/** A bare stem with a fan of stiff blades: palms and their relatives. */
+/**
+ * A palm.
+ *
+ * The old one was seven cones pointing outward from the top of a pipe, which
+ * read as a mace rather than a tree. A palm is recognisable from three things:
+ * a trunk that **tapers and curves**, ringed where old fronds fell away; a
+ * crown of long **drooping** fronds, heaviest at the tips, not radiating
+ * stiffly; and a tuft of new growth standing upright in the middle of them.
+ */
+const palm = (leaf: string, trunk = '#8a6a44', h = 0.85, seed = 5): Figure => (g) => {
+  const r = rng(seed * 613 + 29);
+  const bark = new Color(trunk);
+  const lean = (r() - 0.5) * 0.16;
+  // The trunk in segments, each a little narrower and a little further over,
+  // so it curves instead of standing like a post.
+  const segs = 7;
+  for (let i = 0; i < segs; i++) {
+    const f = i / segs;
+    const sr = 0.062 - f * 0.022;
+    const m = new Mesh(new CylinderGeometry(sr * 0.94, sr, h / segs + 0.012, 12), std(bark.clone().offsetHSL(0, 0, (i % 2 ? 0.03 : -0.02))));
+    m.position.set(lean * f * f * 2.2, h * (f + 0.5 / segs), 0);
+    m.rotation.z = -lean * f;
+    g.add(m);
+  }
+  const topX = lean * 2.2, topY = h;
+  // Fronds: a tapered blade bent down at the tip, laid around the crown.
+  const n = 9;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + r() * 0.3;
+    const droop = 0.75 + r() * 0.5;
+    const len = 0.46 + r() * 0.16;
+    const frond = new Group();
+    const inner = new Mesh(new ConeGeometry(0.055, len * 0.6, 6), std(leaf));
+    inner.position.y = len * 0.3; inner.rotation.x = Math.PI;
+    const outer = new Mesh(new ConeGeometry(0.038, len * 0.55, 6), std(new Color(leaf).offsetHSL(0, 0, -0.05)));
+    outer.position.set(0, len * 0.72, len * 0.16); outer.rotation.set(Math.PI + 0.5, 0, 0);
+    frond.add(inner, outer);
+    frond.position.set(topX, topY + 0.05, 0);
+    frond.rotation.set(Math.cos(a) * droop, -a, -Math.sin(a) * droop);
+    g.add(frond);
+  }
+  // The spear of new growth at the centre, which is what says "still growing".
+  const spear = new Mesh(new ConeGeometry(0.03, 0.22, 6), std(new Color(leaf).offsetHSL(0, 0, 0.08)));
+  spear.position.set(topX, topY + 0.15, 0);
+  g.add(spear);
+};
 /** Several thin culms with narrow leaves: bamboo, and by shape also cane. */
-const culms = (stem: string, leaf: string): Figure => (g) => {
-  for (let i = 0; i < 3; i++) {
-    const x = (i - 1) * 0.11, h = 0.8 + i * 0.1;
-    rod(g, stem, 0.028, h, x, h / 2);
-    for (let k = 1; k <= 3; k++) {
-      const b = new Mesh(new ConeGeometry(0.035, 0.24, 4), std(leaf));
-      b.position.set(x + (k % 2 ? 0.11 : -0.11), h * 0.35 + k * 0.16, 0);
-      b.rotation.z = (k % 2 ? -1 : 1) * 1.1;
-      g.add(b);
+/**
+ * Bamboo, paddy, jute: many thin stems from one clump.
+ *
+ * The old one was three bare rods with four-sided cones stuck on them. What
+ * makes a culm read as a culm is the **node**: the swollen ring every few
+ * inches that a bare cylinder has none of. Five stems now, each leaning its
+ * own way, jointed, with narrow blades hanging in pairs from the joints.
+ */
+const culms = (stem: string, leaf: string, seed = 9): Figure => (g) => {
+  const r = rng(seed * 401 + 7);
+  const stalks = 5;
+  for (let i = 0; i < stalks; i++) {
+    const x = (i - (stalks - 1) / 2) * 0.085 + (r() - 0.5) * 0.03;
+    const z = (r() - 0.5) * 0.12;
+    const h = 0.72 + r() * 0.42;
+    const lean = (r() - 0.5) * 0.22;
+    const joints = 5;
+    const col = new Color(stem).offsetHSL(0, 0, (r() - 0.5) * 0.08);
+    for (let k = 0; k < joints; k++) {
+      const f = k / joints;
+      const sy = h * (f + 0.5 / joints);
+      const sec = new Mesh(new CylinderGeometry(0.019, 0.023, h / joints - 0.012, 10), std(col));
+      sec.position.set(x + lean * f * f, sy, z);
+      sec.rotation.z = -lean * f * 0.8;
+      g.add(sec);
+      // the node itself
+      const node = new Mesh(new CylinderGeometry(0.026, 0.026, 0.014, 10), std(col.clone().offsetHSL(0, 0, -0.06)));
+      node.position.set(x + lean * f * f, h * (k + 1) / joints, z);
+      g.add(node);
+      // a pair of blades off the upper joints, drooping outward
+      if (k >= 2) {
+        for (const side of [-1, 1]) {
+          const bl = new Mesh(new ConeGeometry(0.022, 0.2 + r() * 0.08, 4), std(new Color(leaf).offsetHSL(0, 0, (r() - 0.5) * 0.1)));
+          bl.position.set(x + lean * f * f + side * 0.07, h * (k + 1) / joints + 0.03, z + (r() - 0.5) * 0.05);
+          bl.rotation.set(0, r() * 2, side * (1.05 + r() * 0.35));
+          g.add(bl);
+        }
+      }
     }
   }
 };
@@ -878,13 +1014,13 @@ export const FIGURES: Record<string, Figure> = {
   // home experiments
   volcano, lemonBattery, rainbowPaper, layers, balloonRocket, floatEgg, sundial, magnet,
   // plants
-  mango: broadleaf('#3f7a42'), jackfruit: broadleaf('#356b39', '#6b4a2a', 0.6, 0.44),
-  banyan: broadleaf('#2f6b3f', '#8a6a44', 0.42, 0.5), palm: palm('#4b8f4f'),
-  simul: broadleaf('#5f9e4a', '#9aa5b1', 0.62, 0.38), krishnachura: broadleaf('#d94a3a', '#6b4a2a', 0.55, 0.4),
-  sundari: broadleaf('#3d6b4a', '#5b4a3a', 0.45, 0.36), golpata: palm('#3f7a52', '#5b4a3a', 0.3),
-  bamboo: culms('#8fae5a', '#5f9e4a'), paddy: culms('#c8b25a', '#a8bf5a'),
-  jute: culms('#7f9e4a', '#6f8e3a'), lily,
-  kodom: broadleaf('#3f7a42', '#6b4a2a', 0.6, 0.4), hijol: broadleaf('#2f6b4a', '#6b4a2a', 0.5, 0.42),
+  mango: broadleaf('#3f7a42', '#7a4f2a', 0.55, 0.42, 3), jackfruit: broadleaf('#356b39', '#6b4a2a', 0.6, 0.44, 7),
+  banyan: broadleaf('#2f6b3f', '#8a6a44', 0.42, 0.54, 11), palm: palm('#4b8f4f', '#8a6a44', 0.85, 5),
+  simul: broadleaf('#5f9e4a', '#9aa5b1', 0.66, 0.36, 17), krishnachura: broadleaf('#d94a3a', '#6b4a2a', 0.55, 0.42, 23),
+  sundari: broadleaf('#3d6b4a', '#5b4a3a', 0.45, 0.36, 29), golpata: palm('#3f7a52', '#5b4a3a', 0.3, 15),
+  bamboo: culms('#8fae5a', '#5f9e4a', 4), paddy: culms('#c8b25a', '#a8bf5a', 12),
+  jute: culms('#7f9e4a', '#6f8e3a', 21), lily,
+  kodom: broadleaf('#3f7a42', '#6b4a2a', 0.6, 0.4, 31), hijol: broadleaf('#2f6b4a', '#6b4a2a', 0.5, 0.44, 37),
   herbGreen: herb('#4b8f4f'), herbDark: herb('#2f6b3f'), herbPale: herb('#8fae5a'),
   shrubGreen: shrub('#3f7a42'), shrubPale: shrub('#8fae5a'),
   // animals
@@ -919,17 +1055,33 @@ export const FIGURES: Record<string, Figure> = {
 };
 
 /** Lay out n groups on a shallow arc facing the camera, biggest set spread widest. */
+/**
+ * Where the i-th of n figures stands.
+ *
+ * This used to be at most two rows, which for fourteen items meant seven
+ * abreast: a hedge, edge to edge, with every figure touching its neighbours
+ * and the camera forced so far back that none of them could be seen. Now it
+ * builds a grove. At most five to a row, rows staggered by half a step so the
+ * ones behind show through the gaps rather than hiding directly behind the
+ * ones in front, pushed further apart in depth, and lifted slightly toward the
+ * back so the whole group reads as receding ground rather than a flat wall.
+ */
 export function arc(n: number, i: number): Vector3 {
-  const cols = Math.min(n, n <= 6 ? n : Math.ceil(n / 2));
-  const row = n <= 6 ? 0 : Math.floor(i / cols);
-  const rows = n <= 6 ? 1 : Math.ceil(n / cols);
-  const inRow = n <= 6 ? n : Math.min(cols, n - row * cols);
-  const k = n <= 6 ? i : i - row * cols;
-  const spanX = Math.max(2.6, inRow * 0.78);
-  const x = inRow === 1 ? 0 : (k / (inRow - 1) - 0.5) * spanX;
-  const z = (row - (rows - 1) / 2) * -1.3;
-  const y = -0.55 + row * 0.12;
-  return new Vector3(x, y, z + Math.abs(x) * 0.16);
+  const perRow = n <= 5 ? n : n <= 8 ? Math.ceil(n / 2) : 5;
+  const rows = Math.ceil(n / perRow);
+  const row = Math.floor(i / perRow);
+  const inRow = Math.min(perRow, n - row * perRow);
+  const k = i - row * perRow;
+  const spanX = Math.max(2.4, (perRow - 1) * 1.02);
+  // Half-step stagger on alternate rows: the single change that turns a grid
+  // into something that looks grown rather than planted by a machine.
+  const offset = row % 2 ? spanX / (perRow - 1 || 1) * 0.5 : 0;
+  const x = inRow === 1 && rows === 1 ? 0 : (k / Math.max(1, perRow - 1) - 0.5) * spanX + offset;
+  const z = -row * 1.55;
+  const y = -0.55 + row * 0.07;
+  // A gentle bow, so the ends of a row turn toward the camera instead of
+  // trailing off sideways.
+  return new Vector3(x, y, z + Math.abs(x) * 0.22);
 }
 
 export { std as figMaterial };

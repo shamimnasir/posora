@@ -17,10 +17,11 @@
  */
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Color, Vector2, Vector3, Box3, Raycaster, MathUtils,
-  CylinderGeometry, MeshStandardMaterial, MeshBasicMaterial, AmbientLight, DirectionalLight,
+  CylinderGeometry, MeshStandardMaterial, MeshBasicMaterial,
   CanvasTexture, Sprite, SpriteMaterial, BoxGeometry, DoubleSide, PlaneGeometry,
 } from 'three';
 import { FIGURES } from './figures';
+import { dressScene, castShadows } from './render';
 
 export type ShelfSlot = {
   label: string;
@@ -90,14 +91,13 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
   const muted = getComputedStyle(document.body).getPropertyValue('--muted').trim() || '#6b7987';
 
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   const scene = new Scene();
   const camera = new PerspectiveCamera(40, 1, 0.1, 120);
   const stage = new Group(); scene.add(stage);
-
-  scene.add(new AmbientLight('#ffffff', 0.72));
-  const keyL = new DirectionalLight('#ffffff', 1.5); keyL.position.set(2.5, 6, 5); scene.add(keyL);
-  const fillL = new DirectionalLight('#cfe2ff', 0.45); fillL.position.set(-4, 2, 3); scene.add(fillL);
+  // The same shadows, tone mapping and sky environment as the world stages, so
+  // a figure looks like itself in both places. No ground: these stand on their
+  // own pedestals and a disc under the whole shelf would fight them.
+  const look = dressScene(renderer, scene, { radius: 7, exposure: 1.02 });
 
   type Cell = { g: Group; body: Group | null; got: boolean; y0: number; spin: number };
   let cells: Cell[] = [];
@@ -162,6 +162,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
         ? new MeshStandardMaterial({ color: hue.clone().lerp(new Color('#ffffff'), 0.55), roughness: 0.85 })
         : ghostMat);
       plank.position.y = -0.08;
+      plank.receiveShadow = true;
       cell.add(plank);
 
       const build = slot.figure ? FIGURES[slot.figure] : undefined;
@@ -177,7 +178,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
       } else if (slot.got) {
         body = emojiTile(slot.emoji || '✨', hue);
       }
-      if (body) cell.add(body);
+      if (body) { castShadows(body); cell.add(body); }
       else {
         // No figure of its own and not collected: an empty pedestal.
         const q = textSprite('?', font, muted, 60, 96);
@@ -283,7 +284,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
       host.removeEventListener('pointerdown', onDown);
       host.removeEventListener('pointerup', onUp);
       clear();
-      plankGeo.dispose(); ghostMat.dispose();
+      plankGeo.dispose(); ghostMat.dispose(); look.dispose();
       renderer.dispose();
     },
   };

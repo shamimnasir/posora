@@ -8,10 +8,11 @@ import {
   SphereGeometry, BoxGeometry, CylinderGeometry, TorusGeometry, ConeGeometry, PlaneGeometry, CircleGeometry,
   IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, DodecahedronGeometry, TubeGeometry, ExtrudeGeometry,
   Shape, CatmullRomCurve3, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, Line, LineBasicMaterial, Box3, Sphere,
-  MeshStandardMaterial, MeshBasicMaterial, AmbientLight, DirectionalLight, PointLight, CanvasTexture, Sprite, SpriteMaterial,
+  MeshStandardMaterial, MeshBasicMaterial, PointLight, CanvasTexture, Sprite, SpriteMaterial,
   DoubleSide, InstancedMesh, Matrix4,
 } from 'three';
 import { FIGURES, arc } from './figures';
+import { dressScene, castShadows } from './render';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
   /** For the `collection` scene: item label -> figure name, in order. */
@@ -24,7 +25,26 @@ type Ctx = { root: Group; hue: Color; v: string; font: string; figures: { label:
  * part of the model that item is about. Badges then sit on the model instead of
  * orbiting it, and follow the part when the scene explodes.
  */
-type SceneObj = { update(t: number, dt: number, p: number): void; label: string; anchors?: Record<string, Object3D> };
+/**
+ * `groundY` says this scene stands on something, and at what height, so the
+ * shared shadow-catching ground can be moved under it. A scene that leaves it
+ * out is one that floats - an atom, an orbit, a water cycle - and gets no
+ * ground at all, because a disc under a floating molecule is worse than none.
+ */
+type SceneObj = {
+  update(t: number, dt: number, p: number): void;
+  label: string;
+  anchors?: Record<string, Object3D>;
+  groundY?: number;
+  /**
+   * Where the camera should look, and from what height. Most scenes are one
+   * object centred on the origin and the default is right for them. A scene
+   * that spreads backwards, like a grove of fourteen trees, has its centre of
+   * interest somewhere else, and aiming at the origin regardless leaves the
+   * subject stranded in a corner with the frame full of empty ground.
+   */
+  aim?: { y?: number; z?: number; eye?: number; dolly?: number };
+};
 type Builder = (c: Ctx) => SceneObj;
 
 /* ---------- helpers ---------- */
@@ -298,6 +318,7 @@ const SCENES: Record<string, Builder> = {
   collection({ root, figures }) {
     const anchors: Record<string, Object3D> = {};
     const made: { g: Group; home: Vector3 }[] = [];
+    let firstDone = false;
     // the figures stand around eye level rather than at the bottom of the stage
     root.position.y = 0.55;
     for (let i = 0; i < figures.length; i++) {
@@ -313,23 +334,43 @@ const SCENES: Record<string, Builder> = {
       const m = new Object3D(); m.position.set(0, 0.55, 0); g.add(m);
       anchors[spec.label] = m;
     }
-    // a patch of ground so the figures read as standing on something
-    const ground = new Mesh(new CircleGeometry(3.6, 48), std('#2b3547', { transparent: true, opacity: 0.5, side: DoubleSide }));
-    ground.rotation.x = -Math.PI / 2; ground.position.y = -0.56; root.add(ground);
-    return { label: 'সামনে আনো', anchors, update(t, _dt, p) {
+    // No ground of its own any more: the shared one in render.ts catches the
+    // key light's shadow, and two grounds at slightly different heights was
+    // exactly the dark second ellipse that made this look like a sticker.
+    // `root.position.y` is 0.55 and the figures sit at -0.55, so their feet
+    // are at world zero.
+    /**
+     * Hero and supporting cast, rather than a row of equals.
+     *
+     * Fourteen things laid flat across a 700px stage gave every one of them
+     * about forty pixels, which is why the trees read as a hedge of lollipops
+     * no matter how well each one was built. The chosen one now comes a long
+     * way forward and gets nearly twice the size, and the rest stay back as a
+     * grove that the fog softens. Same information, but there is something to
+     * actually look at, and the slider is now a camera move rather than a
+     * highlight.
+     */
+    // The grove runs backwards from the origin, so the camera aims into it and
+    // sits at about the height of a crown rather than looking down on a
+    // diorama. Without this the subject sat in the top corner of the frame with
+    // the bottom third empty ground.
+    return { label: 'সামনে আনো', anchors, groundY: 0, aim: { y: 0.55, z: -0.9, eye: 1.0, dolly: 0.46 }, update(t, _dt, p) {
       const n = made.length;
       if (!n) return;
       const pick = Math.min(n - 1, Math.round(p * (n - 1)));
+      const base = n > 10 ? 1.05 : 1.25;
+      const settled = firstDone; firstDone = true;
       made.forEach((m, i) => {
         const on = i === pick;
-        // the chosen one steps forward and turns; the rest sway where they are
         const want = on ? 1 : 0;
-        m.g.userData.k = (m.g.userData.k ?? 0) + (want - (m.g.userData.k ?? 0)) * 0.12;
+        // Snap on the first frame, ease after: same reason as the badges.
+        m.g.userData.k = settled ? (m.g.userData.k ?? 0) + (want - (m.g.userData.k ?? 0)) * 0.1 : want;
         const k = m.g.userData.k as number;
-        m.g.position.set(m.home.x * (1 - k * 0.75), m.home.y + k * 0.1, m.home.z + k * 2.0);
-        m.g.rotation.y = on ? t * 0.7 : Math.sin(t * 0.5 + i) * 0.16;
-        const base = n > 10 ? 1.0 : 1.2;
-        m.g.scale.setScalar(base * (1 + k * 0.45));
+        m.g.position.set(m.home.x * (1 - k * 0.92), m.home.y + k * 0.06, m.home.z + k * 1.55);
+        // The chosen one turns slowly so its whole silhouette is read; the
+        // others breathe rather than spin, which would make the grove jitter.
+        m.g.rotation.y = on ? t * 0.45 : Math.sin(t * 0.35 + i * 1.7) * 0.12;
+        m.g.scale.setScalar(base * (1 + k * 1.05));
       });
     } };
   },
@@ -638,9 +679,36 @@ export function mountHero(
   const canvas = host.querySelector('canvas')!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const font = getComputedStyle(document.body).fontFamily;
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' }); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-  const scene = new Scene(); const camera = new PerspectiveCamera(42, 1, 0.1, 100); camera.position.set(0, 1.9, 6.2); camera.lookAt(0, 0.1, 0);
-  scene.add(new AmbientLight('#ffffff', 0.55)); const key = new DirectionalLight('#ffffff', 1.75); key.position.set(3, 6, 4); scene.add(key); const fill = new DirectionalLight('#cfe2ff', 0.4); fill.position.set(-4, 2, -3); scene.add(fill); const rim = new DirectionalLight('#ffe8c2', 0.55); rim.position.set(-2, 1.5, -5); scene.add(rim);
+  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  const scene = new Scene();
+  // A slightly longer lens and a lower eye line. 42mm from up at 1.9 was a
+  // grown-up looking down at a diorama; this stands the viewer in front of the
+  // thing instead, which is most of why it now reads as a place.
+  const camera = new PerspectiveCamera(36, 1, 0.1, 100); camera.position.set(0, 1.35, 6.4);
+  /** The scene's own framing, or the default one object at the origin. */
+  // `dolly` pulls the camera in for scenes whose badges are pinned on the
+  // model rather than orbiting it: the default distance exists to clear that
+  // ring, and a scene without one should not be framed as if it had one.
+  let aimY = 0.1, aimZ = 0, eyeY = 1.35, dolly = 1;
+  /**
+   * Badges and labels are sprites measured in world units, so pulling the
+   * camera in for a close scene magnifies them along with everything else -
+   * and a name tag is not part of the scenery, it should hold the same size
+   * on screen wherever the camera stands. Scaling them by the dolly keeps
+   * the angle they subtend constant.
+   */
+  const sprK = () => dolly;
+  // `resize` reads `w` and `camZBase`, which are declared far below this, so
+  // the first build cannot call it: that is a dead-zone throw, not a type
+  // error, and it takes the whole scene out. The initial resize runs on its
+  // own a moment later; every later scene change goes through this flag.
+  let framed = false;
+  const aimCamera = () => { camera.position.y = eyeY; camera.lookAt(0, aimY, aimZ); };
+  aimCamera();
+  // Shadows, filmic tone mapping, a sky/ground environment and fog. See
+  // render.ts for why those four and not a pile of downloaded models.
+  const stage = dressScene(renderer, scene, { groundY: -0.56, radius: 4.2 });
+  scene.add(stage.ground);
   const user = new Group(); scene.add(user); let root = new Group(); user.add(root);
   let cur: SceneObj | null = null, param = spec.p ?? 0.5, popStart = performance.now();
 
@@ -672,7 +740,10 @@ export function mountHero(
       const sp = badgeSprite(it, hueNow, font); const label = labelSprite(it.label, font);
       const a0 = (i / Math.max(1, n)) * Math.PI * 2;
       const marker = named[it.label] ?? generic[i];
-      if (marker) { anchoredCount++; sp.scale.setScalar(pinScale); pins.add(sp); pins.add(label); }
+      // Start at the resting size rather than easing down to it: the frame
+      // loop stops while the tab is in the background, so a scene loaded out
+      // of view would be frozen mid-transition when the visitor arrives.
+      if (marker) { anchoredCount++; sp.scale.setScalar(pinScale * 0.72 * dolly); pins.add(sp); pins.add(label); }
       else { sp.scale.setScalar(0.85); orbit.add(sp); orbit.add(label); }
       return { sp, label, a0, marker };
     });
@@ -801,6 +872,16 @@ export function mountHero(
     user.remove(root); root = new Group(); user.add(root); parts = [];
     hueNow = new Color(s.hue);
     const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font, figures: s.figures ?? [] }); param = s.p ?? 0.5; popStart = performance.now();
+    // One call after the scene is built, rather than a flag inside ninety
+    // builders that a ninety-first would forget.
+    castShadows(root);
+    // The ground belongs to the world, not to the model, so it sits outside
+    // the turntable group: the figures turn on it and their shadows sweep
+    // across it, which is what the eye expects. A floating scene gets none.
+    stage.ground.visible = cur.groundY !== undefined;
+    if (cur.groundY !== undefined) stage.ground.position.y = cur.groundY;
+    aimY = cur.aim?.y ?? 0.1; aimZ = cur.aim?.z ?? 0; eyeY = cur.aim?.eye ?? 1.35; dolly = cur.aim?.dolly ?? 1;
+    if (framed) resize(); else aimCamera();
     return cur.label;
   }
   const firstLabel = build(spec);
@@ -823,8 +904,8 @@ export function mountHero(
 
   let w = 1, h = 1, visible = true, raf = 0, last = performance.now(), t = 0;
   let camZBase = 6.2;
-  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camZBase = (w < 600 ? 7.4 : 6.2) + (badges.length ? (anchoredCount ? 1.2 : 1.9) : 0); camera.position.z = camZBase; camera.lookAt(0, 0.1, 0); }
-  new ResizeObserver(resize).observe(host); resize();
+  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camZBase = ((w < 600 ? 7.4 : 6.2) + (badges.length ? (anchoredCount ? 1.2 : 1.9) : 0)) * dolly; camera.position.z = camZBase; aimCamera(); }
+  new ResizeObserver(resize).observe(host); resize(); framed = true;
   function frame(now: number) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     const run = auto || dragging; if (run) t += dt;
@@ -850,12 +931,30 @@ export function mountHero(
           // pinned to its part: follow the part, hover slightly, face the camera
           b.marker.getWorldPosition(wp); user.worldToLocal(wp);
           b.sp.position.copy(wp); b.sp.position.y += pinScale * 0.33 + Math.sin(t * 1.3 + i) * 0.04;
-          const target = on ? 0.95 : pinScale;
+          /**
+           * One label at a time.
+           *
+           * Fourteen pinned badges, each with its name under it, covered more
+           * of the screen than the models did: the thing the page exists to
+           * show was behind its own annotations. Now the chosen one carries a
+           * full badge and its name, and the rest shrink back to quiet markers
+           * that say "there is something here" without saying what. The name
+           * of every one of them is a tap or a slider nudge away, and the
+           * reading panel beside the stage has it in full.
+           */
+          const target = (on ? 1 : pinScale * 0.72) * sprK();
           b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
-          (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.78;
-          b.label.position.copy(b.sp.position); b.label.position.y -= on ? 0.78 : pinScale;
-          (b.label.material as SpriteMaterial).opacity = on ? 1 : 0.85; b.label.visible = true;
-          const ls = on ? 0.95 : pinScale * 1.1; b.label.scale.set(2.6 * ls, 0.52 * ls, 1);
+          (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.42;
+          b.label.position.copy(b.sp.position); b.label.position.y -= 0.42 * sprK() + 0.3;
+          // Set, not eased. An eased opacity here depends on the frame loop
+          // having run enough times, and this loop idles when the turntable is
+          // paused and is throttled outright when the tab is in the background:
+          // the labels would then be caught half faded, or not faded at all.
+          // Visibility of a label is a fact about which item is chosen, so it
+          // is written as one.
+          b.label.visible = on;
+          (b.label.material as SpriteMaterial).opacity = 1;
+          b.label.scale.set(2.6 * sprK(), 0.52 * sprK(), 1);
           return;
         }
         const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
@@ -876,7 +975,7 @@ export function mountHero(
     if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
     // the camera eases back as the model opens up, so nothing leaves the frame
     camera.position.z = camZBase + explodeNow * spread * 2.1;
-    camera.lookAt(0, 0.1, 0);
+    aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
     raf = visible && !document.hidden ? requestAnimationFrame(frame) : 0;
