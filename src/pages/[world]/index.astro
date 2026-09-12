@@ -53,7 +53,7 @@ const charsOf = (d: ItemDetail[] | null) =>
 const payload = w.cats.map((c, i) => {
   const detail = explorer?.[i] ?? null;
   return {
-    n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i),
+    n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i, c.n),
     lab: c.lab, labAnchors: c.labAnchors, detail, chars: charsOf(detail),
     emoji: c.items.map((it) => emojiFor(w.slug, it)),
   };

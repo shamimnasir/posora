@@ -11,11 +11,14 @@ import {
   MeshStandardMaterial, MeshBasicMaterial, AmbientLight, DirectionalLight, PointLight, CanvasTexture, Sprite, SpriteMaterial,
   DoubleSide, InstancedMesh, Matrix4,
 } from 'three';
+import { FIGURES, arc } from './figures';
 
-export type HeroSpec = { type: string; hue: string; v?: string; p?: number };
+export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
+  /** For the `collection` scene: item label -> figure name, in order. */
+  figures?: { label: string; figure: string }[] };
 /** One thing in the category, shown as a badge orbiting the category's model. */
 export type HeroItem = { label: string; emoji?: string };
-type Ctx = { root: Group; hue: Color; v: string; font: string };
+type Ctx = { root: Group; hue: Color; v: string; font: string; figures: { label: string; figure: string }[] };
 /**
  * A scene may expose `anchors`: a marker object per item label, attached to the
  * part of the model that item is about. Badges then sit on the model instead of
@@ -283,6 +286,51 @@ const SCENES: Record<string, Builder> = {
       lungL.scale.set(0.16 * br, 0.3 * br, 0.13 * br); lungR.scale.set(0.15 * br, 0.28 * br, 0.13 * br);
       bloodM.emissiveIntensity = 0.3 + Math.max(0, Math.sin(t * rate)) * (0.4 + p * 0.4);
       nerveM.emissiveIntensity = 0.25 + Math.max(0, Math.sin(t * 9 + 1)) * 0.35;
+    } };
+  },
+
+  /**
+   * A category that is a list of different things: each item gets its own
+   * little model, laid out on an arc, and its badge pins to it. The slider
+   * makes them take a turn in front, one at a time, so a child can look at
+   * any one of them close up without dragging.
+   */
+  collection({ root, figures }) {
+    const anchors: Record<string, Object3D> = {};
+    const made: { g: Group; home: Vector3 }[] = [];
+    // the figures stand around eye level rather than at the bottom of the stage
+    root.position.y = 0.55;
+    for (let i = 0; i < figures.length; i++) {
+      const spec = figures[i]!;
+      const build = FIGURES[spec.figure] ?? FIGURES[Object.keys(FIGURES)[0]!]!;
+      const g = new Group();
+      build(g);
+      const home = arc(figures.length, i);
+      g.position.copy(home);
+      g.scale.setScalar(figures.length > 10 ? 1.0 : 1.2);
+      root.add(g);
+      made.push({ g, home: home.clone() });
+      const m = new Object3D(); m.position.set(0, 0.55, 0); g.add(m);
+      anchors[spec.label] = m;
+    }
+    // a patch of ground so the figures read as standing on something
+    const ground = new Mesh(new CircleGeometry(3.6, 48), std('#2b3547', { transparent: true, opacity: 0.5, side: DoubleSide }));
+    ground.rotation.x = -Math.PI / 2; ground.position.y = -0.56; root.add(ground);
+    return { label: 'সামনে আনো', anchors, update(t, _dt, p) {
+      const n = made.length;
+      if (!n) return;
+      const pick = Math.min(n - 1, Math.round(p * (n - 1)));
+      made.forEach((m, i) => {
+        const on = i === pick;
+        // the chosen one steps forward and turns; the rest sway where they are
+        const want = on ? 1 : 0;
+        m.g.userData.k = (m.g.userData.k ?? 0) + (want - (m.g.userData.k ?? 0)) * 0.12;
+        const k = m.g.userData.k as number;
+        m.g.position.set(m.home.x * (1 - k * 0.75), m.home.y + k * 0.1, m.home.z + k * 2.0);
+        m.g.rotation.y = on ? t * 0.7 : Math.sin(t * 0.5 + i) * 0.16;
+        const base = n > 10 ? 1.0 : 1.2;
+        m.g.scale.setScalar(base * (1 + k * 0.45));
+      });
     } };
   },
 
@@ -752,7 +800,7 @@ export function mountHero(
     root.traverse((o) => { const m = o as Mesh; m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
     user.remove(root); root = new Group(); user.add(root); parts = [];
     hueNow = new Color(s.hue);
-    const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font }); param = s.p ?? 0.5; popStart = performance.now();
+    const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font, figures: s.figures ?? [] }); param = s.p ?? 0.5; popStart = performance.now();
     return cur.label;
   }
   const firstLabel = build(spec);
