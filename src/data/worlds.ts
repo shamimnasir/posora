@@ -25,8 +25,8 @@ export const worlds: World[] = [
   "keys": [
    "থ্রিডি অরবিট",
    "স্কেল তুলনা",
-   "তারা জোড়া",
-   "গ্রহণ সিমুলেটর"
+   "ভেতরে কী আছে",
+   "মিশনে খেলো"
   ],
   "open": true,
   "cats": [
@@ -125,15 +125,21 @@ export const worlds: World[] = [
    }
   ],
   "keyCats": [
-   null,
-   null,
-   null,
+   0,
+   0,
+   0,
    null
   ],
   "missionCats": [
    null,
    null,
    null
+  ],
+  "keyMissions": [
+   null,
+   null,
+   null,
+   0
   ]
  },
  {

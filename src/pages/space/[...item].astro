@@ -4,6 +4,8 @@ import SpaceExplorer from '../../components/explorer/SpaceExplorer.astro';
 import { DEFAULT_BODY, branchesFor } from '../../data/space';
 import { getBodies, getWorld } from '../../lib/content';
 import { bn } from '../../lib/bn';
+import { spaceExplorer, beltExtras } from '../../data/space-explorer';
+import { worlds } from '../../data/worlds';
 
 export const prerender = false;
 
@@ -22,6 +24,13 @@ const branches = branchesFor(cur.id);
  * description say which is which.
  */
 const isHub = !Astro.params.item;
+// The four categories that are not one of the eleven body pages: moon phases,
+// stars, galaxies and missions. They are written in space-explorer.ts and read
+// here on the hub, because the explorer above only ever shows a body.
+const spaceCats = worlds.find((w) => w.slug === 'space')!.cats;
+const written = spaceCats
+  .map((c, i) => ({ cat: c, detail: spaceExplorer[i] }))
+  .filter((x): x is { cat: typeof spaceCats[number]; detail: NonNullable<typeof x.detail> } => !!x.detail);
 const title = isHub ? 'মহাকাশ' : `${cur.bn} · মহাকাশ`;
 const description = isHub
   ? `সৌরজগতের ${bn(bodies.length)}টি জগৎ এক পাতায় - সূর্য, আটটি গ্রহ, চাঁদ আর প্লুটো। প্রতিটি ঘোরানো যায়, কাছে গিয়ে দেখা যায়, আর তিন গভীরতায় পড়া যায়।`
@@ -78,7 +87,32 @@ const schema = [
               <p class="ix-more"><a href={`/space/${b.id}/`}>{b.bn}ের পুরো পাতা →</a></p>
             </details>
           ))}
+          {beltExtras.map((e) => (
+            <details class="ix">
+              <summary><b>{e.name}</b>{e.detail.chips.slice(0, 1).map((c) => <span class="pill">{c}</span>)}</summary>
+              <p>{e.detail.l1}</p>
+              <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{e.detail.fun}</p>
+            </details>
+          ))}
         </div>
+
+        {written.map(({ cat, detail }) => (
+          <>
+            <h3 class="bt-h">{cat.n}</h3>
+            <p class="bt-tag">{cat.play}</p>
+            <div class="bt-branches">
+              {cat.items.map((it, j) => (
+                <details class="ix">
+                  <summary><b>{it}</b>{detail[j].chips.slice(0, 1).map((c) => <span class="pill">{c}</span>)}</summary>
+                  <p>{detail[j].l1}</p>
+                  <p>{detail[j].l2}</p>
+                  <p>{detail[j].l3}</p>
+                  <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{detail[j].fun}</p>
+                </details>
+              ))}
+            </div>
+          </>
+        ))}
       </section>
     ) : (
       <section class="body-text">
@@ -157,6 +191,8 @@ const schema = [
   .bt-all { margin-top: 0.5rem; font-size: 14px; line-height: 2; color: var(--muted); }
   .bt-all a { color: var(--brand-ink); font-weight: 600; }
   .bt-all a:hover { text-decoration: underline; }
+  .ix-fun { font-size: 13px; color: var(--ink-2); }
+  .ix-fun .lbl { display: block; color: color-mix(in oklab, var(--sun) 55%, var(--ink)); margin-bottom: 0.15rem; }
   .ix summary .pill { font-size: 10.5px; padding: 1px 7px; margin-left: 0.2rem; }
   .ix-more { padding-bottom: 0.8rem; }
   .ix-more a { font-size: 12.5px; font-weight: 700; color: var(--brand-ink); }

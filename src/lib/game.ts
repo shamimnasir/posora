@@ -8,7 +8,7 @@ import { bn } from './bn';
 /* ---------- levels ---------- */
 /** Cumulative জ্ঞানবিন্দু at which each title is reached. */
 export const LEVELS: [number, string][] = [
-  [0, 'নবীন'], [100, 'অভিযাত্রী'], [300, 'অনুসন্ধানী'], [700, 'গবেষক'], [1500, 'বিজ্ঞানী'], [3000, 'পণ্ডিত'],
+  [0, 'নবীন'], [100, 'কৌতূহলী'], [300, 'চালাক'], [700, 'গবেষক'], [1500, 'বিজ্ঞানী'], [3000, 'ওস্তাদ'],
 ];
 export function levelOf(xp: number): { n: number; title: string; next: number | null; frac: number } {
   let i = 0;

@@ -17,6 +17,7 @@ import { discoveryExplorer } from '../../data/discovery-explorer';
 import type { ItemDetail } from '../../data/explorer-types';
 import { getMember, hasPlan, activeChild } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
+import { catEmoji } from '../../data/cat-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
 import { missionSpec, missionKind, missionLength } from '../../data/missions';
 
@@ -137,11 +138,11 @@ const schema = [
 
     <div class="xp">
       <aside class="rail card" aria-label="বিভাগের তালিকা">
-        <div class="card-h"><span class="lbl">বিভাগ</span><span class="lbl num" id="seen-count">০ / {bn(readableTotal)} আবিষ্কৃত</span></div>
+        <div class="card-h"><span class="lbl">বিভাগ</span><span class="lbl num" id="seen-count">০ / {bn(readableTotal)} দেখা হয়েছে</span></div>
         <div class="rail-list">
           {w.cats.map((c, i) => (
             <button type="button" data-i={i} aria-current={i === 0 ? 'true' : undefined} style={`--o:${shade(i)}`}>
-              <span class="rorb" aria-hidden="true"></span>
+              <span class="rorb" aria-hidden="true">{catEmoji(w.slug, c.n)}</span>
               <span class="rt"><span class="nm">{c.n}</span><span class="tg">{bn(c.items.length)} আইটেম</span></span>
               <span class="no lbl">{pad2(i + 1)}</span>
             </button>
@@ -394,11 +395,10 @@ const schema = [
         <section class="card">
           <div class="card-h"><span class="lbl">ভুবন পরিচিতি</span></div>
           <div class="spec">
-            <div class="row"><span class="k">বয়স উপযোগিতা</span><span class="v">{w.age}</span></div>
+            <div class="row"><span class="k">কোন বয়সের জন্য</span><span class="v">{w.age}</span></div>
             <div class="row"><span class="k">বিভাগ</span><span class="v">{bn(w.cats.length)}</span></div>
             <div class="row"><span class="k">শেখার আইটেম</span><span class="v">{bn(total)}</span></div>
-            <div class="row"><span class="k">পূর্বশর্ত</span><span class="v">{w.dep}</span></div>
-            <div class="row"><span class="k">নির্মাণ ফেজ</span><span class="v">{w.phase}</span></div>
+            <div class="row"><span class="k">আগে কী জানা দরকার</span><span class="v">{w.dep}</span></div>
             <div class="row"><span class="k">তুমি দেখেছ</span><span class="v" id="spec-read">০</span><span class="meter"><i id="spec-meter"></i></span></div>
           </div>
         </section>
@@ -419,7 +419,7 @@ const schema = [
           <h2>{w.bn} ভুবনের পুরো তালিকা</h2>
           <p class="index-s">
             {bn(w.cats.length)}টি বিভাগ, {bn(total)}টি বিষয়। নিচের যেকোনো শিরোনামে চাপলে
-            সংক্ষিপ্ত লেখাটা খুলবে। পুরো লেখা আর তিনটি গভীরতা উপরের অন্বেষকে।
+            ছোট লেখাটা খুলবে। পুরো লেখা আর তিনটি গভীরতা উপরের মডেলে।
           </p>
         </div>
       </div>
@@ -442,7 +442,7 @@ const schema = [
                   <p>{c.detail![ii].l1}</p>
                   <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{c.detail![ii].fun}</p>
                   <p class="ix-more">
-                    <button type="button" class="ix-open" data-c={ci} data-i={ii}>অন্বেষকে খুলে দেখো →</button>
+                    <button type="button" class="ix-open" data-c={ci} data-i={ii}>উপরে মডেলে দেখাও →</button>
                   </p>
                 </details>
               ))}
@@ -462,7 +462,7 @@ const schema = [
     <div class="printable" id="printable" aria-hidden="true"></div>
 
     <div class="status card">
-      <span class="lbl">অভিযান লগ</span>
+      <span class="lbl">কতদূর হলো</span>
       <span class="bar"><i id="log-bar"></i></span>
       <span class="lbl num" id="log-text">০ / {bn(total)}</span>
     </div>
@@ -486,9 +486,11 @@ const schema = [
   .rail-list button { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; padding: 8px 9px; border-radius: 11px; border-left: 3px solid transparent; transition: background 0.15s ease; }
   .rail-list button:hover { background: var(--panel-2); }
   .rail-list button[aria-current="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
-  .rorb { width: 30px; height: 30px; border-radius: 50%; flex: none; background: radial-gradient(circle at 32% 30%, #fff 0%, var(--o) 32%, color-mix(in oklab, var(--o) 55%, #000) 100%); box-shadow: inset -3px -4px 8px rgba(0,0,0,.25); transition: transform 0.2s ease; }
+  /* the subject of the row, not another identical bead */
+  .rorb { width: 32px; height: 32px; border-radius: 11px; flex: none; display: grid; place-items: center; font-size: 17px; line-height: 1;
+    background: color-mix(in oklab, var(--o) 18%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 38%, var(--line)); transition: transform 0.2s ease, background 0.2s ease; }
   .rail-list button:hover .rorb { transform: scale(1.1); }
-  .rail-list button.done .rorb { box-shadow: inset -3px -4px 8px rgba(0,0,0,.25), 0 0 0 2px var(--panel), 0 0 0 4px var(--ok); }
+  .rail-list button.done .rorb { border-color: var(--ok); box-shadow: 0 0 0 2px color-mix(in oklab, var(--ok) 28%, transparent); }
   .rt { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
   .nm { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
   .tg { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1297,7 +1299,7 @@ const schema = [
     const seen = new Set(seenList());
     const done = cats.reduce((s, _c, i) => s + readCount(i, seen), 0);
     const pct = TOTAL ? (done / TOTAL) * 100 : 0;
-    $('#seen-count').textContent = `${bn(done)} / ${bn(TOTAL)} আবিষ্কৃত`;
+    $('#seen-count').textContent = `${bn(done)} / ${bn(TOTAL)} দেখা হয়েছে`;
     $('#log-text').textContent = `${bn(done)} / ${bn(TOTAL)}`;
     $('#log-bar').style.width = `${pct}%`;
     $('#prog-bar').style.width = `${pct}%`;

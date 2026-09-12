@@ -15,6 +15,7 @@
  */
 import { worlds } from '../data/worlds';
 import { bodies } from '../data/space';
+import { spaceExplorer, beltExtras } from '../data/space-explorer';
 import { mathExplorer } from '../data/math-explorer';
 import { physicsExplorer } from '../data/physics-explorer';
 import { chemistryExplorer } from '../data/chemistry-explorer';
@@ -49,10 +50,20 @@ function compute(): Coverage {
     const items = w.cats.reduce((s, c) => s + c.items.length, 0);
     total += items;
     if (w.open) {
-      // The space explorer covers one body per entry; the rest of the space
-      // plan (stars, galaxies, missions) is listed but not built.
-      readable += bodies.length;
-      uncovered += Math.max(0, items - bodies.length);
+      // Space is written in two places, so it is counted in two. The eleven
+      // bodies each have their own page, built from `bodies`; everything else
+      // is written in space-explorer.ts and read on the /space/ hub. Each item
+      // is checked against both rather than subtracted, so the count cannot
+      // quietly drift past the number of items that exist.
+      const bodyNames = new Set(bodies.map((b) => b.bn));
+      const extraNames = new Set(beltExtras.map((e) => e.name));
+      w.cats.forEach((c, i) => {
+        const d = spaceExplorer[i];
+        if (d && d.length === c.items.length) { readable += c.items.length; return; }
+        const ok = c.items.filter((it) => bodyNames.has(it) || extraNames.has(it)).length;
+        readable += ok;
+        uncovered += c.items.length - ok;
+      });
       continue;
     }
     const ex = EXPLORERS[w.slug];
@@ -73,7 +84,19 @@ export function coverageFor(slug: string): { items: number; covered: number } {
   const w = worlds.find((x) => x.slug === slug);
   if (!w) return { items: 0, covered: 0 };
   const items = w.cats.reduce((s, c) => s + c.items.length, 0);
-  if (w.open) return { items, covered: bodies.length };
+  if (w.open) {
+    // same two-source count as compute(), so the per-world pill and the
+    // site-wide total can never tell different stories
+    const bodyNames = new Set(bodies.map((b) => b.bn));
+    const extraNames = new Set(beltExtras.map((e) => e.name));
+    let covered = 0;
+    w.cats.forEach((c, i) => {
+      const d = spaceExplorer[i];
+      if (d && d.length === c.items.length) { covered += c.items.length; return; }
+      covered += c.items.filter((it) => bodyNames.has(it) || extraNames.has(it)).length;
+    });
+    return { items, covered };
+  }
   const ex = EXPLORERS[w.slug];
   let covered = 0;
   w.cats.forEach((c, i) => {

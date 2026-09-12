@@ -114,7 +114,10 @@ const homeSchema = [
   <section class="sec wrap" id="worlds">
     <div class="sec-h">
       <h2>{bn(totals.worlds)}টি ভুবন</h2>
-      <p>প্রতিটি ভুবনের প্রতিটি বিভাগে একটা জীবন্ত থ্রিডি মডেল - টেনে ঘোরাও, স্লাইডার বদলাও। {bn(totals.items)}টির মধ্যে {bn(COVERAGE.covered)}টি বিষয়ের পুরো কথা এখন তিন গভীরতায় পড়া যায়; মহাকাশের তারা, গ্যালাক্সি আর অভিযানের {bn(COVERAGE.uncovered)}টি এখনো বাকি।</p>
+      <p>প্রতিটি ভুবনের প্রতিটি বিভাগে একটা জীবন্ত থ্রিডি মডেল - টেনে ঘোরাও, স্লাইডার বদলাও।{' '}
+        {COVERAGE.uncovered === 0
+          ? `${bn(totals.items)}টি বিষয়ের প্রতিটির পুরো কথা এখন তিন গভীরতায় পড়া যায়, একটাও বাকি নেই।`
+          : `${bn(totals.items)}টির মধ্যে ${bn(COVERAGE.covered)}টি বিষয়ের পুরো কথা এখন তিন গভীরতায় পড়া যায়, বাকি ${bn(COVERAGE.uncovered)}টি লেখা হচ্ছে।`}</p>
     </div>
     <div class="grid">
       {worlds.map((w, i) => <WorldCard w={w} i={i} />)}

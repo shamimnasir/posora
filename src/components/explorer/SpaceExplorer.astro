@@ -4,6 +4,7 @@ import { bn, pad2 } from '../../lib/bn';
 import { worlds } from '../../data/worlds';
 import { missionSpec, missionKind, missionLength } from '../../data/missions';
 import { AWARDS, awardKey } from '../../lib/game';
+import { bodyEmoji } from '../../data/cat-emoji';
 interface Props { current: Body }
 const { current: cur } = Astro.props;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
@@ -16,11 +17,11 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
 ---
 <div class="xp" id="explorer" data-current={cur.id}>
   <aside class="rail card" aria-label="সৌরজগতের তালিকা">
-    <div class="card-h"><span class="lbl">সৌরজগৎ</span><span class="lbl num" id="seen-count">০ / {bn(bodies.length)} আবিষ্কৃত</span></div>
+    <div class="card-h"><span class="lbl">সৌরজগৎ</span><span class="lbl num" id="seen-count">০ / {bn(bodies.length)} দেখা হয়েছে</span></div>
     <div class="rail-list">
       {bodies.map((b, i) => (
         <button type="button" data-id={b.id} aria-current={b.id === cur.id ? 'true' : undefined} style={`--o:${b.visual.colors[0]};--o2:${b.visual.colors[1]}`}>
-          <span class="rorb" aria-hidden="true"></span>
+          <span class="rorb" aria-hidden="true">{bodyEmoji(b.id)}</span>
           <span class="rt"><span class="nm">{b.bn}</span><span class="tg">{b.tagline}</span></span>
           <span class="no lbl">{pad2(i + 1)}</span>
         </button>
@@ -264,7 +265,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
 </div>
 
 <div class="status card">
-  <span class="lbl">অভিযান লগ</span>
+  <span class="lbl">কতদূর হলো</span>
   <span class="bar"><i id="log-bar"></i></span>
   <span class="lbl num" id="log-text">০ / {bn(bodies.length)}</span>
 </div>
@@ -282,9 +283,11 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .rail-list button { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; padding: 8px 9px; border-radius: 11px; border-left: 3px solid transparent; transition: background 0.15s ease; }
   .rail-list button:hover { background: var(--panel-2); }
   .rail-list button[aria-current="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
-  .rorb { width: 30px; height: 30px; border-radius: 50%; flex: none; background: radial-gradient(circle at 32% 30%, #fff 0%, var(--o) 30%, var(--o2) 100%); box-shadow: inset -3px -4px 8px rgba(0,0,0,.25); transition: transform 0.2s ease; }
+  /* the body itself, not another identical bead: its own colour behind its own icon */
+  .rorb { width: 32px; height: 32px; border-radius: 11px; flex: none; display: grid; place-items: center; font-size: 17px; line-height: 1;
+    background: color-mix(in oklab, var(--o) 22%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 45%, var(--line)); transition: transform 0.2s ease; }
   .rail-list button:hover .rorb { transform: scale(1.1); }
-  .rail-list button.seen .rorb { box-shadow: inset -3px -4px 8px rgba(0,0,0,.25), 0 0 0 2px var(--panel), 0 0 0 4px var(--ok); }
+  .rail-list button.seen .rorb { border-color: var(--ok); box-shadow: 0 0 0 2px color-mix(in oklab, var(--ok) 28%, transparent); }
   .rt { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
   .nm { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
   .tg { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -863,7 +866,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   }
   function renderProgress() {
     const n = getProgress().seen[WORLD]?.length ?? 0;
-    $('#seen-count').textContent = `${bn(n)} / ${bn(data.length)} আবিষ্কৃত`;
+    $('#seen-count').textContent = `${bn(n)} / ${bn(data.length)} দেখা হয়েছে`;
     (document.getElementById('log-bar') as HTMLElement).style.width = `${(n / data.length) * 100}%`;
     document.getElementById('log-text')!.textContent = `${bn(n)} / ${bn(data.length)}`;
     rail.forEach((b) => b.classList.toggle('seen', (getProgress().seen[WORLD] ?? []).includes(b.dataset.id!)));

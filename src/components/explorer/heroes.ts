@@ -326,7 +326,7 @@ const SCENES: Record<string, Builder> = {
   wave({ root, hue }) {
     const geo = new PlaneGeometry(7, 1.4, 140, 8); const m = new Mesh(geo, std(hue, { side: DoubleSide })); m.rotation.x = -0.35; root.add(m);
     const pos = geo.attributes.position as Float32BufferAttribute; const base = Float32Array.from(pos.array as Float32Array);
-    return { label: 'কম্পাঙ্ক', update(t, _dt, p) {
+    return { label: 'সুর', update(t, _dt, p) {
       const k = 1 + p * 4; for (let i = 0; i < pos.count; i++) { const x = base[i * 3]; pos.setZ(i, Math.sin(x * k - t * 3) * 0.45); } pos.needsUpdate = true; geo.computeVertexNormals();
     } };
   },
@@ -354,7 +354,7 @@ const SCENES: Record<string, Builder> = {
     const prism = new Mesh(new CylinderGeometry(1.2, 1.2, 1.6, 3), std(lighten(hue, 0.6), { transparent: true, opacity: 0.55, roughness: 0.1 })); prism.rotation.x = Math.PI / 2; prism.rotation.z = Math.PI; root.add(prism);
     const beam = new Mesh(new BoxGeometry(3, 0.08, 0.08), glow('#ffffff', 0.9)); beam.position.set(-2.3, 0.2, 0); root.add(beam);
     const cols = ['#ff3b30', '#ff9500', '#ffd60a', '#34c759', '#0a84ff', '#5e5ce6', '#bf5af2'].map((c, i) => { const r = new Mesh(new BoxGeometry(3.2, 0.07, 0.07), glow(c, 0.95)); r.position.x = 1.6; const p = new Group(); p.position.set(0.7, -0.05, 0); p.add(r); root.add(p); return p; });
-    return { label: 'বিচ্ছুরণ', update(t, _dt, p) { cols.forEach((c, i) => { c.rotation.z = -(i - 3) * (0.04 + p * 0.09); }); (beam.material as MeshBasicMaterial).opacity = 0.75 + Math.sin(t * 6) * 0.15; } };
+    return { label: 'রং ছড়াও', update(t, _dt, p) { cols.forEach((c, i) => { c.rotation.z = -(i - 3) * (0.04 + p * 0.09); }); (beam.material as MeshBasicMaterial).opacity = 0.75 + Math.sin(t * 6) * 0.15; } };
   },
 
   circuit({ root, hue, v }) {
@@ -512,7 +512,7 @@ const SCENES: Record<string, Builder> = {
     [0, 1, 2].forEach((i) => { const f = new Mesh(new BoxGeometry(0.08, 0.7, 0.6), std(hue)); const a = (i / 3) * Math.PI * 2; f.position.set(Math.cos(a) * 0.5, -0.8, Math.sin(a) * 0.5); f.rotation.y = -a; r.add(f); });
     const flame = new Mesh(new ConeGeometry(0.32, 1.2, 16), glow('#ff8c1a', 0.95)); flame.rotation.x = Math.PI; flame.position.y = -1.6; r.add(flame);
     const N = 120; const arr = new Float32Array(N * 3); const pg = new BufferGeometry(); pg.setAttribute('position', new Float32BufferAttribute(arr, 3)); const smoke = new Points(pg, new PointsMaterial({ color: '#c9ced4', size: 0.12, transparent: true, opacity: 0.7 })); root.add(smoke);
-    return { label: 'থ্রটল', update(t, dt, p) { r.position.y = -1 + p * 3 + Math.sin(t * 8) * 0.02 * p; r.rotation.z = Math.sin(t * 2) * 0.02; flame.scale.set(1, 0.6 + p * 1.4 + Math.random() * 0.3, 1); flame.visible = p > 0.05; const pa = pg.attributes.position as Float32BufferAttribute; for (let i = 0; i < N; i++) { let y = pa.getY(i) - dt * 2; if (y < r.position.y - 4 || pa.getX(i) === 0) { y = r.position.y - 2; pa.setX(i, rnd(-0.3, 0.3)); pa.setZ(i, rnd(-0.3, 0.3)); } pa.setX(i, pa.getX(i) * 1.02); pa.setY(i, p > 0.05 ? y : 99); } pa.needsUpdate = true; } };
+    return { label: 'জোর', update(t, dt, p) { r.position.y = -1 + p * 3 + Math.sin(t * 8) * 0.02 * p; r.rotation.z = Math.sin(t * 2) * 0.02; flame.scale.set(1, 0.6 + p * 1.4 + Math.random() * 0.3, 1); flame.visible = p > 0.05; const pa = pg.attributes.position as Float32BufferAttribute; for (let i = 0; i < N; i++) { let y = pa.getY(i) - dt * 2; if (y < r.position.y - 4 || pa.getX(i) === 0) { y = r.position.y - 2; pa.setX(i, rnd(-0.3, 0.3)); pa.setZ(i, rnd(-0.3, 0.3)); } pa.setX(i, pa.getX(i) * 1.02); pa.setY(i, p > 0.05 ? y : 99); } pa.needsUpdate = true; } };
   },
 
   letters({ root, hue, v, font }) {
