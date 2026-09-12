@@ -100,7 +100,9 @@ const first = shelves[0];
         <section class="card stage">
           <div class="card-h">
             <span class="lbl" id="sh-cat">{shelves[0]?.c}</span>
-            <span class="lbl num" id="sh-n"></span>
+            {/* True for a visitor who has collected nothing, corrected by the
+                script for everyone else. Only the browser knows the real count. */}
+            <span class="lbl num" id="sh-n">০ / {bn(shelves[0]?.slots.length ?? 0)} সংগ্রহে</span>
           </div>
           <div class="host" id="shelf-host" role="img" aria-label="সংগ্রহের তাক - থ্রিডি">
             <canvas></canvas>

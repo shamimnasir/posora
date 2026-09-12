@@ -206,8 +206,12 @@ const schema = [
 
       {/* ---------- rail ---------- */}
       <aside class="rail">
+        {/* The counts below belong to this browser, so the server cannot know
+            them. They ship as the true value for a first-ever visitor and the
+            script corrects them; a heading over a blank space is worse than a
+            number that is right for somebody. */}
         <section class="card cal">
-          <div class="card-h"><span class="lbl">শেষ চার সপ্তাহ</span><span class="lbl num" id="cal-n"></span></div>
+          <div class="card-h"><span class="lbl">শেষ চার সপ্তাহ</span><span class="lbl num" id="cal-n">০ দিন</span></div>
           <div class="cells" id="cells" aria-hidden="true">
             {Array.from({ length: 28 }, (_, i) => <span class="cell" data-back={27 - i}></span>)}
           </div>
@@ -215,7 +219,7 @@ const schema = [
         </section>
 
         <section class="card mile">
-          <div class="card-h"><span class="lbl">ধারার ধাপ</span><span class="lbl" id="mile-next"></span></div>
+          <div class="card-h"><span class="lbl">ধারার ধাপ</span><span class="lbl" id="mile-next">পরের ধাপ {bn(MILESTONES[0].at)} দিনে</span></div>
           <ol class="ml">
             {MILESTONES.map((m) => (
               <li data-at={m.at}>

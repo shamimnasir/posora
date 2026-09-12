@@ -102,11 +102,12 @@ export const MOUTH = {
  * time. A mission with seven puzzles that hands you five of them, in an order
  * drawn from the day and the attempt, is twenty-one different games.
  *
- * Two types are deliberately left whole. A `path` is a journey: food does not
+ * Two types keep every piece they have. A `path` is a journey: food does not
  * reach the small intestine before the stomach, so its stops can be neither
- * cut nor reordered. A `build` is one budget against one set of requirements;
- * removing a pool item can make it unsolvable. Both already shuffle what they
- * can - the choices at each stop, the order of the pool.
+ * cut nor reordered, and it makes no claim to vary. A `build` is one budget
+ * against one set of requirements, so removing a pool item could make it
+ * unsolvable - but the order the shelf is laid out in carries no meaning, so
+ * that is shuffled and the puzzle is never the same shelf twice.
  * ------------------------------------------------------------------------- */
 import { rng, hash, shuffle } from '../lib/rand';
 
@@ -138,6 +139,10 @@ export function varyMission(m: Mission, seed: string): Mission {
       return { ...m, rounds: sample(m.rounds, want!, `${seed}:c`) };
     case 'calc':
       return { ...m, rounds: sample(m.rounds, want!, `${seed}:n`) };
+    case 'build':
+      // The budget and the requirements are the puzzle and stay exactly as
+      // authored. Where the items sit on the shelf is not.
+      return { ...m, pool: shuffle(m.pool, rng(hash(`${seed}:b`))) };
     case 'sort': {
       // Sampling has to leave every bucket represented, or a bucket sits on
       // screen all game with nothing that belongs in it, which teaches the
