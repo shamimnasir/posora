@@ -9,7 +9,7 @@ import {
   IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, DodecahedronGeometry, TubeGeometry, ExtrudeGeometry,
   Shape, CatmullRomCurve3, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, Line, LineBasicMaterial, Box3, Sphere,
   MeshStandardMaterial, MeshBasicMaterial, AmbientLight, DirectionalLight, PointLight, CanvasTexture, Sprite, SpriteMaterial,
-  DoubleSide, InstancedMesh, Matrix4, Quaternion, Euler,
+  DoubleSide, InstancedMesh, Matrix4,
 } from 'three';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number };

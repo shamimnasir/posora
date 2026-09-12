@@ -21,6 +21,12 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = '') => { const n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; };
 const shuffle = <T,>(a: T[]) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j]!, b[i]!]; } return b; };
 
+// Astro gathers the CSS of everything a page can reach and links it in the
+// head, dynamic imports included, so there is no way to defer this from here.
+// It is 3KB over the wire and immutable-cached, which is a fair price for the
+// panel never appearing unstyled.
+import '../../styles/mission-panel.css';
+
 export function playMission(spec: Mission, o: Opts): { close(): void } {
   /* ---- shell ---- */
   // only ever one mission panel on screen: a second one would stack on the first

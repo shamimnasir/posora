@@ -4,7 +4,6 @@ import { bn, pad2 } from '../../lib/bn';
 import { worlds } from '../../data/worlds';
 import { missionSpec, missionKind, missionLength } from '../../data/missions';
 import { AWARDS, awardKey } from '../../lib/game';
-import '../../styles/mission-panel.css';
 interface Props { current: Body }
 const { current: cur } = Astro.props;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
@@ -1037,8 +1036,8 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   }
   missionBtns.forEach((b, i) => b.addEventListener('click', async () => {
     const mi = +b.dataset.mi!;
-    const { missionSpec } = await import('../../data/missions');
-    const spec = missionSpec(WORLD, mi);
+    const { loadMission } = await import('../../data/mission-loader');
+    const spec = await loadMission(WORLD, mi);
     if (!spec) return;
     const { playMission } = await import('./missions');
     track('mission_start', { world: WORLD, mission: mi });

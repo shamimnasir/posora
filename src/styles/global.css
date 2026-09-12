@@ -25,6 +25,9 @@
   --r-sm: 10px;
   --wrap: 1280px;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Headings are the same family as body text, set heavier. Declaring it a
+     second time in astro.config only ever duplicated the @font-face blocks. */
+  --font-display: var(--font-body);
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {

@@ -103,8 +103,10 @@ const graph = [
         only what the site actually is; no ratings, no prices, nothing unearned. */}
     <script type="application/ld+json" is:inline set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />
     {/* Preload only the Bengali faces the first paint needs; Latin + other weights load on demand. */}
+    {/* One family, one set of @font-face rules. Only the Bengali file is
+        preloaded: it carries almost every glyph on the page, and the Latin
+        one can arrive on its own schedule behind font-display: swap. */}
     <Font cssVariable="--font-body" preload={[{ subset: 'bengali', weight: 400 }]} />
-    <Font cssVariable="--font-display" preload={[{ subset: 'bengali' }]} />
     <Analytics />
   </head>
   <body style={hue ? `--w:${hue}` : undefined}>

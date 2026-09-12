@@ -19,7 +19,6 @@ import { getMember, hasPlan, activeChild } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
 import { missionSpec, missionKind, missionLength } from '../../data/missions';
-import '../../styles/mission-panel.css';
 
 export const prerender = false;
 
@@ -737,7 +736,11 @@ const schema = [
   .index-worlds { margin-top: 0.9rem; font-size: 13.5px; line-height: 2; color: var(--muted); }
   .index-worlds :global(a) { color: var(--brand-ink); font-weight: 600; }
   .index-worlds :global(a:hover) { text-decoration: underline; }
-  .index-cat { margin-top: 1.8rem; }
+  /* Eighty-odd blocks of text that nobody sees until they scroll. Skipping
+     their layout and paint until then costs nothing and saves the browser
+     real work on a slow phone; the placeholder height keeps the scrollbar
+     honest so the page does not jump as they come into view. */
+  .index-cat { margin-top: 1.8rem; content-visibility: auto; contain-intrinsic-size: auto 420px; }
   .index-cat h3 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
   .index-play { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0.3rem 0 0.7rem; max-width: 76ch; }
   .index-note { font-size: 13.5px; color: var(--ink-2); line-height: 1.8; max-width: 76ch; }
@@ -992,8 +995,9 @@ const schema = [
   }));
   missionBtns.forEach((b, i) => b.addEventListener('click', async () => {
     const mi = +b.dataset.mi!;
-    const { missionSpec } = await import('../../data/missions');
-    const spec = missionSpec(slug, mi);
+    // one world's missions, not all eleven
+    const { loadMission } = await import('../../data/mission-loader');
+    const spec = await loadMission(slug, mi);
     if (!spec) return;
     const { playMission } = await import('../../components/explorer/missions');
     // If the mission belongs to a category, move the model there first, so
