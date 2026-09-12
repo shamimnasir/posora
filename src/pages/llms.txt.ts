@@ -50,9 +50,9 @@ and carries no advertising.
 - ${c.readable} items have full written explanations at three depths (ছোট for ages 5-8,
   মাঝারি for 9-12, বড় for 13+), plus context chips and one surprising fact each.
 - ${c.tool} items are live interactive tools rather than reading.
-- ${c.uncovered} items are listed in the plan but not yet written, and the site marks
-  them as such rather than showing an empty page.
-- ${missionCount} playable missions, three per world, each a small game with three
+${c.uncovered === 0
+  ? '- Nothing on the plan is unwritten: every item has its text.\n'
+  : `- ${c.uncovered} items are listed in the plan but not yet written, and the site marks\n  them as such rather than showing an empty page.\n`}- ${missionCount} playable missions, three per world, each a small game with three
   lives, a timer bonus and a star score.
 - Every category also has a find-it game: the model names one of its own items
   and the child has to spot that item on the model.
