@@ -14,7 +14,12 @@ export type CalcRound = { q: string; a: number; fact?: string };
 /** `tags` are the requirements this item covers. An item with none is a trap, and `warn` says why. */
 export type BuildItem = { name: string; emoji: string; cost: number; tags: string[]; warn?: string };
 export type Mission =
-  | { type: 'order'; intro: string; rounds: OrderRound[] }
+  /**
+   * `askFirst`, `askNext` and `wrong` are prompt templates. `{first}` is the
+   * card already on the board, `{prev}` the one just placed. Without them the
+   * engine falls back to neutral wording.
+   */
+  | { type: 'order'; intro: string; askFirst?: string; askNext?: string; wrong?: string; rounds: OrderRound[] }
   | { type: 'path'; intro: string; token: string; tokenName: string; stops: PathStop[] }
   | { type: 'identify'; intro: string; caption: string; rounds: IdRound[] }
   /** Tap the right bucket for each item. The buckets stay on screen, so the categories themselves are the lesson. */
@@ -93,6 +98,9 @@ export const MISSIONS: Record<string, (Mission | null)[]> = {
     {
       type: 'order',
       intro: 'সূর্যের শক্তি কে খায়, তাকে কে খায়? নিচের কার্ডগুলো ঠিক ক্রমে ছুঁয়ে শৃঙ্খলটা গড়ো।',
+      askFirst: '{first} থেকে শুরু। তার শক্তি প্রথমে কে নেয়?',
+      askNext: '{prev}কে কে খায়?',
+      wrong: 'উঁহু। {prev} খায় কে, সেটা ভাবো।',
       rounds: [
         { title: 'সুন্দরবনে', chain: ['সূর্য', 'ঘাস', 'চিত্রা হরিণ', 'বাঘ'], emoji: ['☀️', '🌿', '🦌', '🐅'], note: 'প্রতিটি ধাপে শক্তির বড় অংশ হারিয়ে যায়, তাই বাঘের চেয়ে হরিণ অনেক বেশি, হরিণের চেয়ে ঘাস আরও বেশি।' },
         { title: 'পুকুরে', chain: ['সূর্য', 'শৈবাল', 'পুঁটি মাছ', 'বক'], emoji: ['☀️', '🟢', '🐟', '🐦'], note: 'পানির নিচে শৈবালই গাছের কাজ করে: সূর্যের আলো ধরে খাবার বানায়, আর তা থেকেই পুকুরের সব প্রাণী বাঁচে।' },
@@ -133,6 +141,9 @@ export const MISSIONS: Record<string, (Mission | null)[]> = {
     {
       type: 'order',
       intro: 'সূর্য থেকে বাইরের দিকে কী কী আছে, ঠিক ক্রমে সাজাও। সবচেয়ে কাছেরটা আগে।',
+      askFirst: '{first}-এর সবচেয়ে কাছে কোনটা?',
+      askNext: '{prev}-এর পরে কোনটা আসে?',
+      wrong: 'উঁহু। {prev}-এর ঠিক পরেরটা ভাবো।',
       rounds: [
         { title: 'ভেতরের গ্রহ', chain: ['সূর্য', 'বুধ', 'শুক্র', 'পৃথিবী', 'মঙ্গল'], emoji: ['☀️', '🪨', '🟡', '🌍', '🔴'], note: 'এই চারটিকে বলে পাথুরে গ্রহ, কারণ এদের শক্ত মাটি আছে। মঙ্গলের পরেই গ্রহাণু বলয়।' },
         { title: 'বাইরের গ্রহ', chain: ['গ্রহাণু বলয়', 'বৃহস্পতি', 'শনি', 'ইউরেনাস', 'নেপচুন'], emoji: ['🪨', '🟠', '🪐', '🔵', '🔷'], note: 'এই চারটি গ্যাসের দানব, এদের কোনো শক্ত মাটি নেই। নেপচুনে সূর্যের আলো পৌঁছাতে সাড়ে চার ঘণ্টা লাগে।' },
@@ -699,6 +710,9 @@ export const MISSIONS: Record<string, (Mission | null)[]> = {
     {
       type: 'order',
       intro: 'বিজ্ঞানের কাজ একটা নির্দিষ্ট ক্রমে হয়। তিনটে পরীক্ষার ধাপগুলো ঠিক ক্রমে সাজাও।',
+      askFirst: '{first}-এর পরে কী করবে?',
+      askNext: '{prev}-এর পরে কী করবে?',
+      wrong: 'উঁহু। {prev}-এর ঠিক পরের ধাপটা ভাবো।',
       rounds: [
         { title: 'বিজ্ঞানের পদ্ধতি', chain: ['প্রশ্ন করা', 'অনুমান', 'পরীক্ষা', 'পর্যবেক্ষণ', 'সিদ্ধান্ত'], emoji: ['❓', '💭', '🧪', '👀', '✅'], note: 'অনুমান ভুল হলেও সেটা ব্যর্থতা নয়। ভুল অনুমান বাতিল করাও একটা ফল, আর বিজ্ঞান এভাবেই এগোয়।' },
         { title: 'বেকিং সোডার আগ্নেয়গিরি', chain: ['বোতল সাজানো', 'বেকিং সোডা ঢালা', 'রং মেশানো', 'ভিনেগার ঢালা', 'ফেনার অগ্ন্যুৎপাত'], emoji: ['🍾', '🥣', '🎨', '🧪', '🌋'], note: 'ভিনেগার সবার শেষে, কারণ সে ঢাললেই বিক্রিয়া শুরু। বিক্রিয়ার আগে সব প্রস্তুতি সেরে নেওয়াই নিয়ম।' },
@@ -708,6 +722,9 @@ export const MISSIONS: Record<string, (Mission | null)[]> = {
     {
       type: 'order',
       intro: 'মানুষের বড় আবিষ্কারগুলো একটার পিঠে আরেকটা চড়ে এসেছে। কোনটা আগে, কোনটা পরে, সাজাও।',
+      askFirst: '{first}-এর পরে কোন আবিষ্কারটা এসেছে?',
+      askNext: '{prev}-এর পরে কোনটা এসেছে?',
+      wrong: 'উঁহু, ওটা আরও পরের। {prev}-এর ঠিক পরেরটা ভাবো।',
       rounds: [
         { title: 'শুরুর দিকের আবিষ্কার', chain: ['আগুনের ব্যবহার', 'চাকা', 'লিখন', 'কাগজ'], emoji: ['🔥', '🎡', '✍️', '📜'], note: 'আগুন লক্ষ বছরের পুরনো, চাকা প্রায় সাড়ে পাঁচ হাজার বছর, লিখনও তার কাছাকাছি সময়ের। কাগজ আসে অনেক পরে, চীনে।' },
         { title: 'যন্ত্রের যুগ', chain: ['ছাপাখানা', 'বাষ্পীয় ইঞ্জিন', 'টেলিফোন', 'উড়োজাহাজ'], emoji: ['🖨️', '🚂', '☎️', '✈️'], note: 'ছাপাখানা পনেরো শতকে, বাষ্পীয় ইঞ্জিন আঠারো শতকে, টেলিফোন ১৮৭৬ সালে, রাইট ভাইদের উড়োজাহাজ ১৯০৩ সালে।' },
@@ -717,6 +734,9 @@ export const MISSIONS: Record<string, (Mission | null)[]> = {
     {
       type: 'order',
       intro: 'রোবটটা গোলকধাঁধায় দাঁড়িয়ে। ব্লকগুলো ঠিক ক্রমে সাজালে সে বেরিয়ে যাবে। কম্পিউটার ঠিক এভাবেই এক লাইন করে নির্দেশ পড়ে।',
+      askFirst: 'রোবট তৈরি। প্রথম ব্লকটা কোনটা?',
+      askNext: 'তারপর কোন ব্লকটা বসবে?',
+      wrong: 'ওই ব্লকটা এখানে নয়। রাউন্ডের নামটা আরেকবার পড়ো।',
       rounds: [
         { title: 'সোজা তারপর ডানে', chain: ['শুরু', 'সামনে যাও', 'সামনে যাও', 'ডানে ঘোরো', 'সামনে যাও'], emoji: ['🤖', '⬆️', '⬆️', '➡️', '⬆️'], note: 'কম্পিউটার নিজে কিছু আন্দাজ করে না, ঠিক যতটা বলবে ততটাই করবে। এটাই প্রোগ্রামের প্রথম শিক্ষা।' },
         { title: 'দুই মোড়ের ধাঁধা', chain: ['শুরু', 'সামনে যাও', 'বাঁয়ে ঘোরো', 'সামনে যাও', 'ডানে ঘোরো', 'সামনে যাও'], emoji: ['🤖', '⬆️', '⬅️', '⬆️', '➡️', '⬆️'], note: 'ঘোরার ব্লক নিজে রোবটকে এগোয় না, শুধু মুখ ঘোরায়। তাই ঘোরার পরে আবার এগোনোর ব্লক লাগে।' },

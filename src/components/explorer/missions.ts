@@ -121,7 +121,8 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
   }
 
   /* ---- game type: order the chain ---- */
-  function runOrder(rounds: OrderRound[]) {
+  function runOrder(rounds: OrderRound[], askFirst?: string, askNext?: string, wrongMsg?: string) {
+    const fill = (tpl: string, first: string, prev: string) => tpl.replace('{first}', first).replace('{prev}', prev);
     steps = rounds.reduce((s, r) => s + r.chain.length - 1, 0); setProgress();
     let ri = 0;
     const round = () => {
@@ -142,7 +143,7 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
             const s = slots[pos]!; s.replaceChildren(el('span', 'mz-em', c.e), el('span', '', c.n)); s.classList.add('on');
             if (!reduced()) s.animate([{ transform: 'scale(0.6)' }, { transform: 'scale(1.12)' }, { transform: 'none' }], { duration: 320 });
             correct(s); pos++;
-            foot.textContent = pos < r.chain.length ? `${c.n}কে কে খায়?` : '';
+            foot.textContent = pos < r.chain.length ? fill(askNext ?? 'এরপর কোনটা?', r.chain[0]!, c.n) : '';
             if (pos >= r.chain.length) {
               foot.textContent = r.note;
               const next = el('button', 'mz-btn mz-primary mz-next', ri + 1 < rounds.length ? 'পরের শৃঙ্খল ▶' : 'শেষ করো ✔'); next.type = 'button';
@@ -150,14 +151,14 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
               hand.replaceChildren(next); next.focus();
             }
           } else {
-            foot.textContent = `উঁহু। ${r.chain[pos - 1]} খায় কে, সেটা ভাবো।`;
+            foot.textContent = fill(wrongMsg ?? 'উঁহু, ওটা এখানে বসে না। আরেকবার ভাবো।', r.chain[0]!, r.chain[pos - 1]!);
             wrong(b);
           }
         });
         hand.append(b);
       }
       body.append(chain, hand);
-      foot.textContent = `শুরু সূর্য থেকে। ${r.chain[0]}ের শক্তি প্রথমে কে নেয়?`;
+      foot.textContent = fill(askFirst ?? 'প্রথমে কোনটা আসবে?', r.chain[0]!, r.chain[0]!);
       stepStart = performance.now();
     };
     round();
@@ -410,7 +411,7 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
   }
 
   function run() {
-    if (spec.type === 'order') intro(spec.intro, () => runOrder(spec.rounds));
+    if (spec.type === 'order') intro(spec.intro, () => runOrder(spec.rounds, spec.askFirst, spec.askNext, spec.wrong));
     else if (spec.type === 'path') intro(spec.intro, () => runPath(spec.token, spec.tokenName, spec.stops));
     else if (spec.type === 'sort') intro(spec.intro, () => runSort(spec.buckets, spec.items));
     else if (spec.type === 'choice') intro(spec.intro, () => runChoice(spec.rounds));
