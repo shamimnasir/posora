@@ -6,7 +6,7 @@ const T = (type: string, v?: string, p?: number): H => ({ type, v, p });
 const MAP: Record<string, H[]> = {
   physics:   [T('ramp'), T('pendulum'), T('gears'), T('prism', undefined, 0.6), T('wave'), T('particles', undefined, 0.55), T('circuit', undefined, 0.7)],
   chemistry: [T('particles', undefined, 0.2), T('atom', undefined, 0.5), T('atom', undefined, 0.9), T('beaker', undefined, 0.6), T('beaker', 'ph', 0.2), T('particles', 'mix', 0.2), T('molecule')],
-  life:      [T('treeparts', undefined, 0), T('tree', 'photo', 0.7), T('tree', undefined, 0.15), T('terrain', undefined, 0.5), T('molecule'), T('flock'), T('flock', 'fish'), T('heart', undefined, 0.35)],
+  life:      [T('treeparts', undefined, 0), T('tree', 'photo', 0.7), T('tree', undefined, 0.15), T('terrain', undefined, 0.5), T('molecule'), T('flock'), T('flock', 'fish'), T('bodyparts', undefined, 0)],
   nature:    [T('weather', undefined, 0.4), T('seasonwheel'), T('terrain', 'delta', 0.6), T('terrain', undefined, 0.6), T('terrain', 'delta', 0.4), T('flock'), T('earth', undefined, 0.2), T('weather', 'storm', 0.9)],
   food:      [T('molecule'), T('plate', undefined, 0.7), T('terrain', 'farm', 0.6), T('seasonwheel', 'fruit'), T('plate', undefined, 0.3), T('particles', 'mix', 0.8), T('beaker', undefined, 0.5), T('shield', undefined, 0.8)],
   math:      [T('blocks', undefined, 0.47), T('blocks', undefined, 0.25), T('pie', undefined, 0.375), T('shapes', undefined, 0.15), T('scale', undefined, 0.5), T('coins', undefined, 0.5), T('blocks', 'wave'), T('bars', undefined, 0.6), T('scale', undefined, 0.3)],

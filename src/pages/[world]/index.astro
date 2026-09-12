@@ -17,6 +17,7 @@ import { discoveryExplorer } from '../../data/discovery-explorer';
 import type { ItemDetail } from '../../data/explorer-types';
 import { getMember, hasPlan, activeChild } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
+import { AWARDS, awardKey } from '../../lib/game';
 
 export const prerender = false;
 
@@ -113,6 +114,16 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
               <span class="pill">বয়স {w.age}</span>
             </div>
           </header>
+          {/* The player bar. Every number on it is earned on this device: points
+              for items opened and games won, a title from the points, days in a
+              row from the dates this browser opened a world. */}
+          <div class="player" id="player">
+            <span class="pl-lvl"><b id="pl-lvl">স্তর ১</b><span id="pl-title">নবীন</span><span class="pl-bar" aria-hidden="true"><i id="pl-bar"></i></span></span>
+            <span class="pl-xp">⚡ <b id="pl-xp">০</b> জ্ঞানবিন্দু</span>
+            <span class="pl-streak">🔥 <b id="pl-days">১</b> দিন</span>
+            <button type="button" class="pl-sound" id="pl-sound" aria-pressed="true" aria-label="খেলার শব্দ">🔔</button>
+            <span class="xp-float" id="xp-float" aria-hidden="true"></span>
+          </div>
 
           <div class="scene">
             <nav class="zoombar" aria-label="কোথায় আছো">
@@ -125,11 +136,38 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
             <div class="host" id="hero-host" role="img" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
               <canvas></canvas>
             </div>
+            <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+            {/* খোঁজার খেলা: the model asks for one of its own items and the child has
+                to click that badge on it. Nothing is read out; finding is the game. */}
+            <div class="quest" id="quest" hidden>
+              <div class="q-card" id="q-card" role="status" aria-live="polite">
+                <span class="lbl q-l">খুঁজে বের করো</span>
+                <span class="q-target"><span class="q-emoji" id="q-emoji"></span><b id="q-name"></b></span>
+                <span class="q-meta"><span id="q-count">০ / ০</span> · <span id="q-time">০ সেকেন্ড</span></span>
+                <button type="button" class="q-x" id="q-quit" aria-label="খেলা বন্ধ করো">✕</button>
+              </div>
+              <p class="q-hint" id="q-hint"></p>
+            </div>
+            <div class="qres" id="qres" hidden>
+              <div class="qres-card">
+                <p class="lbl">খোঁজার খেলা শেষ</p>
+                <p class="q-stars" id="q-stars" aria-label="তারা">★★★</p>
+                <h3 id="q-head">দারুণ!</h3>
+                <p class="q-sum" id="q-sum"></p>
+                <div class="q-btns">
+                  <button type="button" id="q-again">আবার খেলো</button>
+                  <button type="button" id="q-next" class="primary">পরের বিভাগ →</button>
+                  <button type="button" id="q-read">পড়তে যাও</button>
+                </div>
+              </div>
+            </div>
+            <p class="award-toast" id="award-toast" role="status" aria-live="polite" hidden></p>
             <p class="hint" id="hero-hint">গোল ছবিগুলোয় ক্লিক করো - টেনে ঘোরাও</p>
             <noscript><p class="hint">থ্রিডি মডেল দেখতে জাভাস্ক্রিপ্ট চালু করো।</p></noscript>
             <div class="scenebar">
               <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-labelledby="ctl-label" /></label>
               <div class="hctl">
+                <button type="button" id="q-start" class="q-start">🎯 খোঁজার খেলা</button>
                 <button type="button" id="h-spin" aria-pressed="true">ঘোরানো থামাও</button>
                 <button type="button" id="h-reset">সোজা করো</button>
                 <span class="hang" id="h-angle">কোণ ০°</span>
@@ -239,6 +277,19 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
         </section>
 
         <section class="card">
+          <div class="card-h"><span class="lbl">অর্জন</span><span class="lbl num" id="aw-count">০ / {bn(AWARDS.length)}</span></div>
+          <div class="awards" id="awards">
+            {AWARDS.map((a) => (
+              <span class="aw" data-id={awardKey(a, w.slug)} title={a.desc}>
+                <span class="aw-e" aria-hidden="true">{a.emoji}</span>
+                <span class="aw-n">{a.name}</span>
+                <span class="aw-d">{a.desc}</span>
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section class="card">
           <div class="card-h"><span class="lbl">এই ভুবনে যা যা করা যাবে</span></div>
           <div class="keys">
             {w.keys.map((k, i) => w.keyCats[i] !== null ? (
@@ -321,6 +372,59 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
   .top-chips { padding-top: 0.4rem; }
 
+  /* player bar */
+  .player { position: relative; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0.8rem 1.4rem 0; }
+  .player > span, .pl-sound { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 12.5px; padding: 0.3rem 0.75rem; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); }
+  .player b { font-family: var(--font-display); font-size: 14px; color: var(--ink); }
+  .pl-lvl { gap: 0.5rem; }
+  .pl-lvl b { color: var(--w); }
+  .pl-bar { display: block; width: 64px; height: 5px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+  .pl-bar i { display: block; height: 100%; width: 0; background: var(--w); transition: width 0.6s ease; }
+  .pl-sound { cursor: pointer; transition: background 0.15s ease; }
+  .pl-sound[aria-pressed="false"] { opacity: 0.55; text-decoration: line-through; }
+  .xp-float { position: absolute; left: 0; top: 0; pointer-events: none; font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--w); opacity: 0; }
+  .xp-float.go { animation: xpfloat 1.1s ease-out forwards; }
+  @keyframes xpfloat { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-34px); } }
+
+  /* the find-it game, over the model */
+  .fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+  .quest { position: absolute; top: 48px; left: 0; right: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; pointer-events: none; }
+  .q-card { pointer-events: auto; display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 0.9rem; align-items: center; padding: 0.55rem 0.9rem 0.55rem 1rem; border-radius: 16px; background: rgba(9, 14, 24, 0.86); border: 1px solid rgba(255, 255, 255, 0.2); color: #f4f8fc; backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+  .q-card.shake { animation: shake 0.4s ease; }
+  @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+  .q-l { color: #cfe0f2; grid-column: 1; }
+  .q-target { grid-column: 1; grid-row: 2; display: flex; align-items: center; gap: 0.5rem; }
+  .q-emoji { font-size: 28px; line-height: 1; }
+  .q-target b { font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; }
+  .q-meta { grid-column: 2; grid-row: 2; font-family: var(--font-mono); font-size: 11px; color: rgba(226, 235, 245, 0.75); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .q-x { grid-column: 2; grid-row: 1; justify-self: end; width: 24px; height: 24px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 12px; }
+  .q-x:hover { background: rgba(255, 255, 255, 0.28); }
+  .q-hint { font-size: 12.5px; color: #ffe08a; background: rgba(9, 14, 24, 0.7); padding: 3px 12px; border-radius: 999px; min-height: 1.6em; text-align: center; max-width: 90%; }
+  .q-hint:empty { display: none; }
+  .q-start { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 60%, #f0b429)) !important; border-color: transparent !important; }
+  .qres { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(5, 7, 14, 0.62); backdrop-filter: blur(3px); }
+  .qres-card { text-align: center; padding: 1.3rem 1.5rem 1.2rem; border-radius: 20px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--shadow-lg, 0 20px 50px rgba(0,0,0,.4)); max-width: 92%; width: 380px; animation: pop 0.45s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+  .q-stars { font-size: 34px; letter-spacing: 0.1em; color: var(--sun); line-height: 1.1; margin-top: 0.3rem; }
+  .qres-card h3 { font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem; }
+  .q-sum { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; margin-top: 0.4rem; }
+  .q-btns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 0.9rem; }
+  .q-btns button { font-size: 13px; font-weight: 700; padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); transition: transform 0.15s ease; }
+  .q-btns button:hover { transform: translateY(-1px); }
+  .q-btns .primary { background: var(--w); color: #fff; border-color: transparent; }
+  .award-toast { position: absolute; bottom: 124px; left: 50%; transform: translate(-50%, 8px); z-index: 8; font-size: 13.5px; font-weight: 700; color: #1a1408; background: linear-gradient(135deg, #ffe08a, #f0b429); padding: 0.45rem 1rem; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.35); opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
+  .award-toast.show { opacity: 1; transform: translate(-50%, 0); }
+  @media (prefers-reduced-motion: reduce) { .q-card.shake, .qres-card, .xp-float.go { animation: none; } .xp-float.go { opacity: 1; } }
+
+  /* awards shelf */
+  .awards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0.7rem 0.95rem 0.95rem; }
+  .aw { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; padding: 0.55rem 0.3rem 0.5rem; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--muted); }
+  .aw-e { font-size: 24px; line-height: 1; filter: grayscale(1); opacity: 0.45; transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease; }
+  .aw-n { font-size: 11px; font-weight: 700; line-height: 1.25; }
+  .aw-d { display: none; }
+  .aw.on { background: color-mix(in oklab, var(--sun) 16%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 55%, var(--line)); color: var(--ink); }
+  .aw.on .aw-e { filter: none; opacity: 1; transform: scale(1.12); }
+
   /* the scene is the same dark stage the space explorer uses, so every world
      reads as one product; the hero canvas is transparent and sits on top of it */
   .scene { position: relative; flex: 1; min-height: min(58vh, 520px); overflow: hidden; margin-top: 1rem;
@@ -336,7 +440,10 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .hint { position: absolute; bottom: 86px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #d7e2f0; background: rgba(9, 14, 24, 0.72); padding: 3px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); pointer-events: none; transition: opacity 0.4s ease; z-index: 2; }
   .scenebar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 2rem 1.1rem 0.85rem;
     background: linear-gradient(to top, rgba(5, 7, 14, 0.94) 45%, rgba(5, 7, 14, 0.7) 74%, transparent);
-    display: flex; flex-direction: column; gap: 0.5rem; }
+    display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+  /* the bar's fade is see-through for clicks, so a badge low on the model
+     (roots, feet) is still clickable; only the controls themselves take the pointer */
+  .scenebar > * { pointer-events: auto; }
   .ctl-r { display: flex; align-items: center; gap: 0.75rem; }
   .ctl-r .lbl { white-space: nowrap; min-width: 6ch; color: #cfe0f2; }
   .ctl-r input { flex: 1; accent-color: var(--w); height: 4px; cursor: pointer; }
@@ -517,7 +624,8 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 </style>
 
 <script>
-  import { toggleStar, isStarred, getProgress, markSeen } from '../../lib/progress';
+  import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, touchDay } from '../../lib/progress';
+  import { levelOf, AWARDS, awardKey, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
   import { bn, pad2 } from '../../lib/bn';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import { setProgressScope } from '../../lib/progress';
@@ -558,7 +666,10 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   // "did this visitor actually touch the model", counted once per category so a
   // single drag does not turn into a hundred events
   let playCounted = false;
+  let playedEver = false;
   const countPlay = () => {
+    playedEver = true;
+    checkAwards();
     if (playCounted) return;
     playCounted = true;
     trackPlay(slug, cats[curCat].n);
@@ -581,7 +692,10 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   };
   const heroItems = (c: Cat) => c.items.map((label, j) => ({ label, emoji: c.emoji[j] }));
   import('../../components/explorer/heroes').then(({ mountHero }) => {
-    hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => { if (readable(cats[curCat])) selectItem(j); });
+    hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => {
+      if (!readable(cats[curCat])) return;
+      if (quest.on) questPick(j); else selectItem(j);
+    });
     ctlLabel.textContent = hero.set(cats[curCat].hero);
     ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
     hero.setItems(heroItems(cats[curCat]), curItem);
@@ -592,6 +706,157 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   resetBtn.addEventListener('click', () => hero?.resetView());
   ctl.addEventListener('input', () => { hero?.setParam(+ctl.value / 100); countPlay(); });
   host.addEventListener('pointerdown', countPlay);
+
+  /* ---- the player bar: points, title, days in a row ---- */
+  const streakDays = touchDay();
+  const fx = confetti($<HTMLCanvasElement>('#fx'));
+  const worldHue = getComputedStyle(root).getPropertyValue('--w').trim() || '#3E8E5A';
+  function renderPlayer() {
+    const xp = getProgress().xp, lv = levelOf(xp);
+    $('#pl-lvl').textContent = `স্তর ${bn(lv.n)}`;
+    $('#pl-title').textContent = lv.title;
+    $('#pl-bar').style.width = `${Math.round(lv.frac * 100)}%`;
+    $('#pl-xp').textContent = bn(xp);
+    $('#pl-days').textContent = bn(streakDays);
+    $('.pl-lvl').title = lv.next === null ? 'সর্বোচ্চ স্তর' : `পরের স্তরে যেতে আর ${bn(lv.next - xp)} জ্ঞানবিন্দু`;
+  }
+  /** "+১০" drifting up from the points pill. */
+  function floatXp(n: number) {
+    const f = $('#xp-float'), pill = $('.pl-xp');
+    f.textContent = `+${bn(n)}`;
+    f.style.left = `${pill.offsetLeft + pill.offsetWidth / 2 - 14}px`; f.style.top = `${pill.offsetTop - 4}px`;
+    f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+    renderPlayer();
+  }
+  const soundBtn = $<HTMLButtonElement>('#pl-sound');
+  soundBtn.setAttribute('aria-pressed', String(soundOn()));
+  soundBtn.addEventListener('click', () => { const on = !soundOn(); setSound(on); soundBtn.setAttribute('aria-pressed', String(on)); if (on) chime('ok'); });
+
+  /* ---- awards: computed from what actually happened, celebrated once ---- */
+  const toastEl = $('#award-toast');
+  const toastQ: string[] = []; let toastBusy = false;
+  function toast(text: string) {
+    toastQ.push(text);
+    if (toastBusy) return;
+    toastBusy = true;
+    const next = () => {
+      const t = toastQ.shift();
+      if (!t) { toastBusy = false; toastEl.hidden = true; return; }
+      toastEl.hidden = false; toastEl.textContent = t; toastEl.classList.add('show');
+      window.setTimeout(() => { toastEl.classList.remove('show'); window.setTimeout(next, 350); }, 2600);
+    };
+    next();
+  }
+  let questsDone = 0, perfectEver = false;
+  function renderAwards() {
+    const have = new Set(getProgress().awards);
+    let n = 0;
+    root.querySelectorAll<HTMLElement>('.aw[data-id]').forEach((el) => { const on = have.has(el.dataset.id!); el.classList.toggle('on', on); if (on) n++; });
+    $('#aw-count').textContent = `${bn(n)} / ${bn(AWARDS.length)}`;
+  }
+  function checkAwards() {
+    const seen = new Set(seenList());
+    const ctx = {
+      seen: cats.reduce((s, _c, i) => s + readCount(i, seen), 0), total: TOTAL,
+      catsDone: cats.filter((c, i) => readable(c) && readCount(i, seen) === c.items.length).length,
+      played: playedEver, questsDone, perfect: perfectEver, streak: streakDays,
+    };
+    let any = false;
+    for (const a of AWARDS) {
+      if (!a.test(ctx)) continue;
+      const key = awardKey(a, slug);
+      if (grantAward(key)) { any = true; toast(`${a.emoji} নতুন অর্জন: ${a.name}`); track('award', { world: slug, award: a.id }); }
+    }
+    if (any) { chime('win'); renderAwards(); }
+  }
+
+  /* ---- খোঁজার খেলা: find each item on the model ---- */
+  const quest = { on: false, order: [] as number[], i: 0, mistakes: 0, wrongHere: 0, t0: 0, timer: 0 };
+  const qEl = $('#quest'), qCard = $('#q-card'), qHint = $('#q-hint'), qRes = $('#qres'), qStart = $<HTMLButtonElement>('#q-start');
+  const questable = (c: Cat) => readable(c) && c.items.length >= 3;
+  const bestKey = () => `${slug}:${cats[curCat].n}`;
+  function renderQuestBtn() {
+    const c = cats[curCat];
+    qStart.hidden = !questable(c);
+    const best = getProgress().best[bestKey()] ?? 0;
+    qStart.textContent = best ? `🎯 খোঁজার খেলা ${starText(best)}` : '🎯 খোঁজার খেলা';
+  }
+  function questTarget() { return quest.order[quest.i]!; }
+  function questShow() {
+    const c = cats[curCat], j = questTarget();
+    $('#q-emoji').textContent = c.emoji[j] ?? '';
+    $('#q-name').textContent = c.items[j]!;
+    $('#q-count').textContent = `${bn(quest.i + 1)} / ${bn(c.items.length)}`;
+    qHint.textContent = '';
+    hero?.focus(-1);   // no badge stays lit from a hint on the last one
+    if (!reduced) qCard.animate([{ transform: 'scale(0.92)' }, { transform: 'none' }], { duration: 220, easing: 'ease-out' });
+  }
+  function questTick() { $('#q-time').textContent = secText(performance.now() - quest.t0); }
+  function questStart() {
+    const c = cats[curCat];
+    if (!questable(c) || !hero) return;
+    quest.on = true; quest.i = 0; quest.mistakes = 0; quest.wrongHere = 0; quest.t0 = performance.now();
+    quest.order = c.items.map((_it, j) => j);
+    for (let k = quest.order.length - 1; k > 0; k--) { const r = Math.floor(Math.random() * (k + 1)); [quest.order[k], quest.order[r]] = [quest.order[r]!, quest.order[k]!]; }
+    hero.focus(-1);
+    qRes.hidden = true; qEl.hidden = false; $('#hero-hint').style.opacity = '0';
+    root.classList.add('questing');
+    clearInterval(quest.timer); quest.timer = window.setInterval(questTick, 500); questTick();
+    questShow();
+    chime('tick');
+    track('quest_start', { world: slug, category: c.n });
+  }
+  function questQuit(silent = false) {
+    if (!quest.on) return;
+    quest.on = false; clearInterval(quest.timer);
+    qEl.hidden = true; root.classList.remove('questing');
+    hero?.focus(curItem);
+    if (!silent) track('quest_quit', { world: slug, category: cats[curCat].n, found: quest.i });
+  }
+  function questPick(j: number) {
+    const c = cats[curCat], target = questTarget();
+    if (j === target) {
+      const gained = quest.wrongHere ? 2 : 5;
+      addXp(gained); floatXp(gained); chime('ok');
+      const at = hero?.badgeAt(j); const r = host.getBoundingClientRect();
+      fx.burst(at?.x ?? r.width / 2, at?.y ?? r.height / 2, worldHue);
+      quest.i++; quest.wrongHere = 0;
+      if (quest.i >= quest.order.length) { questFinish(); return; }
+      questShow();
+      return;
+    }
+    quest.mistakes++; quest.wrongHere++;
+    chime('no');
+    qCard.classList.remove('shake'); void qCard.offsetWidth; qCard.classList.add('shake');
+    if (quest.wrongHere >= 2) { hero?.focus(target); qHint.textContent = `ইঙ্গিত: যেটা বড় হয়ে জ্বলছে, সেটাই ${c.items[target]}`; }
+    else qHint.textContent = `উঁহু, ওটা ${c.items[j]}। আবার খোঁজো - টেনে ঘোরাও, বা স্লাইডারে খুলে দেখো`;
+  }
+  function questFinish() {
+    const c = cats[curCat], ms = performance.now() - quest.t0, stars = starsFor(quest.mistakes);
+    const bonus = stars === 3 ? 20 : stars === 2 ? 10 : 0;
+    if (bonus) { addXp(bonus); floatXp(bonus); }
+    const improved = setBest(bestKey(), stars);
+    questsDone++; if (stars === 3) perfectEver = true;
+    quest.on = false; clearInterval(quest.timer); qEl.hidden = true; root.classList.remove('questing');
+    $('#q-stars').textContent = starText(stars);
+    $('#q-head').textContent = stars === 3 ? 'নিখুঁত!' : stars === 2 ? 'দারুণ!' : 'শেষ করেছ!';
+    $('#q-sum').textContent = `${c.n}-এর ${bn(c.items.length)}টিই খুঁজে পেয়েছ ${secText(ms)}-এ, ভুল ${bn(quest.mistakes)}টি।${bonus ? ` বোনাস +${bn(bonus)} জ্ঞানবিন্দু।` : ''}${improved ? ' এটা এই বিভাগে তোমার সেরা।' : ''}`;
+    qRes.hidden = false;
+    const r = host.getBoundingClientRect(); fx.burst(r.width / 2, r.height * 0.45, worldHue, true);
+    chime('win');
+    renderQuestBtn(); renderPlayer();
+    track('quest_done', { world: slug, category: c.n, stars, mistakes: quest.mistakes, seconds: Math.round(ms / 1000) });
+    checkAwards();
+  }
+  qStart.addEventListener('click', questStart);
+  $('#q-quit').addEventListener('click', () => questQuit());
+  $('#q-again').addEventListener('click', () => { qRes.hidden = true; questStart(); });
+  $('#q-read').addEventListener('click', () => { qRes.hidden = true; hero?.focus(curItem); $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }); });
+  $('#q-next').addEventListener('click', () => {
+    qRes.hidden = true;
+    for (let k = 1; k <= cats.length; k++) { const i = (curCat + k) % cats.length; if (questable(cats[i]!)) { showCat(i); questStart(); return; } }
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!qRes.hidden) qRes.hidden = true; else questQuit(); } });
 
   /* ---- the reading card: one item, three depths ---- */
   const seg = [...root.querySelectorAll<HTMLButtonElement>('.seg [data-l]')];
@@ -809,9 +1074,17 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
       chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`)?.classList.add('done');
       if (childId) pushSeen(slug, keyOf(curCat, ii));
       renderProgress(); renderGlance(); renderRecords();
+      floatXp(10);
+      if (readCount(curCat) === c.items.length) {
+        // the whole category has been opened: that is worth a moment
+        const r = host.getBoundingClientRect(); fx.burst(r.width / 2, r.height * 0.45, worldHue, true);
+        chime('win'); toast(`🧩 ${c.n} সম্পূর্ণ! সব ${bn(c.items.length)}টিই দেখা হয়ে গেছে`);
+      }
+      checkAwards();
     }
   }
   function showCat(i: number, item = 0) {
+    questQuit(true); qRes.hidden = true;
     curCat = i; curItem = item; playCounted = false;
     rail.forEach((b) => { if (+b.dataset.i! === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
     const c = cats[i];
@@ -828,6 +1101,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     extras.hidden = !readable(c);
     $<HTMLAnchorElement>('#x-quiz').href = `/${slug}/quiz/${i}/`;
     $<HTMLAnchorElement>('#x-ws').href = `/${slug}/worksheet/${i}/`;
+    renderQuestBtn();
     rail[i]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
     if (!reduced) $('.items-h').animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
   }
@@ -932,8 +1206,9 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   renderProgress();
   renderChips();
   $('#extras').hidden = !readable(cats[0]);
+  renderPlayer(); renderAwards(); renderQuestBtn(); checkAwards();
   // Pull the child's progress from other devices, then repaint what it changes.
-  if (childId) syncWorld(slug).then(() => { renderProgress(); renderGlance(); renderRecords(); renderChips(); });
+  if (childId) syncWorld(slug).then(() => { renderProgress(); renderGlance(); renderRecords(); renderChips(); renderPlayer(); checkAwards(); });
   // count the category and item the page lands on the same way a click is
   // counted, so the totals are not skewed toward whatever happens to be first
   trackCategory(slug, cats[0].n);

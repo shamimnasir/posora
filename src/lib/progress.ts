@@ -10,8 +10,18 @@ let KEY = BASE_KEY;
 export function setProgressScope(childId: string | null): void {
   KEY = childId ? `${BASE_KEY}:${childId}` : BASE_KEY;
 }
-export type Progress = { xp: number; seen: Record<string, string[]>; stars: string[] };
-const EMPTY: Progress = { xp: 0, seen: {}, stars: [] };
+export type Progress = {
+  xp: number;
+  seen: Record<string, string[]>;
+  stars: string[];
+  /** Ids of earned awards, e.g. "life:cat" or the global "streak3". */
+  awards: string[];
+  /** Best খোঁজার খেলা result per "world:category", 1 to 3 stars. */
+  best: Record<string, number>;
+  /** Days this learner opened a world, as YYYY-MM-DD, newest last (capped). */
+  days: string[];
+};
+const EMPTY: Progress = { xp: 0, seen: {}, stars: [], awards: [], best: {}, days: [] };
 const XP_PER_ITEM = 10;
 
 function read(): Progress {
@@ -19,7 +29,7 @@ function read(): Progress {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(EMPTY);
     const p = JSON.parse(raw) as Partial<Progress>;
-    return { xp: p.xp ?? 0, seen: p.seen ?? {}, stars: p.stars ?? [] };
+    return { xp: p.xp ?? 0, seen: p.seen ?? {}, stars: p.stars ?? [], awards: p.awards ?? [], best: p.best ?? {}, days: p.days ?? [] };
   } catch {
     return structuredClone(EMPTY);
   }
@@ -54,6 +64,50 @@ export function importSeen(world: string, keys: string[]): number {
   for (const k of keys) if (typeof k === 'string' && k && !list.includes(k)) { list.push(k); added++; }
   if (added) { p.xp += added * XP_PER_ITEM; write(p); }
   return added;
+}
+
+/** Points for something other than opening an item: a game round, a bonus. */
+export function addXp(n: number): number {
+  const p = read();
+  p.xp += Math.max(0, Math.round(n));
+  write(p);
+  return p.xp;
+}
+
+/** Record an award. Returns true the first time, so the page can celebrate once. */
+export function grantAward(id: string): boolean {
+  const p = read();
+  if (p.awards.includes(id)) return false;
+  p.awards.push(id);
+  write(p);
+  return true;
+}
+export const hasAward = (id: string) => read().awards.includes(id);
+
+/** Keep the best খোঁজার খেলা result for a category. Returns true when it improved. */
+export function setBest(key: string, stars: number): boolean {
+  const p = read();
+  if ((p.best[key] ?? 0) >= stars) return false;
+  p.best[key] = stars;
+  write(p);
+  return true;
+}
+
+const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+/**
+ * Note today's visit and return the run of consecutive days ending today.
+ * A day is counted where the learner is, from the device clock; nothing is sent.
+ */
+export function touchDay(): number {
+  const p = read();
+  const today = dayKey(new Date());
+  if (p.days[p.days.length - 1] !== today) { p.days.push(today); if (p.days.length > 60) p.days.splice(0, p.days.length - 60); write(p); }
+  let n = 1;
+  for (let i = p.days.length - 1; i > 0; i--) {
+    const a = new Date(p.days[i]!), b = new Date(p.days[i - 1]!);
+    if (Math.round((a.getTime() - b.getTime()) / 86400000) === 1) n++; else break;
+  }
+  return n;
 }
 
 /** Star a not-yet-built item ("আগে এটা চাই"). Toggles; returns new state. */

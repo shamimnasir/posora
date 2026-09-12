@@ -140,6 +140,147 @@ const SCENES: Record<string, Builder> = {
     } };
   },
 
+  /**
+   * মানবদেহ: a figure with a see-through skin and every organ system as its
+   * own part. The slider peels the skin and skeleton to the sides and lifts
+   * each organ out along its own direction, badge riding with it.
+   */
+  bodyparts({ root }) {
+    const parts: { g: Group; base: Vector3; dir: Vector3; k: number }[] = [];
+    const anchors: Record<string, Object3D> = {};
+    const part = (base: Vector3, dir: Vector3, k = 1) => { const g = new Group(); g.position.copy(base); root.add(g); parts.push({ g, base: base.clone(), dir: dir.clone().normalize(), k }); return g; };
+    const mark = (name: string, parent: Object3D, x: number, y: number, z: number) => { const m = new Object3D(); m.position.set(x, y, z); parent.add(m); anchors[name] = m; };
+    const ell = (parent: Object3D, mat: MeshStandardMaterial, x: number, y: number, z: number, sx: number, sy: number, sz: number) => { const m = new Mesh(new SphereGeometry(1, 20, 16), mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); parent.add(m); return m; };
+    const rod = (parent: Object3D, mat: MeshStandardMaterial, a: Vector3, b: Vector3, r: number) => { const d = b.clone().sub(a); const m = new Mesh(new CylinderGeometry(r, r, d.length(), 10), mat); m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), d.normalize()); parent.add(m); return m; };
+    const tube = (parent: Object3D, mat: MeshStandardMaterial, pts: number[][], r: number) => { const m = new Mesh(new TubeGeometry(new CatmullRomCurve3(pts.map(([x, y, z]) => new Vector3(x, y, z))), 40, r, 6, false), mat); parent.add(m); return m; };
+    root.position.y = -0.1;   // the figure stands a touch low so the lifted brain stays in frame
+
+    // ত্বক: the see-through shell of the whole figure; the slider slides it off to the left
+    const skinM = std('#e9b58f', { transparent: true, opacity: 0.3, depthWrite: false, roughness: 0.75 });
+    const skin = part(new Vector3(0, 0, 0), new Vector3(-1, 0, 0.25), 1.9);
+    ell(skin, skinM, 0, 1.55, 0, 0.4, 0.44, 0.4);                                   // head
+    rod(skin, skinM, new Vector3(0, 1.1, 0), new Vector3(0, 1.32, 0), 0.13);        // neck
+    const torso = new Mesh(new CylinderGeometry(0.42, 0.36, 1.45, 22), skinM); torso.position.y = 0.42; torso.scale.z = 0.65; skin.add(torso);
+    ell(skin, skinM, 0, 1.12, 0, 0.5, 0.16, 0.32);                                   // shoulders
+    ell(skin, skinM, 0, -0.3, 0, 0.38, 0.14, 0.24);                                  // hips
+    for (const s of [-1, 1]) {
+      rod(skin, skinM, new Vector3(s * 0.52, 1.05, 0), new Vector3(s * 0.82, -0.35, 0.05), 0.11);   // arm
+      ell(skin, skinM, s * 0.84, -0.45, 0.06, 0.08, 0.11, 0.06);                                    // hand
+      rod(skin, skinM, new Vector3(s * 0.22, -0.35, 0), new Vector3(s * 0.28, -1.85, 0), 0.15);     // leg
+      ell(skin, skinM, s * 0.3, -1.92, 0.1, 0.11, 0.06, 0.2);                                       // foot
+    }
+    mark('ত্বক', skin, -0.95, 0.35, 0.2);
+
+    // কঙ্কাল: spine, ribs, pelvis and limb bones; slides off to the right and back
+    const boneM = std('#f3eee2', { roughness: 0.5 });
+    const skel = part(new Vector3(0, 0, 0), new Vector3(1, 0, -0.5), 1.55);
+    for (let i = 0; i < 12; i++) rod(skel, boneM, new Vector3(0, 1.18 - i * 0.125, -0.12), new Vector3(0, 1.1 - i * 0.125, -0.12), 0.055);
+    for (let i = 0; i < 4; i++) { const rib = new Mesh(new TorusGeometry(0.34 - i * 0.015, 0.022, 6, 32), boneM); rib.position.set(0, 0.98 - i * 0.17, -0.02); rib.rotation.x = Math.PI / 2; rib.scale.z = 0.7; skel.add(rib); }
+    const pelvis = new Mesh(new TorusGeometry(0.3, 0.05, 8, 24), boneM); pelvis.position.set(0, -0.3, -0.04); pelvis.rotation.x = Math.PI / 2 - 0.4; skel.add(pelvis);
+    for (const s of [-1, 1]) {
+      rod(skel, boneM, new Vector3(s * 0.52, 1.05, 0), new Vector3(s * 0.66, 0.35, 0.02), 0.04);
+      rod(skel, boneM, new Vector3(s * 0.66, 0.35, 0.02), new Vector3(s * 0.82, -0.35, 0.05), 0.035);
+      rod(skel, boneM, new Vector3(s * 0.22, -0.35, 0), new Vector3(s * 0.25, -1.1, 0), 0.055);
+      rod(skel, boneM, new Vector3(s * 0.25, -1.1, 0), new Vector3(s * 0.28, -1.85, 0), 0.045);
+      rod(skel, boneM, new Vector3(s * 0.2, 1.08, 0.1), new Vector3(s * 0.5, 1.06, 0.02), 0.03);   // collarbone
+    }
+    ell(skel, boneM, 0, 1.55, -0.02, 0.3, 0.32, 0.3).material = std('#f3eee2', { transparent: true, opacity: 0.35, depthWrite: false });   // skull, faint so the brain shows
+    mark('কঙ্কাল', skel, 0.62, 0.02, 0.1);
+
+    // পেশি: the big muscle groups, pulled to the right and forward
+    const muscM = std('#c4463b', { roughness: 0.6 });
+    const musc = part(new Vector3(0, 0, 0), new Vector3(1, 0, 0.6), 1.3);
+    for (const s of [-1, 1]) {
+      ell(musc, muscM, s * 0.6, 0.72, 0.03, 0.1, 0.22, 0.1);         // upper arm
+      ell(musc, muscM, s * 0.74, 0.02, 0.05, 0.08, 0.2, 0.08);        // forearm
+      ell(musc, muscM, s * 0.24, -0.78, 0.0, 0.14, 0.34, 0.14);       // thigh
+      ell(musc, muscM, s * 0.27, -1.5, -0.03, 0.1, 0.25, 0.1);        // calf
+      ell(musc, muscM, s * 0.18, 0.82, 0.24, 0.19, 0.13, 0.07);       // chest
+    }
+    ell(musc, muscM, 0, 0.25, 0.22, 0.2, 0.3, 0.06);                  // abdomen
+    mark('পেশি', musc, 0.24, -0.78, 0.25);
+
+    // মস্তিষ্ক: lifts straight up out of the head
+    const brainM = std('#f0a6b4', { roughness: 0.7 });
+    const brain = part(new Vector3(0, 1.6, 0), new Vector3(0.3, 1, 0), 0.6);
+    ell(brain, brainM, 0, 0, 0, 0.27, 0.23, 0.3);
+    for (let i = 0; i < 5; i++) { const gr = new Mesh(new TorusGeometry(0.22 - i * 0.03, 0.02, 5, 24, Math.PI), std('#d98594')); gr.position.set(0, 0.05 + i * 0.03, 0); gr.rotation.set(-Math.PI / 2, 0, i * 0.5); brain.add(gr); }
+    mark('মস্তিষ্ক', brain, 0, 0.3, 0);
+
+    // স্নায়ু: spinal cord and nerve branches, pulled straight back
+    const nerveM = std('#f2d15c', { emissive: '#f2d15c', emissiveIntensity: 0.35 });
+    const nerves = part(new Vector3(0, 0, 0), new Vector3(0, 0.15, -1), 1.5);
+    rod(nerves, nerveM, new Vector3(0, 1.35, -0.1), new Vector3(0, -0.4, -0.1), 0.028);
+    for (const s of [-1, 1]) {
+      tube(nerves, nerveM, [[0, 1.0, -0.1], [s * 0.5, 1.02, -0.05], [s * 0.66, 0.35, 0.0], [s * 0.82, -0.35, 0.03]], 0.012);
+      tube(nerves, nerveM, [[0, -0.3, -0.1], [s * 0.22, -0.4, -0.05], [s * 0.25, -1.1, 0.0], [s * 0.28, -1.8, 0.0]], 0.012);
+      for (let i = 0; i < 4; i++) tube(nerves, nerveM, [[0, 0.95 - i * 0.2, -0.1], [s * 0.2, 0.93 - i * 0.2, 0.05], [s * 0.3, 0.9 - i * 0.2, 0.15]], 0.008);
+    }
+    mark('স্নায়ু', nerves, 0, 0.55, -0.35);
+
+    // চোখ, কান, দাঁত, জিভ: the face, each on its own direction
+    const eyes = part(new Vector3(0, 1.62, 0.33), new Vector3(0.2, 0.35, 1), 1);
+    for (const s of [-1, 1]) { ell(eyes, std('#ffffff'), s * 0.14, 0, 0, 0.065, 0.065, 0.05); ell(eyes, std('#2a2f3a'), s * 0.14, 0, 0.045, 0.03, 0.03, 0.02); }
+    mark('চোখ', eyes, 0.36, 0.0, 0);
+    const ears = part(new Vector3(0, 1.55, 0), new Vector3(-0.6, 0.5, -0.5), 1);
+    for (const s of [-1, 1]) ell(ears, std('#d9a17b'), s * 0.41, 0, 0, 0.04, 0.1, 0.07);
+    mark('কান', ears, -0.62, 0.0, 0);
+    const teeth = part(new Vector3(0, 1.38, 0.3), new Vector3(0.4, -0.25, 1), 1.1);
+    for (let i = 0; i < 8; i++) { const a = -0.9 + (i / 7) * 1.8; const t = new Mesh(new BoxGeometry(0.035, 0.05, 0.03), std('#fbfbf7')); t.position.set(Math.sin(a) * 0.16, 0, Math.cos(a) * 0.1 - 0.02); teeth.add(t); }
+    mark('দাঁত', teeth, 0.36, -0.08, 0.05);
+    const tongue = part(new Vector3(0, 1.32, 0.24), new Vector3(-0.5, -0.6, 1), 1.1);
+    ell(tongue, std('#e05a75'), 0, 0, 0, 0.08, 0.03, 0.12);
+    mark('জিভ', tongue, -0.34, -0.14, 0.08);
+
+    // ফুসফুস and হৃৎপিণ্ড: the chest, lungs to the front-left, heart to the front-right
+    const lungM = std('#e88a9a', { roughness: 0.75 });
+    const lungs = part(new Vector3(0, 0.72, 0), new Vector3(-0.9, 0.35, 1), 1);
+    const lungL = ell(lungs, lungM, -0.22, 0, 0, 0.16, 0.3, 0.13), lungR = ell(lungs, lungM, 0.24, 0.02, 0, 0.15, 0.28, 0.13);
+    rod(lungs, std('#f4c7d0'), new Vector3(0, 0.55, 0.02), new Vector3(0, 0.22, 0.02), 0.035);
+    mark('ফুসফুস', lungs, -0.45, 0.15, 0.1);
+    const heartM = std('#c0263a', { emissive: '#c0263a', emissiveIntensity: 0.25 });
+    const heart = part(new Vector3(0.06, 0.7, 0.14), new Vector3(0.9, 0.05, 1), 1.1);
+    const heartB = new Group(); heart.add(heartB);
+    ell(heartB, heartM, 0, 0, 0, 0.15, 0.17, 0.13).rotation.z = -0.3;
+    ell(heartB, heartM, -0.06, 0.1, 0, 0.08, 0.08, 0.08); ell(heartB, heartM, 0.07, 0.1, 0, 0.08, 0.08, 0.08);
+    mark('হৃৎপিণ্ড', heart, 0.32, 0.18, 0.1);
+
+    // রক্ত: vessels from the heart to head, arms and legs, pulled straight forward
+    const bloodM = std('#d7263d', { emissive: '#8a1020', emissiveIntensity: 0.4 });
+    const blood = part(new Vector3(0, 0, 0), new Vector3(0.1, -0.15, 1), 1.7);
+    tube(blood, bloodM, [[0.06, 0.75, 0.12], [0.04, 1.1, 0.08], [0.05, 1.4, 0.06], [0.1, 1.7, 0.1]], 0.02);
+    for (const s of [-1, 1]) {
+      tube(blood, bloodM, [[0.06, 0.78, 0.12], [s * 0.4, 1.0, 0.06], [s * 0.66, 0.38, 0.06], [s * 0.82, -0.35, 0.08]], 0.016);
+      tube(blood, bloodM, [[0.06, 0.62, 0.12], [0.02, 0.1, 0.06], [s * 0.22, -0.4, 0.05], [s * 0.27, -1.2, 0.06], [s * 0.3, -1.8, 0.08]], 0.018);
+    }
+    mark('রক্ত', blood, 0.02, -0.12, 0.3);
+
+    // পাচনতন্ত্র: food pipe, stomach and the coiled gut, out and down
+    const gutM = std('#e0996a', { roughness: 0.7 });
+    const gut = part(new Vector3(0, 0.15, 0.08), new Vector3(0, -0.9, 1), 1.1);
+    rod(gut, std('#f0b58c'), new Vector3(0, 1.15, -0.02), new Vector3(-0.1, 0.25, 0.02), 0.03);
+    ell(gut, gutM, -0.12, 0.16, 0.02, 0.2, 0.14, 0.12);
+    const coil: number[][] = []; for (let i = 0; i < 9; i++) coil.push([(i % 2 ? 0.2 : -0.2), 0.0 - i * 0.055, 0.06 + Math.sin(i) * 0.03]);
+    tube(gut, gutM, coil, 0.045);
+    mark('পাচনতন্ত্র', gut, -0.32, -0.05, 0.2);
+
+    // কিডনি: the pair at the back, out and down behind the figure
+    const kid = part(new Vector3(0, 0.12, -0.16), new Vector3(0, -0.5, -1), 1.2);
+    for (const s of [-1, 1]) ell(kid, std('#8b3a3a'), s * 0.19, 0, 0, 0.085, 0.13, 0.065);
+    mark('কিডনি', kid, -0.36, 0.0, -0.1);
+
+    return { label: 'খুলে দেখো', anchors, update(t, _dt, p) {
+      // p = 0 the figure stands whole, p = 1 skin and bones to the sides, every organ out on its own
+      for (const pt of parts) pt.g.position.copy(pt.base).addScaledVector(pt.dir, p * 1.05 * pt.k);
+      const beat = 1 + Math.max(0, Math.sin(t * 5.2)) * 0.12 * Math.max(0, Math.sin(t * 2.6));
+      heartB.scale.setScalar(beat);
+      const br = 1 + Math.sin(t * 1.4) * 0.06; lungL.scale.set(0.16 * br, 0.3 * br, 0.13 * br); lungR.scale.set(0.15 * br, 0.28 * br, 0.13 * br);
+      bloodM.emissiveIntensity = 0.3 + Math.max(0, Math.sin(t * 5.2)) * 0.5;
+      nerveM.emissiveIntensity = 0.25 + Math.max(0, Math.sin(t * 9 + 1)) * 0.35;
+      (skinM as MeshStandardMaterial).opacity = 0.3 - p * 0.05;
+    } };
+  },
+
   atom({ root, hue }) {
     const nuc = new Group(); root.add(nuc);
     for (let i = 0; i < 10; i++) { const m = new Mesh(new SphereGeometry(0.22, 16, 16), std(i % 2 ? hue : lighten(hue, 0.5))); m.position.set(rnd(-0.22, 0.22), rnd(-0.22, 0.22), rnd(-0.22, 0.22)); nuc.add(m); }
@@ -424,6 +565,8 @@ export type HeroHandle = {
   isAuto(): boolean;
   /** Ease the model back to its default orientation. */
   resetView(): void;
+  /** Where badge `i` currently sits on the canvas, in CSS pixels from the host's top-left. */
+  badgeAt(i: number): { x: number; y: number } | null;
   destroy(): void;
 };
 
@@ -448,6 +591,8 @@ export function mountHero(
   let badges: { sp: Sprite; label: Sprite; a0: number; marker?: Object3D }[] = [];
   const pins = new Group(); user.add(pins);
   let anchoredCount = 0;
+  // the model sits half size inside a ring of badges, full size when the badges are pinned on it
+  let baseScale = 1, pinScale = 0.55;
   let active = -1, orbitYawTo = 0, orbitYaw = 0, hueNow = new Color(spec.hue);
   function clearItems() {
     for (const b of badges) { b.sp.material.map?.dispose(); b.sp.material.dispose(); b.label.material.map?.dispose(); b.label.material.dispose(); }
@@ -457,17 +602,19 @@ export function mountHero(
     clearItems();
     const n = items.length;
     const anchors = cur?.anchors ?? {};
+    // pinned badges shrink as a model carries more of them, so fourteen organs do not bury the figure
+    pinScale = MathUtils.clamp(0.66 - n * 0.018, 0.4, 0.55);
     badges = items.map((it, i) => {
       const sp = badgeSprite(it, hueNow, font); const label = labelSprite(it.label, font);
       const a0 = (i / Math.max(1, n)) * Math.PI * 2;
       const marker = anchors[it.label];
-      if (marker) { anchoredCount++; sp.scale.setScalar(0.55); pins.add(sp); pins.add(label); }
+      if (marker) { anchoredCount++; sp.scale.setScalar(pinScale); pins.add(sp); pins.add(label); }
       else { sp.scale.setScalar(0.85); orbit.add(sp); orbit.add(label); }
       return { sp, label, a0, marker };
     });
     // when the items live on the model, the model stays full size; otherwise it
     // sits smaller in the middle of the ring
-    root.scale.setScalar(n && anchoredCount < n / 2 ? 0.5 : 1);
+    baseScale = n && anchoredCount < n / 2 ? 0.5 : 1;
     focus(act);
   }
   function focus(i: number) {
@@ -495,7 +642,7 @@ export function mountHero(
     user.remove(root); root = new Group(); user.add(root);
     hueNow = new Color(s.hue);
     const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font }); param = s.p ?? 0.5; popStart = performance.now();
-    if (badges.length && anchoredCount < badges.length / 2) root.scale.setScalar(0.5);
+    baseScale = badges.length && anchoredCount < badges.length / 2 ? 0.5 : 1;
     return cur.label;
   }
   const firstLabel = build(spec);
@@ -543,13 +690,13 @@ export function mountHero(
         if (b.marker) {
           // pinned to its part: follow the part, hover slightly, face the camera
           b.marker.getWorldPosition(wp); user.worldToLocal(wp);
-          b.sp.position.copy(wp); b.sp.position.y += 0.18 + Math.sin(t * 1.3 + i) * 0.04;
-          const target = on ? 0.95 : 0.55;
+          b.sp.position.copy(wp); b.sp.position.y += pinScale * 0.33 + Math.sin(t * 1.3 + i) * 0.04;
+          const target = on ? 0.95 : pinScale;
           b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
           (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.78;
-          b.label.position.copy(b.sp.position); b.label.position.y -= on ? 0.78 : 0.55;
+          b.label.position.copy(b.sp.position); b.label.position.y -= on ? 0.78 : pinScale;
           (b.label.material as SpriteMaterial).opacity = on ? 1 : 0.85; b.label.visible = true;
-          const ls = on ? 0.95 : 0.6; b.label.scale.set(2.6 * ls, 0.52 * ls, 1);
+          const ls = on ? 0.95 : pinScale * 1.1; b.label.scale.set(2.6 * ls, 0.52 * ls, 1);
           return;
         }
         const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
@@ -563,7 +710,7 @@ export function mountHero(
         const ls = on ? 1 : 0.72; b.label.scale.set(2.6 * ls, 0.52 * ls, 1);
       });
     }
-    const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(1 - Math.pow(1 - pop, 3));
+    const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(baseScale * (1 - Math.pow(1 - pop, 3)));
     cur?.update(t, run ? dt : 0, param); renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
     raf = visible && !document.hidden ? requestAnimationFrame(frame) : 0;
@@ -580,6 +727,11 @@ export function mountHero(
     setAuto: (on) => { auto = on; start(); },
     isAuto: () => auto,
     resetView: () => { vx = vy = 0; pitch = 0; yawTo = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; start(); },
+    badgeAt(i) {
+      const b = badges[i]; if (!b) return null;
+      const v = new Vector3(); b.sp.getWorldPosition(v); v.project(camera);
+      return { x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h };
+    },
     destroy() { cancelAnimationFrame(raf); io.disconnect(); clearItems(); renderer.dispose(); },
   };
 }
