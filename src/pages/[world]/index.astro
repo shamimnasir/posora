@@ -184,6 +184,10 @@ const schema = [
             </nav>
             <div class="host" id="hero-host" role="img" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
               <canvas></canvas>
+              {/* The 3D engine is a 145KB download that starts after the text
+                  has painted, so for a moment this box is empty. Saying so beats
+                  looking broken. Removed the instant the model mounts. */}
+              <div class="loading" id="hero-loading" aria-hidden="true"><span></span><span></span><span></span><p>মডেল আসছে…</p></div>
             </div>
             <canvas class="fx" id="fx" aria-hidden="true"></canvas>
             {/* খোঁজার খেলা: the model asks for one of its own items and the child has
@@ -559,6 +563,14 @@ const schema = [
   .host { position: absolute; inset: 0; cursor: grab; touch-action: none; overflow: hidden; }
   .host.dragging { cursor: grabbing; }
   .host canvas { width: 100%; height: 100%; }
+  .loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; pointer-events: none; transition: opacity 0.35s ease; }
+  .loading span { width: 44px; height: 44px; border-radius: 50%; background: color-mix(in oklab, var(--w) 55%, #0c1220); opacity: 0.25; animation: hb 1.4s ease-in-out infinite; }
+  .loading span:nth-child(2) { width: 74px; height: 74px; animation-delay: 0.18s; }
+  .loading span:nth-child(3) { width: 30px; height: 30px; animation-delay: 0.36s; }
+  .loading p { margin-top: 0.7rem; font-size: 12px; color: rgba(214, 228, 244, 0.6); }
+  .loading.gone { opacity: 0; }
+  @keyframes hb { 0%, 100% { transform: scale(0.9); opacity: 0.18; } 50% { transform: scale(1.06); opacity: 0.4; } }
+  @media (prefers-reduced-motion: reduce) { .loading span { animation: none; } }
   .zoombar { position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
   .crumb { font-size: 12.5px; font-weight: 600; color: #e6eef8; background: rgba(9, 14, 24, 0.6); border: 1px solid rgba(255, 255, 255, 0.16); padding: 0.22rem 0.7rem; border-radius: 999px; backdrop-filter: blur(6px); transition: background 0.15s ease; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .crumb:hover { background: rgba(9, 14, 24, 0.9); color: #fff; }
@@ -877,6 +889,8 @@ const schema = [
   };
   const heroItems = (c: Cat) => c.items.map((label, j) => ({ label, emoji: c.emoji[j] }));
   import('../../components/explorer/heroes').then(({ mountHero }) => {
+    const loading = root.querySelector<HTMLElement>('#hero-loading');
+    if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
     hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => {
       if (!readable(cats[curCat])) return;
       if (quest.on) questPick(j); else selectItem(j);
