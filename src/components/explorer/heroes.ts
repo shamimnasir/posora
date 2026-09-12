@@ -4,7 +4,7 @@
  * Each scene reads a 0–1 `param` from the page slider so every hero is something to play with.
  */
 import {
-  WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Object3D, Color, Vector3, MathUtils,
+  WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Object3D, Color, Vector3, MathUtils, Raycaster, Vector2,
   SphereGeometry, BoxGeometry, CylinderGeometry, TorusGeometry, ConeGeometry, PlaneGeometry, CircleGeometry,
   IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, DodecahedronGeometry, TubeGeometry, ExtrudeGeometry,
   Shape, CatmullRomCurve3, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, Line, LineBasicMaterial,
@@ -13,6 +13,8 @@ import {
 } from 'three';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number };
+/** One thing in the category, shown as a badge orbiting the category's model. */
+export type HeroItem = { label: string; emoji?: string };
 type Ctx = { root: Group; hue: Color; v: string; font: string };
 type SceneObj = { update(t: number, dt: number, p: number): void; label: string };
 type Builder = (c: Ctx) => SceneObj;
@@ -37,6 +39,32 @@ function textSprite(text: string, font: string, color: string, size = 1): Sprite
   const tex = new CanvasTexture(c); const s = new Sprite(new SpriteMaterial({ map: tex, transparent: true })); s.scale.setScalar(size); return s;
 }
 const emojiSprite = (e: string, size = 0.8) => textSprite(e, 'system-ui', '#000', size);
+/** A round badge carrying an emoji, or the first letter of the label when there is none. */
+function badgeSprite(item: HeroItem, hue: Color, font: string): Sprite {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d')!;
+  const cx = 128, r = 112;
+  g.beginPath(); g.arc(cx, cx, r, 0, Math.PI * 2);
+  const grad = g.createRadialGradient(cx - 30, cx - 36, 10, cx, cx, r);
+  grad.addColorStop(0, '#' + lighten(hue, 0.55).getHexString()); grad.addColorStop(1, '#' + hue.getHexString());
+  g.fillStyle = grad; g.fill();
+  g.lineWidth = 8; g.strokeStyle = 'rgba(255,255,255,0.85)'; g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  if (item.emoji) { g.font = '120px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'; g.fillStyle = '#000'; g.fillText(item.emoji, cx, cx + 8); }
+  else { const ch = Array.from(item.label.trim())[0] ?? '?'; g.font = `800 130px ${font}`; g.fillStyle = '#ffffff'; g.fillText(ch, cx, cx + 14); }
+  const tex = new CanvasTexture(c); const sp = new Sprite(new SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  sp.renderOrder = 10; return sp;
+}
+/** A pill with the item's name, sized to the text. */
+function labelSprite(text: string, font: string): Sprite {
+  const c = document.createElement('canvas'); c.width = 640; c.height = 128; const g = c.getContext('2d')!;
+  g.font = `700 44px ${font}`; const w = Math.min(600, g.measureText(text).width + 56);
+  const x = (640 - w) / 2, y = 24, h = 80, rr = 40;
+  g.beginPath(); g.moveTo(x + rr, y); g.lineTo(x + w - rr, y); g.arc(x + w - rr, y + rr, rr, -Math.PI / 2, Math.PI / 2); g.lineTo(x + rr, y + h); g.arc(x + rr, y + rr, rr, Math.PI / 2, -Math.PI / 2); g.closePath();
+  g.fillStyle = 'rgba(9,14,24,0.86)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,0.3)'; g.stroke();
+  g.fillStyle = '#f4f8fc'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 320, 66);
+  const tex = new CanvasTexture(c); const sp = new Sprite(new SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  sp.scale.set(2.6, 0.52, 1); sp.renderOrder = 11; return sp;
+}
 function ring(rOut: number, rIn: number, color: Color | string, o: Record<string, unknown> = {}) {
   const m = new Mesh(new TorusGeometry((rOut + rIn) / 2, (rOut - rIn) / 2, 8, 64), std(color, o)); return m;
 }
@@ -320,6 +348,10 @@ const SCENES: Record<string, Builder> = {
 /* ---------- engine ---------- */
 export type HeroHandle = {
   set(spec: HeroSpec): string;
+  /** Put the category's items around the model as clickable badges. `active` is highlighted. */
+  setItems(items: HeroItem[], active: number): void;
+  /** Bring one item to the front and light it up. */
+  focus(i: number): void;
   setParam(v: number): void;
   /** Start or stop the idle turntable. Dragging works either way. */
   setAuto(on: boolean): void;
@@ -333,6 +365,7 @@ export function mountHero(
   host: HTMLElement,
   spec: HeroSpec,
   onFrame?: (info: { yawDeg: number; auto: boolean }) => void,
+  onPick?: (index: number) => void,
 ): HeroHandle {
   const canvas = host.querySelector('canvas')!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -343,10 +376,54 @@ export function mountHero(
   const user = new Group(); scene.add(user); let root = new Group(); user.add(root);
   let cur: SceneObj | null = null, param = spec.p ?? 0.5, popStart = performance.now();
 
+  /* ---- the item orbit: every item of the category as a badge around the model ---- */
+  const ORBIT_R = 3.05;
+  const orbit = new Group(); user.add(orbit);
+  let badges: { sp: Sprite; label: Sprite; a0: number }[] = [];
+  let active = -1, orbitYawTo = 0, orbitYaw = 0, hueNow = new Color(spec.hue);
+  function clearItems() {
+    for (const b of badges) { b.sp.material.map?.dispose(); b.sp.material.dispose(); b.label.material.map?.dispose(); b.label.material.dispose(); }
+    orbit.clear(); badges = [];
+  }
+  function setItems(items: HeroItem[], act: number) {
+    clearItems();
+    const n = items.length;
+    badges = items.map((it, i) => {
+      const sp = badgeSprite(it, hueNow, font); const label = labelSprite(it.label, font);
+      const a0 = (i / Math.max(1, n)) * Math.PI * 2;
+      sp.scale.setScalar(0.85); orbit.add(sp); orbit.add(label);
+      return { sp, label, a0 };
+    });
+    // the model sits smaller in the middle once it has company
+    root.scale.setScalar(n ? 0.5 : 1);
+    focus(act);
+  }
+  function focus(i: number) {
+    active = i;
+    if (i < 0 || !badges[i]) return;
+    // turn the ring so the chosen badge comes to the front (toward the camera, +z)
+    orbitYawTo = Math.PI / 2 - badges[i]!.a0;
+    // keep the shortest turn
+    while (orbitYawTo - orbitYaw > Math.PI) orbitYawTo -= Math.PI * 2;
+    while (orbitYawTo - orbitYaw < -Math.PI) orbitYawTo += Math.PI * 2;
+  }
+  const ray = new Raycaster(), ndc = new Vector2();
+  function pick(clientX: number, clientY: number): number {
+    if (!badges.length) return -1;
+    const r = host.getBoundingClientRect();
+    ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(badges.map((b) => b.sp), false)[0];
+    return hit ? badges.findIndex((b) => b.sp === hit.object) : -1;
+  }
+
   function build(s: HeroSpec) {
     root.traverse((o) => { const m = o as Mesh; m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
     user.remove(root); root = new Group(); user.add(root);
-    const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: new Color(s.hue), v: s.v ?? '', font }); param = s.p ?? 0.5; popStart = performance.now(); return cur.label;
+    hueNow = new Color(s.hue);
+    const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font }); param = s.p ?? 0.5; popStart = performance.now();
+    if (badges.length) root.scale.setScalar(0.5);
+    return cur.label;
   }
   const firstLabel = build(spec);
 
@@ -356,12 +433,18 @@ export function mountHero(
   // ask for reduced motion start still, and anyone can pause or reset it.
   let auto = !reduced, yawTo: number | null = null;
   const yawDeg = () => { const d = ((yaw * 180) / Math.PI) % 360; return d < 0 ? d + 360 : d; };
-  host.addEventListener('pointerdown', (e) => { dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
+  let downX = 0, downY = 0;
+  host.addEventListener('pointerdown', (e) => { dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; downX = e.clientX; downY = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
+  host.addEventListener('pointerup', (e) => {
+    if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;   // that was a drag, not a click
+    const i = pick(e.clientX, e.clientY);
+    if (i >= 0) { focus(i); onPick?.(i); }
+  });
   host.addEventListener('pointermove', (e) => { if (!dragging) return; vx = (e.clientX - lx) * 0.006; vy = (e.clientY - ly) * 0.006; lx = e.clientX; ly = e.clientY; yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); });
   const up = () => { dragging = false; host.classList.remove('dragging'); }; host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
 
   let w = 1, h = 1, visible = true, raf = 0, last = performance.now(), t = 0;
-  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camera.position.z = w < 600 ? 7.4 : 6.2; camera.lookAt(0, 0.1, 0); }
+  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camera.position.z = (w < 600 ? 7.4 : 6.2) + (badges.length ? 1.9 : 0); camera.lookAt(0, 0.1, 0); }
   new ResizeObserver(resize).observe(host); resize();
   function frame(now: number) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -375,6 +458,25 @@ export function mountHero(
     }
     user.rotation.set(pitch, yaw, 0);
     user.position.y = run ? Math.sin(t * 0.55) * 0.045 : 0; // faint breathing bob - a still photo never does this
+    if (badges.length) {
+      // the ring drifts slowly, and eases round when an item is chosen
+      orbitYaw += (orbitYawTo - orbitYaw) * 0.08;
+      if (!dragging && auto && Math.abs(orbitYawTo - orbitYaw) < 0.01) { orbitYawTo += dt * 0.05; }
+      // the ring counter-rotates the user's yaw so badges stay readable from the front
+      orbit.rotation.y = orbitYaw - yaw;
+      badges.forEach((b, i) => {
+        const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
+        const on = i === active;
+        const target = on ? 1.45 : 0.8 + 0.18 * depth;
+        b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.12);
+        b.sp.position.set(Math.cos(b.a0) * ORBIT_R, Math.sin(t * 0.9 + i) * 0.12 + (on ? 0.15 : 0), Math.sin(b.a0) * ORBIT_R);
+        (b.sp.material as SpriteMaterial).opacity = on ? 1 : 0.7 + 0.3 * Math.max(0, depth);
+        b.label.position.copy(b.sp.position); b.label.position.y -= on ? 1.15 : 0.8;
+        const lo = on ? 1 : depth > 0.35 ? (depth - 0.35) * 0.9 : 0;
+        (b.label.material as SpriteMaterial).opacity = lo; b.label.visible = lo > 0.02;
+        const ls = on ? 1 : 0.72; b.label.scale.set(2.6 * ls, 0.52 * ls, 1);
+      });
+    }
     const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(1 - Math.pow(1 - pop, 3));
     cur?.update(t, run ? dt : 0, param); renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
@@ -386,10 +488,12 @@ export function mountHero(
   void firstLabel;
   return {
     set: (s) => { const l = build(s); start(); return l; },
+    setItems: (items, act) => { setItems(items, act); resize(); start(); },
+    focus: (i) => { focus(i); start(); },
     setParam: (v) => { param = v; start(); },
     setAuto: (on) => { auto = on; start(); },
     isAuto: () => auto,
     resetView: () => { vx = vy = 0; pitch = 0; yawTo = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; start(); },
-    destroy() { cancelAnimationFrame(raf); io.disconnect(); renderer.dispose(); },
+    destroy() { cancelAnimationFrame(raf); io.disconnect(); clearItems(); renderer.dispose(); },
   };
 }

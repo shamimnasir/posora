@@ -16,6 +16,7 @@ import { socialExplorer } from '../../data/social-explorer';
 import { discoveryExplorer } from '../../data/discovery-explorer';
 import type { ItemDetail } from '../../data/explorer-types';
 import { getMember, hasPlan, activeChild } from '../../lib/members';
+import { emojiFor } from '../../data/item-emoji';
 
 export const prerender = false;
 
@@ -51,6 +52,7 @@ const payload = w.cats.map((c, i) => {
   return {
     n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i),
     lab: c.lab, labAnchors: c.labAnchors, detail, chars: charsOf(detail),
+    emoji: c.items.map((it) => emojiFor(w.slug, it)),
   };
 });
 
@@ -123,7 +125,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
             <div class="host" id="hero-host" role="img" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
               <canvas></canvas>
             </div>
-            <p class="hint" id="hero-hint">টেনে ঘোরাও</p>
+            <p class="hint" id="hero-hint">গোল ছবিগুলোয় ক্লিক করো - টেনে ঘোরাও</p>
             <noscript><p class="hint">থ্রিডি মডেল দেখতে জাভাস্ক্রিপ্ট চালু করো।</p></noscript>
             <div class="scenebar">
               <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-labelledby="ctl-label" /></label>
@@ -526,6 +528,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   type Cat = {
     n: string; items: string[]; play: string; hero: HeroSpec;
     lab?: string; labAnchors?: string[]; detail: ItemDetail[] | null; chars: number;
+    emoji: (string | undefined)[];
   };
 
   const root = document.getElementById('world')!;
@@ -576,10 +579,12 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     const d = Math.round(yawDeg); if (d === lastDeg) return;
     lastDeg = d; angleEl.textContent = `কোণ ${bn(d)}°`;
   };
+  const heroItems = (c: Cat) => c.items.map((label, j) => ({ label, emoji: c.emoji[j] }));
   import('../../components/explorer/heroes').then(({ mountHero }) => {
-    hero = mountHero(host, cats[0].hero, onHeroFrame);
+    hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => { if (readable(cats[curCat])) selectItem(j); });
     ctlLabel.textContent = hero.set(cats[curCat].hero);
     ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
+    hero.setItems(heroItems(cats[curCat]), curItem);
     syncSpin(hero.isAuto());
     host.addEventListener('pointerdown', () => { $('#hero-hint').style.opacity = '0'; }, { once: true });
   });
@@ -795,7 +800,10 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     if (!readable(c)) return;
     curItem = ii;
     chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
+    hero?.focus(ii);
     renderRead(); renderCrumbs();
+    // the reading arrives, it does not just swap
+    if (!reduced) $('#read').animate([{ opacity: 0.2, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
     trackItem(slug, c.n, c.items[ii]);
     if (mark && markSeen(slug, keyOf(curCat, ii))) {
       chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`)?.classList.add('done');
@@ -812,7 +820,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     $('#c-name').textContent = c.n;
     $('#c-play').innerHTML = '<b>পর্দায়</b>';
     $('#c-play').append(c.play);
-    if (hero) { ctlLabel.textContent = hero.set(c.hero); ctl.value = String(Math.round((c.hero.p ?? 0.5) * 100)); }
+    if (hero) { ctlLabel.textContent = hero.set(c.hero); ctl.value = String(Math.round((c.hero.p ?? 0.5) * 100)); hero.setItems(heroItems(c), curItem); }
     renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
     if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); renderProgress(); renderGlance(); renderRecords(); renderChips(); } }
     // the gated features follow the category
