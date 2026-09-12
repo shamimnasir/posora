@@ -35,12 +35,31 @@ const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হো
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="bn_BD" />
     <meta property="og:site_name" content="পসরা" />
+    {/* summary, not summary_large_image: there is no share image yet, and
+        claiming one produces an empty card. */}
+    <meta name="twitter:card" content="summary" />
+    {/* Not executed, so the CSP's script-src does not apply to it. Describes
+        only what the site actually is; no ratings, no prices, nothing unearned. */}
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'পসরা',
+      alternateName: 'Posora',
+      url: 'https://posora.com/',
+      inLanguage: 'bn',
+      description: 'বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা - ১১টি ভুবন, প্রতিটি বিষয়ে থ্রিডি মডেল ও তিন গভীরতার লেখা।',
+      isAccessibleForFree: true,
+      publisher: { '@type': 'Organization', name: 'পসরা', url: 'https://posora.com/', email: 'support@posora.com' },
+    })} />
     {/* Preload only the Bengali faces the first paint needs; Latin + other weights load on demand. */}
     <Font cssVariable="--font-body" preload={[{ subset: 'bengali', weight: 400 }]} />
     <Font cssVariable="--font-display" preload={[{ subset: 'bengali' }]} />
     <Analytics />
   </head>
   <body style={hue ? `--w:${hue}` : undefined}>
+    {/* Keyboard users land here first and can jump past the header, which on a
+        world page sits in front of a long category rail. */}
+    <a class="skip" href="#main">মূল অংশে যাও</a>
     <Header />
     <main id="main">
       <slot />
