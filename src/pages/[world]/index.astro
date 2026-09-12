@@ -30,9 +30,7 @@ Astro.response.headers.set(
   'cache-control',
   preview ? 'private, no-store' : 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
 );
-const first = w.cats[0];
-// Categories that ship a per-item "more info" dataset render as a reading sheet,
-// like the space explorer; the rest keep the honest wishlist / lab behaviour.
+
 const EXPLORERS: Record<string, (ItemDetail[] | null)[]> = {
   math: mathExplorer, physics: physicsExplorer, chemistry: chemistryExplorer,
   life: lifeExplorer, nature: natureExplorer, food: foodExplorer,
@@ -40,96 +38,179 @@ const EXPLORERS: Record<string, (ItemDetail[] | null)[]> = {
   discovery: discoveryExplorer,
 };
 const explorer = EXPLORERS[w.slug] ?? null;
-const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i), lab: c.lab, labAnchors: c.labAnchors, detail: explorer?.[i] ?? null }));
+
+/* Reading time is measured off the real text, never guessed: every character of
+   every depth plus the fun fact, divided by a stated reading rate. The caption
+   on the chart says which rate, so the number can be checked. */
+const charsOf = (d: ItemDetail[] | null) =>
+  d ? d.reduce((s, it) => s + it.l1.length + it.l2.length + it.l3.length + it.fun.length, 0) : 0;
+
+const payload = w.cats.map((c, i) => {
+  const detail = explorer?.[i] ?? null;
+  return {
+    n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i),
+    lab: c.lab, labAnchors: c.labAnchors, detail, chars: charsOf(detail),
+  };
+});
+
+const first = w.cats[0];
+const firstDetail = payload[0].detail;
+const firstItem = firstDetail?.[0] ?? null;
+const total = itemCount(w);
+// A ladder of the world hue so each category reads as its own colour without
+// ever leaving the palette. Lightest at the top, steadily deeper down the rail.
+const shade = (i: number) => `color-mix(in oklab, ${w.hue} ${96 - (i % 6) * 9}%, #8894a8)`;
+const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
+const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'পড়ার সময়'], ['read', 'তুমি যত পড়েছ']] as const;
 ---
-<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue}>
-  <div class="wrap page" id="world" data-slug={w.slug}>
+<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare>
+  <div class="wrap page" id="world" data-slug={w.slug} data-total={total}>
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> {w.bn}</p>
+
     <div class="xp">
       <aside class="rail card" aria-label="বিভাগের তালিকা">
-        <div class="card-h"><span class="lbl">বিভাগ</span><span class="lbl num">{bn(w.cats.length)}টি</span></div>
+        <div class="card-h"><span class="lbl">বিভাগ</span><span class="lbl num" id="seen-count">০ / {bn(total)} পড়া</span></div>
         <div class="rail-list" role="tablist">
           {w.cats.map((c, i) => (
-            <button role="tab" type="button" data-i={i} aria-selected={i === 0 ? 'true' : 'false'}>
-              <span class="no">{pad2(i + 1)}</span>
+            <button role="tab" type="button" data-i={i} aria-selected={i === 0 ? 'true' : 'false'} style={`--o:${shade(i)}`}>
+              <span class="rorb" aria-hidden="true"></span>
               <span class="rt"><span class="nm">{c.n}</span><span class="tg">{bn(c.items.length)} আইটেম</span></span>
+              <span class="no lbl">{pad2(i + 1)}</span>
             </button>
           ))}
         </div>
       </aside>
 
-      <section class="stage card" aria-live="polite">
-        <header class="stage-h">
-          <div>
-            <p class="eyebrow">ভুবন · {w.en}</p>
-            <h1>{w.bn}</h1>
-            <p class="tag">{w.tag}</p>
-          </div>
-          <span class="pill soon">{w.phase}-এ খুলছে</span>
-        </header>
-        <div class="scene">
-          <div class="hero3d" id="hero-host" role="img" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
-            <canvas></canvas>
-            <p class="hint" id="hero-hint">টেনে ঘোরাও</p>
-          </div>
-          <div class="ctl">
-            <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-label="মডেল নিয়ন্ত্রণ" /></label>
-            <div class="hctl">
-              <button type="button" id="h-spin" aria-pressed="true">ঘোরানো থামাও</button>
-              <button type="button" id="h-reset">সোজা করো</button>
-              <span class="hang" id="h-angle">কোণ ০°</span>
-            </div>
-          </div>
-          <div class="scene-t">
-            <p class="lbl">বিভাগ <span id="c-no">০১</span></p>
-            <h2 id="c-name">{first.n}</h2>
-            <p class="play" id="c-play"><b>পর্দায়</b>{first.play}</p>
-          </div>
-        </div>
-        <div class="items" id="c-items">
-          <div class="items-h">
+      <div class="mid">
+        <section class="stage card" aria-live="polite">
+          <header class="stage-h">
             <div>
-              <p class="items-h-t" id="items-h-t">{first.lab ? 'এই বিভাগে যা যা আছে - সবকটাই কাজ করে' : 'এই বিভাগে যা যা যোগ হবে'}</p>
-              <p class="items-h-s" id="items-h-s">{first.lab ? 'নিচে যেকোনোটায় ক্লিক করো - সরাসরি সেই টুলে চলে যাবে' : 'এখনও লেখা হয়নি - নিচের ★ চেপে বলো কোনটা আগে বানাবো'}</p>
+              <p class="eyebrow">ভুবন · {w.en}</p>
+              <h1>{w.bn}</h1>
+              <p class="tag">{w.tag}</p>
             </div>
-            <span class="star-count" id="star-count" hidden><b id="star-n">০</b>টা বলেছ</span>
+            <div class="chips top-chips">
+              <span class="pill">{bn(w.cats.length)} বিভাগ</span>
+              <span class="pill">{bn(total)} আইটেম</span>
+              <span class="pill">বয়স {w.age}</span>
+            </div>
+          </header>
+
+          <div class="scene">
+            <nav class="zoombar" aria-label="কোথায় আছো">
+              <a class="crumb crumb-world" href="/#worlds">{w.bn}</a>
+              <span class="sep sep-world" aria-hidden="true">›</span>
+              <button type="button" class="crumb cur" id="crumb-cat">{first.n}</button>
+              <span class="sep" id="crumb-sep2" aria-hidden="true">›</span>
+              <button type="button" class="crumb" id="crumb-item">{first.items[0]}</button>
+            </nav>
+            <div class="host" id="hero-host" role="img" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
+              <canvas></canvas>
+            </div>
+            <p class="hint" id="hero-hint">টেনে ঘোরাও</p>
+            <noscript><p class="hint">থ্রিডি মডেল দেখতে জাভাস্ক্রিপ্ট চালু করো।</p></noscript>
+            <div class="scenebar">
+              <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-label="মডেল নিয়ন্ত্রণ" /></label>
+              <div class="hctl">
+                <button type="button" id="h-spin" aria-pressed="true">ঘোরানো থামাও</button>
+                <button type="button" id="h-reset">সোজা করো</button>
+                <span class="hang" id="h-angle">কোণ ০°</span>
+              </div>
+            </div>
           </div>
-          <div class="chips" id="chips">
-            {first.lab
-              ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
-              : first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
-          </div>
-          <p class="toast" id="star-toast" role="status" aria-live="polite"></p>
-          <div class="sheet card" id="sheet" hidden>
-            <div class="sheet-h">
+
+          <div class="items" id="c-items">
+            <div class="items-h">
               <div>
-                <p class="eyebrow">এই একটার কথা</p>
-                <h3 id="item-name"></h3>
+                <p class="lbl">বিভাগ <span id="c-no">০১</span></p>
+                <h2 id="c-name">{first.n}</h2>
+                <p class="play" id="c-play"><b>পর্দায়</b>{first.play}</p>
               </div>
-              <div class="seg" id="item-seg" role="tablist" aria-label="কতটা গভীর পড়বে">
-                <button type="button" role="tab" data-l="l1" aria-selected="true">ছোট <small>৫–৮</small></button>
-                <button type="button" role="tab" data-l="l2" aria-selected="false">মাঝারি <small>৯–১২</small></button>
-                <button type="button" role="tab" data-l="l3" aria-selected="false">বড় <small>১৩+</small></button>
-              </div>
+              <span class="cat-prog" id="cat-prog"><b id="cat-prog-n">০</b> / {bn(first.items.length)} পড়া</span>
             </div>
-            <div class="item-chips" id="item-chips"></div>
-            <p class="item-txt" id="item-text"></p>
-            <p class="item-fun" id="item-fun"></p>
+            <p class="items-h-s" id="items-h-s">নিচের যেকোনোটিতে ক্লিক করো - ডানে তার পুরো কথা খুলবে</p>
+            <div class="chips" id="chips">
+              {first.lab
+                ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
+                : firstDetail
+                  ? first.items.map((it, j) => <button type="button" class="chip" data-di={j} aria-pressed={j === 0 ? 'true' : 'false'}>{it}</button>)
+                  : first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
+            </div>
+            <p class="toast" id="star-toast" role="status" aria-live="polite"></p>
           </div>
-        </div>
-      </section>
+
+          <div class="actions">
+            <button type="button" data-act="prev">← আগেরটা</button>
+            <button type="button" data-act="read" class="primary">
+              <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3 4h6a2 2 0 0 1 2 2v10a1.5 1.5 0 0 0-1.5-1.5H3zM17 4h-6a2 2 0 0 0-2 2v10a1.5 1.5 0 0 1 1.5-1.5H17z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              পড়ো
+            </button>
+            <button type="button" data-act="next">পরেরটা →</button>
+          </div>
+        </section>
+
+        <section class="card glance" id="glance">
+          <div class="card-h">
+            <span class="lbl">{w.bn} এক নজরে</span>
+            <span class="lbl gauto" id="gauto">নিজে নিজে বদলাচ্ছে</span>
+          </div>
+          <div class="gseg" role="tablist" aria-label="কোন হিসাবে তুলনা">
+            {GMETRICS.map(([id, label], i) => (
+              <button type="button" role="tab" data-m={id} aria-selected={i === 0 ? 'true' : 'false'}>{label}</button>
+            ))}
+          </div>
+          <div class="gchart" id="gchart">
+            {w.cats.map((c, i) => (
+              <button type="button" class="grow" data-i={i} style={`--o:${shade(i)}`}>
+                <span class="gn">{c.n}</span>
+                <span class="gtrack"><i></i></span>
+                <span class="gv"></span>
+              </button>
+            ))}
+          </div>
+          <p class="gcap" id="gcap"></p>
+          <div class="agebox">
+            <p class="kg"><b id="prog-line">এই ভুবনে তোমার যাত্রা সবে শুরু।</b></p>
+            <span class="bar"><i id="prog-bar"></i></span>
+            <button type="button" class="mini nextnew" id="next-new">পরের নতুনটা পড়ো →</button>
+          </div>
+        </section>
+      </div>
 
       <aside class="info">
+        <section class="card read" id="read">
+          <div class="card-h">
+            <span class="lbl">পড়ো</span>
+            <div class="seg" role="tablist" aria-label="পড়ার গভীরতা">
+              {LEVELS.map(([k, l, a]) => <button type="button" role="tab" data-l={k} aria-selected={k === 'l1' ? 'true' : 'false'}>{l} <small>{a}</small></button>)}
+            </div>
+          </div>
+          <h3 class="item-name" id="item-name">{first.items[0]}</h3>
+          <div class="item-chips" id="item-chips">
+            {firstItem?.chips.map((c) => <span class="pill">{c}</span>)}
+          </div>
+          <p class="text" id="item-text">{firstItem?.l1 ?? ''}</p>
+          <p class="fun" id="item-fun-wrap"><span class="lbl">মজার তথ্য</span><span id="item-fun">{firstItem?.fun ?? ''}</span></p>
+          <p class="text lab-note" id="lab-note" hidden></p>
+        </section>
+
         <section class="card">
           <div class="card-h"><span class="lbl">ভুবন পরিচিতি</span></div>
           <div class="spec">
             <div class="row"><span class="k">বয়স উপযোগিতা</span><span class="v">{w.age}</span></div>
             <div class="row"><span class="k">বিভাগ</span><span class="v">{bn(w.cats.length)}</span></div>
-            <div class="row"><span class="k">শেখার আইটেম</span><span class="v">{bn(itemCount(w))}+</span></div>
+            <div class="row"><span class="k">শেখার আইটেম</span><span class="v">{bn(total)}</span></div>
             <div class="row"><span class="k">পূর্বশর্ত</span><span class="v">{w.dep}</span></div>
             <div class="row"><span class="k">নির্মাণ ফেজ</span><span class="v">{w.phase}</span></div>
+            <div class="row"><span class="k">তুমি পড়েছ</span><span class="v" id="spec-read">০</span><span class="meter"><i id="spec-meter"></i></span></div>
           </div>
         </section>
+
+        <section class="card">
+          <div class="card-h"><span class="lbl">রেকর্ড</span><span class="lbl">এই ভুবনে</span></div>
+          <div class="recs" id="recs"></div>
+        </section>
+
         <section class="card">
           <div class="card-h"><span class="lbl">এই ভুবনে যা যা করা যাবে</span></div>
           <div class="keys">
@@ -141,8 +222,9 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
           </div>
           <p class="intro">{w.intro}</p>
         </section>
+
         <section class="card">
-          <div class="card-h"><span class="lbl">মিশন</span></div>
+          <div class="card-h"><span class="lbl">মিশন</span><span class="lbl">+১০ জ্ঞানবিন্দু</span></div>
           <div class="miss">
             {w.missions.map((m, i) => w.missionCats[i] !== null ? (
               <button type="button" class="m mission-jump" data-cat={w.missionCats[i]}>
@@ -157,104 +239,179 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
             ))}
           </div>
         </section>
+
         <a class="card cta" href="/space/">
-          <span class="lbl">এখনই খেলতে চাও?</span>
+          <span class="lbl">থ্রিডি সৌরজগৎ ঘুরে আসবে?</span>
           <b>মহাকাশ ভুবন খোলা আছে →</b>
         </a>
       </aside>
     </div>
+
+    <div class="status card">
+      <span class="lbl">অভিযান লগ</span>
+      <span class="bar"><i id="log-bar"></i></span>
+      <span class="lbl num" id="log-text">০ / {bn(total)}</span>
+    </div>
+    <p class="back"><a href="/#worlds">← সব ভুবন</a> · <a href="/space/">মহাকাশ</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ?</a></p>
+
     <script is:inline type="application/json" id="world-data" set:html={JSON.stringify(payload)}></script>
   </div>
 </Base>
 
 <style>
-  .page { padding-block: 1rem 2rem; }
+  .page { padding-block: 1rem 3.5rem; }
   .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
   .crumbs span { margin: 0 0.35rem; }
   .xp { display: grid; grid-template-columns: 250px minmax(0, 1fr) 292px; gap: 0.85rem; align-items: start; }
   .xp > * { min-width: 0; }
+  .card-h { padding: 0.7rem 0.95rem; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+
+  /* rail */
   .rail { overflow: hidden; }
-  .card-h { padding: 0.7rem 0.95rem; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; }
-  .rail-list { padding: 6px; display: flex; flex-direction: column; gap: 2px; max-height: 620px; overflow-y: auto; }
-  .rail-list button { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; padding: 8px 10px; border-radius: 11px; border-left: 3px solid transparent; transition: background 0.15s ease; }
+  .rail-list { padding: 6px; display: flex; flex-direction: column; gap: 2px; max-height: 640px; overflow-y: auto; }
+  .rail-list button { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; padding: 8px 9px; border-radius: 11px; border-left: 3px solid transparent; transition: background 0.15s ease; }
   .rail-list button:hover { background: var(--panel-2); }
-  .rail-list button[aria-selected="true"] { background: color-mix(in oklab, var(--w) 12%, var(--panel)); border-left-color: var(--w); }
-  .no { font-family: var(--font-mono); font-size: 10px; color: var(--w); width: 20px; }
+  .rail-list button[aria-selected="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
+  .rorb { width: 30px; height: 30px; border-radius: 50%; flex: none; background: radial-gradient(circle at 32% 30%, #fff 0%, var(--o) 32%, color-mix(in oklab, var(--o) 55%, #000) 100%); box-shadow: inset -3px -4px 8px rgba(0,0,0,.25); transition: transform 0.2s ease; }
+  .rail-list button:hover .rorb { transform: scale(1.1); }
+  .rail-list button.done .rorb { box-shadow: inset -3px -4px 8px rgba(0,0,0,.25), 0 0 0 2px var(--panel), 0 0 0 4px var(--ok); }
   .rt { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
-  .nm { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
-  .tg { font-size: 11.5px; color: var(--muted); }
+  .nm { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+  .tg { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .no { margin-left: auto; font-size: 10px; }
+
+  /* stage */
+  .mid { display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; }
   .stage { display: flex; flex-direction: column; min-height: 620px; overflow: hidden; }
-  .stage-h { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem 0; flex-wrap: wrap; align-items: flex-start; }
-  .stage-h h1 { font-size: clamp(1.7rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+  .stage-h { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem 0; flex-wrap: wrap; }
+  .stage-h h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -0.01em; line-height: 1.15; font-weight: 800; margin-top: 0.1rem; overflow-wrap: anywhere; }
   .tag { color: var(--muted); font-size: 14px; }
-  .soon { background: color-mix(in oklab, var(--sun) 22%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 50%, var(--line)); font-weight: 600; }
-  .scene { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); grid-template-rows: auto auto; gap: 0.6rem 1.5rem; align-items: center; padding: 1rem 1.4rem 1.25rem; }
-  .hero3d { position: relative; grid-row: 1; aspect-ratio: 4 / 3; max-height: 480px; width: 100%; border-radius: 14px; background: radial-gradient(ellipse at 50% 70%, color-mix(in oklab, var(--w) 12%, var(--panel-2)) 0%, var(--panel-2) 60%, transparent 85%); cursor: grab; touch-action: none; overflow: hidden; }
-  .hero3d.dragging { cursor: grabbing; }
-  .hero3d canvas { width: 100%; height: 100%; }
-  .hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--muted); background: var(--panel); padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line-soft); pointer-events: none; transition: opacity 0.4s ease; }
-  .ctl { grid-row: 2; grid-column: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+  .top-chips { padding-top: 0.4rem; }
+
+  /* the scene is the same dark stage the space explorer uses, so every world
+     reads as one product; the hero canvas is transparent and sits on top of it */
+  .scene { position: relative; flex: 1; min-height: min(58vh, 520px); overflow: hidden; margin-top: 1rem;
+    background: radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 22%, #141c2e) 0%, #0c1220 52%, #05070e 100%); }
+  .host { position: absolute; inset: 0; cursor: grab; touch-action: none; overflow: hidden; }
+  .host.dragging { cursor: grabbing; }
+  .host canvas { width: 100%; height: 100%; }
+  .zoombar { position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .crumb { font-size: 12.5px; font-weight: 600; color: #e6eef8; background: rgba(9, 14, 24, 0.6); border: 1px solid rgba(255, 255, 255, 0.16); padding: 0.22rem 0.7rem; border-radius: 999px; backdrop-filter: blur(6px); transition: background 0.15s ease; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .crumb:hover { background: rgba(9, 14, 24, 0.9); color: #fff; }
+  .crumb.cur { background: var(--w); color: #fff; border-color: transparent; }
+  .zoombar .sep { color: rgba(226, 235, 245, 0.5); font-size: 12px; }
+  .hint { position: absolute; bottom: 86px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #d7e2f0; background: rgba(9, 14, 24, 0.72); padding: 3px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); pointer-events: none; transition: opacity 0.4s ease; z-index: 2; }
+  .scenebar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 2rem 1.1rem 0.85rem;
+    background: linear-gradient(to top, rgba(5, 7, 14, 0.94) 45%, rgba(5, 7, 14, 0.7) 74%, transparent);
+    display: flex; flex-direction: column; gap: 0.5rem; }
   .ctl-r { display: flex; align-items: center; gap: 0.75rem; }
-  .ctl .lbl { white-space: nowrap; min-width: 6ch; color: var(--w); }
-  .ctl input { flex: 1; accent-color: var(--w); height: 4px; cursor: pointer; }
-  /* Real camera controls. A paused turntable and a live angle only exist because
-     the scene is rendered live; a looping clip cannot offer either. */
+  .ctl-r .lbl { white-space: nowrap; min-width: 6ch; color: #cfe0f2; }
+  .ctl-r input { flex: 1; accent-color: var(--w); height: 4px; cursor: pointer; }
   .hctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .hctl button { font-size: 12px; font-weight: 600; padding: 0.25rem 0.7rem; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease; }
-  .hctl button:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 14%, var(--panel)); }
-  .hctl button[aria-pressed="true"] { background: color-mix(in oklab, var(--w) 16%, var(--panel)); border-color: color-mix(in oklab, var(--w) 40%, var(--line)); color: var(--ink); }
-  .hang { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .scene-t { grid-row: 1 / 3; grid-column: 2; }
-  .scene-t h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); margin: 0.2rem 0 0.6rem; }
-  .play { font-size: 14.5px; color: var(--ink-2); padding-left: 0.85rem; border-left: 2px solid color-mix(in oklab, var(--w) 50%, var(--line)); }
+  .hctl button { font-size: 12px; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #eef4fb; backdrop-filter: blur(4px); transition: background 0.15s ease, transform 0.15s ease; }
+  .hctl button:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.2); }
+  .hctl button[aria-pressed="true"] { background: var(--w); color: #fff; border-color: transparent; }
+  .hang { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: rgba(226, 235, 245, 0.66); font-variant-numeric: tabular-nums; }
+
+  /* item strip */
+  .items { padding: 1rem 1.4rem 1.1rem; }
+  .items-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .items-h h2 { font-size: clamp(1.25rem, 2.4vw, 1.65rem); margin: 0.15rem 0 0.5rem; }
+  .play { font-size: 14px; color: var(--ink-2); padding-left: 0.85rem; border-left: 2px solid color-mix(in oklab, var(--w) 50%, var(--line)); }
   .play :global(b) { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--w); }
-  .items { border-top: 1px solid var(--line-soft); padding: 1rem 1.4rem 1.25rem; }
-  .items-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.85rem; }
-  .items-h-t { font-weight: 700; font-size: 14.5px; }
-  .items-h-s { font-size: 12.5px; color: var(--muted); margin-top: 0.15rem; }
-  .star-count { flex: none; display: flex; align-items: baseline; gap: 0.3rem; font-size: 12px; color: var(--sun); background: color-mix(in oklab, var(--sun) 14%, var(--panel)); border: 1px solid color-mix(in oklab, var(--sun) 40%, var(--line)); border-radius: 999px; padding: 0.3rem 0.7rem; white-space: nowrap; }
-  .star-count b { font-family: var(--font-display); font-size: 14px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  /* NOTE: the chips are rebuilt by the script on every category change, so the
-     rules for them must be :global(). Astro stamps data-astro-cid onto elements
-     at build time, and a JS-created <button class="chip"> never gets one, so a
-     scoped .chip selector would match nothing and the list would render as bare
-     default buttons. */
-  .chips :global(.chip) { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13.5px; padding: 6px 13px 6px 10px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
+  .cat-prog { flex: none; font-size: 12px; color: var(--w); background: color-mix(in oklab, var(--w) 12%, var(--panel)); border: 1px solid color-mix(in oklab, var(--w) 34%, var(--line)); border-radius: 999px; padding: 0.3rem 0.7rem; white-space: nowrap; }
+  .cat-prog b { font-family: var(--font-display); font-size: 14px; }
+  .items-h-s { font-size: 12.5px; color: var(--muted); margin: 0.85rem 0 0.6rem; }
+  /* NOTE: the chips are rebuilt by the script on every category change, so their
+     rules must be :global(). Astro stamps data-astro-cid onto elements at build
+     time, and a JS-created <button class="chip"> never gets one, so a scoped
+     .chip selector would match nothing and the list would render unstyled. */
+  .chips :global(.chip) { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13.5px; padding: 6px 13px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
   .chips :global(.chip:hover) { background: color-mix(in oklab, var(--w) 14%, var(--panel)); border-color: color-mix(in oklab, var(--w) 34%, var(--line)); transform: translateY(-1px); }
+  .chips :global(.chip[data-di][aria-pressed="true"]) { background: var(--w); border-color: transparent; color: #fff; font-weight: 700; }
+  .chips :global(.chip.done) { border-color: color-mix(in oklab, var(--ok) 45%, var(--line)); }
+  .chips :global(.chip.done::before) { content: "✓"; color: var(--ok); font-size: 12px; font-weight: 700; }
+  .chips :global(.chip[data-di][aria-pressed="true"].done::before) { color: #fff; }
   .chips :global(.chip .star) { color: var(--line); font-size: 15px; line-height: 1; transition: color 0.15s ease, transform 0.2s ease; }
-  .chips :global(.chip[aria-pressed="true"]) { border-color: color-mix(in oklab, var(--sun) 60%, var(--line)); background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: var(--ink); font-weight: 600; }
-  .chips :global(.chip[aria-pressed="true"] .star) { color: var(--sun); transform: scale(1.3) rotate(-12deg); }
+  .chips :global(.chip[data-key][aria-pressed="true"]) { border-color: color-mix(in oklab, var(--sun) 60%, var(--line)); background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: var(--ink); font-weight: 600; }
+  .chips :global(.chip[data-key][aria-pressed="true"] .star) { color: var(--sun); transform: scale(1.3) rotate(-12deg); }
+  .chips :global(.chip-real) { background: color-mix(in oklab, var(--ok) 12%, var(--panel)); border-color: color-mix(in oklab, var(--ok) 36%, var(--line)); color: var(--ink); font-weight: 600; }
+  .chips :global(.chip-real:hover) { background: color-mix(in oklab, var(--ok) 20%, var(--panel)); }
+  .chips :global(.chip-real .check) { color: var(--ok); font-size: 13px; }
   .toast { margin-top: 0.7rem; font-size: 12.5px; font-weight: 600; color: var(--brand-ink); opacity: 0; transition: opacity 0.25s ease; }
   .toast.show { opacity: 1; }
-  /* reading sheet - shows the per-item "more info" like the space explorer */
-  .sheet[hidden] { display: none; }
-  .sheet { margin-top: 0.8rem; border-color: color-mix(in oklab, var(--w) 26%, var(--line-soft)); background: color-mix(in oklab, var(--panel) 96%, var(--w) 4%); }
-  .sheet-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.9rem; flex-wrap: wrap; padding: 1rem 1.1rem 0.5rem; }
-  .sheet-h h3 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; margin-top: 0.15rem; }
-  .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px; gap: 2px; }
-  .seg button { display: flex; align-items: baseline; gap: 0.35rem; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 600; font-size: 12.5px; color: var(--muted); }
-  .seg button small { font-size: 10px; font-weight: 500; }
-  .seg button:hover { color: var(--ink); }
-  .seg button[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
-  .item-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0.2rem 1.1rem 0.55rem; }
-  .item-txt { margin: 0.2rem 1.1rem 0.7rem; font-size: 15px; line-height: 1.75; color: var(--ink-2); }
-  .item-fun { margin: 0 1.1rem 1rem; font-size: 13.5px; font-weight: 700; color: var(--brand-ink); background: color-mix(in oklab, var(--brand) 12%, var(--panel)); border: 1px solid color-mix(in oklab, var(--brand) 26%, var(--line)); border-radius: 10px; padding: 0.55rem 0.85rem; }
-  .item-fun::before { content: "মজার: "; font-weight: 700; color: var(--w); }
-  @media (max-width: 520px) { .sheet-h { flex-direction: column; } }
-  .chips :global(.chip-real) { border-style: solid; background: color-mix(in oklab, var(--ok) 12%, var(--panel)); border-color: color-mix(in oklab, var(--ok) 36%, var(--line)); color: var(--ink); font-weight: 600; }
-  .chips :global(.chip-real:hover) { background: color-mix(in oklab, var(--ok) 20%, var(--panel)); transform: translateY(-1px); }
-  .chips :global(.chip-real .check) { color: var(--ok); font-size: 13px; }
+
+  .actions { display: flex; justify-content: center; gap: 6px; padding: 0.75rem; border-top: 1px solid var(--line-soft); background: var(--panel-2); margin-top: auto; }
+  .actions button { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.05rem; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease; }
+  .actions button:hover { background: var(--panel); transform: translateY(-1px); }
+  .actions .primary { background: var(--brand); color: var(--on-brand); }
+  .actions .primary:hover { background: var(--brand-ink); }
+
+  /* এক নজরে - the animated comparison chart under the stage */
+  .glance { overflow: hidden; }
+  .gauto { color: var(--w); transition: opacity 0.3s ease; }
+  .gauto[hidden] { display: none; }
+  .gseg { display: flex; flex-wrap: wrap; gap: 6px; padding: 0.75rem 1.1rem 0.2rem; }
+  .gseg button { font-size: 12.5px; font-weight: 700; padding: 0.28rem 0.8rem; border-radius: 999px; color: var(--ink-2);
+    background: var(--panel-2); border: 1px solid var(--line-soft); transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+  .gseg button:hover { transform: translateY(-1px); background: var(--panel); }
+  .gseg button[aria-selected="true"] { background: var(--w); color: #fff; border-color: transparent; }
+  .gchart { padding: 0.6rem 1.1rem 0.2rem; display: flex; flex-direction: column; gap: 1px; }
+  .grow { display: grid; grid-template-columns: 118px minmax(0, 1fr) auto; align-items: center; column-gap: 0.7rem;
+    width: 100%; text-align: left; padding: 0.3rem 0.4rem; border-radius: 8px; transition: background 0.15s ease; }
+  .grow:hover { background: color-mix(in oklab, var(--w) 8%, transparent); }
+  .grow[aria-current="true"] { background: color-mix(in oklab, var(--o) 16%, transparent); }
+  .gn { font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grow[aria-current="true"] .gn { color: var(--ink); font-weight: 800; }
+  .gtrack { display: block; height: 13px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+  .gtrack i { display: block; height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, color-mix(in oklab, var(--o) 55%, var(--panel)), var(--o));
+    transition: width 0.75s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: calc(var(--i, 0) * 45ms); }
+  .gv { font-size: 12.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 84px; text-align: right; }
+  .gv.none { color: var(--muted); font-weight: 500; font-size: 11.5px; }
+  .gcap { padding: 0.5rem 1.15rem 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .agebox { margin: 0.8rem 1.1rem 1rem; padding: 0.7rem 0.85rem; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+  .agebox .kg { font-size: 13px; color: var(--ink-2); }
+  .agebox .kg b { color: var(--ink); }
+  .agebox .bar { width: 100%; }
+  .nextnew { align-self: flex-start; }
+  @media (prefers-reduced-motion: reduce) { .gtrack i { transition: none; } }
+
+  /* info rail */
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
-  .spec { padding: 0.3rem 0.95rem 0.5rem; }
-  .row { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
+  .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 2px; }
+  .seg button { padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; font-size: 12px; color: var(--muted); display: flex; gap: 0.25rem; align-items: baseline; }
+  .seg button small { font-size: 9.5px; }
+  .seg button[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .item-name { font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; padding: 0.8rem 0.95rem 0; line-height: 1.3; }
+  .item-chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 0.5rem 0.95rem 0; }
+  .text { padding: 0.7rem 0.95rem 0.5rem; font-size: 14.5px; color: var(--ink-2); line-height: 1.75; }
+  .fun { margin: 0 0.95rem 0.95rem; padding: 0.55rem 0.75rem; border-radius: 10px; background: color-mix(in oklab, var(--sun) 16%, var(--panel)); font-size: 13px; display: flex; flex-direction: column; gap: 0.1rem; }
+  .fun .lbl { color: color-mix(in oklab, var(--sun) 60%, var(--ink)); }
+  .fun[hidden], .lab-note[hidden], .item-name[hidden] { display: none; }
+  .lab-note :global(a) { color: var(--brand-ink); font-weight: 700; }
+
+  .spec { padding: 0.3rem 0.95rem 0.7rem; }
+  .row { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 0.6rem; padding: 0.55rem 0.3rem; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
   .row:last-child { border-bottom: 0; }
   .k { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); }
-  .v { font-size: 13px; font-weight: 700; text-align: right; }
+  .v { font-size: 13px; font-weight: 700; text-align: right; grid-column: 2; grid-row: 1; }
+  .meter { grid-column: 1 / -1; grid-row: 2; display: block; margin-top: 5px; }
+  .meter i { display: block; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--w) var(--p, 0%), var(--sunk) var(--p, 0%)); }
+
+  .recs { padding: 0.3rem 0.95rem 0.7rem; }
+  .recs :global(button) { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; width: 100%; text-align: left; padding: 0.45rem 0.3rem; border-radius: 8px; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+  .recs :global(button:last-child) { border-bottom: 0; }
+  .recs :global(button:hover) { background: color-mix(in oklab, var(--w) 10%, transparent); }
+  .recs :global(button span) { color: var(--muted); font-size: 12px; }
+  .recs :global(button b) { font-family: var(--font-display); text-align: right; }
+  .recs :global(button.is-cur b) { color: var(--w); }
+  .recs :global(.rnone) { font-size: 12.5px; color: var(--muted); line-height: 1.6; padding: 0.45rem 0.3rem; }
+
   .keys { display: flex; flex-wrap: wrap; gap: 6px; padding: 0.8rem 0.95rem 0; }
   .key-jump { cursor: pointer; transition: transform 0.15s ease, background 0.15s ease; }
   .key-jump:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 22%, var(--panel)); }
-  .key-jump:active { transform: translateY(0); }
   .key-soon { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 5px 12px; border-radius: 9px;
     background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: default; }
   .key-soon small { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; }
@@ -263,7 +420,7 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .m { display: flex; gap: 0.7rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line-soft); width: 100%; text-align: left; }
   .m:last-child { border-bottom: 0; }
   .mission-jump { cursor: pointer; border-radius: 8px; transition: background 0.15s ease, transform 0.15s ease; }
-  .mission-jump:hover { background: color-mix(in oklab, var(--w) 8%, transparent); transform: translateX(-2px); }
+  .mission-jump:hover { background: color-mix(in oklab, var(--w) 8%, transparent); }
   .m-soon { opacity: 0.72; }
   .mb { width: 26px; height: 26px; border-radius: 8px; flex: none; display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; background: color-mix(in oklab, var(--w) 18%, var(--panel)); color: var(--w); border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); }
   .m-soon .mb { background: transparent; color: var(--muted); border-style: dashed; }
@@ -271,142 +428,376 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .m p { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
   .try { display: inline-block; margin-top: 0.3rem; font-size: 11.5px; font-weight: 700; color: var(--w); }
   .try.soon { font-weight: 500; color: var(--muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; }
+  .mini { font-size: 11.5px; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--panel); transition: background 0.15s ease, transform 0.15s ease; }
+  .mini:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 14%, var(--panel)); }
   .cta { padding: 0.9rem 0.95rem; display: flex; flex-direction: column; gap: 0.15rem; background: var(--brand-soft); border-color: transparent; transition: transform 0.15s ease; }
   .cta:hover { transform: translateY(-2px); }
   .cta b { font-family: var(--font-display); color: var(--brand-ink); font-size: 16px; }
+
+  .status { margin-top: 0.85rem; display: flex; align-items: center; gap: 1rem; padding: 0.65rem 1.1rem; }
+  .bar { flex: 1; max-width: 360px; height: 5px; background: var(--sunk); border-radius: 3px; overflow: hidden; display: block; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--brand); border-radius: 3px; transition: width 0.5s ease; }
+  .back { margin-top: 1.2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
   @media (max-width: 1080px) {
     .xp { grid-template-columns: 1fr; }
-    .rail-list { flex-direction: row; overflow-x: auto; max-height: none; }
-    .rail-list button { width: auto; flex: none; border-left: 0; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; }
-    .rail-list button[aria-selected="true"] { border-bottom-color: var(--w); }
-    .rail-list .tg { display: none; }
+    .rail-list { flex-direction: row; overflow-x: auto; max-height: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+    .rail-list button { width: auto; flex: none; border-left: 0; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; scroll-snap-align: start; }
+    .rail-list button[aria-selected="true"] { border-bottom-color: var(--o); }
+    .rail-list .tg, .rail-list .no { display: none; }
     .stage { min-height: 0; }
+    .scene { min-height: min(96vw, 460px); }
   }
-  @media (max-width: 760px) { .scene { grid-template-columns: 1fr; } .scene-t { grid-row: 3; grid-column: 1; } .hero3d { max-height: none; } }
+  @media (max-width: 560px) {
+    /* the world name is already the page heading; on a phone the crumb only
+       needs to say which category and item the model is showing */
+    .crumb-world, .sep-world { display: none; }
+    .crumb { max-width: 45%; }
+    .items { padding: 0.9rem 1rem 1rem; }
+    .stage-h { padding: 1rem 1rem 0; }
+    .grow { grid-template-columns: 84px minmax(0, 1fr) auto; column-gap: 0.5rem; }
+    .gn { font-size: 12px; }
+    .gv { font-size: 11.5px; min-width: 64px; }
+  }
 </style>
 
 <script>
   import { toggleStar, isStarred, getProgress, markSeen } from '../../lib/progress';
   import { bn, pad2 } from '../../lib/bn';
   import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
-  import type { MathItemDetail } from '../../data/math-explorer';
-  type Cat = { n: string; items: string[]; play: string; hero: HeroSpec; lab?: string; labAnchors?: string[]; detail?: MathItemDetail[] | null };
+  import type { ItemDetail } from '../../data/explorer-types';
+
+  type Cat = {
+    n: string; items: string[]; play: string; hero: HeroSpec;
+    lab?: string; labAnchors?: string[]; detail: ItemDetail[] | null; chars: number;
+  };
+
   const root = document.getElementById('world')!;
   const slug = root.dataset.slug!;
   const cats: Cat[] = JSON.parse(document.getElementById('world-data')!.textContent!);
-  const rail = [...root.querySelectorAll<HTMLButtonElement>('.rail-list [data-i]')];
-  const chips = document.getElementById('chips')!;
-  const starCount = document.getElementById('star-count')!, starN = document.getElementById('star-n')!, starToast = document.getElementById('star-toast')!;
-  let toastTimer = 0;
-  // per-item reading sheet (the "more info" that makes a world page feel like space)
-  const sheet = document.getElementById('sheet') as HTMLElement, itemName = document.getElementById('item-name')!, itemChips = document.getElementById('item-chips')!, itemText = document.getElementById('item-text')!, itemFun = document.getElementById('item-fun')!;
-  const segs = [...document.querySelectorAll<HTMLButtonElement>('#item-seg [data-l]')];
-  let curItem = 0; let curLevel: 'l1' | 'l2' | 'l3' = 'l1';
-  function drawItem() {
-    const d = cats[curCat].detail![curItem];
-    itemName.textContent = cats[curCat].items[curItem];
-    itemChips.replaceChildren(...d.chips.map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
-    itemText.textContent = d[curLevel];
-    itemFun.textContent = d.fun;
-    segs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.l === curLevel)));
-  }
-  segs.forEach((b) => b.addEventListener('click', () => { curLevel = b.dataset.l as 'l1' | 'l2' | 'l3'; drawItem(); }));
+  const $ = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const host = document.getElementById('hero-host')!, ctl = document.getElementById('ctl') as HTMLInputElement, ctlLabel = document.getElementById('ctl-label')!;
-  const spinBtn = document.getElementById('h-spin') as HTMLButtonElement, resetBtn = document.getElementById('h-reset') as HTMLButtonElement, angleEl = document.getElementById('h-angle')!;
-  let hero: HeroHandle | null = null, curCat = 0, lastDeg = -1;
-  const applyHero = (spec: HeroSpec) => { if (!hero) return; ctlLabel.textContent = hero.set(spec); ctl.value = String(Math.round((spec.p ?? 0.5) * 100)); };
+  const TOTAL = cats.reduce((s, c) => s + c.items.length, 0);
+  /** Characters a comfortable Bangla reader gets through in a minute. Stated in
+      the chart caption so the estimate can be judged, not just trusted. */
+  const CHARS_PER_MIN = 600;
+
+  const rail = [...root.querySelectorAll<HTMLButtonElement>('.rail-list [data-i]')];
+  const chips = $('#chips');
+  const starToast = $('#star-toast');
+  let toastTimer = 0;
+
+  let curCat = 0, curItem = 0;
+  let level = (localStorage.getItem('posora:level') as 'l1' | 'l2' | 'l3' | null) ?? 'l1';
+  let hero: HeroHandle | null = null, lastDeg = -1;
+
+  const readable = (c: Cat) => !!c.detail && c.detail.length === c.items.length;
+  const keyOf = (ci: number, ii: number) => `${cats[ci].n}:${cats[ci].items[ii]}`;
+  const seenList = () => getProgress().seen[slug] ?? [];
+  const readCount = (ci: number, seen = new Set(seenList())) =>
+    cats[ci].items.reduce((n, _it, ii) => n + (seen.has(keyOf(ci, ii)) ? 1 : 0), 0);
+  const minutesOf = (c: Cat) => (c.chars ? Math.max(1, Math.round(c.chars / CHARS_PER_MIN)) : 0);
+
+  /* ---- 3D hero: loaded after first paint so the text is readable immediately ---- */
+  const host = $('#hero-host'), ctl = $<HTMLInputElement>('#ctl'), ctlLabel = $('#ctl-label');
+  const spinBtn = $<HTMLButtonElement>('#h-spin'), resetBtn = $<HTMLButtonElement>('#h-reset'), angleEl = $('#h-angle');
   const syncSpin = (on: boolean) => { spinBtn.setAttribute('aria-pressed', String(on)); spinBtn.textContent = on ? 'ঘোরানো থামাও' : 'ঘোরানো চালাও'; };
-  const onHeroFrame = ({ yawDeg }: { yawDeg: number }) => { const d = Math.round(yawDeg); if (d === lastDeg) return; lastDeg = d; angleEl.textContent = `কোণ ${bn(d)}°`; };
+  const onHeroFrame = ({ yawDeg }: { yawDeg: number }) => {
+    const d = Math.round(yawDeg); if (d === lastDeg) return;
+    lastDeg = d; angleEl.textContent = `কোণ ${bn(d)}°`;
+  };
+  import('../../components/explorer/heroes').then(({ mountHero }) => {
+    hero = mountHero(host, cats[0].hero, onHeroFrame);
+    ctlLabel.textContent = hero.set(cats[curCat].hero);
+    ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
+    syncSpin(hero.isAuto());
+    host.addEventListener('pointerdown', () => { $('#hero-hint').style.opacity = '0'; }, { once: true });
+  });
   spinBtn.addEventListener('click', () => { if (!hero) return; const on = !hero.isAuto(); hero.setAuto(on); syncSpin(on); });
   resetBtn.addEventListener('click', () => hero?.resetView());
-  import('../../components/explorer/heroes').then(({ mountHero }) => {
-    hero = mountHero(host, cats[0].hero, onHeroFrame); ctlLabel.textContent = hero.set(cats[curCat].hero); ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
-    syncSpin(hero.isAuto());
-    host.addEventListener('pointerdown', () => { document.getElementById('hero-hint')!.style.opacity = '0'; }, { once: true });
-  });
   ctl.addEventListener('input', () => hero?.setParam(+ctl.value / 100));
 
-  const itemsHT = document.getElementById('items-h-t')!, itemsHS = document.getElementById('items-h-s')!;
-  function renderChips(c: Cat) {
-    const hasDetail = !!(c.detail && c.detail.length === c.items.length);
-    starCount.hidden = !!c.lab || getProgress().stars.length === 0;
+  /* ---- the reading card: one item, three depths ---- */
+  const seg = [...root.querySelectorAll<HTMLButtonElement>('.seg [data-l]')];
+  const itemName = $('#item-name'), itemChips = $('#item-chips'), itemText = $('#item-text');
+  const funWrap = $('#item-fun-wrap'), itemFun = $('#item-fun'), labNote = $('#lab-note');
+  function renderRead() {
+    const c = cats[curCat];
+    seg.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.l === level)));
+    if (readable(c)) {
+      const d = c.detail![curItem];
+      itemName.hidden = false; itemName.textContent = c.items[curItem];
+      itemChips.replaceChildren(...d.chips.map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
+      itemText.textContent = d[level];
+      funWrap.hidden = false; itemFun.textContent = d.fun;
+      labNote.hidden = true;
+      return;
+    }
+    itemChips.replaceChildren();
+    funWrap.hidden = true;
     if (c.lab) {
-      sheet.hidden = true;
-      itemsHT.textContent = 'এই বিভাগে যা যা আছে - সবকটাই কাজ করে';
-      itemsHS.textContent = 'নিচে যেকোনোটায় ক্লিক করো - সরাসরি সেই টুলে চলে যাবে';
+      itemName.hidden = false; itemName.textContent = c.n;
+      itemText.textContent = 'এই বিভাগের প্রতিটি আইটেম আলাদা একটা চালু টুল - পড়ার বদলে সরাসরি নেড়েচেড়ে দেখা যায়।';
+      labNote.hidden = false;
+      labNote.innerHTML = `<a href="${c.lab}">${c.n} টুলে যাও →</a>`;
+      return;
+    }
+    itemName.hidden = true;
+    itemText.textContent = 'এই বিভাগের লেখা এখনও তৈরি হয়নি। নিচের তালিকায় ★ চেপে বলে দাও কোনটা আগে বানাবো - তোমার ভোট আমাদের কাছে জমা থাকবে।';
+    labNote.hidden = true;
+  }
+  seg.forEach((b) => b.addEventListener('click', () => {
+    level = b.dataset.l as typeof level;
+    localStorage.setItem('posora:level', level);
+    renderRead();
+  }));
+
+  /* ---- the item strip ---- */
+  function renderChips() {
+    const c = cats[curCat], seen = new Set(seenList());
+    if (c.lab) {
+      $('#items-h-s').textContent = 'নিচে যেকোনোটায় ক্লিক করো - সরাসরি সেই টুলে চলে যাবে';
       chips.replaceChildren(...c.items.map((it, j) => {
-        const a = document.createElement('a'); a.className = 'chip chip-real'; a.href = `${c.lab}#${c.labAnchors![j]}`;
-        a.innerHTML = `<span class="check" aria-hidden="true">✓</span>`; a.append(it);
+        const a = document.createElement('a');
+        a.className = 'chip chip-real'; a.href = `${c.lab}#${c.labAnchors![j]}`;
+        a.innerHTML = '<span class="check" aria-hidden="true">✓</span>';
+        a.append(it);
         return a;
       }));
       return;
     }
-    if (hasDetail) {
+    if (readable(c)) {
       if (curItem >= c.items.length) curItem = 0;
-      itemsHT.textContent = 'এই বিভাগে যা যা আছে - সবকটিই পড়া যায়';
-      itemsHS.textContent = 'নিচের যেকোনোটিতে ক্লিক করো - ছোট, মাঝারি নয় বড় গভীরে তার কথা পড়ো';
+      $('#items-h-s').textContent = 'নিচের যেকোনোটিতে ক্লিক করো - ডানে তার পুরো কথা খুলবে';
       chips.replaceChildren(...c.items.map((it, j) => {
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.di = String(j);
-        b.append(it); b.setAttribute('aria-pressed', String(j === curItem));
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'chip'; b.dataset.di = String(j);
+        b.classList.toggle('done', seen.has(keyOf(curCat, j)));
+        b.append(it);
+        b.setAttribute('aria-pressed', String(j === curItem));
         return b;
       }));
-      sheet.hidden = false;
-      drawItem();
       return;
     }
-    sheet.hidden = true;
-    itemsHT.textContent = 'এই বিভাগে যা যা যোগ হবে';
-    itemsHS.textContent = 'এখনও লেখা হয়নি - নিচের ★ চেপে বলো কোনটা আগে বানাবো';
+    $('#items-h-s').textContent = 'এখনও লেখা হয়নি - ★ চেপে বলো কোনটা আগে বানাবো';
     chips.replaceChildren(...c.items.map((it) => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.key = `${slug}:${c.n}:${it}`;
-      b.innerHTML = `<span class="star" aria-hidden="true">★</span>`; b.append(it);
-      b.setAttribute('aria-pressed', String(isStarred(b.dataset.key)));
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.dataset.key = `${slug}:${c.n}:${it}`;
+      b.innerHTML = '<span class="star" aria-hidden="true">★</span>';
+      b.append(it);
+      b.setAttribute('aria-pressed', String(isStarred(b.dataset.key!)));
       return b;
     }));
   }
-  function renderStarCount() {
-    const n = getProgress().stars.length;
-    starCount.hidden = n === 0;
-    starN.textContent = bn(n);
+
+  /* ---- এক নজরে: one animated chart, three honest ways to compare ---- */
+  const GIDS = ['items', 'time', 'read'] as const;
+  const gseg = [...root.querySelectorAll<HTMLButtonElement>('.gseg [data-m]')];
+  const grows = [...root.querySelectorAll<HTMLElement>('.gchart .grow')];
+  let metric = 0, autoTimer = 0;
+
+  function gValue(ci: number, id: string, seen: Set<string>): number {
+    if (id === 'items') return cats[ci].items.length;
+    if (id === 'time') return minutesOf(cats[ci]);
+    return readCount(ci, seen);
   }
-  function show(i: number) {
-    const c = cats[i]; curCat = i; applyHero(c.hero);
+  function gLabel(id: string, ci: number, v: number): string {
+    if (id === 'items') return `${bn(v)}টি`;
+    if (id === 'time') return v ? `${bn(v)} মিনিট` : 'টুল';
+    return `${bn(v)} / ${bn(cats[ci].items.length)}`;
+  }
+  function renderGlance() {
+    const id = GIDS[metric], seen = new Set(seenList());
+    const vals = cats.map((_c, i) => gValue(i, id, seen));
+    const max = Math.max(...vals, 1);
+    gseg.forEach((b, i) => b.setAttribute('aria-selected', String(i === metric)));
+    grows.forEach((row, i) => {
+      const bar = row.querySelector<HTMLElement>('.gtrack i')!, out = row.querySelector<HTMLElement>('.gv')!;
+      row.style.setProperty('--i', String(i));
+      row.setAttribute('aria-current', String(i === curCat));
+      const v = vals[i];
+      // "তুমি যত পড়েছ" fills by how far through that category you are, so a short
+      // category finished reads as full; the other two fill against the biggest.
+      const frac = id === 'read' ? v / (cats[i].items.length || 1) : v / max;
+      bar.style.width = v === 0 ? '0%' : `${Math.max(3, frac * 100)}%`;
+      out.textContent = gLabel(id, i, v);
+      out.classList.toggle('none', v === 0);
+    });
+    $('#gcap').textContent =
+      id === 'items' ? 'প্রতিটি বারের লম্বা সরাসরি ওই বিভাগের আইটেম সংখ্যার অনুপাতে আঁকা।'
+      : id === 'time' ? 'তিনটি গভীরতার পুরো লেখা মিলিয়ে আনুমানিক সময়, মিনিটে ৬০০ অক্ষর পড়ার হিসাবে। এটা আন্দাজ, মাপা সময় নয়।'
+      : 'বার যত লম্বা, ওই বিভাগের তত বেশি অংশ তোমার পড়া হয়ে গেছে। হিসাবটা শুধু এই ব্রাউজারে জমা থাকে।';
+  }
+  function stopAuto() { if (!autoTimer) return; clearInterval(autoTimer); autoTimer = 0; $('#gauto').hidden = true; }
+  function startAuto() {
+    if (autoTimer || reduced || $('#gauto').hidden) return;
+    autoTimer = window.setInterval(() => { metric = (metric + 1) % GIDS.length; renderGlance(); }, 6500);
+  }
+  if (reduced) $('#gauto').hidden = true;
+  else new IntersectionObserver((es) => {
+    if ($('#gauto').hidden) return;
+    if (es[0].isIntersecting) startAuto();
+    else { clearInterval(autoTimer); autoTimer = 0; }
+  }, { threshold: 0.25 }).observe($('#glance'));
+  gseg.forEach((b, i) => b.addEventListener('click', () => { stopAuto(); metric = i; renderGlance(); }));
+  $('#gchart').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-i]');
+    if (b) { stopAuto(); showCat(+b.dataset.i!); }
+  });
+
+  /* ---- records: read straight off the structure, nothing invented ---- */
+  function renderRecords() {
+    const seen = new Set(seenList());
+    const idxMax = (f: (i: number) => number) => cats.reduce((best, _c, i) => (f(i) > f(best) ? i : best), 0);
+    const idxMin = (f: (i: number) => number) => cats.reduce((best, _c, i) => (f(i) < f(best) ? i : best), 0);
+    const nItems = (i: number) => cats[i].items.length;
+    const nRead = (i: number) => readCount(i, seen);
+
+    const rows: { label: string; i: number; val: string }[] = [
+      { label: 'সবচেয়ে বড় বিভাগ', i: idxMax(nItems), val: `${bn(nItems(idxMax(nItems)))}টি` },
+      { label: 'সবচেয়ে ছোট বিভাগ', i: idxMin(nItems), val: `${bn(nItems(idxMin(nItems)))}টি` },
+      { label: 'সবচেয়ে লম্বা পড়া', i: idxMax((i) => minutesOf(cats[i])), val: `${bn(minutesOf(cats[idxMax((i) => minutesOf(cats[i]))]))} মিনিট` },
+    ];
+    const top = idxMax(nRead);
+    const box = $('#recs');
+    const nodes: HTMLElement[] = rows.map((r) => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.dataset.i = String(r.i);
+      btn.classList.toggle('is-cur', r.i === curCat);
+      btn.innerHTML = `<span>${r.label}</span><b>${cats[r.i].n} <small style="font-weight:500;color:var(--muted)">${r.val}</small></b>`;
+      return btn;
+    });
+    if (nRead(top) > 0) {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.dataset.i = String(top);
+      btn.classList.toggle('is-cur', top === curCat);
+      btn.innerHTML = `<span>তুমি সবচেয়ে এগিয়ে</span><b>${cats[top].n} <small style="font-weight:500;color:var(--muted)">${bn(nRead(top))}টি পড়া</small></b>`;
+      nodes.push(btn);
+    } else {
+      const p = document.createElement('p');
+      p.className = 'rnone';
+      p.textContent = 'তুমি এখনও কিছু পড়োনি, তাই তোমার নিজের রেকর্ড এখানে এখনও ফাঁকা।';
+      nodes.push(p);
+    }
+    box.replaceChildren(...nodes);
+  }
+  $('#recs').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-i]');
+    if (b) showCat(+b.dataset.i!);
+  });
+
+  /* ---- progress, everywhere it shows ---- */
+  function renderProgress() {
+    const seen = new Set(seenList());
+    const done = cats.reduce((s, _c, i) => s + readCount(i, seen), 0);
+    const pct = TOTAL ? (done / TOTAL) * 100 : 0;
+    $('#seen-count').textContent = `${bn(done)} / ${bn(TOTAL)} পড়া`;
+    $('#log-text').textContent = `${bn(done)} / ${bn(TOTAL)}`;
+    $('#log-bar').style.width = `${pct}%`;
+    $('#prog-bar').style.width = `${pct}%`;
+    $('#spec-read').textContent = `${bn(done)} / ${bn(TOTAL)}`;
+    $('#spec-meter').style.setProperty('--p', `${Math.round(pct)}%`);
+    $('#prog-line').textContent = done === 0
+      ? 'এই ভুবনে তোমার যাত্রা সবে শুরু।'
+      : done === TOTAL
+        ? `পুরো ${cats.length === 1 ? 'বিভাগ' : 'ভুবন'} শেষ! ${bn(TOTAL)}টি আইটেমই পড়া হয়ে গেছে।`
+        : `তুমি ${bn(done)} / ${bn(TOTAL)} আইটেম পড়েছ, বাকি আছে ${bn(TOTAL - done)}টি।`;
+    rail.forEach((b, i) => b.classList.toggle('done', readCount(i, seen) === cats[i].items.length));
+    $('#cat-prog-n').textContent = bn(readCount(curCat, seen));
+    $('#cat-prog').lastChild!.textContent = ` / ${bn(cats[curCat].items.length)} পড়া`;
+    $('#cat-prog').hidden = !readable(cats[curCat]);
+  }
+
+  /* ---- selection ---- */
+  function renderCrumbs() {
+    $('#crumb-cat').textContent = cats[curCat].n;
+    const item = $('#crumb-item'), sep = $('#crumb-sep2');
+    const show = readable(cats[curCat]);
+    item.hidden = sep.hidden = !show;
+    $('#crumb-cat').classList.toggle('cur', !show);
+    item.classList.toggle('cur', show);
+    if (show) item.textContent = cats[curCat].items[curItem];
+  }
+  function selectItem(ii: number, mark = true) {
+    const c = cats[curCat];
+    if (!readable(c)) return;
+    curItem = ii;
+    chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
+    renderRead(); renderCrumbs();
+    if (mark && markSeen(slug, keyOf(curCat, ii))) {
+      chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`)?.classList.add('done');
+      renderProgress(); renderGlance(); renderRecords();
+    }
+  }
+  function showCat(i: number, item = 0) {
+    curCat = i; curItem = item;
     rail.forEach((b) => b.setAttribute('aria-selected', String(+b.dataset.i! === i)));
-    document.getElementById('c-no')!.textContent = pad2(i + 1);
-    document.getElementById('c-name')!.textContent = c.n;
-    document.getElementById('c-play')!.innerHTML = `<b>পর্দায়</b>${c.play}`;
-    renderChips(c);
-    if (!reduced) root.querySelector('.scene-t')!.animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
+    const c = cats[i];
+    $('#c-no').textContent = pad2(i + 1);
+    $('#c-name').textContent = c.n;
+    $('#c-play').innerHTML = '<b>পর্দায়</b>';
+    $('#c-play').append(c.play);
+    if (hero) { ctlLabel.textContent = hero.set(c.hero); ctl.value = String(Math.round((c.hero.p ?? 0.5) * 100)); }
+    renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
+    if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { renderProgress(); renderGlance(); renderRecords(); renderChips(); } }
+    rail[i]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
+    if (!reduced) $('.items-h').animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
   }
-  rail.forEach((b) => b.addEventListener('click', () => show(+b.dataset.i!)));
-  root.querySelectorAll<HTMLButtonElement>('.key-jump').forEach((b) => b.addEventListener('click', () => {
-    show(+b.dataset.cat!);
-    root.querySelector('.stage')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
-  }));
-  root.querySelectorAll<HTMLButtonElement>('.mission-jump').forEach((b) => b.addEventListener('click', () => {
-    show(+b.dataset.cat!);
-    root.querySelector('.stage')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
-  }));
+  /** Walk one item forward or back, rolling into the next category at the edges. */
+  function step(d: number) {
+    let ci = curCat, ii = curItem + d;
+    for (let guard = 0; guard < cats.length + 1; guard++) {
+      if (ii >= 0 && ii < cats[ci].items.length) break;
+      if (ii < 0) { ci = (ci - 1 + cats.length) % cats.length; ii = cats[ci].items.length - 1; }
+      else { ci = (ci + 1) % cats.length; ii = 0; }
+    }
+    if (ci === curCat) selectItem(ii); else showCat(ci, ii);
+  }
+
+  /* ---- wiring ---- */
+  rail.forEach((b) => b.addEventListener('click', () => showCat(+b.dataset.i!)));
+  $('#crumb-cat').addEventListener('click', () => $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }));
+  $('#crumb-item').addEventListener('click', () => $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }));
   chips.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return;
-    const cat = cats[curCat];
-    if (cat.detail && cat.detail.length === cat.items.length) {
-      const j = +b.dataset.di!;
-      chips.querySelectorAll<HTMLButtonElement>('.chip').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === j)));
-      curItem = j; drawItem();
-      markSeen(slug, `${cat.n}:${cat.items[j]}`);
-      return;
-    }
+    const di = b.dataset.di, key = b.dataset.key;
+    if (di !== undefined) { selectItem(+di); return; }
+    if (key === undefined) return;
     const label = b.textContent!.replace('★', '').trim();
-    const on = toggleStar(b.dataset.key!); b.setAttribute('aria-pressed', String(on));
+    const on = toggleStar(key);
+    b.setAttribute('aria-pressed', String(on));
     if (on && !reduced) b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 });
-    renderStarCount();
     starToast.textContent = on ? `"${label}" এখন তোমার তালিকায় - আমরা এটাই আগে বানাবো` : `"${label}" তালিকা থেকে সরানো হলো`;
     starToast.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = window.setTimeout(() => starToast.classList.remove('show'), 2600);
   });
-  renderChips(cats[0]);
-  renderStarCount();
+  root.querySelectorAll<HTMLButtonElement>('.key-jump, .mission-jump').forEach((b) => b.addEventListener('click', () => {
+    showCat(+b.dataset.cat!);
+    $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }));
+  root.querySelector('[data-act="prev"]')!.addEventListener('click', () => step(-1));
+  root.querySelector('[data-act="next"]')!.addEventListener('click', () => step(1));
+  root.querySelector('[data-act="read"]')!.addEventListener('click', () => $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }));
+  $('#next-new').addEventListener('click', () => {
+    const seen = new Set(seenList());
+    for (let i = 0; i < cats.length; i++) {
+      if (!readable(cats[i])) continue;
+      const j = cats[i].items.findIndex((_it, ii) => !seen.has(keyOf(i, ii)));
+      if (j >= 0) { showCat(i, j); $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }); return; }
+    }
+    $('#prog-line').textContent = 'সব পড়া হয়ে গেছে! নতুন লেখা যোগ হলে এখানেই দেখাবে।';
+  });
+  document.addEventListener('keydown', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight') step(1);
+    if (e.key === 'ArrowLeft') step(-1);
+  });
+
+  renderChips(); renderRead(); renderCrumbs(); renderGlance(); renderRecords();
+  if (readable(cats[0])) markSeen(slug, keyOf(0, 0));
+  renderProgress();
+  renderChips();
 </script>

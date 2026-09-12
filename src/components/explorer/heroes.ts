@@ -207,7 +207,7 @@ const SCENES: Record<string, Builder> = {
     const cols = ['#f0b429', '#3b82f6', '#9fd3e6', '#d9822b', '#cfd8e3', '#e88fb0']; const names = ['গ্রীষ্ম', 'বর্ষা', 'শরৎ', 'হেমন্ত', 'শীত', 'বসন্ত'];
     const fruits = ['🥭', '🍈', '🍌', '🥥', '🥕', '🍓'];
     const wheel = new Group(); wheel.rotation.x = 0.5; root.add(wheel);
-    cols.forEach((c, i) => { const s = sector(2.6, (i / 6) * Math.PI * 2, Math.PI / 3, c, 0.2); wheel.add(s); const a = (i + 0.5) / 6 * Math.PI * 2; const sp = v === 'fruit' ? emojiSprite(fruits[i], 0.9) : textSprite(names[i], font, '#111820', 1.1); sp.position.set(Math.cos(a) * 2, 0.4, -Math.sin(a) * 2); wheel.add(sp); });
+    cols.forEach((c, i) => { const s = sector(2.6, (i / 6) * Math.PI * 2, Math.PI / 3, c, 0.2); wheel.add(s); const a = (i + 0.5) / 6 * Math.PI * 2; const sp = v === 'fruit' ? emojiSprite(fruits[i], 0.9) : textSprite(names[i], font, '#eef4fb', 1.1); sp.position.set(Math.cos(a) * 2, 0.4, -Math.sin(a) * 2); wheel.add(sp); });
     wheel.add(new Mesh(new CylinderGeometry(0.5, 0.5, 0.3, 32), std('#ffffff')));
     return { label: 'ঋতু ঘোরাও', update(t, _dt, p) { wheel.rotation.y += (p * Math.PI * 2 - wheel.rotation.y) * 0.08; wheel.rotation.z = 0.5 + Math.sin(t * 0.4) * 0.025; } };
   },
@@ -277,9 +277,9 @@ const SCENES: Record<string, Builder> = {
 
   letters({ root, hue, v, font }) {
     const set = v === 'en' ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') : v === 'words' ? ['মা', 'বাবা', 'বই', 'ফুল', 'পাখি', 'নদী', 'চাঁদ', 'ঘর', 'মাছ', 'গাছ'] : v === 'jukto' ? ['ক্ষ', 'জ্ঞ', 'ঙ্গ', 'ন্ত', 'স্থ', 'ষ্ট', 'ত্র', 'দ্ধ', 'ম্ব', 'শ্র'] : v === 'num' ? '০১২৩৪৫৬৭৮৯'.split('') : 'অআইঈউঊঋএঐওঔকখগঘঙচছজঝঞটঠডঢণতথদধনপফবভমযরলশষসহ'.split('');
-    const N = Math.min(set.length, 26); const sps = set.slice(0, N).map((ch, i) => { const s = textSprite(ch, font, '#' + (i % 2 ? hue.getHexString() : darken(hue, 0.35).getHexString()), 1.1); root.add(s); return s; });
-    const big = textSprite(set[0], font, '#' + hue.getHexString(), 3); root.add(big); let cur = 0;
-    return { label: 'বর্ণ বাছো', update(t, _dt, p) { const sel = Math.min(N - 1, Math.floor(p * N)); if (sel !== cur) { cur = sel; big.material.map?.dispose(); big.material.dispose(); root.remove(big); const nb = textSprite(set[sel], font, '#' + hue.getHexString(), 3); root.add(nb); Object.assign(big, { material: nb.material }); root.remove(nb); root.add(big); } sps.forEach((s, i) => { const a = (i / N) * Math.PI * 2 + t * 0.12; s.position.set(Math.cos(a) * 3.2, Math.sin(a * 3 + t) * 0.5, Math.sin(a) * 1.5); s.scale.setScalar(i === sel ? 0.2 : 1.1); }); big.position.y = Math.sin(t * 1.2) * 0.15; } };
+    const N = Math.min(set.length, 26); const sps = set.slice(0, N).map((ch, i) => { const s = textSprite(ch, font, '#' + (i % 2 ? lighten(hue, 0.3).getHexString() : lighten(hue, 0.6).getHexString()), 1.1); root.add(s); return s; });
+    const big = textSprite(set[0], font, '#' + lighten(hue, 0.35).getHexString(), 3); root.add(big); let cur = 0;
+    return { label: 'বর্ণ বাছো', update(t, _dt, p) { const sel = Math.min(N - 1, Math.floor(p * N)); if (sel !== cur) { cur = sel; big.material.map?.dispose(); big.material.dispose(); root.remove(big); const nb = textSprite(set[sel], font, '#' + lighten(hue, 0.35).getHexString(), 3); root.add(nb); Object.assign(big, { material: nb.material }); root.remove(nb); root.add(big); } sps.forEach((s, i) => { const a = (i / N) * Math.PI * 2 + t * 0.12; s.position.set(Math.cos(a) * 3.2, Math.sin(a * 3 + t) * 0.5, Math.sin(a) * 1.5); s.scale.setScalar(i === sel ? 0.2 : 1.1); }); big.position.y = Math.sin(t * 1.2) * 0.15; } };
   },
 
   face({ root, hue, v }) {

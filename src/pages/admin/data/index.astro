@@ -22,14 +22,14 @@ const labels: Record<string, string> = {
 };
 const when = (ms?: number) =>
   ms ? new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }).format(ms) : 'আমদানি হয়নি';
-const kb = (n?: number) => (n ? `${(n / 1024).toFixed(1)} KB` : '—');
+const kb = (n?: number) => (n ? `${(n / 1024).toFixed(1)} KB` : '-');
 ---
 
 <Admin title="ডেটা" section="data">
   <div class="a-wrap">
     <h1 class="a-h">ডেটা</h1>
     <p class="a-sub">
-      ভুবনের বাইরের কনটেন্ট। এগুলো JSON হিসেবে সম্পাদনা করা হয় — গঠন ভুল হলে সংরক্ষণ হবে না।
+      ভুবনের বাইরের কনটেন্ট। এগুলো JSON হিসেবে সম্পাদনা করা হয় - গঠন ভুল হলে সংরক্ষণ হবে না।
     </p>
 
     <div class="card">

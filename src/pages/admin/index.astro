@@ -25,7 +25,7 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
   <div class="a-wrap">
     <h1 class="a-h">ড্যাশবোর্ড</h1>
     <p class="a-sub">
-      {seeded ? `শেষ সম্পাদনা: ${lastEdit ? when(lastEdit) : '—'}` : 'ডেটাবেস এখনো খালি।'}
+      {seeded ? `শেষ সম্পাদনা: ${lastEdit ? when(lastEdit) : '-'}` : 'ডেটাবেস এখনো খালি।'}
     </p>
 
     {
@@ -34,7 +34,7 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
           <h2>প্রথম ধাপ</h2>
           <p>
             ডেটাবেসে এখনো কোনো ভুবন নেই। নিচের বোতামে ক্লিক করলে <code>src/data/</code>-এর বর্তমান সব
-            কনটেন্ট D1-এ চলে আসবে। এতে সাইটের কিছুই বদলাবে না — শুধু সম্পাদনাযোগ্য হবে।
+            কনটেন্ট D1-এ চলে আসবে। এতে সাইটের কিছুই বদলাবে না - শুধু সম্পাদনাযোগ্য হবে।
           </p>
           <button class="btn btn-primary" id="seed" type="button">কনটেন্ট আমদানি করো</button>
           <p class="note" id="seed-out"></p>

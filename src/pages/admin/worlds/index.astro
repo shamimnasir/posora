@@ -11,7 +11,7 @@ if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
 
 const all = await selectWorlds(db()!, false);
 const when = (ms: number) =>
-  ms ? new Intl.DateTimeFormat('bn-BD', { dateStyle: 'short' }).format(ms) : '—';
+  ms ? new Intl.DateTimeFormat('bn-BD', { dateStyle: 'short' }).format(ms) : '-';
 ---
 
 <Admin title="ভুবন" section="worlds">

@@ -151,7 +151,7 @@ function start(initial: World, creating: boolean) {
   /** A category select bound to one slot of keyCats / missionCats. */
   function catSelect(current: number | null, onPick: (v: number | null) => void) {
     const sel = el('select', { class: 'cat-ref' });
-    sel.append(el('option', { value: '' }, '— এখনো নেই —'));
+    sel.append(el('option', { value: '' }, '- এখনো নেই -'));
     state.cats.forEach((c, i) => {
       const o = el('option', { value: String(i) }, c.n || `বিভাগ ${i + 1}`);
       if (current === i) o.setAttribute('selected', '');
@@ -169,7 +169,7 @@ function start(initial: World, creating: boolean) {
   function refreshCatOptions() {
     for (const sel of document.querySelectorAll<HTMLSelectElement>('select.cat-ref')) {
       const keep = sel.value;
-      sel.replaceChildren(el('option', { value: '' }, '— এখনো নেই —'));
+      sel.replaceChildren(el('option', { value: '' }, '- এখনো নেই -'));
       state.cats.forEach((c, i) => sel.append(el('option', { value: String(i) }, c.n || `বিভাগ ${i + 1}`)));
       sel.value = keep;
     }

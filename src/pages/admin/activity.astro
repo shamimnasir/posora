@@ -46,8 +46,8 @@ const labels: Record<string, string> = {
                     <b>{labels[r.action] ?? r.action}</b>
                     {r.action === 'login.failed' && <span class="pill draft" style="margin-inline-start:8px">সতর্কতা</span>}
                   </td>
-                  <td class="note">{r.target ?? '—'}</td>
-                  <td class="note">{r.detail ?? '—'}</td>
+                  <td class="note">{r.target ?? '-'}</td>
+                  <td class="note">{r.detail ?? '-'}</td>
                   <td class="note" style="white-space:nowrap">{when(r.at)}</td>
                 </tr>
               ))}
