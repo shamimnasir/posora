@@ -1,0 +1,149 @@
+---
+/**
+ * Members and the founding list. Until a payment rail exists, this is where a
+ * family gets the plan: find them, grant it, say why in the note.
+ */
+import Admin from '../../../layouts/Admin.astro';
+import { isLoggedIn } from '../../../lib/auth';
+import { db } from '../../../lib/db';
+import { listMembers, listWaitlist } from '../../../lib/members';
+import { bn } from '../../../lib/bn';
+
+export const prerender = false;
+if (!(await isLoggedIn(Astro))) return Astro.redirect('/admin/login');
+Astro.response.headers.set('cache-control', 'private, no-store');
+
+let members: Awaited<ReturnType<typeof listMembers>> = [];
+let waitlist: Awaited<ReturnType<typeof listWaitlist>> = [];
+let schemaMissing = false;
+if (db()) {
+  try {
+    members = await listMembers();
+    waitlist = await listWaitlist(200);
+  } catch {
+    // The members migration has not been applied to this database yet.
+    schemaMissing = true;
+  }
+}
+const when = (ms: number | null) => (ms ? new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium' }).format(ms) : '-');
+const active = members.filter((m) => m.family).length;
+---
+<Admin title="সদস্য" section="members">
+  <div class="a-wrap">
+    <h1 class="a-h">সদস্য ও প্রতিষ্ঠাতা তালিকা</h1>
+    <p class="a-sub">পরিবার প্ল্যান এখনো হাতে চালু করা হয়। প্রতিটি চালু বা বন্ধ করা কার্যক্রমে লেখা থাকে।</p>
+
+    {schemaMissing && (
+      <div class="card">
+        <h2>টেবিল এখনো তৈরি হয়নি</h2>
+        <p>সদস্যদের টেবিল এই ডেটাবেসে নেই। রেপো থেকে একবার চালান:</p>
+        <pre><code>npx wrangler d1 migrations apply posora --remote</code></pre>
+      </div>
+    )}
+
+    <div class="stat-row" style="margin-bottom:18px">
+      <div class="s"><b>{bn(members.length)}</b><span>সদস্য</span></div>
+      <div class="s"><b>{bn(active)}</b><span>পরিবার প্ল্যান চালু</span></div>
+      <div class="s"><b>{bn(waitlist.filter((w) => w.topic === 'family').length)}</b><span>প্রতিষ্ঠাতা তালিকায়</span></div>
+      <div class="s"><b>{bn(waitlist.filter((w) => w.topic === 'school').length)}</b><span>স্কুলের আগ্রহ</span></div>
+    </div>
+
+    <div class="card">
+      <div class="spread" style="margin-bottom:14px">
+        <h2 style="margin:0">সদস্য</h2>
+        <form id="addf" class="inline">
+          <input name="email" type="email" placeholder="ইমেইল দিয়ে সদস্য যোগ করো" required />
+          <input name="name" type="text" placeholder="নাম (ঐচ্ছিক)" />
+          <button class="btn btn-sm" type="submit">যোগ করো</button>
+        </form>
+      </div>
+      {members.length === 0 ? <p class="note">এখনো কেউ ঢোকেনি।</p> : (
+        <table class="a-list">
+          <thead><tr><th>ইমেইল</th><th>নাম</th><th>যোগ</th><th>শেষ ঢোকা</th><th>সন্তান</th><th>প্ল্যান</th><th></th></tr></thead>
+          <tbody>
+            {members.map((m) => (
+              <tr data-id={m.id}>
+                <td>{m.email}</td>
+                <td>{m.name ?? '-'}</td>
+                <td>{when(m.createdAt)}</td>
+                <td>{when(m.lastLoginAt)}</td>
+                <td>{bn(m.children)}</td>
+                <td>{m.family ? <span class="pill ok">চালু{m.familyEnds ? ` · ${when(m.familyEnds)} পর্যন্ত` : ' · শেষ নেই'}</span> : <span class="pill">নেই</span>}</td>
+                <td class="acts">
+                  {m.family
+                    ? <button type="button" class="btn btn-sm" data-act="revoke">বন্ধ করো</button>
+                    : <>
+                        <button type="button" class="btn btn-sm btn-primary" data-act="grant" data-days="365">১ বছর দাও</button>
+                        <button type="button" class="btn btn-sm" data-act="grant" data-days="">শেষ ছাড়া</button>
+                      </>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <p class="note" id="mmsg"></p>
+    </div>
+
+    <div class="card">
+      <h2>প্রতিষ্ঠাতা তালিকা ও স্কুলের আগ্রহ</h2>
+      <p class="note">ফর্ম থেকে যা এসেছে, নতুন আগে। ইমেইলেও একই কপি গেছে।</p>
+      {waitlist.length === 0 ? <p class="note">এখনো কিছু আসেনি।</p> : (
+        <table class="a-list">
+          <thead><tr><th>কখন</th><th>কোথা থেকে</th><th>নাম</th><th>যোগাযোগ</th><th>কথা</th></tr></thead>
+          <tbody>
+            {waitlist.map((r) => (
+              <tr>
+                <td>{when(r.createdAt)}</td>
+                <td>{r.topic === 'family' ? 'পরিবার' : r.topic === 'school' ? 'স্কুল' : r.topic}</td>
+                <td>{r.name}</td>
+                <td>{r.contact}</td>
+                <td class="msgcell">{r.message}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  </div>
+</Admin>
+
+<style>
+  .inline { display: flex; gap: 6px; flex-wrap: wrap; }
+  .inline input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line, #cfd6de); }
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line, #cfd6de); }
+  .pill.ok { background: #e0f0e7; color: #1f6b43; border-color: #9ad0b1; }
+  .msgcell { max-width: 36ch; white-space: pre-wrap; font-size: 12.5px; }
+  pre { background: #f2f4f7; padding: 10px 12px; border-radius: 8px; overflow-x: auto; }
+</style>
+
+<script>
+  const msg = document.getElementById('mmsg')!;
+  const call = async (body: Record<string, unknown>) => {
+    const res = await fetch('/api/admin/member', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    return (await res.json()) as { ok?: boolean; error?: string };
+  };
+  document.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((b) => b.addEventListener('click', async () => {
+    const id = b.closest<HTMLElement>('tr')!.dataset.id!;
+    const email = b.closest('tr')!.querySelector('td')!.textContent;
+    if (b.dataset.act === 'revoke') {
+      if (!confirm(`${email}-এর পরিবার প্ল্যান বন্ধ করবেন?`)) return;
+      const note = prompt('কারণ (কার্যক্রমে লেখা থাকবে)', '') ?? '';
+      const r = await call({ op: 'revoke', memberId: id, note });
+      if (r.ok) location.reload(); else msg.textContent = 'বন্ধ করা গেল না।';
+    } else {
+      const days = b.dataset.days ? Number(b.dataset.days) : null;
+      const note = prompt('নোট (যেমন: প্রতিষ্ঠাতা পরিবার #১২)', '') ?? '';
+      const r = await call({ op: 'grant', memberId: id, days, note });
+      if (r.ok) location.reload(); else msg.textContent = 'চালু করা গেল না।';
+    }
+  }));
+  const addf = document.getElementById('addf') as HTMLFormElement;
+  addf.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(addf);
+    const r = await call({ op: 'add', email: String(fd.get('email') ?? ''), name: String(fd.get('name') ?? '') });
+    if (r.ok) location.reload(); else msg.textContent = r.error === 'email' ? 'ইমেইলটা ঠিক নয়।' : 'যোগ করা গেল না।';
+  });
+</script>

@@ -1,0 +1,268 @@
+---
+/**
+ * The member's own page. Signed out, it is the one-field sign-in form. Signed
+ * in, it is the family: plan status, the children, what each has finished,
+ * and the certificates that are ready.
+ *
+ * The only personal data on this page is the adult's email. A child appears
+ * as the nickname the adult typed and a reading level, nothing else.
+ */
+import Base from '../../layouts/Base.astro';
+import { db } from '../../lib/db';
+import { getWorlds } from '../../lib/content';
+import { bn } from '../../lib/bn';
+import { getMember, hasPlan, activeChild, progressSummary, bestQuizResults, MAX_CHILDREN } from '../../lib/members';
+import { readableCount, readableCats } from '../../lib/explorers';
+import { passMark } from '../../lib/quiz';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'private, no-store');
+
+const ready = !!db();
+const member = ready ? await getMember(Astro) : null;
+const plan = hasPlan(member);
+const child = activeChild(Astro, member);
+const welcome = Astro.url.searchParams.get('welcome') === '1';
+const LEVELS = [['l1', 'ছোট ৫–৮'], ['l2', 'মাঝারি ৯–১২'], ['l3', 'বড় ১৩+']] as const;
+
+const familyEnd = member?.entitlements.find((e) => e.plan === 'family' && e.status === 'active')?.endsAt ?? null;
+const when = (ms: number) => new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium' }).format(ms);
+
+type Row = { slug: string; bn: string; hue: string; seen: number; total: number; quizzes: number; quizTotal: number; done: boolean };
+let rows: Row[] = [];
+if (member && plan && child) {
+  const worlds = await getWorlds();
+  const summary = await progressSummary(child.id);
+  const best = await bestQuizResults(child.id);
+  rows = worlds.map((w) => {
+    const total = readableCount(w);
+    const seen = Math.min(total, summary[w.slug] ?? 0);
+    const cats = w.open ? [] : readableCats(w);
+    const passed = cats.filter((i) => best.some((b) => b.world === w.slug && b.cat === i && b.score >= passMark(b.total))).length;
+    return { slug: w.slug, bn: w.bn, hue: w.hue, seen, total, quizzes: passed, quizTotal: cats.length, done: total > 0 && seen >= total && passed >= cats.length };
+  });
+}
+---
+<Base title={member ? 'আমার পসরা' : 'ঢোকো'} description="পসরা পরিবার - আপনার পরিবারের পাতা">
+  <div class="wrap page">
+    {!ready ? (
+      <div class="card box">
+        <h1>এখনো চালু হয়নি</h1>
+        <p>পরিবারের অ্যাকাউন্ট এই মুহূর্তে বন্ধ আছে। <a href="/family/">পসরা পরিবার</a> সম্পর্কে পড়ুন, বা <a href="/contact/">যোগাযোগ</a> করুন।</p>
+      </div>
+    ) : !member ? (
+      <div class="signin">
+        <div class="card box">
+          <p class="eyebrow">পসরা পরিবার</p>
+          <h1>ইমেইলে একটা লিংক পাঠাই</h1>
+          <p class="lede">পাসওয়ার্ড নেই, মনে রাখারও কিছু নেই। ইমেইল দিন, যে লিংকটা যাবে তাতে চাপলেই ঢুকে যাবেন। লিংকটা বিশ মিনিট কাজ করে, একবারই।</p>
+          <form id="lform" novalidate>
+            <label>ইমেইল <input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="আপনার ইমেইল" /></label>
+            <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+            <button class="btn btn-primary" type="submit">লিংক পাঠাও</button>
+            <p class="msg" id="lmsg" role="status" aria-live="polite"></p>
+          </form>
+          <p class="fine">এই ফর্মটা অভিভাবকের জন্য। সন্তানের কোনো অ্যাকাউন্ট হয় না, হবেও না।</p>
+        </div>
+        <aside class="card side">
+          <p class="eyebrow">এখনো পরিবারে নেই?</p>
+          <p>ঢুকতে পারবেন যেকোনো সময়, ফ্রি। পরিবার প্ল্যানের জিনিসগুলো, যেমন সন্তানের প্রোফাইল আর যাচাই, খোলে প্ল্যান চালু হলে।</p>
+          <a class="btn" href="/family/">পসরা পরিবার কী →</a>
+        </aside>
+      </div>
+    ) : (
+      <div class="dash">
+        {welcome && <p class="toast" role="status">ঢুকে পড়েছেন। এই ব্রাউজারে তিরিশ দিন ঢোকা থাকবে।</p>}
+        <header class="dh">
+          <div>
+            <p class="eyebrow">আমার পসরা</p>
+            <h1>{member.name ?? member.email}</h1>
+            <p class="lede">{plan
+              ? `পসরা পরিবার চালু আছে${familyEnd ? `, ${when(familyEnd)} পর্যন্ত` : ''}।`
+              : 'এখনো পরিবার প্ল্যান চালু হয়নি। ঢুকে থাকতে পারেন, ফ্রি জিনিস সবই আছে; সন্তানের প্রোফাইল, যাচাই আর অনুশীলনী খুলবে প্ল্যান চালু হলে।'}</p>
+          </div>
+          <form method="post" action="/api/account/logout"><button class="btn" type="submit">বেরিয়ে যাও</button></form>
+        </header>
+
+        {!plan && (
+          <section class="card box gate">
+            <h2>পরিবার প্ল্যান</h2>
+            <p>প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিচ্ছি, কারণ পেমেন্টের ব্যবস্থা এখনো বসেনি। তালিকায় নাম না লেখালে <a href="/family/">এখানে</a> লেখান; লেখানো থাকলে আমরা যোগাযোগ করব।</p>
+          </section>
+        )}
+
+        {plan && (
+          <section class="card box">
+            <div class="sh"><h2>সন্তান</h2><span class="lbl">{bn(member.children.length)} / {bn(MAX_CHILDREN)}</span></div>
+            <p class="note">যে সন্তানের নাম বাছা থাকবে, এই ব্রাউজারে তার হিসাবই জমা হবে। প্রতিটির নিজের গভীরতা, নিজের অগ্রগতি।</p>
+            <ul class="kids" id="kids">
+              {member.children.map((c) => (
+                <li class={c.id === child?.id ? 'kid on' : 'kid'} data-id={c.id}>
+                  <button type="button" class="pick" data-act="select" aria-pressed={c.id === child?.id ? 'true' : 'false'}>
+                    <span class="dot" aria-hidden="true"></span>{c.nickname}
+                  </button>
+                  <select data-act="level" aria-label={`${c.nickname} কোন গভীরতায় পড়ে`}>
+                    {LEVELS.map(([k, l]) => <option value={k} selected={c.level === k}>{l}</option>)}
+                  </select>
+                  <button type="button" class="mini" data-act="rename">নাম বদলাও</button>
+                  <button type="button" class="mini danger" data-act="remove">সরাও</button>
+                </li>
+              ))}
+            </ul>
+            {member.children.length < MAX_CHILDREN && (
+              <form id="kform" class="kform" novalidate>
+                <label>ডাকনাম <input name="nickname" required maxlength="40" placeholder="যেমন: টুনি" /></label>
+                <label>গভীরতা
+                  <select name="level">{LEVELS.map(([k, l]) => <option value={k}>{l}</option>)}</select>
+                </label>
+                <button class="btn btn-primary" type="submit">যোগ করো</button>
+              </form>
+            )}
+            <p class="msg" id="kmsg" role="status" aria-live="polite"></p>
+          </section>
+        )}
+
+        {plan && child && (
+          <section class="card box">
+            <div class="sh"><h2>{child.nickname} কতদূর</h2><span class="lbl">ভুবন ধরে</span></div>
+            <ul class="worlds">
+              {rows.map((r) => (
+                <li style={`--w:${r.hue}`}>
+                  <a class="wn" href={`/${r.slug === 'space' ? 'space' : r.slug}/`}>{r.bn}</a>
+                  <span class="bar"><i style={`width:${r.total ? Math.round((r.seen / r.total) * 100) : 0}%`}></i></span>
+                  <span class="num">{bn(r.seen)} / {bn(r.total)} দেখা{r.quizTotal ? ` · যাচাই ${bn(r.quizzes)} / ${bn(r.quizTotal)}` : ''}</span>
+                  {r.done
+                    ? <a class="cert" href={`/account/certificate/${r.slug}/`}>সার্টিফিকেট →</a>
+                    : <span class="cert soon">সার্টিফিকেট: সব দেখা{r.quizTotal ? ' আর সব যাচাই পাশ' : ''} হলে</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+    )}
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 2rem 4rem; }
+  .signin { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+  .box { padding: 1.5rem 1.6rem 1.6rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .side { padding: 1.3rem 1.4rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 14.5px; color: var(--ink-2); }
+  h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+  h2 { font-size: 1.2rem; font-weight: 800; }
+  .lede { color: var(--ink-2); line-height: 1.7; }
+  form { display: flex; flex-direction: column; gap: 0.7rem; }
+  label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; font-size: 14px; }
+  input, select { font: inherit; font-size: 15px; padding: 0.55rem 0.75rem; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); }
+  input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
+  .hp { position: absolute; left: -9999px; }
+  .fine { font-size: 12.5px; color: var(--muted); }
+  .msg { font-size: 14px; color: var(--muted); min-height: 1.4em; }
+  .msg.ok { color: var(--ok); font-weight: 600; }
+  .msg.err { color: var(--danger); }
+  .btn { align-self: flex-start; }
+
+  .dash { display: flex; flex-direction: column; gap: 1rem; }
+  .toast { background: color-mix(in oklab, var(--ok) 14%, var(--panel)); border: 1px solid color-mix(in oklab, var(--ok) 36%, var(--line)); color: var(--ok); font-weight: 600; padding: 0.6rem 0.9rem; border-radius: var(--r-sm); font-size: 14px; }
+  .dh { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+  .dh form { flex-direction: row; }
+  .gate { background: color-mix(in oklab, var(--sun) 12%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); }
+  .gate p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
+  .sh { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .note { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+
+  .kids { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+  .kid { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 0.5rem; align-items: center; padding: 0.55rem 0.7rem; border: 1px solid var(--line-soft); border-radius: var(--r-sm); background: var(--panel-2); }
+  .kid.on { border-color: color-mix(in oklab, var(--brand) 45%, var(--line)); background: color-mix(in oklab, var(--brand) 10%, var(--panel)); }
+  .pick { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 15px; text-align: left; min-width: 0; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
+  .kid.on .dot { background: var(--brand); border-color: var(--brand); }
+  .kid select { font-size: 13px; padding: 0.3rem 0.5rem; }
+  .mini { font-size: 12px; font-weight: 600; padding: 0.3rem 0.65rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink-2); }
+  .mini:hover { background: var(--panel-2); }
+  .mini.danger:hover { color: var(--danger); border-color: color-mix(in oklab, var(--danger) 45%, var(--line)); }
+  .kform { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.6rem; align-items: end; margin-top: 0.4rem; }
+
+  .worlds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+  .worlds li { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto auto; gap: 0.7rem; align-items: center; padding: 0.5rem 0.3rem; border-bottom: 1px solid var(--line-soft); }
+  .worlds li:last-child { border-bottom: 0; }
+  .wn { font-weight: 700; font-size: 14.5px; color: var(--ink); }
+  .bar { display: block; height: 10px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--w); border-radius: 999px; }
+  .num { font-size: 12.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .cert { font-size: 12.5px; font-weight: 700; color: var(--brand-ink); white-space: nowrap; }
+  .cert.soon { font-weight: 500; color: var(--muted); white-space: normal; max-width: 22ch; line-height: 1.35; }
+
+  @media (max-width: 760px) {
+    .signin { grid-template-columns: 1fr; }
+    .kid { grid-template-columns: 1fr 1fr; }
+    .pick { grid-column: 1 / -1; }
+    .kform { grid-template-columns: 1fr; }
+    .worlds li { grid-template-columns: 1fr; gap: 0.3rem; }
+  }
+</style>
+
+<script>
+  const lform = document.getElementById('lform') as HTMLFormElement | null;
+  if (lform) {
+    const msg = document.getElementById('lmsg')!, btn = lform.querySelector('button')!;
+    lform.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(lform);
+      const email = String(fd.get('email') ?? '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.className = 'msg err'; msg.textContent = 'ইমেইলটা ঠিকমতো লিখুন।'; return; }
+      btn.disabled = true; msg.className = 'msg'; msg.textContent = 'পাঠানো হচ্ছে...';
+      try {
+        const res = await fetch('/api/account/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, website: String(fd.get('website') ?? '') }) });
+        const data = (await res.json()) as { ok?: boolean; error?: string };
+        if (data.ok) { msg.className = 'msg ok'; msg.textContent = `${email}-এ লিংক পাঠানো হয়েছে। ইনবক্স দেখুন, স্প্যামেও একবার।`; lform.reset(); return; }
+        msg.className = 'msg err';
+        msg.textContent = data.error === 'throttled' ? 'একটু বেশি বার চাওয়া হয়ে গেছে। এক ঘণ্টা পরে আবার।'
+          : data.error === 'email-unavailable' ? 'ইমেইল পাঠানোর ব্যবস্থা এই মুহূর্তে বন্ধ। support@posora.com-এ লিখুন।'
+          : 'পাঠানো গেল না। আরেকবার চেষ্টা করুন।';
+      } catch { msg.className = 'msg err'; msg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না।'; }
+      finally { btn.disabled = false; }
+    });
+  }
+
+  const kids = document.getElementById('kids');
+  const kmsg = document.getElementById('kmsg');
+  const call = async (body: Record<string, unknown>) => {
+    const res = await fetch('/api/account/children', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    return (await res.json()) as { ok?: boolean; error?: string };
+  };
+  const fail = (t: string) => { if (kmsg) { kmsg.className = 'msg err'; kmsg.textContent = t; } };
+
+  kids?.addEventListener('click', async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]'); if (!b) return;
+    const li = b.closest<HTMLElement>('.kid')!, id = li.dataset.id!, act = b.dataset.act;
+    const name = li.querySelector('.pick')!.textContent!.trim();
+    if (act === 'select') { const r = await call({ op: 'select', id }); if (r.ok) location.reload(); else fail('বাছা গেল না।'); }
+    if (act === 'remove') {
+      if (!confirm(`${name}-কে সরাবেন? তার সব হিসাব মুছে যাবে।`)) return;
+      const r = await call({ op: 'remove', id }); if (r.ok) location.reload(); else fail('সরানো গেল না।');
+    }
+    if (act === 'rename') {
+      const nick = prompt('নতুন ডাকনাম', name); if (!nick) return;
+      const level = (li.querySelector('select') as HTMLSelectElement).value;
+      const r = await call({ op: 'update', id, nickname: nick, level }); if (r.ok) location.reload(); else fail('নাম বদলানো গেল না।');
+    }
+  });
+  kids?.addEventListener('change', async (e) => {
+    const s = (e.target as HTMLElement).closest<HTMLSelectElement>('select[data-act="level"]'); if (!s) return;
+    const li = s.closest<HTMLElement>('.kid')!;
+    const r = await call({ op: 'update', id: li.dataset.id, nickname: li.querySelector('.pick')!.textContent!.trim(), level: s.value });
+    if (!r.ok) fail('গভীরতা বদলানো গেল না।');
+    else if (kmsg) { kmsg.className = 'msg ok'; kmsg.textContent = 'গভীরতা বদলে গেছে।'; }
+  });
+
+  const kform = document.getElementById('kform') as HTMLFormElement | null;
+  kform?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(kform);
+    const r = await call({ op: 'add', nickname: String(fd.get('nickname') ?? ''), level: String(fd.get('level') ?? 'l1') });
+    if (r.ok) location.reload();
+    else fail(r.error === 'full' ? 'ছয়জনের বেশি যোগ করা যায় না।' : r.error === 'invalid' ? 'একটা ডাকনাম লিখুন।' : 'যোগ করা গেল না।');
+  });
+</script>

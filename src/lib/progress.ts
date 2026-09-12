@@ -1,5 +1,15 @@
 /** Learner progress, kept in localStorage only - no accounts, no personal data. */
-const KEY = 'posora:v1';
+const BASE_KEY = 'posora:v1';
+let KEY = BASE_KEY;
+
+/**
+ * A family plan child gets their own bucket on the device, so two siblings
+ * sharing a tablet do not share one set of ticks. Called by the page before
+ * the first read; null returns to the anonymous bucket.
+ */
+export function setProgressScope(childId: string | null): void {
+  KEY = childId ? `${BASE_KEY}:${childId}` : BASE_KEY;
+}
 export type Progress = { xp: number; seen: Record<string, string[]>; stars: string[] };
 const EMPTY: Progress = { xp: 0, seen: {}, stars: [] };
 const XP_PER_ITEM = 10;
@@ -32,6 +42,19 @@ export function markSeen(world: string, id: string): boolean {
   return true;
 }
 export const seenCount = (world: string) => read().seen[world]?.length ?? 0;
+
+/**
+ * Merge keys seen on another device. Points are awarded for anything new,
+ * since they were earned there; nothing is removed. Returns how many were new.
+ */
+export function importSeen(world: string, keys: string[]): number {
+  const p = read();
+  const list = (p.seen[world] ??= []);
+  let added = 0;
+  for (const k of keys) if (typeof k === 'string' && k && !list.includes(k)) { list.push(k); added++; }
+  if (added) { p.xp += added * XP_PER_ITEM; write(p); }
+  return added;
+}
 
 /** Star a not-yet-built item ("আগে এটা চাই"). Toggles; returns new state. */
 export function toggleStar(key: string): boolean {

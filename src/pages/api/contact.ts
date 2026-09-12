@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
+import { addWaitlist } from '../../lib/members';
 
 export const prerender = false;
 
@@ -28,6 +29,10 @@ export const POST: APIRoute = async ({ request }) => {
   // trusted into the subject line.
   const raw = clip(body.topic, 24);
   const topic = raw === 'school' || raw === 'family' ? raw : 'general';
+
+  // The list lives in the database as well as the inbox, so the admin panel
+  // can show it. A failure here must never lose the email.
+  if (topic !== 'general') { try { await addWaitlist(topic, name, contact, message); } catch (err) { console.error('waitlist insert failed', err); } }
 
   const e = env as unknown as Env;
   if (!e.EMAIL) return json({ ok: false, error: 'email-unavailable' }, 503);

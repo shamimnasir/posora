@@ -1,0 +1,182 @@
+---
+/**
+ * যাচাই - the comprehension check for one category. Family plan.
+ *
+ * Signed out or without the plan, the page still shows the first question so
+ * a parent can see exactly what they would be paying for, and says plainly
+ * that the rest is in the plan. With the plan, the whole quiz runs and the
+ * result is saved for the active child.
+ */
+import Base from '../../../layouts/Base.astro';
+import { getWorld } from '../../../lib/content';
+import { bn, pad2 } from '../../../lib/bn';
+import { catDetail, isReadable } from '../../../lib/explorers';
+import { buildQuiz, passMark } from '../../../lib/quiz';
+import { getMember, hasPlan, activeChild } from '../../../lib/members';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'private, no-store');
+
+const w = await getWorld(Astro.params.world!);
+const cat = Number(Astro.params.cat);
+if (!w || w.open || !Number.isInteger(cat) || cat < 0 || cat >= w.cats.length || !isReadable(w, cat)) return Astro.rewrite('/404');
+const c = w.cats[cat]!;
+const questions = buildQuiz(w.slug, cat, c.items, catDetail(w.slug, cat)!);
+if (questions.length === 0) return Astro.rewrite('/404');
+
+const member = await getMember(Astro);
+const plan = hasPlan(member);
+const child = activeChild(Astro, member);
+const unlocked = plan && !!child;
+const need = passMark(questions.length);
+const payload = { world: w.slug, cat, questions: unlocked ? questions : questions.slice(0, 1), need };
+---
+<Base title={`যাচাই · ${c.n}`} description={`${w.bn} - ${c.n} বিভাগের যাচাই, পড়া থেকেই তৈরি ${bn(questions.length)}টি প্রশ্ন।`} hue={w.hue}>
+  <div class="wrap page" id="quiz" data-unlocked={unlocked ? '1' : '0'}>
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href={`/${w.slug}/`}>{w.bn}</a> <span>/</span> যাচাই</p>
+
+    <header class="qh">
+      <div>
+        <p class="eyebrow">যাচাই · বিভাগ {pad2(cat + 1)}</p>
+        <h1>{c.n}</h1>
+        <p class="lede">
+          {bn(questions.length)}টি প্রশ্ন, পড়ার লেখা থেকেই বানানো। প্রতিটিতে একটা বিষয়ের ছোট কথাটা দেখানো,
+          নামটা ফাঁকা - বলতে হবে কোনটির কথা। {bn(need)}টি ঠিক হলে পাশ।
+        </p>
+      </div>
+      {child && <p class="who">যাচাই দিচ্ছে: <b>{child.nickname}</b> <a href="/account/">বদলাও</a></p>}
+    </header>
+
+    <div class="card qcard" id="qcard">
+      <div class="qtop"><span class="lbl" id="qno">প্রশ্ন ১ / {bn(unlocked ? questions.length : 1)}</span><span class="lbl" id="qscore"></span></div>
+      <p class="prompt" id="qprompt"></p>
+      <div class="opts" id="qopts"></div>
+      <p class="fb" id="qfb" role="status" aria-live="polite"></p>
+      <div class="qacts">
+        <button type="button" class="btn btn-primary" id="qnext" hidden>পরের প্রশ্ন →</button>
+      </div>
+    </div>
+
+    <div class="card done" id="qdone" hidden>
+      <p class="eyebrow">ফল</p>
+      <h2 id="qresult"></h2>
+      <p id="qnote" class="lede"></p>
+      <div class="qacts">
+        <a class="btn btn-primary" href={`/${w.slug}/`}>ভুবনে ফিরে যাও</a>
+        <button type="button" class="btn" id="qagain">আবার দাও</button>
+        <a class="btn" href="/account/">আমার পসরা</a>
+      </div>
+    </div>
+
+    {!unlocked && (
+      <section class="card gate">
+        <p class="eyebrow">পসরা পরিবার</p>
+        <h2>{plan ? 'আগে একজন সন্তানের নাম বেছে নিন' : `বাকি ${bn(questions.length - 1)}টি প্রশ্ন আর ফল জমা থাকা পরিবার প্ল্যানে`}</h2>
+        <p>
+          {plan
+            ? 'যাচাইয়ের ফল কার নামে জমা হবে তা ঠিক করতে আমার পসরা-য় গিয়ে একজন সন্তান যোগ করুন বা বেছে নিন।'
+            : 'উপরের প্রশ্নটা সবার জন্য খোলা, দেখে নিন জিনিসটা কেমন। পুরো যাচাই, প্রতিটি সন্তানের নামে ফল জমা থাকা আর ভুবন শেষে সার্টিফিকেট - এগুলো পসরা পরিবারে। পড়ার লেখা আর মডেল আগের মতোই ফ্রি।'}
+        </p>
+        <div class="qacts">
+          {plan
+            ? <a class="btn btn-primary" href="/account/">আমার পসরা →</a>
+            : <><a class="btn btn-primary" href="/family/">পসরা পরিবার কী →</a>{!member && <a class="btn" href="/account/">আগেই সদস্য? ঢোকো</a>}</>}
+        </div>
+      </section>
+    )}
+
+    <script is:inline type="application/json" id="quiz-data" set:html={JSON.stringify(payload)}></script>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 1.2rem; max-width: 820px; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 0.35rem; }
+  .qh { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+  h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; margin: 0.15rem 0 0.4rem; }
+  .lede { color: var(--ink-2); line-height: 1.7; max-width: 58ch; }
+  .who { font-size: 13.5px; color: var(--muted); }
+  .who a { margin-left: 0.4rem; color: var(--brand-ink); font-weight: 600; }
+  .qcard { padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.9rem; }
+  .qcard[hidden], .done[hidden] { display: none; }
+  .qtop { display: flex; justify-content: space-between; }
+  .prompt { font-size: clamp(1.05rem, 2vw, 1.25rem); line-height: 1.75; color: var(--ink); }
+  .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.55rem; }
+  /* NOTE: options are built by the script, so their rules must be :global(). */
+  .opts :global(button) { text-align: left; padding: 0.8rem 1rem; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); font-size: 15.5px; font-weight: 600; color: var(--ink); transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease; }
+  .opts :global(button:hover:not(:disabled)) { transform: translateY(-1px); border-color: color-mix(in oklab, var(--w) 45%, var(--line)); }
+  .opts :global(button.right) { background: color-mix(in oklab, var(--ok) 18%, var(--panel)); border-color: var(--ok); }
+  .opts :global(button.wrong) { background: color-mix(in oklab, var(--danger) 14%, var(--panel)); border-color: var(--danger); }
+  .opts :global(button:disabled) { cursor: default; opacity: 0.85; }
+  .fb { font-size: 14.5px; font-weight: 600; min-height: 1.5em; color: var(--ink-2); }
+  .qacts { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .done { padding: 1.5rem 1.6rem 1.6rem; display: flex; flex-direction: column; gap: 0.6rem; border-color: color-mix(in oklab, var(--w) 40%, var(--line)); }
+  .done h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); font-weight: 800; }
+  .gate { padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; background: color-mix(in oklab, var(--sun) 12%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); }
+  .gate h2 { font-size: 1.3rem; font-weight: 800; }
+  .gate p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
+</style>
+
+<script>
+  import { bn } from '../../../lib/bn';
+  import { track } from '../../../lib/track';
+  type Q = { item: number; prompt: string; options: string[]; answer: number };
+  type Data = { world: string; cat: number; questions: Q[]; need: number };
+
+  const root = document.getElementById('quiz')!;
+  const unlocked = root.dataset.unlocked === '1';
+  const data: Data = JSON.parse(document.getElementById('quiz-data')!.textContent!);
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const prompt = $('qprompt'), opts = $('qopts'), fb = $('qfb'), next = $<HTMLButtonElement>('qnext'), no = $('qno'), scoreEl = $('qscore');
+  let i = 0, score = 0, answered = false;
+
+  function show() {
+    const q = data.questions[i]!;
+    answered = false;
+    no.textContent = `প্রশ্ন ${bn(i + 1)} / ${bn(data.questions.length)}`;
+    scoreEl.textContent = i ? `ঠিক ${bn(score)}` : '';
+    prompt.textContent = q.prompt;
+    fb.textContent = '';
+    next.hidden = true;
+    opts.replaceChildren(...q.options.map((o, k) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = o; b.dataset.k = String(k);
+      return b;
+    }));
+  }
+  opts.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button'); if (!b || answered) return;
+    answered = true;
+    const q = data.questions[i]!, k = +b.dataset.k!;
+    const right = k === q.answer;
+    if (right) score++;
+    opts.querySelectorAll<HTMLButtonElement>('button').forEach((x) => {
+      x.disabled = true;
+      if (+x.dataset.k! === q.answer) x.classList.add('right');
+      else if (x === b) x.classList.add('wrong');
+    });
+    fb.textContent = right ? 'ঠিক!' : `না, এটা ${q.options[q.answer]}-এর কথা।`;
+    scoreEl.textContent = `ঠিক ${bn(score)}`;
+    if (i + 1 < data.questions.length) next.hidden = false;
+    else finish();
+  });
+  next.addEventListener('click', () => { i++; show(); });
+
+  async function finish() {
+    if (!unlocked) { fb.textContent += ' বাকি প্রশ্নগুলো পসরা পরিবারে।'; return; }
+    const total = data.questions.length, pass = score >= data.need;
+    $('qcard').hidden = true;
+    const done = $('qdone'); done.hidden = false;
+    $('qresult').textContent = `${bn(score)} / ${bn(total)} ${pass ? '- পাশ!' : ''}`;
+    $('qnote').textContent = pass
+      ? 'ফল জমা হয়ে গেছে। এই ভুবনের সব বিভাগ পাশ হলে আর সব বিষয় দেখা হলে সার্টিফিকেট তৈরি হবে।'
+      : `পাশ করতে ${bn(data.need)}টি ঠিক লাগে। আরেকবার দিলে একই প্রশ্ন আসবে, তাই আগে পড়াটা আরেকবার দেখে নাও।`;
+    track('quiz_done', { world: data.world, category: String(data.cat), score, total });
+    try {
+      await fetch('/api/account/quiz', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ world: data.world, cat: data.cat, score, total }) });
+    } catch { /* the score is on screen either way */ }
+  }
+  $('qagain')?.addEventListener('click', () => { i = 0; score = 0; $('qdone').hidden = true; $('qcard').hidden = false; show(); });
+  show();
+</script>

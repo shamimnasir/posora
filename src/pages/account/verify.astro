@@ -1,0 +1,49 @@
+---
+/**
+ * Where the emailed sign-in link lands. Turns the one-time token into a
+ * session cookie and moves on; a stale or reused link explains itself and
+ * offers a fresh one. Never cached: the response sets a cookie.
+ */
+import Base from '../../layouts/Base.astro';
+import { db } from '../../lib/db';
+import { verifyMagicLink, MEMBER_COOKIE, cookieOptions } from '../../lib/members';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'private, no-store');
+
+const token = Astro.url.searchParams.get('t') ?? '';
+let ok = false;
+if (db() && token) {
+  try {
+    const session = await verifyMagicLink(token, Astro.request.headers.get('user-agent'));
+    if (session) {
+      Astro.cookies.set(MEMBER_COOKIE, session, cookieOptions(Astro.url.protocol === 'https:'));
+      ok = true;
+    }
+  } catch (err) {
+    console.error('verify failed', err);
+  }
+}
+if (ok) return Astro.redirect('/account/?welcome=1', 303);
+---
+<Base title="ঢোকা যায়নি" description="পসরায় ঢোকার লিংক">
+  <div class="wrap page">
+    <div class="card box">
+      <p class="eyebrow">পসরা পরিবার</p>
+      <h1>এই লিংকটা আর কাজ করছে না</h1>
+      <p>
+        ঢোকার লিংক বিশ মিনিট পর্যন্ত কাজ করে, আর একবারই। হয় সময় পেরিয়ে গেছে, নয়তো
+        লিংকটা আগেই একবার ব্যবহার হয়েছে। নতুন একটা চাইলে এক মিনিটের কাজ।
+      </p>
+      <a class="btn btn-primary" href="/account/">নতুন লিংক চাও</a>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 3rem 4rem; display: grid; place-items: center; }
+  .box { max-width: 520px; padding: 1.6rem 1.7rem 1.8rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  h1 { font-size: clamp(1.5rem, 3.5vw, 2rem); font-weight: 800; }
+  p { color: var(--ink-2); line-height: 1.7; }
+  .btn { align-self: flex-start; margin-top: 0.4rem; }
+</style>

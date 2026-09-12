@@ -9,7 +9,7 @@ import '../styles/admin.css';
 interface Props {
   title: string;
   /** Which nav item to mark current. Omit on the login screen. */
-  section?: 'dashboard' | 'worlds' | 'data' | 'activity';
+  section?: 'dashboard' | 'worlds' | 'data' | 'members' | 'activity';
   /** Hide the nav entirely (login). */
   bare?: boolean;
 }
@@ -19,6 +19,7 @@ const nav = [
   { key: 'dashboard', href: '/admin', label: 'ড্যাশবোর্ড' },
   { key: 'worlds', href: '/admin/worlds', label: 'ভুবন' },
   { key: 'data', href: '/admin/data', label: 'ডেটা' },
+  { key: 'members', href: '/admin/members', label: 'সদস্য' },
   { key: 'activity', href: '/admin/activity', label: 'কার্যক্রম' },
 ] as const;
 ---

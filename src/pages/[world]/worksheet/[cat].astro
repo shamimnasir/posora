@@ -1,0 +1,140 @@
+---
+/**
+ * অনুশীলনী - the printable worksheet for one category. Family plan.
+ *
+ * Without the plan the page shows the first blank as a sample and says where
+ * the rest is. With it, the whole sheet renders for paper, with the answer key
+ * on its own page so it can be kept back.
+ */
+import Base from '../../../layouts/Base.astro';
+import { getWorld } from '../../../lib/content';
+import { bn, pad2 } from '../../../lib/bn';
+import { catDetail, isReadable } from '../../../lib/explorers';
+import { buildWorksheet } from '../../../lib/worksheet';
+import { getMember, hasPlan } from '../../../lib/members';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'private, no-store');
+
+const w = await getWorld(Astro.params.world!);
+const cat = Number(Astro.params.cat);
+if (!w || w.open || !Number.isInteger(cat) || cat < 0 || cat >= w.cats.length || !isReadable(w, cat)) return Astro.rewrite('/404');
+const c = w.cats[cat]!;
+const ws = buildWorksheet(w.slug, cat, c.items, catDetail(w.slug, cat)!);
+if (!ws) return Astro.rewrite('/404');
+
+const member = await getMember(Astro);
+const unlocked = hasPlan(member);
+const shown = unlocked ? ws.blanks : ws.blanks.slice(0, 1);
+---
+<Base title={`অনুশীলনী · ${c.n}`} description={`${w.bn} - ${c.n} বিভাগের ছাপার অনুশীলনী: শূন্যস্থান পূরণ আর মিলানো, উত্তরপত্র সহ।`} hue={w.hue}>
+  <div class="wrap page">
+    <p class="crumbs no-print"><a href="/#worlds">ভুবন</a> <span>/</span> <a href={`/${w.slug}/`}>{w.bn}</a> <span>/</span> অনুশীলনী</p>
+
+    <header class="wh no-print">
+      <div>
+        <p class="eyebrow">অনুশীলনী · বিভাগ {pad2(cat + 1)}</p>
+        <h1>{c.n}</h1>
+        <p class="lede">{bn(ws.blanks.length)}টি শূন্যস্থান আর {bn(ws.matchKey.length)}টি মিলানো, পড়ার লেখা থেকেই তৈরি। উত্তরপত্র আলাদা পাতায়, যাতে আগে থেকে দেখা না যায়।</p>
+      </div>
+      {unlocked && <button type="button" class="btn btn-primary" id="print">ছাপাও বা PDF করো</button>}
+    </header>
+
+    <div class="paper">
+      <header class="ph">
+        <h2>{w.bn} · {c.n} · অনুশীলনী</h2>
+        <span>নাম: ____________________ &nbsp; তারিখ: __________</span>
+      </header>
+
+      <h3>১. শূন্যস্থান পূরণ করো</h3>
+      <p class="note">নিচের শব্দভাণ্ডার থেকে ঠিক শব্দটা বসাও।</p>
+      {unlocked && <p class="bank">{ws.bank.map((b) => <span>{b}</span>)}</p>}
+      <ol class="blanks">
+        {shown.map((b) => <li><span class="n">{bn(b.n)}.</span> {b.prompt}</li>)}
+      </ol>
+
+      {unlocked && (
+        <>
+          <h3 class="brk">২. মিলাও</h3>
+          <p class="note">বাঁ পাশের বিষয়ের সঙ্গে ডান পাশের কথাটা রেখা টেনে মেলাও।</p>
+          <div class="match">
+            <ol class="ml">{ws.matchLeft.map((l) => <li>{l}</li>)}</ol>
+            <ol class="mr" type="a">{ws.matchRight.map((r) => <li>{r}</li>)}</ol>
+          </div>
+
+          <section class="key">
+            <header class="ph"><h2>উত্তরপত্র · {c.n}</h2><span>অভিভাবক বা শিক্ষকের জন্য</span></header>
+            <h3>১. শূন্যস্থান</h3>
+            <ol class="klist">{ws.blanks.map((b) => <li><span class="n">{bn(b.n)}.</span> {b.answer}</li>)}</ol>
+            <h3>২. মিলাও</h3>
+            <ol class="klist">{ws.matchKey.map((m) => <li>{m.left} <span class="arrow">→</span> {m.right}</li>)}</ol>
+          </section>
+        </>
+      )}
+      <footer class="pf">পসরা · posora.com · {w.bn} · {c.n}</footer>
+    </div>
+
+    {!unlocked && (
+      <section class="card gate no-print">
+        <p class="eyebrow">পসরা পরিবার</p>
+        <h2>পুরো অনুশীলনী, শব্দভাণ্ডার, মিলানো আর উত্তরপত্র পরিবার প্ল্যানে</h2>
+        <p>উপরে একটা নমুনা প্রশ্ন দেখানো হলো। এই বিভাগের পড়া আর মডেল আগের মতোই ফ্রি; ছাপার অনুশীলনী হলো সেই পড়ার চারপাশের জিনিস, যেটা পরিবার প্ল্যান কিনলে খোলে।</p>
+        <div class="acts">
+          <a class="btn btn-primary" href="/family/">পসরা পরিবার কী →</a>
+          {!member && <a class="btn" href="/account/">আগেই সদস্য? ঢোকো</a>}
+          <a class="btn" href="/printables/">ফ্রি ছাপার শিটগুলো</a>
+        </div>
+      </section>
+    )}
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 1.3rem; max-width: 900px; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 0.35rem; }
+  .wh { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+  h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; margin: 0.15rem 0 0.4rem; }
+  .lede { color: var(--ink-2); line-height: 1.7; max-width: 58ch; }
+
+  .paper { background: #fff; color: #111820; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 1.6rem 1.6rem 1.2rem; box-shadow: var(--shadow-sm); }
+  .ph { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; border-bottom: 2px solid #111820; padding-bottom: 0.4rem; margin-bottom: 0.9rem; }
+  .ph h2 { font-size: 1.2rem; font-weight: 800; }
+  .ph span { font-family: var(--font-mono); font-size: 10.5px; color: #555; letter-spacing: 0.06em; }
+  h3 { font-size: 1.05rem; font-weight: 800; margin: 0.9rem 0 0.3rem; }
+  .note { font-size: 12.5px; color: #444; margin-bottom: 0.6rem; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.8rem; }
+  .bank span { border: 1px solid #bbb; border-radius: 999px; padding: 0.15rem 0.7rem; font-size: 13px; font-weight: 600; }
+  .blanks { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+  .blanks li { font-size: 14px; line-height: 1.85; break-inside: avoid; }
+  .n { font-weight: 700; margin-right: 0.3rem; }
+  .match { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .ml, .mr { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; font-size: 14px; }
+  .ml li { font-weight: 700; }
+  .key { margin-top: 1.4rem; padding-top: 1rem; border-top: 2px dashed #bbb; }
+  .klist { margin: 0; padding-left: 0; list-style: none; columns: 2; column-gap: 2rem; font-size: 13px; }
+  .klist li { break-inside: avoid; padding: 0.15rem 0; }
+  .arrow { color: #777; }
+  .pf { margin-top: 1.1rem; padding-top: 0.5rem; border-top: 1px solid #ccc; font-size: 10px; color: #666; }
+
+  .gate { padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; background: color-mix(in oklab, var(--sun) 12%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); }
+  .gate h2 { font-size: 1.3rem; font-weight: 800; }
+  .gate p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
+  .acts { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+  @media (max-width: 640px) { .match { grid-template-columns: 1fr; } .klist { columns: 1; } }
+  @media print {
+    .no-print { display: none !important; }
+    .page { padding: 0; gap: 0; max-width: none; }
+    .paper { border: 0; box-shadow: none; padding: 0; border-radius: 0; }
+    .key { break-before: page; page-break-before: always; border-top: 0; margin-top: 0; padding-top: 0; }
+  }
+</style>
+
+<script>
+  import { track } from '../../../lib/track';
+  document.getElementById('print')?.addEventListener('click', () => {
+    track('worksheet_print', { path: location.pathname });
+    window.print();
+  });
+</script>

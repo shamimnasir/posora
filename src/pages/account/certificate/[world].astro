@@ -1,0 +1,131 @@
+---
+/**
+ * The certificate for finishing a world. Family plan, active child.
+ *
+ * It is earned, not printed on request: every readable item in the world has
+ * to have been opened and every category's যাচাই passed. Until then the page
+ * lists exactly what is left, so it is a checklist rather than a locked door.
+ */
+import Base from '../../../layouts/Base.astro';
+import { getWorld } from '../../../lib/content';
+import { bn } from '../../../lib/bn';
+import { bodies } from '../../../data/space';
+import { getMember, hasPlan, activeChild, getChildProgress, bestQuizResults } from '../../../lib/members';
+import { readableCats, readableCount, itemKey } from '../../../lib/explorers';
+import { passMark } from '../../../lib/quiz';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'private, no-store');
+
+const w = await getWorld(Astro.params.world!);
+if (!w) return Astro.rewrite('/404');
+const member = await getMember(Astro);
+if (!member) return Astro.redirect('/account/', 303);
+const plan = hasPlan(member);
+const child = activeChild(Astro, member);
+
+type Missing = { kind: 'items' | 'quiz'; text: string; href: string };
+const missing: Missing[] = [];
+let seenCount = 0;
+const total = readableCount(w);
+
+if (plan && child) {
+  const seen = new Set(await getChildProgress(child.id, w.slug));
+  if (w.open) {
+    const left = bodies.filter((b) => !seen.has(b.id));
+    seenCount = bodies.length - left.length;
+    if (left.length) missing.push({ kind: 'items', text: `${bn(left.length)}টি বস্তু এখনো দেখা হয়নি: ${left.map((b) => b.bn).join(', ')}`, href: `/space/${left[0]!.id}/` });
+  } else {
+    const best = await bestQuizResults(child.id, w.slug);
+    for (const i of readableCats(w)) {
+      const c = w.cats[i]!;
+      const left = c.items.filter((it) => !seen.has(itemKey(c.n, it)));
+      seenCount += c.items.length - left.length;
+      if (left.length) missing.push({ kind: 'items', text: `${c.n}: ${bn(left.length)}টি বিষয় এখনো দেখা হয়নি`, href: `/${w.slug}/` });
+      const r = best.find((b) => b.cat === i);
+      if (!r || r.score < passMark(r.total)) missing.push({ kind: 'quiz', text: `${c.n}: যাচাই ${r ? `${bn(r.score)} / ${bn(r.total)}, পাশ হয়নি` : 'এখনো দেওয়া হয়নি'}`, href: `/${w.slug}/quiz/${i}/` });
+    }
+  }
+}
+const earned = plan && !!child && missing.length === 0 && total > 0;
+const today = new Intl.DateTimeFormat('bn-BD', { dateStyle: 'long' }).format(Date.now());
+---
+<Base title={`সার্টিফিকেট · ${w.bn}`} description={`${w.bn} ভুবন শেষ করার সার্টিফিকেট`} hue={w.hue}>
+  <div class="wrap page">
+    <p class="crumbs no-print"><a href="/account/">আমার পসরা</a> <span>/</span> সার্টিফিকেট</p>
+
+    {!plan ? (
+      <div class="card box">
+        <h1>সার্টিফিকেট পসরা পরিবারে</h1>
+        <p>ভুবন শেষ করার সার্টিফিকেট তৈরি হয় সন্তানের নিজের হিসাব থেকে, আর সেটা পরিবার প্ল্যানের অংশ। <a href="/family/">পসরা পরিবার কী</a></p>
+      </div>
+    ) : !child ? (
+      <div class="card box">
+        <h1>আগে একজন সন্তান যোগ করুন</h1>
+        <p>সার্টিফিকেটে যার নাম থাকবে, <a href="/account/">আমার পসরা</a>-য় তাকে যোগ করুন বা বেছে নিন।</p>
+      </div>
+    ) : earned ? (
+      <>
+        <div class="acts no-print">
+          <button type="button" class="btn btn-primary" id="print">ছাপাও বা PDF করো</button>
+          <a class="btn" href="/account/">আমার পসরা</a>
+        </div>
+        <div class="cert" style={`--w:${w.hue}`}>
+          <div class="frame">
+            <p class="ce">পসরা · posora.com</p>
+            <p class="ct">সার্টিফিকেট</p>
+            <p class="cs">এই মর্মে জানানো যাচ্ছে যে</p>
+            <p class="cn">{child.nickname}</p>
+            <p class="cs">পসরার</p>
+            <p class="cw">{w.bn}</p>
+            <p class="cd">ভুবনের {bn(total)}টি বিষয় সবকটি খুলে দেখেছে{w.open ? '' : ' এবং প্রতিটি বিভাগের যাচাইয়ে পাশ করেছে'}।</p>
+            <p class="cdate">{today}</p>
+            <p class="cfoot">তিন গভীরতার পড়া, থ্রিডি মডেল, আর নিজের হাতে দেওয়া যাচাই - এই সার্টিফিকেট তার সাক্ষী।</p>
+          </div>
+        </div>
+      </>
+    ) : (
+      <div class="card box">
+        <p class="eyebrow">{child.nickname} · {w.bn}</p>
+        <h1>আর একটু বাকি</h1>
+        <p class="lede">{bn(seenCount)} / {bn(total)} বিষয় দেখা হয়েছে। সার্টিফিকেট পেতে নিচের কাজগুলো বাকি:</p>
+        <ul class="todo">
+          {missing.map((m) => <li><a href={m.href}>{m.text} →</a></li>)}
+        </ul>
+      </div>
+    )}
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1.5rem 4rem; display: flex; flex-direction: column; gap: 1.2rem; max-width: 880px; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 0.35rem; }
+  .box { padding: 1.5rem 1.6rem 1.6rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  h1 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: 800; }
+  .lede, .box p { color: var(--ink-2); line-height: 1.7; }
+  .todo { margin: 0.3rem 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .todo a { color: var(--brand-ink); font-weight: 600; }
+  .acts { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+  .cert { background: #fff; padding: 1.2rem; border-radius: var(--r); box-shadow: var(--shadow); }
+  .frame { border: 6px double color-mix(in oklab, var(--w) 70%, #000); padding: 2.4rem 2rem; text-align: center; display: flex; flex-direction: column; gap: 0.35rem; color: #111820; }
+  .ce { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #666; }
+  .ct { font-family: var(--font-display); font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: 0.02em; color: color-mix(in oklab, var(--w) 75%, #000); }
+  .cs { font-size: 14px; color: #555; margin-top: 0.6rem; }
+  .cn { font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.4rem); font-weight: 800; line-height: 1.15; }
+  .cw { font-family: var(--font-display); font-size: clamp(1.5rem, 4vw, 2.3rem); font-weight: 800; color: color-mix(in oklab, var(--w) 75%, #000); }
+  .cd { font-size: 15px; max-width: 46ch; margin-inline: auto; line-height: 1.7; margin-top: 0.4rem; }
+  .cdate { font-family: var(--font-mono); font-size: 12px; color: #555; margin-top: 1rem; }
+  .cfoot { font-size: 11.5px; color: #777; margin-top: 0.8rem; font-style: italic; }
+  @media print {
+    .no-print { display: none !important; }
+    .page { padding: 0; max-width: none; }
+    .cert { box-shadow: none; border-radius: 0; padding: 0; }
+    @page { size: A4 landscape; margin: 14mm; }
+  }
+</style>
+
+<script>
+  document.getElementById('print')?.addEventListener('click', () => window.print());
+</script>

@@ -15,6 +15,7 @@ import { languageExplorer } from '../../data/language-explorer';
 import { socialExplorer } from '../../data/social-explorer';
 import { discoveryExplorer } from '../../data/discovery-explorer';
 import type { ItemDetail } from '../../data/explorer-types';
+import { getMember, hasPlan, activeChild } from '../../lib/members';
 
 export const prerender = false;
 
@@ -53,6 +54,12 @@ const payload = w.cats.map((c, i) => {
   };
 });
 
+// Family plan: which child this device is reading as. The page renders the
+// same for everyone; a plan only adds the synced bucket and the gated links.
+const member = await getMember(Astro);
+const plan = hasPlan(member);
+const child = plan ? activeChild(Astro, member) : null;
+
 const first = w.cats[0];
 const firstDetail = payload[0].detail;
 // Same test the client uses, so the server-rendered chips cannot disagree with
@@ -73,7 +80,7 @@ const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '
 const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'পড়ার সময়'], ['read', 'তুমি যত দেখেছ']] as const;
 ---
 <Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare>
-  <div class="wrap page" id="world" data-slug={w.slug} data-total={total}>
+  <div class="wrap page" id="world" data-slug={w.slug} data-total={total} data-child={child?.id} data-plan={plan ? '1' : '0'}>
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> {w.bn}</p>
 
     <div class="xp">
@@ -138,6 +145,11 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
               <span class="cat-prog" id="cat-prog"><b id="cat-prog-n">০</b> / {bn(first.items.length)} দেখা</span>
             </div>
             <p class="items-h-s" id="items-h-s">নিচের যেকোনোটিতে ক্লিক করো - ডানে তার পুরো কথা খুলবে</p>
+            <div class="extras" id="extras">
+              <a class="xbtn" id="x-quiz" href={`/${w.slug}/quiz/0/`}>যাচাই দাও{plan ? '' : ' · পরিবার'}</a>
+              <a class="xbtn" id="x-ws" href={`/${w.slug}/worksheet/0/`}>অনুশীলনী ছাপাও{plan ? '' : ' · পরিবার'}</a>
+              {child && <span class="xwho">পড়ছে: <b>{child.nickname}</b> <a href="/account/">বদলাও</a></span>}
+            </div>
             <div class="chips" id="chips">
               {first.lab
                 ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
@@ -341,6 +353,12 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .cat-prog { flex: none; font-size: 12px; color: var(--w); background: color-mix(in oklab, var(--w) 12%, var(--panel)); border: 1px solid color-mix(in oklab, var(--w) 34%, var(--line)); border-radius: 999px; padding: 0.3rem 0.7rem; white-space: nowrap; }
   .cat-prog b { font-family: var(--font-display); font-size: 14px; }
   .items-h-s { font-size: 12.5px; color: var(--muted); margin: 0.85rem 0 0.6rem; }
+  .extras { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 0.75rem; }
+  .extras[hidden] { display: none; }
+  .xbtn { font-size: 12.5px; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); background: color-mix(in oklab, var(--w) 10%, var(--panel)); color: var(--ink); transition: background 0.15s ease, transform 0.15s ease; }
+  .xbtn:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 20%, var(--panel)); }
+  .xwho { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+  .xwho a { margin-left: 0.3rem; color: var(--brand-ink); font-weight: 600; }
   /* NOTE: the chips are rebuilt by the script on every category change, so their
      rules must be :global(). Astro stamps data-astro-cid onto elements at build
      time, and a JS-created <button class="chip"> never gets one, so a scoped
@@ -500,6 +518,8 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   import { toggleStar, isStarred, getProgress, markSeen } from '../../lib/progress';
   import { bn, pad2 } from '../../lib/bn';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
+  import { setProgressScope } from '../../lib/progress';
+  import { syncWorld, pushSeen } from '../../lib/sync';
   import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
   import type { ItemDetail } from '../../data/explorer-types';
 
@@ -510,6 +530,9 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 
   const root = document.getElementById('world')!;
   const slug = root.dataset.slug!;
+  // A family plan child reads into their own bucket, mirrored to the server.
+  const childId = root.dataset.child || null;
+  setProgressScope(childId);
   const cats: Cat[] = JSON.parse(document.getElementById('world-data')!.textContent!);
   const $ = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -776,6 +799,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     trackItem(slug, c.n, c.items[ii]);
     if (mark && markSeen(slug, keyOf(curCat, ii))) {
       chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`)?.classList.add('done');
+      if (childId) pushSeen(slug, keyOf(curCat, ii));
       renderProgress(); renderGlance(); renderRecords();
     }
   }
@@ -790,7 +814,12 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     $('#c-play').append(c.play);
     if (hero) { ctlLabel.textContent = hero.set(c.hero); ctl.value = String(Math.round((c.hero.p ?? 0.5) * 100)); }
     renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
-    if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { renderProgress(); renderGlance(); renderRecords(); renderChips(); } }
+    if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); renderProgress(); renderGlance(); renderRecords(); renderChips(); } }
+    // the gated features follow the category
+    const extras = $('#extras');
+    extras.hidden = !readable(c);
+    $<HTMLAnchorElement>('#x-quiz').href = `/${slug}/quiz/${i}/`;
+    $<HTMLAnchorElement>('#x-ws').href = `/${slug}/worksheet/${i}/`;
     rail[i]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
     if (!reduced) $('.items-h').animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
   }
@@ -891,9 +920,12 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   });
 
   renderChips(); renderRead(); renderCrumbs(); renderGlance(); renderRecords();
-  if (readable(cats[0])) markSeen(slug, keyOf(0, 0));
+  if (readable(cats[0])) { if (markSeen(slug, keyOf(0, 0)) && childId) pushSeen(slug, keyOf(0, 0)); }
   renderProgress();
   renderChips();
+  $('#extras').hidden = !readable(cats[0]);
+  // Pull the child's progress from other devices, then repaint what it changes.
+  if (childId) syncWorld(slug).then(() => { renderProgress(); renderGlance(); renderRecords(); renderChips(); });
   // count the category and item the page lands on the same way a click is
   // counted, so the totals are not skewed toward whatever happens to be first
   trackCategory(slug, cats[0].n);
