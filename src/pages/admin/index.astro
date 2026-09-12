@@ -4,6 +4,7 @@ import { isLoggedIn } from '../../lib/auth';
 import { db, recentAudit, selectWorlds } from '../../lib/db';
 import { computeTotals, itemCount } from '../../lib/content';
 import { bn, bnNum } from '../../lib/bn';
+import { recentLetters, weekKey } from '../../lib/weekly';
 
 export const prerender = false;
 
@@ -16,6 +17,11 @@ const live = all.filter((w) => w.status === 'published');
 const drafts = all.filter((w) => w.status === 'draft');
 const totals = computeTotals(live);
 const activity = await recentAudit(d, 6);
+// The letters already sent. A run that shows nothing new is not a failure:
+// the cron sends once a week and a repeat run is meant to be a no-op.
+const letters = await recentLetters(8).catch(() => []);
+const thisWeek = weekKey();
+const sentThisWeek = letters.filter((l) => l.week === thisWeek).length;
 
 const when = (ms: number) => new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }).format(ms);
 const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
@@ -87,9 +93,14 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
     <div class="card">
       <h2>সপ্তাহের চিঠি</h2>
       <p class="note">
-        পরিবার প্ল্যান চালু আছে এমন প্রতিটি অ্যাকাউন্টে সপ্তাহে একবার যায় - শুধু সেই সপ্তাহে,
-        যে সপ্তাহে সত্যিই কিছু হয়েছে। চুপচাপ সপ্তাহে কোনো মেইল যায় না।
-        আগে "দেখে নাও" চেপে লেখাটা পড়ুন, তারপর পাঠান।
+        প্রতি <b>শুক্রবার সকাল ৯টায়</b> (ঢাকা) নিজে থেকেই চলে যায়, পরিবার প্ল্যান চালু আছে এমন
+        প্রতিটি অ্যাকাউন্টে - শুধু সেই সপ্তাহে, যে সপ্তাহে সত্যিই কিছু হয়েছে। চুপচাপ সপ্তাহে
+        কোনো মেইল যায় না। এক সপ্তাহে একজন একটার বেশি চিঠি পাবেন না, তাই নিচের বোতাম
+        চাপলেও আগের পাঠানো চিঠি আবার যাবে না।
+      </p>
+      <p class="note">
+        এই সপ্তাহে ({thisWeek} থেকে) পাঠানো হয়েছে <b>{bn(sentThisWeek)}টি</b>।
+        হাতে চালাতে হলে আগে "দেখে নাও" চেপে লেখাটা পড়ুন, তারপর পাঠান।
       </p>
       <div class="wrow">
         <button type="button" class="btn" id="letter-dry">দেখে নাও (পাঠাবে না)</button>
@@ -97,9 +108,26 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
       </div>
       <p class="note" id="letter-out" role="status" aria-live="polite"></p>
       <pre class="letter-pre" id="letter-pre" hidden></pre>
+
+      {letters.length > 0 && (
+        <table class="a-list">
+          <tbody>
+            {letters.map((l) => (
+              <tr>
+                <td style="width:34%"><b>{l.email ?? l.member_id}</b></td>
+                <td class="note" style="padding-top:11px">{l.subject ?? ''}</td>
+                <td style="text-align:right;white-space:nowrap" class="note">{when(l.sent_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
       <p class="note">
-        স্বয়ংক্রিয় করতে: <code>CRON_SECRET</code> সেট করে বাইরের যেকোনো শিডিউলার থেকে
-        <code>POST /api/cron/weekly</code> ডাকলেই হবে, হেডারে <code>Authorization: Bearer …</code>।
+        সময় বদলাতে হলে <code>wrangler.jsonc</code>-এ <code>triggers.crons</code>।
+        চলার সময় দেখতে <code>npx wrangler tail</code>।
+        বাইরের কোনো শিডিউলার থেকেও চালানো যায়: <code>CRON_SECRET</code> সেট করে
+        <code>POST /api/cron/weekly</code>, হেডারে <code>Authorization: Bearer …</code>।
       </p>
     </div>
 
@@ -143,7 +171,7 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
   });
 
   /* ---- the weekly letter ---- */
-  type Run = { ok?: boolean; error?: string; members?: number; sent?: number; quiet?: number; failed?: number;
+  type Run = { ok?: boolean; error?: string; members?: number; sent?: number; quiet?: number; already?: number; failed?: number;
     preview?: { to: string; subject: string; text: string }[] };
   const lOut = document.getElementById('letter-out');
   const lPre = document.getElementById('letter-pre') as HTMLPreElement | null;
@@ -159,7 +187,7 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
       if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       if (lOut) lOut.textContent = dry
         ? `${data.members}টি অ্যাকাউন্ট, ${data.preview?.length ?? 0}টি চিঠি তৈরি, ${data.quiet}টি চুপচাপ সপ্তাহ। কিছু পাঠানো হয়নি।`
-        : `পাঠানো: ${data.sent}. চুপচাপ সপ্তাহ: ${data.quiet}. ব্যর্থ: ${data.failed}.`;
+        : `পাঠানো ${data.sent}টি · আগেই পাঠানো ছিল ${data.already}টি · চুপচাপ সপ্তাহ ${data.quiet}টি · ব্যর্থ ${data.failed}টি। পাতা রিলোড করলে নিচের তালিকা আপডেট হবে।`;
       if (lPre) {
         const list = data.preview ?? [];
         lPre.hidden = list.length === 0;

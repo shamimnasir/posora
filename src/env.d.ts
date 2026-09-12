@@ -24,3 +24,16 @@ interface D1Database {
   batch<T = Record<string, unknown>>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
   exec(query: string): Promise<{ count: number; duration: number }>;
 }
+
+/** Just enough of the scheduled-handler surface for src/worker.ts, for the
+ *  same reason: the full workers-types package cannot be pulled in. */
+interface ScheduledController {
+  readonly scheduledTime: number;
+  readonly cron: string;
+  noRetry(): void;
+}
+
+interface ExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+  passThroughOnException(): void;
+}
