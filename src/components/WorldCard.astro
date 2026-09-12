@@ -2,8 +2,10 @@
 import type { World } from '../data/worlds';
 import { itemCount } from '../data/worlds';
 import { bn, pad2 } from '../lib/bn';
+import { coverageFor } from '../lib/coverage';
 interface Props { w: World; i: number }
 const { w, i } = Astro.props;
+const { items, covered } = coverageFor(w.slug);
 ---
 <a class="wcard" href={`/${w.slug}/`} style={`--w:${w.hue}`} data-tilt>
   <span class="orb" style="width:52px;height:52px"></span>
@@ -12,9 +14,12 @@ const { w, i } = Astro.props;
   <span class="tag">{w.tag}</span>
   <span class="meta">
     <span class="pill pill-w">{bn(w.cats.length)} বিভাগ · {bn(itemCount(w))} আইটেম</span>
-    {/* Every world now has the full reading for every item; space adds the
-        zoomable solar system on top, so only that card claims it. */}
-    {w.open ? <span class="pill open">থ্রিডি সৌরজগৎ · পুরো পাঠ</span> : <span class="pill open">পুরো পাঠ · থ্রিডি মডেল</span>}
+    {/* The pill says what this world can actually show. Space has a zoomable
+        solar system but reading for only 11 of its 49 planned items, so it says
+        so rather than borrowing the other worlds' claim. */}
+    {covered >= items
+      ? <span class="pill open">{w.open ? 'থ্রিডি সৌরজগৎ · পুরো পাঠ' : 'পুরো পাঠ · থ্রিডি মডেল'}</span>
+      : <span class="pill part">{w.open ? 'থ্রিডি সৌরজগৎ' : 'থ্রিডি মডেল'} · {bn(covered)}টির পাঠ</span>}
   </span>
 </a>
 
@@ -35,5 +40,7 @@ const { w, i } = Astro.props;
   .meta { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.55rem; }
   .pill { font-size: 12px; }
   .open { background: var(--brand-soft); color: var(--brand-ink); border-color: transparent; font-weight: 600; }
+  .part { background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: color-mix(in oklab, var(--sun) 55%, var(--ink));
+    border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); font-weight: 600; }
   .soon { color: var(--muted); }
 </style>

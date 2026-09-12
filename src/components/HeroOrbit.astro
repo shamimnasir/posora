@@ -25,19 +25,28 @@ const data = worlds.map((w) => ({ slug: w.slug, bn: w.bn, hue: w.hue, open: w.op
   // Astro hashes self-hosted family names - read the resolved stacks instead of hard-coding them.
   const bodyFont = getComputedStyle(document.body).fontFamily;
 
-  // Three rings, 3 / 4 / 4 worlds, inner ring spins fastest.
-  const rings = [
-    { r: 0.34, speed: 0.10, n: 3 },
-    { r: 0.64, speed: 0.065, n: 4 },
-    { r: 0.94, speed: 0.045, n: 4 },
+  // Three rings, inner one spinning fastest. The counts are split from however
+  // many worlds are actually published rather than hardcoded, so publishing or
+  // unpublishing a world cannot drop an orb or create one pointing at
+  // /undefined/. Roughly a quarter inside, the rest shared outward.
+  const RING_GEOM = [
+    { r: 0.34, speed: 0.10 },
+    { r: 0.64, speed: 0.065 },
+    { r: 0.94, speed: 0.045 },
   ];
+  const total = worlds.length;
+  const counts = [Math.floor(total / 4), 0, 0];
+  counts[1] = Math.ceil((total - counts[0]) / 2);
+  counts[2] = total - counts[0] - counts[1];
+  const rings = RING_GEOM.map((g, i) => ({ ...g, n: counts[i] }));
   type Orb = W & { ring: number; a0: number; r: number; x: number; y: number; hover: number };
   const orbs: Orb[] = [];
   let k = 0;
   rings.forEach((ring, ri) => {
     for (let i = 0; i < ring.n; i++, k++) {
       const w = worlds[k];
-      orbs.push({ ...w, ring: ri, a0: (i / ring.n) * Math.PI * 2 + ri * 0.7, r: w.open ? 24 : 18, x: 0, y: 0, hover: 0 });
+      if (!w) break;
+      orbs.push({ ...w, ring: ri, a0: (i / Math.max(1, ring.n)) * Math.PI * 2 + ri * 0.7, r: w.open ? 24 : 18, x: 0, y: 0, hover: 0 });
     }
   });
 

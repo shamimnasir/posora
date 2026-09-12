@@ -1,12 +1,13 @@
 ---
 import { totals } from '../data/worlds';
 import { bn } from '../lib/bn';
+import { COVERAGE } from '../lib/coverage';
 ---
 <footer class="ftr">
   <div class="wrap grid">
     <div>
       <p class="brand">পসরা</p>
-      <p class="muted">শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। {bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস - প্রতিটি ছোঁয়া যায়।</p>
+      <p class="muted">শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। {bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস - {bn(COVERAGE.covered)}টির পুরো কথা এখন পড়া যায়।</p>
     </div>
     <div>
       <p class="lbl">যোগাযোগ</p>
@@ -16,7 +17,7 @@ import { bn } from '../lib/bn';
     <div>
       <p class="lbl">ভুবন</p>
       <a href="/space/">মহাকাশ - থ্রিডি সৌরজগৎ</a>
-      <a href="/#worlds">সব ১১টি ভুবন</a>
+      <a href="/#worlds">সব {bn(totals.worlds)}টি ভুবন</a>
       <a href="/schools/">স্কুলের জন্য</a>
     </div>
   </div>

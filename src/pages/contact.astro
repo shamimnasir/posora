@@ -27,7 +27,7 @@ const wa = 'https://wa.me/8801771553141';
         <label>তোমার নাম <input name="name" required minlength="2" maxlength="80" autocomplete="name" /></label>
         <label>ইমেইল বা ফোন <input name="contact" required minlength="5" maxlength="120" autocomplete="email" inputmode="email" /></label>
         <label>কী বলতে চাও <textarea name="message" required minlength="5" maxlength="2000" rows="6"></textarea></label>
-        <label class="hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off" /></label>
+        <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
         <button class="btn btn-primary" type="submit">পাঠাও</button>
         <p class="msg" id="fmsg" role="status" aria-live="polite"></p>
       </form>

@@ -414,6 +414,15 @@ export function mountCosmos(
 
   const tmp = new Vector3(), moonWorld = new Vector3();
   const LABEL_PAD = 34; // keep the pill fully inside, not just its anchor point
+  /**
+   * Take a label off screen. The pointer-events half matters as much as the
+   * opacity: these labels are real buttons, so a transparent one left at
+   * `auto` goes on swallowing clicks aimed at the planet behind it.
+   */
+  function hideLabel(elm: HTMLElement) {
+    elm.style.opacity = '0';
+    elm.style.pointerEvents = 'none';
+  }
   function project(v: Vector3, elm: HTMLElement, hide: boolean) {
     tmp.copy(v).project(camera);
     const px = ((tmp.x + 1) / 2) * w, py = ((1 - tmp.y) / 2) * h;
@@ -447,13 +456,13 @@ export function mountCosmos(
         project(moonWorld, s.label, false);
       }
     } else {
-      for (const s of sysRefs) s.label.style.opacity = '0';
+      for (const s of sysRefs) hideLabel(s.label);
     }
 
     // focused body + moons
     if (bodyG.visible) {
       if (cmpOn) { cmpEarth.rotation.y += dt * 0.25; cmpEarth.getWorldPosition(moonWorld); project(moonWorld, cmpLabel, false); }
-      else cmpLabel.style.opacity = '0';
+      else hideLabel(cmpLabel);
       if (!reduced || dragging) planet.rotation.y += spin * dt * (idle > 4 ? 1 : 0.6);
       const pop = Math.min(1, (now - popStart) / 500); const sc = 1 - Math.pow(1 - pop, 3);
       planet.scale.setScalar(sc);
@@ -469,8 +478,8 @@ export function mountCosmos(
         project(moonWorld, m.label, behind || level === 'moon' && followMoon === i);
       });
     } else {
-      for (const m of moonRefs) m.label.style.opacity = '0';
-      cmpLabel.style.opacity = '0';
+      for (const m of moonRefs) hideLabel(m.label);
+      hideLabel(cmpLabel);
     }
 
     // eased camera - this is the "zoom"

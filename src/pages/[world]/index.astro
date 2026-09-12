@@ -55,13 +55,22 @@ const payload = w.cats.map((c, i) => {
 
 const first = w.cats[0];
 const firstDetail = payload[0].detail;
-const firstItem = firstDetail?.[0] ?? null;
+// Same test the client uses, so the server-rendered chips cannot disagree with
+// what appears a moment later on hydration.
+const firstReadable = !!firstDetail && firstDetail.length === first.items.length;
+const firstItem = firstReadable ? firstDetail![0] : null;
 const total = itemCount(w);
+// Progress is measured against items that can actually be opened. A tool
+// category links out instead, so its items are never marked.
+const readableTotal = payload.reduce(
+  (n, c) => n + (c.detail && c.detail.length === c.items.length ? c.items.length : 0),
+  0,
+);
 // A ladder of the world hue so each category reads as its own colour without
 // ever leaving the palette. Lightest at the top, steadily deeper down the rail.
 const shade = (i: number) => `color-mix(in oklab, ${w.hue} ${96 - (i % 6) * 9}%, #8894a8)`;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
-const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'পড়ার সময়'], ['read', 'তুমি যত পড়েছ']] as const;
+const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'পড়ার সময়'], ['read', 'তুমি যত দেখেছ']] as const;
 ---
 <Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare>
   <div class="wrap page" id="world" data-slug={w.slug} data-total={total}>
@@ -69,10 +78,10 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 
     <div class="xp">
       <aside class="rail card" aria-label="বিভাগের তালিকা">
-        <div class="card-h"><span class="lbl">বিভাগ</span><span class="lbl num" id="seen-count">০ / {bn(total)} পড়া</span></div>
-        <div class="rail-list" role="tablist">
+        <div class="card-h"><span class="lbl">বিভাগ</span><span class="lbl num" id="seen-count">০ / {bn(readableTotal)} আবিষ্কৃত</span></div>
+        <div class="rail-list">
           {w.cats.map((c, i) => (
-            <button role="tab" type="button" data-i={i} aria-selected={i === 0 ? 'true' : 'false'} style={`--o:${shade(i)}`}>
+            <button type="button" data-i={i} aria-current={i === 0 ? 'true' : undefined} style={`--o:${shade(i)}`}>
               <span class="rorb" aria-hidden="true"></span>
               <span class="rt"><span class="nm">{c.n}</span><span class="tg">{bn(c.items.length)} আইটেম</span></span>
               <span class="no lbl">{pad2(i + 1)}</span>
@@ -82,7 +91,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
       </aside>
 
       <div class="mid">
-        <section class="stage card" aria-live="polite">
+        <section class="stage card">
           <header class="stage-h">
             <div>
               <p class="eyebrow">ভুবন · {w.en}</p>
@@ -110,7 +119,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
             <p class="hint" id="hero-hint">টেনে ঘোরাও</p>
             <noscript><p class="hint">থ্রিডি মডেল দেখতে জাভাস্ক্রিপ্ট চালু করো।</p></noscript>
             <div class="scenebar">
-              <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-label="মডেল নিয়ন্ত্রণ" /></label>
+              <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-labelledby="ctl-label" /></label>
               <div class="hctl">
                 <button type="button" id="h-spin" aria-pressed="true">ঘোরানো থামাও</button>
                 <button type="button" id="h-reset">সোজা করো</button>
@@ -123,16 +132,16 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
             <div class="items-h">
               <div>
                 <p class="lbl">বিভাগ <span id="c-no">০১</span></p>
-                <h2 id="c-name">{first.n}</h2>
+                <h2 id="c-name" aria-live="polite">{first.n}</h2>
                 <p class="play" id="c-play"><b>পর্দায়</b>{first.play}</p>
               </div>
-              <span class="cat-prog" id="cat-prog"><b id="cat-prog-n">০</b> / {bn(first.items.length)} পড়া</span>
+              <span class="cat-prog" id="cat-prog"><b id="cat-prog-n">০</b> / {bn(first.items.length)} দেখা</span>
             </div>
             <p class="items-h-s" id="items-h-s">নিচের যেকোনোটিতে ক্লিক করো - ডানে তার পুরো কথা খুলবে</p>
             <div class="chips" id="chips">
               {first.lab
                 ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
-                : firstDetail
+                : firstReadable
                   ? first.items.map((it, j) => <button type="button" class="chip" data-di={j} aria-pressed={j === 0 ? 'true' : 'false'}>{it}</button>)
                   : first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
             </div>
@@ -141,6 +150,10 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 
           <div class="actions">
             <button type="button" data-act="prev">← আগেরটা</button>
+            <button type="button" data-act="print" id="print-btn">
+              <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M6 8V3h8v5M6 15H4v-5h12v5h-2M6 13h8v4H6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              ছাপাও
+            </button>
             <button type="button" data-act="read" class="primary">
               <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3 4h6a2 2 0 0 1 2 2v10a1.5 1.5 0 0 0-1.5-1.5H3zM17 4h-6a2 2 0 0 0-2 2v10a1.5 1.5 0 0 1 1.5-1.5H17z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
               পড়ো
@@ -154,9 +167,9 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
             <span class="lbl">{w.bn} এক নজরে</span>
             <span class="lbl gauto" id="gauto">নিজে নিজে বদলাচ্ছে</span>
           </div>
-          <div class="gseg" role="tablist" aria-label="কোন হিসাবে তুলনা">
+          <div class="gseg" role="group" aria-label="কোন হিসাবে তুলনা">
             {GMETRICS.map(([id, label], i) => (
-              <button type="button" role="tab" data-m={id} aria-selected={i === 0 ? 'true' : 'false'}>{label}</button>
+              <button type="button" data-m={id} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>
             ))}
           </div>
           <div class="gchart" id="gchart">
@@ -181,8 +194,8 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
         <section class="card read" id="read">
           <div class="card-h">
             <span class="lbl">পড়ো</span>
-            <div class="seg" role="tablist" aria-label="পড়ার গভীরতা">
-              {LEVELS.map(([k, l, a]) => <button type="button" role="tab" data-l={k} aria-selected={k === 'l1' ? 'true' : 'false'}>{l} <small>{a}</small></button>)}
+            <div class="seg" role="group" aria-label="পড়ার গভীরতা">
+              {LEVELS.map(([k, l, a]) => <button type="button" data-l={k} aria-pressed={k === 'l1' ? 'true' : 'false'}>{l} <small>{a}</small></button>)}
             </div>
           </div>
           <h3 class="item-name" id="item-name">{first.items[0]}</h3>
@@ -202,7 +215,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
             <div class="row"><span class="k">শেখার আইটেম</span><span class="v">{bn(total)}</span></div>
             <div class="row"><span class="k">পূর্বশর্ত</span><span class="v">{w.dep}</span></div>
             <div class="row"><span class="k">নির্মাণ ফেজ</span><span class="v">{w.phase}</span></div>
-            <div class="row"><span class="k">তুমি পড়েছ</span><span class="v" id="spec-read">০</span><span class="meter"><i id="spec-meter"></i></span></div>
+            <div class="row"><span class="k">তুমি দেখেছ</span><span class="v" id="spec-read">০</span><span class="meter"><i id="spec-meter"></i></span></div>
           </div>
         </section>
 
@@ -247,6 +260,11 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
       </aside>
     </div>
 
+    {/* Built on demand when someone presses ছাপাও, and only ever visible on
+        paper. A teacher gets the whole category as a handout at the reading
+        depth they already chose, with no 3D canvas and no navigation on it. */}
+    <div class="printable" id="printable" aria-hidden="true"></div>
+
     <div class="status card">
       <span class="lbl">অভিযান লগ</span>
       <span class="bar"><i id="log-bar"></i></span>
@@ -271,7 +289,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .rail-list { padding: 6px; display: flex; flex-direction: column; gap: 2px; max-height: 640px; overflow-y: auto; }
   .rail-list button { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; padding: 8px 9px; border-radius: 11px; border-left: 3px solid transparent; transition: background 0.15s ease; }
   .rail-list button:hover { background: var(--panel-2); }
-  .rail-list button[aria-selected="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
+  .rail-list button[aria-current="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
   .rorb { width: 30px; height: 30px; border-radius: 50%; flex: none; background: radial-gradient(circle at 32% 30%, #fff 0%, var(--o) 32%, color-mix(in oklab, var(--o) 55%, #000) 100%); box-shadow: inset -3px -4px 8px rgba(0,0,0,.25); transition: transform 0.2s ease; }
   .rail-list button:hover .rorb { transform: scale(1.1); }
   .rail-list button.done .rorb { box-shadow: inset -3px -4px 8px rgba(0,0,0,.25), 0 0 0 2px var(--panel), 0 0 0 4px var(--ok); }
@@ -356,7 +374,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .gseg button { font-size: 12.5px; font-weight: 700; padding: 0.28rem 0.8rem; border-radius: 999px; color: var(--ink-2);
     background: var(--panel-2); border: 1px solid var(--line-soft); transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease; }
   .gseg button:hover { transform: translateY(-1px); background: var(--panel); }
-  .gseg button[aria-selected="true"] { background: var(--w); color: #fff; border-color: transparent; }
+  .gseg button[aria-pressed="true"] { background: var(--w); color: #fff; border-color: transparent; }
   .gchart { padding: 0.6rem 1.1rem 0.2rem; display: flex; flex-direction: column; gap: 1px; }
   .grow { display: grid; grid-template-columns: 118px minmax(0, 1fr) auto; align-items: center; column-gap: 0.7rem;
     width: 100%; text-align: left; padding: 0.3rem 0.4rem; border-radius: 8px; transition: background 0.15s ease; }
@@ -383,7 +401,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 2px; }
   .seg button { padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; font-size: 12px; color: var(--muted); display: flex; gap: 0.25rem; align-items: baseline; }
   .seg button small { font-size: 9.5px; }
-  .seg button[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
   .item-name { font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; padding: 0.8rem 0.95rem 0; line-height: 1.3; }
   .item-chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 0.5rem 0.95rem 0; }
   .text { padding: 0.7rem 0.95rem 0.5rem; font-size: 14.5px; color: var(--ink-2); line-height: 1.75; }
@@ -440,11 +458,27 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .back { margin-top: 1.2rem; font-size: 14px; color: var(--muted); }
   .back a:hover { color: var(--brand-ink); }
 
+  /* ---------- paper ---------- */
+  .printable { display: none; }
+  @media print {
+    .xp, .status, .back, .crumbs { display: none !important; }
+    .printable { display: block; }
+    .printable :global(.p-h) { border-bottom: 2px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    .printable :global(.p-h h1) { font-size: 20pt; font-weight: 800; }
+    .printable :global(.p-h p) { font-size: 10pt; color: #444; margin-top: 0.2rem; }
+    .printable :global(.p-item) { break-inside: avoid; page-break-inside: avoid; margin-bottom: 0.9rem; padding-bottom: 0.7rem; border-bottom: 1px solid #ccc; }
+    .printable :global(.p-item h2) { font-size: 13pt; font-weight: 700; margin-bottom: 0.15rem; }
+    .printable :global(.p-chips) { font-size: 9pt; color: #555; margin-bottom: 0.25rem; }
+    .printable :global(.p-text) { font-size: 11pt; line-height: 1.55; }
+    .printable :global(.p-fun) { font-size: 9.5pt; color: #333; margin-top: 0.25rem; font-style: italic; }
+    .printable :global(.p-foot) { margin-top: 1.2rem; font-size: 9pt; color: #555; }
+  }
+
   @media (max-width: 1080px) {
     .xp { grid-template-columns: 1fr; }
     .rail-list { flex-direction: row; overflow-x: auto; max-height: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
     .rail-list button { width: auto; flex: none; border-left: 0; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; scroll-snap-align: start; }
-    .rail-list button[aria-selected="true"] { border-bottom-color: var(--o); }
+    .rail-list button[aria-current="true"] { border-bottom-color: var(--o); }
     .rail-list .tg, .rail-list .no { display: none; }
     .stage { min-height: 0; }
     .scene { min-height: min(96vw, 460px); }
@@ -465,7 +499,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 <script>
   import { toggleStar, isStarred, getProgress, markSeen } from '../../lib/progress';
   import { bn, pad2 } from '../../lib/bn';
-  import { trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
+  import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
   import type { ItemDetail } from '../../data/explorer-types';
 
@@ -479,7 +513,10 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   const cats: Cat[] = JSON.parse(document.getElementById('world-data')!.textContent!);
   const $ = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const TOTAL = cats.reduce((s, c) => s + c.items.length, 0);
+  // Only items that can actually be opened count toward progress. A tool
+  // category (গণিত - পরিমাপ) links out and is never marked, so counting its
+  // items here would cap the bar below 100% forever.
+  const TOTAL = cats.reduce((s, c) => s + (c.detail && c.detail.length === c.items.length ? c.items.length : 0), 0);
   /** Characters a comfortable Bangla reader gets through in a minute. Stated in
       the chart caption so the estimate can be judged, not just trusted. */
   const CHARS_PER_MIN = 600;
@@ -534,7 +571,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   const funWrap = $('#item-fun-wrap'), itemFun = $('#item-fun'), labNote = $('#lab-note');
   function renderRead() {
     const c = cats[curCat];
-    seg.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.l === level)));
+    seg.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.l === level)));
     if (readable(c)) {
       const d = c.detail![curItem];
       itemName.hidden = false; itemName.textContent = c.items[curItem];
@@ -622,7 +659,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     const id = GIDS[metric], seen = new Set(seenList());
     const vals = cats.map((_c, i) => gValue(i, id, seen));
     const max = Math.max(...vals, 1);
-    gseg.forEach((b, i) => b.setAttribute('aria-selected', String(i === metric)));
+    gseg.forEach((b, i) => b.setAttribute('aria-pressed', String(i === metric)));
     grows.forEach((row, i) => {
       const bar = row.querySelector<HTMLElement>('.gtrack i')!, out = row.querySelector<HTMLElement>('.gv')!;
       row.style.setProperty('--i', String(i));
@@ -638,7 +675,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     $('#gcap').textContent =
       id === 'items' ? 'প্রতিটি বারের লম্বা সরাসরি ওই বিভাগের আইটেম সংখ্যার অনুপাতে আঁকা।'
       : id === 'time' ? 'তিনটি গভীরতার পুরো লেখা মিলিয়ে আনুমানিক সময়, মিনিটে ৬০০ অক্ষর পড়ার হিসাবে। এটা আন্দাজ, মাপা সময় নয়।'
-      : 'বার যত লম্বা, ওই বিভাগের তত বেশি অংশ তোমার পড়া হয়ে গেছে। হিসাবটা শুধু এই ব্রাউজারে জমা থাকে।';
+      : 'বার যত লম্বা, ওই বিভাগের তত বেশি অংশ তুমি খুলে দেখেছ। হিসাবটা শুধু এই ব্রাউজারে জমা থাকে, আমাদের কাছে আসে না।';
   }
   function stopAuto() { if (!autoTimer) return; clearInterval(autoTimer); autoTimer = 0; $('#gauto').hidden = true; }
   function startAuto() {
@@ -683,12 +720,12 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
       const btn = document.createElement('button');
       btn.type = 'button'; btn.dataset.i = String(top);
       btn.classList.toggle('is-cur', top === curCat);
-      btn.innerHTML = `<span>তুমি সবচেয়ে এগিয়ে</span><b>${cats[top].n} <small style="font-weight:500;color:var(--muted)">${bn(nRead(top))}টি পড়া</small></b>`;
+      btn.innerHTML = `<span>তুমি সবচেয়ে এগিয়ে</span><b>${cats[top].n} <small style="font-weight:500;color:var(--muted)">${bn(nRead(top))}টি দেখা</small></b>`;
       nodes.push(btn);
     } else {
       const p = document.createElement('p');
       p.className = 'rnone';
-      p.textContent = 'তুমি এখনও কিছু পড়োনি, তাই তোমার নিজের রেকর্ড এখানে এখনও ফাঁকা।';
+      p.textContent = 'তুমি এখনও কিছু খুলে দেখোনি, তাই তোমার নিজের রেকর্ড এখানে এখনও ফাঁকা।';
       nodes.push(p);
     }
     box.replaceChildren(...nodes);
@@ -703,7 +740,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     const seen = new Set(seenList());
     const done = cats.reduce((s, _c, i) => s + readCount(i, seen), 0);
     const pct = TOTAL ? (done / TOTAL) * 100 : 0;
-    $('#seen-count').textContent = `${bn(done)} / ${bn(TOTAL)} পড়া`;
+    $('#seen-count').textContent = `${bn(done)} / ${bn(TOTAL)} আবিষ্কৃত`;
     $('#log-text').textContent = `${bn(done)} / ${bn(TOTAL)}`;
     $('#log-bar').style.width = `${pct}%`;
     $('#prog-bar').style.width = `${pct}%`;
@@ -712,11 +749,11 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     $('#prog-line').textContent = done === 0
       ? 'এই ভুবনে তোমার যাত্রা সবে শুরু।'
       : done === TOTAL
-        ? `পুরো ${cats.length === 1 ? 'বিভাগ' : 'ভুবন'} শেষ! ${bn(TOTAL)}টি আইটেমই পড়া হয়ে গেছে।`
-        : `তুমি ${bn(done)} / ${bn(TOTAL)} আইটেম পড়েছ, বাকি আছে ${bn(TOTAL - done)}টি।`;
+        ? `পুরো ${cats.length === 1 ? 'বিভাগ' : 'ভুবন'} শেষ! ${bn(TOTAL)}টি আইটেমই খুলে দেখা হয়ে গেছে।`
+        : `তুমি ${bn(done)} / ${bn(TOTAL)} আইটেম খুলে দেখেছ, বাকি আছে ${bn(TOTAL - done)}টি।`;
     rail.forEach((b, i) => b.classList.toggle('done', readCount(i, seen) === cats[i].items.length));
     $('#cat-prog-n').textContent = bn(readCount(curCat, seen));
-    $('#cat-prog').lastChild!.textContent = ` / ${bn(cats[curCat].items.length)} পড়া`;
+    $('#cat-prog').lastChild!.textContent = ` / ${bn(cats[curCat].items.length)} দেখা`;
     $('#cat-prog').hidden = !readable(cats[curCat]);
   }
 
@@ -744,7 +781,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   }
   function showCat(i: number, item = 0) {
     curCat = i; curItem = item; playCounted = false;
-    rail.forEach((b) => b.setAttribute('aria-selected', String(+b.dataset.i! === i)));
+    rail.forEach((b) => { if (+b.dataset.i! === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
     const c = cats[i];
     trackCategory(slug, c.n);
     $('#c-no').textContent = pad2(i + 1);
@@ -759,7 +796,11 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   }
   /** Walk one item forward or back, rolling into the next category at the edges. */
   function step(d: number) {
-    let ci = curCat, ii = curItem + d;
+    // A tool or unwritten category has no item cursor, so treat the whole
+    // category as one stop and step straight out of it. Without this the index
+    // stays in range, selectItem bails, and the button does nothing at all.
+    let ci = curCat;
+    let ii = readable(cats[curCat]) ? curItem + d : (d > 0 ? cats[curCat].items.length : -1);
     for (let guard = 0; guard < cats.length + 1; guard++) {
       if (ii >= 0 && ii < cats[ci].items.length) break;
       if (ii < 0) { ci = (ci - 1 + cats.length) % cats.length; ii = cats[ci].items.length - 1; }
@@ -793,6 +834,46 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   root.querySelector('[data-act="prev"]')!.addEventListener('click', () => step(-1));
   root.querySelector('[data-act="next"]')!.addEventListener('click', () => step(1));
   root.querySelector('[data-act="read"]')!.addEventListener('click', () => $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }));
+
+  /* ---- ছাপাও: the whole category as a paper handout ---- */
+  const printBtn = $<HTMLButtonElement>('#print-btn');
+  function buildPrintable() {
+    const c = cats[curCat], box = $('#printable');
+    const el = (tag: string, cls: string, text: string) => {
+      const n = document.createElement(tag);
+      n.className = cls; n.textContent = text;
+      return n;
+    };
+    const head = document.createElement('header');
+    head.className = 'p-h';
+    head.append(
+      el('h1', '', `${document.title.split(' · ')[0]} · ${c.n}`),
+      el('p', '', `পসরা · posora.com · ${bn(c.items.length)}টি বিষয় · পড়ার গভীরতা: ${level === 'l1' ? 'ছোট' : level === 'l2' ? 'মাঝারি' : 'বড়'}`),
+    );
+    const parts: HTMLElement[] = [head];
+    if (readable(c)) {
+      c.detail!.forEach((d, j) => {
+        const art = document.createElement('article');
+        art.className = 'p-item';
+        art.append(
+          el('h2', '', `${pad2(j + 1)}. ${c.items[j]}`),
+          el('p', 'p-chips', d.chips.join(' · ')),
+          el('p', 'p-text', d[level]),
+          el('p', 'p-fun', `মজার তথ্য: ${d.fun}`),
+        );
+        parts.push(art);
+      });
+    } else {
+      parts.push(el('p', 'p-text', `${c.n}: ${c.items.join(', ')}`));
+    }
+    parts.push(el('p', 'p-foot', 'পসরা - বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। মডেলগুলো নাড়াচাড়া করতে posora.com খোলো।'));
+    box.replaceChildren(...parts);
+  }
+  printBtn.addEventListener('click', () => {
+    buildPrintable();
+    track('print_category', { world: slug, category: cats[curCat].n });
+    window.print();
+  });
   $('#next-new').addEventListener('click', () => {
     const seen = new Set(seenList());
     for (let i = 0; i < cats.length; i++) {
@@ -800,7 +881,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
       const j = cats[i].items.findIndex((_it, ii) => !seen.has(keyOf(i, ii)));
       if (j >= 0) { showCat(i, j); $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }); return; }
     }
-    $('#prog-line').textContent = 'সব পড়া হয়ে গেছে! নতুন লেখা যোগ হলে এখানেই দেখাবে।';
+    $('#prog-line').textContent = 'সব কটাই খুলে দেখা হয়ে গেছে! নতুন লেখা যোগ হলে এখানেই দেখাবে।';
   });
   document.addEventListener('keydown', (e) => {
     const t = e.target as HTMLElement;

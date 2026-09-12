@@ -5,6 +5,7 @@ import WorldCard from '../components/WorldCard.astro';
 import { getWorlds, getBody, computeTotals } from '../lib/content';
 import { isLoggedIn } from '../lib/auth';
 import { bn } from '../lib/bn';
+import { COVERAGE } from '../lib/coverage';
 
 // Content now comes from D1 at request time, so this route can't be prerendered.
 export const prerender = false;
@@ -28,7 +29,7 @@ Astro.response.headers.set(
     <div class="copy">
       <p class="eyebrow" style="--w:var(--brand)">বাংলায় · শিশু ও বড়দের জন্য</p>
       <h1>শেখা হোক <em>খেলার মতো</em></h1>
-      <p class="lede">{bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস - প্রতিটি ছোঁয়া যায়, ঘোরানো যায়, ভাঙা যায়। পড়ে নয়, নেড়েচেড়ে শেখা।</p>
+      <p class="lede">{bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস - ঘোরানো যায়, নাড়াচাড়া করা যায়, খুলে দেখা যায়। পড়ে নয়, নেড়েচেড়ে শেখা।</p>
       <div class="cta">
         <a class="btn btn-primary" href="/space/">মহাকাশে যাও →</a>
         <a class="btn" href="#worlds">সব ভুবন দেখো</a>
@@ -49,7 +50,7 @@ Astro.response.headers.set(
   <section class="sec wrap" id="worlds">
     <div class="sec-h">
       <h2>{bn(totals.worlds)}টি ভুবন</h2>
-      <p>প্রতিটি ভুবনের প্রতিটি বিভাগে একটা জীবন্ত থ্রিডি মডেল - টেনে ঘোরাও, স্লাইডার বদলাও। প্রতিটি আইটেমের লেখা তিনটি গভীরতায় পড়া যায়, আর মহাকাশে পুরো সৌরজগৎ ঘুরে দেখা যায়।</p>
+      <p>প্রতিটি ভুবনের প্রতিটি বিভাগে একটা জীবন্ত থ্রিডি মডেল - টেনে ঘোরাও, স্লাইডার বদলাও। {bn(totals.items)}টির মধ্যে {bn(COVERAGE.covered)}টি বিষয়ের পুরো কথা এখন তিন গভীরতায় পড়া যায়; মহাকাশের তারা, গ্যালাক্সি আর অভিযানের {bn(COVERAGE.uncovered)}টি এখনো বাকি।</p>
     </div>
     <div class="grid">
       {worlds.map((w, i) => <WorldCard w={w} i={i} />)}
@@ -86,10 +87,10 @@ Astro.response.headers.set(
       <div class="demo-h">
         <span class="orb" style="width:44px;height:44px;--w:#c9a15e"></span>
         <div><b>{saturn.bn}</b><span class="lbl">{saturn.tagline}</span></div>
-        <div class="seg" role="tablist" aria-label="পড়ার গভীরতা">
-          <button role="tab" aria-selected="true" data-l="l1">ছোট <small>৫–৮</small></button>
-          <button role="tab" aria-selected="false" data-l="l2">মাঝারি <small>৯–১২</small></button>
-          <button role="tab" aria-selected="false" data-l="l3">বড় <small>১৩+</small></button>
+        <div class="seg" role="group" aria-label="পড়ার গভীরতা">
+          <button type="button" aria-pressed="true" data-l="l1">ছোট <small>৫–৮</small></button>
+          <button type="button" aria-pressed="false" data-l="l2">মাঝারি <small>৯–১২</small></button>
+          <button type="button" aria-pressed="false" data-l="l3">বড় <small>১৩+</small></button>
         </div>
       </div>
       <p class="demo-t" data-l1={saturn.l1} data-l2={saturn.l2} data-l3={saturn.l3}>{saturn.l1}</p>
@@ -135,7 +136,7 @@ Astro.response.headers.set(
   .seg { margin-left: auto; display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px; }
   .seg button { padding: 0.35rem 0.9rem; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--muted); display: flex; gap: 0.3rem; align-items: baseline; }
   .seg button small { font-size: 11px; font-weight: 500; }
-  .seg button[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
   .demo-t { font-size: 17px; max-width: 70ch; min-height: 3.4em; color: var(--ink-2); }
   .cbox { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.75rem 2rem; background: var(--brand-soft); border-color: transparent; }
   .cbox h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
@@ -181,7 +182,7 @@ Astro.response.headers.set(
   const demo = document.getElementById('depth-demo')!;
   const text = demo.querySelector<HTMLElement>('.demo-t')!;
   demo.querySelectorAll<HTMLButtonElement>('[data-l]').forEach((b) => b.addEventListener('click', () => {
-    demo.querySelectorAll('[data-l]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    demo.querySelectorAll('[data-l]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     text.textContent = text.dataset[b.dataset.l as 'l1' | 'l2' | 'l3']!;
     if (!reduced) text.animate([{ opacity: 0.2, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
   }));

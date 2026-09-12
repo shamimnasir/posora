@@ -14,7 +14,23 @@ const href = `https://wa.me/8801771553141?text=${msg}`;
     background: #25d366; color: #062b14; font-weight: 700; font-size: 15px; box-shadow: 0 10px 26px -8px rgba(37, 211, 102, 0.7), 0 2px 6px rgba(0,0,0,.15);
     transition: transform 0.15s ease, box-shadow 0.15s ease; animation: breathe 3.2s ease-in-out infinite;
   }
-  .fab:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 30px -8px rgba(37, 211, 102, 0.8), 0 2px 6px rgba(0,0,0,.15); animation: none; }
+  .fab:hover, .fab:focus-visible { transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 30px -8px rgba(37, 211, 102, 0.8), 0 2px 6px rgba(0,0,0,.15); animation: none; }
   @keyframes breathe { 0%, 100% { box-shadow: 0 10px 26px -8px rgba(37,211,102,.7), 0 0 0 0 rgba(37,211,102,.45); } 50% { box-shadow: 0 10px 26px -8px rgba(37,211,102,.7), 0 0 0 12px rgba(37,211,102,0); } }
   @media (max-width: 480px) { .fab span { display: none; } .fab { padding: 0.8rem; } }
+  /* The explorer pages put a card column under this corner, and a fixed button
+     sits over it at every scroll position. Collapse to the icon once the layout
+     is wide enough to have that column, and show the word on hover or focus. */
+  @media (min-width: 1081px) {
+    .fab { padding: 0.8rem; }
+    .fab span {
+      max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0;
+      transition: max-width 0.2s ease, opacity 0.2s ease, margin 0.2s ease;
+      margin-left: -0.5rem;
+    }
+    .fab:hover span, .fab:focus-visible span { max-width: 9rem; opacity: 1; margin-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fab { animation: none; transition: none; }
+    .fab span { transition: none; }
+  }
 </style>
