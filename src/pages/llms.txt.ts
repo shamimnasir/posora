@@ -57,6 +57,31 @@ ${c.uncovered === 0
 - Every category also has a find-it game: the model names one of its own items
   and the child has to spot that item on the model.
 
+## The daily page
+
+[আজকের পসরা](${origin}/today/) is one page that changes every day, and every
+visitor in the country gets the same one, because every pick is seeded from the
+calendar date in Asia/Dhaka rather than chosen per person:
+
+- আজকের জিনিস: one item from the catalogue, with its reading. It walks the
+  whole catalogue in a fixed order, one step a day, so nothing repeats for
+  over two years.
+- আজকের পরখ: five questions generated from the reading itself, the item's own
+  name blanked out of its text and the wrong options taken from its category.
+- কোনটা আলাদা: odd-one-out, three items from one category and one from another.
+- আজকের লক্ষ্য: a goal of three small things - three new items, the day's
+  quiz, and one game - and then it says the day is done. Nothing on the site
+  rewards going past it.
+
+There is also a streak, counted on the device, which can be lost by missing a
+day and defended by a freeze earned at 3, 7, 14 and 30 days. Freezes cannot be
+bought; nothing on this site can be bought by a child, and no mechanic here
+converts a child's attention into a request for money.
+
+[সংগ্রহশালা](${origin}/collection/) shows every item a visitor has opened as a
+3D figure on a shelf, with the ones not yet opened standing beside them as pale
+ghosts. Nothing is locked behind anything.
+
 ## Worlds
 
 ${worldLines}
@@ -90,6 +115,9 @@ top of the free material rather than fencing any of it off.
 - It does not create accounts for children. Accounts belong to an adult, and a
   child is only a nickname and a level inside one.
 - It makes no claim to cover a national curriculum.
+- It has no energy meter, no lives that run out, no gems, and no purchasable
+  streak protection. Progress is stored in the browser unless a family plan is
+  active, and the only leaderboard is between the children on one plan.
 
 ## Machine-readable
 
