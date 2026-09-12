@@ -1,0 +1,434 @@
+---
+/**
+ * পড়ার সিঁড়ি - a route through the site by how hard the Bangla is to read.
+ *
+ * পসরা already grades its writing by age. This grades it by the letters, which
+ * is a different problem and the one a child learning to read Bangla actually
+ * has: a five-year-old who understands the water cycle perfectly may still be
+ * stopped cold by বাষ্পীভবন. Every rung here is cut from measurements of the
+ * real text (see src/lib/readability.ts), so nobody hand-labelled 787 items
+ * and the rungs cannot drift away from what is on the page.
+ *
+ * It is a route, not a copy of the worlds: reading happens right here through
+ * /api/read, and the link beside it goes to the item's own world where the
+ * model and the three depths are.
+ */
+import Base from '../../layouts/Base.astro';
+import { getWorlds } from '../../lib/content';
+import { buildCorpus } from '../../lib/corpus';
+import { ladder, rungStats, RUNGS } from '../../lib/readability';
+import { bn } from '../../lib/bn';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=1800');
+
+const worlds = await getWorlds();
+const { entries } = await buildCorpus(worlds);
+
+// Graded on the ছোট reading, because that is the one a child learning to read
+// is given. The same item is harder at মাঝারি and harder again at বড়.
+const ranked = ladder(entries, (e) => e.d.l1);
+
+type Row = { n: string; w: string; wn: string; hue: string; ci: number; ii: number; k: string; e: string };
+const rungs = RUNGS.map((r, i) => {
+  const rows = ranked.filter((x) => x.rung === i);
+  const s = rungStats(rows);
+  return {
+    ...r,
+    i,
+    stats: s,
+    items: rows.map(({ item: e }): Row => ({
+      n: e.n, w: e.w, wn: e.wn, hue: e.hue, ci: e.ci, ii: e.ii, k: e.key, e: e.emoji ?? '',
+    })),
+  };
+});
+const total = ranked.length;
+const first = rungs[0]?.items[0];
+
+/**
+ * The payload, squeezed.
+ *
+ * Seven hundred and eighty-seven rows written as objects repeat the field
+ * names, the world's Bangla name, its colour and the category name inside
+ * every progress key: about 150KB of the same few hundred strings. A table of
+ * worlds, a table of categories and tuples that point into them say the same
+ * thing in a fraction of it, and the browser rebuilds the objects once on load.
+ */
+const wIdx = new Map<string, number>();
+const wTable: [slug: string, bn: string, hue: string][] = [];
+const cIdx = new Map<string, number>();
+const cTable: [w: number, ci: number, cat: string][] = [];
+const pack = rungs.map((r) => r.items.map((it) => {
+  if (!wIdx.has(it.w)) { wIdx.set(it.w, wTable.length); wTable.push([it.w, it.wn, it.hue]); }
+  const ck = `${it.w}:${it.ci}`;
+  if (!cIdx.has(ck)) {
+    cIdx.set(ck, cTable.length);
+    // The category name is what the progress key is built from, so it is
+    // stored once here instead of inside every key.
+    cTable.push([wIdx.get(it.w)!, it.ci, it.k.includes(':') ? it.k.slice(0, it.k.lastIndexOf(':')) : '']);
+  }
+  const cat = cTable[cIdx.get(ck)!]![2];
+  // Space keys are body ids, not "category:item", so those travel as-is.
+  return cat && it.k === `${cat}:${it.n}`
+    ? [cIdx.get(ck)!, it.ii, it.n, it.e]
+    : [cIdx.get(ck)!, it.ii, it.n, it.e, it.k];
+}));
+const bootstrap = { w: wTable, c: cTable, r: pack };
+
+const pageUrl = new URL('/ladder/', Astro.site ?? 'https://posora.com').href;
+const schema = [{
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
+    { '@type': 'ListItem', position: 2, name: 'পড়ার সিঁড়ি', item: pageUrl },
+  ],
+}];
+---
+<Base
+  title="পড়ার সিঁড়ি"
+  description={`বাংলা পড়া শেখার একটা সাজানো পথ - পসরার ${bn(total)}টি লেখা সাজানো হয়েছে বাক্যের দৈর্ঘ্য, শব্দের দৈর্ঘ্য আর যুক্তাক্ষরের ঘনত্ব মেপে, সবচেয়ে সহজ থেকে সবচেয়ে কঠিন।`}
+  schema={schema}
+>
+  <div class="wrap page" id="lad" data-total={total}>
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> পড়ার সিঁড়ি</p>
+
+    <header class="hd card">
+      <div>
+        <p class="eyebrow">পড়ার সিঁড়ি</p>
+        <h1>সহজ থেকে শুরু করো</h1>
+        <p class="lede">
+          পসরার সব লেখা এখানে সাজানো আছে - সবচেয়ে সহজ বাংলা নিচে, সবচেয়ে কঠিন উপরে।
+          একটা ধাপ শেষ হলে পরেরটায় ওঠো। কিছু বন্ধ নেই, যেকোনো ধাপ যেকোনো সময় খোলা।
+        </p>
+        <details class="how">
+          <summary>কীভাবে মাপা হয়েছে</summary>
+          <p>
+            প্রতিটি লেখার <b>ছোট</b> পাঠটা মেপে দেখা হয়েছে তিনটা জিনিস: এক বাক্যে গড়ে কয়টা শব্দ,
+            এক শব্দে গড়ে কয়টা অক্ষর, আর একশো শব্দে কয়টা যুক্তাক্ষর। সঙ্গে ধরা হয়েছে ইংরেজি অক্ষর
+            আর সংখ্যা কতটা আছে। এই চারটা মিলিয়ে একটা নম্বর, আর সেই নম্বরে সাজিয়ে ছয়টা সমান ধাপ।
+          </p>
+          <p class="warn">
+            এটা কোনো পরীক্ষা নয় আর কোনো পড়ার বয়স নয়। কোনো শিশুর ওপর যাচাই করা হয়নি -
+            এটা কেবল পসরার নিজের লেখাগুলোকে নিজেদের সঙ্গে তুলনা করে সাজানো, যাতে কোথা থেকে
+            শুরু করবে সেটা বোঝা যায়।
+          </p>
+        </details>
+      </div>
+      <div class="you">
+        <p class="lbl">তুমি এখন</p>
+        <b id="you-rung">{RUNGS[0].name}</b>
+        <span class="ybar" aria-hidden="true"><i id="you-bar"></i></span>
+        <span class="ynote" id="you-note">{bn(total)}টি লেখার একটাও এখনো পড়া হয়নি</span>
+        {first && (
+          <a class="btn btn-primary" id="you-go" href={`/${first.w}/?cat=${first.ci}`} data-w={first.w} data-ci={first.ci} data-ii={first.ii}>
+            পরেরটা পড়ো →
+          </a>
+        )}
+      </div>
+    </header>
+
+    {/* The reader. Server-rendered with the easiest reading on the site, so the
+        page is a page before any script runs and before anything is fetched. */}
+    <section class="card reader" id="reader" style={`--w:${first?.hue ?? 'var(--brand)'}`}>
+      <div class="card-h">
+        <span class="lbl" id="rd-where">{first ? `${first.wn} · সিঁড়ির সবচেয়ে সহজ লেখা` : 'পড়া'}</span>
+        <button type="button" class="say" id="say" hidden>🔊 শুনে নাও</button>
+      </div>
+      <div class="rd-top">
+        <span class="rd-e" aria-hidden="true" id="rd-e">{first?.e || '📖'}</span>
+        <h2 id="rd-name">{first?.n}</h2>
+      </div>
+      <p class="rd-text" id="rd-text">লেখাটা আসছে…</p>
+      <div class="rd-go">
+        <a class="btn" id="rd-link" href={first ? `/${first.w}/?cat=${first.ci}` : '/'}>ভুবনে গিয়ে দেখো →</a>
+        <span class="rd-note" id="rd-note"></span>
+      </div>
+    </section>
+
+    {/* Highest rung first, so the ladder reads as a ladder. Only the bottom
+        rung's chips are rendered here: seven hundred buttons at once is half a
+        megabyte and nobody reads them all anyway. The script fills a rung in
+        the moment it is opened, out of the same data. */}
+    <ol class="rungs" id="rungs">
+      {rungs.slice().reverse().map((r) => (
+        <li class="card rung" data-r={r.i}>
+          <button type="button" class="rh" data-open aria-expanded={r.i === 0 ? 'true' : 'false'}>
+            <span class="rn">{bn(r.i + 1)}</span>
+            <span class="rt">
+              <b>{r.name}</b>
+              <small>{r.note}</small>
+            </span>
+            <span class="rc num" data-n>০ / {bn(r.items.length)}</span>
+            <span class="rx" aria-hidden="true">▾</span>
+          </button>
+          <p class="rmeta">
+            গড়ে এক বাক্যে {bn(Math.round(r.stats.wps))}টি শব্দ · একশো শব্দে {bn(Math.round(r.stats.conj))}টি যুক্তাক্ষর · লেখা {bn(Math.round(r.stats.words))} শব্দের
+          </p>
+          <span class="rbar" aria-hidden="true"><i></i></span>
+          <div class="chips" data-filled={r.i === 0 ? '1' : undefined} hidden={r.i !== 0}>
+            {r.i === 0 && r.items.map((it) => (
+              <button type="button" class="chip" style={`--w:${it.hue}`} data-w={it.w} data-ci={it.ci} data-ii={it.ii} data-k={`${it.w}::${it.k}`}>
+                <span class="ce" aria-hidden="true">{it.e || '·'}</span>{it.n}
+              </button>
+            ))}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <script type="application/json" id="lad-data" set:html={JSON.stringify(bootstrap)} is:inline />
+</Base>
+
+<style>
+  .page { padding-block: 1.25rem 4rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 1rem; display: flex; gap: 0.4rem; }
+  .crumbs a:hover { color: var(--brand); }
+  .card-h { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--line-soft); }
+
+  .hd { display: flex; justify-content: space-between; gap: 2rem; flex-wrap: wrap; padding: 1.4rem 1.5rem; }
+  .hd h1 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); margin-top: 0.3rem; }
+  .lede { color: var(--muted); margin-top: 0.5rem; max-width: 54ch; font-size: 15px; line-height: 1.7; }
+  .how { margin-top: 0.9rem; max-width: 58ch; }
+  .how summary { font-size: 13px; color: var(--brand); cursor: pointer; font-weight: 600; }
+  .how p { font-size: 13px; color: var(--muted); line-height: 1.7; margin-top: 0.6rem; }
+  .how .warn { border-inline-start: 3px solid var(--line); padding-inline-start: 0.8rem; }
+  .you { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; min-width: 230px; }
+  .you b { font-size: 24px; font-weight: 800; line-height: 1.2; }
+  .ybar { display: block; width: 100%; height: 8px; border-radius: 999px; background: var(--sunk); overflow: hidden; margin-top: 0.4rem; }
+  .ybar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--brand); transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
+  .ynote { font-size: 12.5px; color: var(--muted); margin-bottom: 0.6rem; }
+
+  /* ---- reader ---- */
+  .reader { margin-top: 1.1rem; }
+  .say { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .say:hover { border-color: var(--w); color: var(--w); }
+  .say[aria-pressed="true"] { background: var(--w); color: var(--on-brand); border-color: transparent; }
+  .rd-top { display: flex; align-items: center; gap: 0.9rem; padding: 1.1rem 1.1rem 0; }
+  .rd-e { font-size: 34px; line-height: 1; flex: none; }
+  .rd-top h2 { font-size: clamp(1.25rem, 2.8vw, 1.6rem); }
+  .rd-text { padding: 0.8rem 1.1rem 0; font-size: 17px; line-height: 1.9; color: var(--ink-2); max-width: 62ch; }
+  .rd-go { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; padding: 1.1rem; }
+  .rd-note { font-size: 12.5px; color: var(--muted); }
+
+  /* ---- rungs ---- */
+  .rungs { list-style: none; margin: 1.1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+  .rung { padding: 1rem 1.1rem 1.1rem; }
+  .rung.here { border-color: color-mix(in oklab, var(--brand) 40%, var(--line-soft)); box-shadow: var(--shadow); }
+  .rh { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 0.8rem; align-items: center; width: 100%; text-align: start; }
+  .rn { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--sunk); font-weight: 800; font-size: 14px; color: var(--muted); }
+  .rung.here .rn, .rung.full .rn { background: var(--brand); color: var(--on-brand); }
+  .rt { display: flex; flex-direction: column; min-width: 0; }
+  .rt b { font-size: 16px; }
+  .rt small { font-size: 12.5px; color: var(--muted); }
+  .rc { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .rx { color: var(--muted); font-size: 13px; transition: transform 0.2s ease; }
+  .rh[aria-expanded="true"] .rx { transform: rotate(180deg); }
+  .rmeta { font-size: 12px; color: var(--muted); margin-top: 0.55rem; font-variant-numeric: tabular-nums; }
+  .rbar { display: block; height: 6px; border-radius: 999px; background: var(--sunk); overflow: hidden; margin-top: 0.5rem; }
+  .rbar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--brand); transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
+  /* The chips of a closed rung are built when it opens, and Astro's scoped
+     attribute never lands on a node JavaScript made, so these are global. */
+  .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.8rem; }
+  :global(.chip) { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.7rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 13px; color: var(--muted); transition: border-color 0.15s ease, color 0.15s ease; }
+  :global(.chip:hover) { border-color: var(--w); color: var(--w); }
+  :global(.chip.read) { border-color: color-mix(in oklab, var(--brand) 42%, var(--line)); background: color-mix(in oklab, var(--brand) 10%, var(--panel)); color: var(--ink); font-weight: 600; }
+  :global(.chip.on) { outline: 2px solid var(--w); outline-offset: 1px; }
+  :global(.ce) { font-size: 13px; }
+</style>
+
+<script>
+  import { getProgress, markSeen, setProgressScope } from '../../lib/progress';
+  import { beginSession, noteItem } from '../../lib/session';
+  import { makeSpeaker, type Speaker } from '../../lib/speak';
+  import { RUNGS } from '../../lib/readability';
+  import { bn } from '../../lib/bn';
+  import { track } from '../../lib/track';
+
+  type Row = { n: string; w: string; wn: string; hue: string; ci: number; ii: number; k: string; e: string };
+  type Packed = {
+    w: [slug: string, bn: string, hue: string][];
+    c: [w: number, ci: number, cat: string][];
+    r: [c: number, ii: number, n: string, e: string, k?: string][][];
+  };
+
+  const root = document.getElementById('lad')!;
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const TOTAL = +(root.dataset.total ?? 0);
+
+  // Rebuild the rows from the tables the page shipped. See the comment on
+  // `pack` above for why they travel this way.
+  const packed: Packed = JSON.parse(document.getElementById('lad-data')!.textContent!);
+  const rungs: Row[][] = packed.r.map((rows) => rows.map(([ci, ii, n, e, k]) => {
+    const cat = packed.c[ci]!;
+    const world = packed.w[cat[0]]!;
+    return { n, w: world[0], wn: world[1], hue: world[2], ci: cat[1], ii, k: k ?? `${cat[2]}:${n}`, e };
+  }));
+
+  setProgressScope(null);
+  beginSession();
+
+  const seen = new Set<string>();
+  for (const [w, list] of Object.entries(getProgress().seen)) for (const k of list) seen.add(`${w}::${k}`);
+  const read = (r: Row) => seen.has(`${r.w}::${r.k}`);
+
+  /* ---- where you are on the ladder ---- */
+  function render() {
+    let done = 0;
+    const rungEls = [...root.querySelectorAll<HTMLElement>('.rung')];
+    // The rung you are on is the lowest one with anything unread in it: the
+    // ladder is climbed from the bottom, not jumped into at the top.
+    const at = rungs.findIndex((rows) => rows.some((r) => !read(r)));
+    const here = at < 0 ? RUNGS.length - 1 : at;
+
+    rungs.forEach((rows, i) => {
+      const n = rows.filter(read).length;
+      done += n;
+      const el = rungEls.find((x) => +(x.dataset.r ?? -1) === i);
+      if (!el) return;
+      el.querySelector<HTMLElement>('[data-n]')!.textContent = `${bn(n)} / ${bn(rows.length)}`;
+      el.querySelector<HTMLElement>('.rbar i')!.style.width = `${(n / rows.length) * 100}%`;
+      el.classList.toggle('here', i === here && n < rows.length);
+      el.classList.toggle('full', n === rows.length);
+    });
+
+    root.querySelectorAll<HTMLElement>('.chip').forEach((c) => c.classList.toggle('read', seen.has(c.dataset.k ?? '')));
+
+    $('#you-rung').textContent = RUNGS[here]!.name;
+    $('#you-bar').style.width = `${(done / TOTAL) * 100}%`;
+    $('#you-note').textContent = done === 0
+      ? `${bn(TOTAL)}টি লেখার একটাও এখনো পড়া হয়নি`
+      : done >= TOTAL ? 'সিঁড়ির সব কটা লেখাই পড়া হয়ে গেছে।'
+        : `${bn(done)}টি পড়া হয়েছে, আর ${bn(TOTAL - done)}টি বাকি`;
+
+    // The button always points at the next unread thing on your own rung.
+    const next = rungs[here]?.find((r) => !read(r)) ?? rungs.flat().find((r) => !read(r));
+    const go = root.querySelector<HTMLAnchorElement>('#you-go');
+    if (go) {
+      if (next) { go.hidden = false; go.textContent = `পরেরটা পড়ো: ${next.n} →`; go.dataset.w = next.w; go.dataset.ci = String(next.ci); go.dataset.ii = String(next.ii); }
+      else { go.hidden = true; }
+    }
+    return next;
+  }
+
+  /* ---- read aloud, only in a real Bangla voice ---- */
+  const sayBtn = $<HTMLButtonElement>('#say');
+  let speaker: Speaker | null = null;
+  let saying = false;
+  const setSay = (on: boolean) => {
+    saying = on;
+    sayBtn.setAttribute('aria-pressed', String(on));
+    sayBtn.textContent = on ? '⏹ থামাও' : '🔊 শুনে নাও';
+  };
+  void makeSpeaker(() => setSay(false)).then((s) => {
+    speaker = s;
+    // No Bangla voice on this device: the button stays away rather than
+    // reading Bangla in an English voice, which is worse than silence.
+    sayBtn.hidden = !s;
+    if (!s) $('#rd-note').textContent = 'এই যন্ত্রে বাংলা কণ্ঠ নেই, তাই পড়ে শোনানো যাচ্ছে না।';
+  });
+  sayBtn.addEventListener('click', () => {
+    if (!speaker) return;
+    if (saying) { speaker.stop(); setSay(false); return; }
+    const text = $('#rd-text').textContent ?? '';
+    if (!text.trim()) return;
+    speaker.say(text);
+    setSay(true);
+    track('read_aloud', { where: 'ladder' });
+  });
+
+  /* ---- the reader ---- */
+  let loading = 0;
+  async function open(r: Row, mark = true) {
+    const id = ++loading;
+    if (speaker && saying) { speaker.stop(); setSay(false); }
+    root.querySelectorAll<HTMLElement>('.chip').forEach((c) => c.classList.remove('on'));
+    root.querySelector<HTMLElement>(`.chip[data-k="${CSS.escape(`${r.w}::${r.k}`)}"]`)?.classList.add('on');
+    const reader = $('#reader');
+    reader.style.setProperty('--w', r.hue);
+    $('#rd-e').textContent = r.e || '📖';
+    $('#rd-name').textContent = r.n;
+    $('#rd-where').textContent = r.wn;
+    $('#rd-text').textContent = 'লেখাটা আসছে…';
+    $<HTMLAnchorElement>('#rd-link').href = r.w === 'space' ? '/space/' : `/${r.w}/?cat=${r.ci}`;
+    $<HTMLAnchorElement>('#rd-link').textContent = `${r.wn} ভুবনে গিয়ে দেখো →`;
+    try {
+      const res = await fetch(`/api/read?w=${encodeURIComponent(r.w)}&c=${r.ci}&i=${r.ii}`);
+      const data = (await res.json()) as { ok?: boolean; l1?: string; fun?: string };
+      if (id !== loading) return;
+      if (!data.ok || !data.l1) throw new Error('no');
+      $('#rd-text').textContent = data.l1;
+      $('#rd-note').textContent = data.fun ?? '';
+    } catch {
+      if (id !== loading) return;
+      $('#rd-text').textContent = 'লেখাটা আনা গেল না। ভুবনে গিয়ে পড়ে আসতে পারো।';
+    }
+    if (mark && markSeen(r.w, r.k)) {
+      seen.add(`${r.w}::${r.k}`);
+      noteItem(r.w);
+      render();
+    }
+    reader.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+
+  const rowAt = (w: string, ci: number, ii: number) =>
+    rungs.flat().find((r) => r.w === w && r.ci === ci && r.ii === ii);
+
+  /** Build a rung's chips the first time it is opened, from the same data. */
+  function fill(rung: HTMLElement) {
+    const box = rung.querySelector<HTMLElement>('.chips')!;
+    if (box.dataset.filled) return;
+    const rows = rungs[+(rung.dataset.r ?? 0)] ?? [];
+    const frag = document.createDocumentFragment();
+    for (const r of rows) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = read(r) ? 'chip read' : 'chip';
+      b.style.setProperty('--w', r.hue);
+      b.dataset.w = r.w; b.dataset.ci = String(r.ci); b.dataset.ii = String(r.ii); b.dataset.k = `${r.w}::${r.k}`;
+      const e = document.createElement('span');
+      e.className = 'ce'; e.setAttribute('aria-hidden', 'true'); e.textContent = r.e || '·';
+      b.append(e, document.createTextNode(r.n));
+      frag.append(b);
+    }
+    box.replaceChildren(frag);
+    box.dataset.filled = '1';
+  }
+
+  function toggle(rung: HTMLElement, open?: boolean) {
+    const head = rung.querySelector<HTMLElement>('.rh')!;
+    const box = rung.querySelector<HTMLElement>('.chips')!;
+    const on = open ?? head.getAttribute('aria-expanded') !== 'true';
+    if (on) fill(rung);
+    head.setAttribute('aria-expanded', String(on));
+    box.hidden = !on;
+  }
+
+  root.addEventListener('click', (e) => {
+    const head = (e.target as HTMLElement).closest<HTMLElement>('.rh');
+    if (head) { toggle(head.closest<HTMLElement>('.rung')!); return; }
+    const chip = (e.target as HTMLElement).closest<HTMLElement>('.chip');
+    if (chip) {
+      const r = rowAt(chip.dataset.w!, +chip.dataset.ci!, +chip.dataset.ii!);
+      if (r) { void open(r); track('ladder_read', { world: r.w, rung: rungs.findIndex((x) => x.includes(r)) }); }
+      return;
+    }
+    const go = (e.target as HTMLElement).closest<HTMLElement>('#you-go');
+    if (go) {
+      e.preventDefault();
+      const r = rowAt(go.dataset.w!, +go.dataset.ci!, +go.dataset.ii!);
+      if (r) { void open(r); track('ladder_next', { world: r.w }); }
+    }
+  });
+
+  const next = render();
+  // Open the rung the climber is actually on, not always the bottom one.
+  const hereEl = root.querySelector<HTMLElement>('.rung.here');
+  if (hereEl) {
+    root.querySelectorAll<HTMLElement>('.rung').forEach((r) => { if (r !== hereEl) toggle(r, false); });
+    toggle(hereEl, true);
+  }
+  // Land on the next thing to read. Not marked as read: arriving on the page
+  // is not reading the thing.
+  if (next) void open(next, false);
+</script>

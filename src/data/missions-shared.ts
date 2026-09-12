@@ -92,6 +92,80 @@ export const MOUTH = {
   small: '<path d="M40 70 Q50 76 60 70" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>',
 };
 
+/* ---------------------------------------------------------------------------
+ * Variants
+ *
+ * Every mission was authored as a fixed list of rounds played in a fixed
+ * order, which made the second attempt a memory test rather than a game. The
+ * rounds themselves are worth keeping - they are written, checked prose - so
+ * the fix is not to generate new ones but to stop playing all of them every
+ * time. A mission with seven puzzles that hands you five of them, in an order
+ * drawn from the day and the attempt, is twenty-one different games.
+ *
+ * Two types are deliberately left whole. A `path` is a journey: food does not
+ * reach the small intestine before the stomach, so its stops can be neither
+ * cut nor reordered. A `build` is one budget against one set of requirements;
+ * removing a pool item can make it unsolvable. Both already shuffle what they
+ * can - the choices at each stop, the order of the pool.
+ * ------------------------------------------------------------------------- */
+import { rng, hash, shuffle } from '../lib/rand';
+
+/** How many rounds one attempt plays, or null to play the whole thing. */
+export const PLAY_LENGTH: Record<Mission['type'], number | null> = {
+  order: null, path: null, build: null,
+  identify: 5, sort: 9, choice: 4, calc: 6,
+};
+
+/** Take `n` from a list, seeded, keeping the sample stable for one attempt. */
+const sample = <T>(list: readonly T[], n: number, seed: string): T[] =>
+  shuffle(list, rng(hash(seed))).slice(0, Math.min(n, list.length));
+
+/**
+ * One attempt's arrangement of a mission. The same seed always gives the same
+ * arrangement, so a reload mid-mission does not shuffle the board underneath
+ * the player.
+ */
+export function varyMission(m: Mission, seed: string): Mission {
+  const want = PLAY_LENGTH[m.type];
+  switch (m.type) {
+    case 'order':
+      // Three chains, kept whole because each is a complete idea, but the
+      // order they arrive in is not part of the idea.
+      return { ...m, rounds: shuffle(m.rounds, rng(hash(`${seed}:o`))) };
+    case 'identify':
+      return { ...m, rounds: sample(m.rounds, want!, `${seed}:i`) };
+    case 'choice':
+      return { ...m, rounds: sample(m.rounds, want!, `${seed}:c`) };
+    case 'calc':
+      return { ...m, rounds: sample(m.rounds, want!, `${seed}:n`) };
+    case 'sort': {
+      // Sampling has to leave every bucket represented, or a bucket sits on
+      // screen all game with nothing that belongs in it, which teaches the
+      // wrong thing about the category.
+      const r = rng(hash(`${seed}:s`));
+      const byBucket = new Map<number, SortItem[]>();
+      for (const it of m.items) (byBucket.get(it.bucket) ?? byBucket.set(it.bucket, []).get(it.bucket)!).push(it);
+      const seeded = [...byBucket.values()].map((list) => shuffle(list, r)[0]!);
+      const rest = shuffle(m.items.filter((it) => !seeded.includes(it)), r);
+      const n = Math.max(seeded.length, Math.min(want!, m.items.length));
+      return { ...m, items: shuffle([...seeded, ...rest.slice(0, n - seeded.length)], r) };
+    }
+    default:
+      return m;
+  }
+}
+
+/** What changes between attempts, said plainly, or null when nothing does. */
+export function varies(m: Mission): string | null {
+  const want = PLAY_LENGTH[m.type];
+  const [total, unit] = fullLength(m);
+  if (want === null) return m.type === 'path' ? null : 'প্রতিবার ক্রম বদলায়';
+  if (total <= want) return 'প্রতিবার ক্রম বদলায়';
+  return `প্রতিবার ${bnd(total)}টির মধ্যে ${bnd(want)}টি আসে`;
+}
+const BND = '০১২৩৪৫৬৭৮৯';
+const bnd = (n: number) => String(n).replace(/\d/g, (d) => BND[+d]!);
+
 /** What kind of game this is, for the card in the rail. */
 export function missionKind(m: Mission): string {
   switch (m.type) {
@@ -104,8 +178,8 @@ export function missionKind(m: Mission): string {
     case 'build': return 'সাজিয়ে তোলার খেলা';
   }
 }
-/** How long it is, counted in whatever unit that game actually has. */
-export function missionLength(m: Mission): [number, string] {
+/** Everything the mission holds, counted in whatever unit that game has. */
+export function fullLength(m: Mission): [number, string] {
   switch (m.type) {
     case 'order': return [m.rounds.length, 'রাউন্ড'];
     case 'path': return [m.stops.length, 'ধাপ'];
@@ -115,4 +189,15 @@ export function missionLength(m: Mission): [number, string] {
     case 'calc': return [m.rounds.length, 'প্রশ্ন'];
     case 'build': return [m.need.length, 'শর্ত'];
   }
+}
+
+/**
+ * How long one attempt is, which is what the card should promise. A mission
+ * holding seven puzzles and dealing five must say five, or the progress bar
+ * and the card disagree in front of the child.
+ */
+export function missionLength(m: Mission): [number, string] {
+  const [total, unit] = fullLength(m);
+  const want = PLAY_LENGTH[m.type];
+  return [want === null ? total : Math.min(want, total), unit];
 }

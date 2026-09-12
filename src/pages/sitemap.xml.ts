@@ -24,6 +24,7 @@ export const GET: APIRoute = async ({ site }) => {
     { loc: '/space/', priority: '0.9' },
     { loc: '/family/', priority: '0.9' },
     { loc: '/collection/', priority: '0.7' },
+    { loc: '/ladder/', priority: '0.8' },
     { loc: '/printables/', priority: '0.9' },
     { loc: '/schools/', priority: '0.8' },
     { loc: '/math/measurement/', priority: '0.7' },

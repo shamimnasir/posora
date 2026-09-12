@@ -19,7 +19,7 @@ import { getMember, hasPlan, activeChild } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
 import { catEmoji } from '../../data/cat-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
-import { missionSpec, missionKind, missionLength } from '../../data/missions';
+import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
 
 export const prerender = false;
 
@@ -336,6 +336,9 @@ const schema = [
             </div>
           </div>
           <h3 class="item-name" id="item-name">{first.items[0]}</h3>
+          {/* Shown only where a real Bangla voice exists; see src/lib/speak.ts
+              for why an English voice reading Bangla is worse than silence. */}
+          <button type="button" class="say" id="say" hidden>🔊 শুনে নাও</button>
           <div class="item-chips" id="item-chips">
             {firstItem?.chips.map((c) => <span class="pill">{c}</span>)}
           </div>
@@ -364,6 +367,7 @@ const schema = [
                       <span class="m-kind">{missionKind(spec)}</span>
                       <span class="m-len">{`${bn(missionLength(spec)[0])} ${missionLength(spec)[1]}`}</span>
                       <span class="m-hearts" aria-hidden="true">♥♥♥</span>
+                      {varies(spec) && <span class="m-vary" title={`${varies(spec)}, তাই প্রতিবার নতুন খেলা`}>🎲 নতুন</span>}
                     </span>
                   </div>
                   <span class="m-go">
@@ -714,6 +718,9 @@ const schema = [
   .seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
   .item-name { font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; padding: 0.8rem 0.95rem 0; line-height: 1.3; }
   .item-chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 0.5rem 0.95rem 0; }
+  .say { display: inline-flex; align-items: center; gap: 0.3rem; margin: 0.5rem 0.95rem 0; padding: 0.28rem 0.75rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  .say:hover { border-color: var(--w); color: var(--w); }
+  .say[aria-pressed="true"] { background: var(--w); color: var(--on-brand); border-color: transparent; }
   .text { padding: 0.7rem 0.95rem 0.5rem; font-size: 14.5px; color: var(--ink-2); line-height: 1.75; }
   .fun { margin: 0 0.95rem 0.95rem; padding: 0.55rem 0.75rem; border-radius: 10px; background: color-mix(in oklab, var(--sun) 16%, var(--panel)); font-size: 13px; display: flex; flex-direction: column; gap: 0.1rem; }
   .fun .lbl { color: color-mix(in oklab, var(--sun) 60%, var(--ink)); }
@@ -765,6 +772,7 @@ const schema = [
   .m-kind { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: color-mix(in oklab, var(--w) 16%, var(--panel)); color: var(--w); }
   .m-len { font-family: var(--font-mono); font-size: 9.5px; color: var(--muted); letter-spacing: 0.04em; }
   .m-hearts { font-size: 10px; color: #e0556a; letter-spacing: 0.08em; }
+  .m-vary { font-size: 10px; color: var(--w); font-weight: 700; }
   .m-go { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   .m-stars { font-size: 13px; letter-spacing: 0.06em; color: var(--sun); }
   .m-play { font-size: 11.5px; font-weight: 800; padding: 0.22rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); color: var(--w); transition: background 0.18s ease, color 0.18s ease; }
@@ -866,6 +874,7 @@ const schema = [
   import { levelOf, AWARDS, awardKey, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
   import { goalParts, goalDone, goalMet } from '../../lib/daily';
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
+  import { makeSpeaker, type Speaker } from '../../lib/speak';
   import { bn, pad2 } from '../../lib/bn';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import { setProgressScope } from '../../lib/progress';
@@ -1204,9 +1213,35 @@ const schema = [
   const seg = [...root.querySelectorAll<HTMLButtonElement>('.seg [data-l]')];
   const itemName = $('#item-name'), itemChips = $('#item-chips'), itemText = $('#item-text');
   const funWrap = $('#item-fun-wrap'), itemFun = $('#item-fun'), labNote = $('#lab-note');
+
+  /* ---- শুনে নাও: the reading, out loud, for a child who cannot decode it yet ---- */
+  const sayBtn = $<HTMLButtonElement>('#say');
+  let speaker: Speaker | null = null;
+  let saying = false;
+  function setSay(on: boolean) {
+    saying = on;
+    sayBtn.setAttribute('aria-pressed', String(on));
+    sayBtn.textContent = on ? '⏹ থামাও' : '🔊 শুনে নাও';
+  }
+  void makeSpeaker(() => setSay(false)).then((s) => {
+    speaker = s;
+    // No Bangla voice installed: no button. An English voice reading Bangla
+    // teaches a child the wrong sounds with total confidence.
+    if (s) sayBtn.hidden = !readable(cats[curCat]);
+  });
+  sayBtn.addEventListener('click', () => {
+    if (!speaker) return;
+    if (saying) { speaker.stop(); setSay(false); return; }
+    const text = `${itemName.textContent}। ${itemText.textContent}`;
+    speaker.say(text);
+    setSay(true);
+    track('read_aloud', { world: slug, level });
+  });
   function renderRead() {
     const c = cats[curCat];
     seg.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.l === level)));
+    // A new reading stops the old one mid-sentence rather than talking over it.
+    if (saying) { speaker?.stop(); setSay(false); }
     if (readable(c)) {
       const d = c.detail![curItem];
       itemName.hidden = false; itemName.textContent = c.items[curItem];
@@ -1214,10 +1249,12 @@ const schema = [
       itemText.textContent = d[level];
       funWrap.hidden = false; itemFun.textContent = d.fun;
       labNote.hidden = true;
+      sayBtn.hidden = !speaker;
       return;
     }
     itemChips.replaceChildren();
     funWrap.hidden = true;
+    sayBtn.hidden = true;
     if (c.lab) {
       itemName.hidden = false; itemName.textContent = c.n;
       itemText.textContent = 'এই বিভাগের প্রতিটি আইটেম আলাদা একটা চালু টুল - পড়ার বদলে সরাসরি নেড়েচেড়ে দেখা যায়।';
@@ -1560,7 +1597,7 @@ const schema = [
   });
 
   renderChips(); renderRead(); renderCrumbs(); renderGlance(); renderRecords();
-  if (readable(cats[0])) { if (markSeen(slug, keyOf(0, 0)) && childId) { pushSeen(slug, keyOf(0, 0)); noteItem(slug); } }
+  if (readable(cats[0]) && markSeen(slug, keyOf(0, 0))) { noteItem(slug); if (childId) pushSeen(slug, keyOf(0, 0)); }
   renderProgress();
   renderChips();
   $('#extras').hidden = !readable(cats[0]);

@@ -41,6 +41,7 @@ body.mz-open { overflow: hidden; }
   .mz-intro { text-align: center; padding: 1rem 0.5rem 0.5rem; }
   .mz-rule { font-size: 1.05rem; line-height: 1.7; max-width: 46ch; margin: 0 auto; }
   .mz-rule-s { margin: 0.9rem auto 0; max-width: 44ch; font-size: 12.5px; line-height: 1.7; color: rgba(226, 235, 245, 0.7); }
+  .mz-vary { margin: 0.8rem auto 0; max-width: 44ch; font-size: 12.5px; line-height: 1.6; color: var(--w); font-weight: 600; }
   .mz-btn { font-size: 14px; font-weight: 800; padding: 0.6rem 1.3rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.1); color: #fff; transition: transform 0.15s ease, background 0.15s ease; }
   .mz-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.2); }
   .mz-primary { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 55%, #ffd76a)); border-color: transparent; color: #0d1322; }

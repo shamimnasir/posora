@@ -82,6 +82,26 @@ converts a child's attention into a request for money.
 3D figure on a shelf, with the ones not yet opened standing beside them as pale
 ghosts. Nothing is locked behind anything.
 
+## পড়ার সিঁড়ি, the reading ladder
+
+[পড়ার সিঁড়ি](${origin}/ladder/) sorts every reading on the site by how hard the
+Bangla itself is to decode, which is a different question from the age grading
+above. The score is computed from the text: words per sentence, characters per
+word, conjuncts (যুক্তাক্ষর, counted exactly by the hasant U+09CD between two
+consonants) per hundred words, and how much Latin script and how many digits
+appear. Those four are combined and the corpus cut into six equal rungs, so the
+boundaries come from this site's own writing rather than from thresholds
+someone typed in.
+
+It is not a reading age and has not been validated against any child; it ranks
+this site's writing against itself so a learner knows where to start. The page
+says exactly that.
+
+Readings can also be played aloud where the device has a Bangla voice
+installed, using the browser's own speech synthesis. No audio is shipped and no
+text is sent anywhere. Where no Bangla voice exists the control is not shown,
+because an English voice reading Bangla produces confident nonsense.
+
 ## Worlds
 
 ${worldLines}

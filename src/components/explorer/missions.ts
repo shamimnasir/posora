@@ -10,6 +10,7 @@
  * (Astro's scoped CSS never reaches nodes made at runtime).
  */
 import type { Mission, OrderRound, IdRound, PathStop, SortItem, ChoiceRound, CalcRound, BuildItem } from '../../data/missions';
+import { varyMission, varies } from '../../data/missions';
 import { bn } from '../../lib/bn';
 import { confetti, chime } from '../../lib/game';
 
@@ -27,7 +28,18 @@ const shuffle = <T,>(a: T[]) => { const b = a.slice(); for (let i = b.length - 1
 // panel never appearing unstyled.
 import '../../styles/mission-panel.css';
 
-export function playMission(spec: Mission, o: Opts): { close(): void } {
+export function playMission(base: Mission, o: Opts): { close(): void } {
+  /**
+   * Each attempt gets its own deal: which rounds come, and in what order.
+   * The seed changes on every restart, so "আবার খেলো" is a new game rather
+   * than the same seven puzzles in the same seven places. Held in a variable
+   * rather than recomputed, so a mid-mission repaint cannot reshuffle the
+   * board under the player.
+   */
+  let attempt = 0;
+  let spec = varyMission(base, `${Date.now()}:${attempt}`);
+  const varyNote = varies(base);
+
   /* ---- shell ---- */
   // only ever one mission panel on screen: a second one would stack on the first
   document.querySelectorAll('.mz').forEach((n) => n.remove());
@@ -109,7 +121,12 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
     chime('win'); burstAt(stamp, true);
     o.onDone({ stars, points, mistakes, seconds, perfect });
   }
-  function restart() { lives = HEARTS; points = 0; streak = 0; mistakes = 0; done = 0; over = false; combo.hidden = true; scoreN.textContent = '০'; renderHearts(); setProgress(); run(); }
+  function restart() {
+    attempt++;
+    spec = varyMission(base, `${Date.now()}:${attempt}`);
+    lives = HEARTS; points = 0; streak = 0; mistakes = 0; done = 0; over = false;
+    combo.hidden = true; scoreN.textContent = '০'; renderHearts(); setProgress(); run();
+  }
   function shut() { document.body.classList.remove('mz-open'); wrap.remove(); document.removeEventListener('keydown', onKey); o.onClose(); }
   const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') shut(); };
   document.addEventListener('keydown', onKey);
@@ -121,6 +138,9 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
     body.replaceChildren();
     const card = el('div', 'mz-intro');
     card.append(el('p', 'mz-rule', text), el('p', 'mz-rule-s', `তিনটি হৃদয় ♥♥♥ আছে, ভুল হলে একটা যায়। যত তাড়াতাড়ি, তত বেশি পয়েন্ট; পরপর ${bn(COMBO_AT)}টি ঠিক হলে কম্বো ×২।`));
+    // The child should know the second attempt is a different game, or they
+    // will not take one.
+    if (varyNote) card.append(el('p', 'mz-vary', `🎲 ${varyNote}, তাই প্রতিবার নতুন খেলা।`));
     const go = el('button', 'mz-btn mz-primary mz-go', 'শুরু করো ▶'); go.type = 'button'; go.addEventListener('click', () => { chime('tick'); start(); });
     card.append(go); body.append(card); go.focus();
     foot.textContent = '';
@@ -417,13 +437,16 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
   }
 
   function run() {
-    if (spec.type === 'order') intro(spec.intro, () => runOrder(spec.rounds, spec.askFirst, spec.askNext, spec.wrong));
-    else if (spec.type === 'path') intro(spec.intro, () => runPath(spec.token, spec.tokenName, spec.stops));
-    else if (spec.type === 'sort') intro(spec.intro, () => runSort(spec.buckets, spec.items));
-    else if (spec.type === 'choice') intro(spec.intro, () => runChoice(spec.rounds));
-    else if (spec.type === 'calc') intro(spec.intro, () => runCalc(spec.unit, spec.rounds));
-    else if (spec.type === 'build') intro(spec.intro, () => runBuild(spec.budget, spec.budgetLabel, spec.unit, spec.need, spec.pool, spec.submit, spec.note));
-    else intro(spec.intro, () => runIdentify(spec.caption, spec.rounds));
+    // This attempt's deal, pinned to a const so the narrowing holds inside the
+    // callbacks; `spec` itself is reassigned on every restart.
+    const s = spec;
+    if (s.type === 'order') intro(s.intro, () => runOrder(s.rounds, s.askFirst, s.askNext, s.wrong));
+    else if (s.type === 'path') intro(s.intro, () => runPath(s.token, s.tokenName, s.stops));
+    else if (s.type === 'sort') intro(s.intro, () => runSort(s.buckets, s.items));
+    else if (s.type === 'choice') intro(s.intro, () => runChoice(s.rounds));
+    else if (s.type === 'calc') intro(s.intro, () => runCalc(s.unit, s.rounds));
+    else if (s.type === 'build') intro(s.intro, () => runBuild(s.budget, s.budgetLabel, s.unit, s.need, s.pool, s.submit, s.note));
+    else intro(s.intro, () => runIdentify(s.caption, s.rounds));
   }
   renderHearts(); setProgress(); run();
   return { close: shut };

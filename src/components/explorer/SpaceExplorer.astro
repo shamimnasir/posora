@@ -2,7 +2,7 @@
 import { bodies, branchesFor, FACTS, METRICS, SPEEDS, EARTH_DIAMETER_KM, type Body } from '../../data/space';
 import { bn, pad2, bnNum, bnDuration } from '../../lib/bn';
 import { worlds } from '../../data/worlds';
-import { missionSpec, missionKind, missionLength } from '../../data/missions';
+import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
 import { AWARDS, awardKey } from '../../lib/game';
 import { bodyEmoji } from '../../data/cat-emoji';
 interface Props { current: Body }
@@ -212,6 +212,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
                   <span class="m-kind">{missionKind(spec)}</span>
                   <span class="m-len">{`${bn(missionLength(spec)[0])} ${missionLength(spec)[1]}`}</span>
                   <span class="m-hearts" aria-hidden="true">♥♥♥</span>
+                  {varies(spec) && <span class="m-vary" title={`${varies(spec)}, তাই প্রতিবার নতুন খেলা`}>🎲 নতুন</span>}
                 </span>
               </div>
               <span class="m-go">
@@ -555,6 +556,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .m-kind { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: color-mix(in oklab, var(--w) 16%, var(--panel)); color: var(--w); }
   .m-len { font-family: var(--font-mono); font-size: 9.5px; color: var(--muted); letter-spacing: 0.04em; }
   .m-hearts { font-size: 10px; color: #e0556a; letter-spacing: 0.08em; }
+  .m-vary { font-size: 10px; color: var(--w); font-weight: 700; }
   .m-go { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   .m-stars { font-size: 13px; letter-spacing: 0.06em; color: var(--sun); }
   .m-play { font-size: 11.5px; font-weight: 800; padding: 0.22rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); color: var(--w); transition: background 0.18s ease, color 0.18s ease; }

@@ -107,7 +107,10 @@ const schema = [
           <section class="card thing" style={`--w:${item.hue}`}>
             <div class="card-h">
               <span class="lbl">আজকের জিনিস</span>
-              <a class="lbl wlink" href={`/${item.w}/`}>{item.wn} →</a>
+              <span class="hrow">
+                <button type="button" class="say" id="say" hidden>🔊 শুনে নাও</button>
+                <a class="lbl wlink" href={`/${item.w}/`}>{item.wn} →</a>
+              </span>
             </div>
             <div class="th-top">
               <span class="th-e" aria-hidden="true">{item.emoji ?? '✨'}</span>
@@ -310,6 +313,10 @@ const schema = [
   @media (max-width: 1000px) { .cols { grid-template-columns: 1fr; } .rail { position: static; } }
 
   /* ---- today's thing ---- */
+  .hrow { display: inline-flex; align-items: center; gap: 0.7rem; }
+  .say { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.7rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  .say:hover { border-color: var(--w); color: var(--w); }
+  .say[aria-pressed="true"] { background: var(--w); color: var(--on-brand); border-color: transparent; }
   .th-top { display: flex; gap: 1rem; align-items: center; padding: 1.1rem 1.1rem 0.5rem; }
   .th-e { font-size: 40px; line-height: 1; flex: none; }
   .th-top h2 { font-size: clamp(1.3rem, 3vw, 1.75rem); }
@@ -386,6 +393,7 @@ const schema = [
   import { getProgress, markSeen, addXp, finishTask, todayState, visitDays, freezeCount, setProgressScope } from '../../lib/progress';
   import { goalParts, goalDone, goalMet, MILESTONES, nextMilestone, GOAL_NEW_ITEMS, DAILY_QUIZ_LENGTH, type DailyQuestion, type OddRound } from '../../lib/daily';
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
+  import { makeSpeaker, type Speaker } from '../../lib/speak';
   import { confetti, chime } from '../../lib/game';
   import { bn } from '../../lib/bn';
   import { track, trackParentPrompt } from '../../lib/track';
@@ -492,6 +500,27 @@ const schema = [
       track('milestone', { at: mile.at });
       renderStreak();
     }, 700);
+  }
+
+  /* ---- শুনে নাও, for the reader who is still learning to read ---- */
+  const sayBtn = root.querySelector<HTMLButtonElement>('#say');
+  if (sayBtn) {
+    let speaker: Speaker | null = null;
+    let saying = false;
+    const setSay = (on: boolean) => {
+      saying = on;
+      sayBtn.setAttribute('aria-pressed', String(on));
+      sayBtn.textContent = on ? '⏹ থামাও' : '🔊 শুনে নাও';
+    };
+    void makeSpeaker(() => setSay(false)).then((s) => { speaker = s; sayBtn.hidden = !s; });
+    sayBtn.addEventListener('click', () => {
+      if (!speaker) return;
+      if (saying) { speaker.stop(); setSay(false); return; }
+      const name = root.querySelector('.th-top h2')?.textContent ?? '';
+      speaker.say(`${name}। ${root.querySelector('.th-text')?.textContent ?? ''}`);
+      setSay(true);
+      track('read_aloud', { where: 'today' });
+    });
   }
 
   /* ---- আজকের জিনিস counts as reading it ---- */
