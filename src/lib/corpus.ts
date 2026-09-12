@@ -17,10 +17,15 @@ import { EXPLORERS, itemKey } from './explorers';
 import { bodies } from '../data/space';
 import { spaceExplorer } from '../data/space-explorer';
 import { emojiFor } from '../data/item-emoji';
+import { bodyEmoji } from '../data/cat-emoji';
+import { collectionFor } from '../data/collections';
 import type { CorpusItem } from './daily';
 
-/** One readable item plus its reading and the key progress is stored under. */
-export type Entry = CorpusItem & { d: ItemDetail; key: string; emoji?: string; href: string };
+/**
+ * One readable item plus its reading, the key progress is stored under, and
+ * the figure that stands for it on the shelf where it has one of its own.
+ */
+export type Entry = CorpusItem & { d: ItemDetail; key: string; emoji?: string; href: string; fig?: string };
 
 /** A whole category, which is what the quiz and odd-one-out draw from. */
 export type PoolCat = {
@@ -44,13 +49,13 @@ export async function buildCorpus(worlds?: World[]): Promise<{ entries: Entry[];
     if (w.open) {
       // Space. The tracked unit is a body, so those are the entries; the
       // explorer's deeper categories still feed the question pool.
-      for (const b of bodies) {
+      bodies.forEach((b, ii) => {
         entries.push({
-          w: w.slug, wn: w.bn, hue: w.hue, c: SPACE_CAT, ci: 0, n: b.bn, ii: 0,
+          w: w.slug, wn: w.bn, hue: w.hue, c: SPACE_CAT, ci: 0, n: b.bn, ii,
           d: { chips: b.chips, l1: b.l1, l2: b.l2, l3: b.l3, fun: b.fun },
-          key: b.id, href: `/space/${b.id}/`,
+          key: b.id, href: `/space/${b.id}/`, emoji: bodyEmoji(b.id),
         });
-      }
+      });
       cats.push({
         w: w.slug, wn: w.bn, hue: w.hue, ci: 0, c: SPACE_CAT,
         items: bodies.map((b) => b.bn),
@@ -73,11 +78,13 @@ export async function buildCorpus(worlds?: World[]): Promise<{ entries: Entry[];
       // that keeps an unwritten item out of today's card.
       if (!d || d.length !== c.items.length || c.lab) return;
       cats.push({ w: w.slug, wn: w.bn, hue: w.hue, ci, c: c.n, items: c.items, detail: d });
+      const col = collectionFor(w.slug, c.n);
       c.items.forEach((n, ii) => {
         entries.push({
           w: w.slug, wn: w.bn, hue: w.hue, c: c.n, ci, n, ii,
           d: d[ii]!, key: itemKey(c.n, n), emoji: emojiFor(w.slug, n),
-          href: `/${w.slug}/#${encodeURIComponent(c.n)}`,
+          href: `/${w.slug}/?cat=${ci}`,
+          fig: col ? (col.items[n] ?? col.fallback) : undefined,
         });
       });
     });

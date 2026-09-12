@@ -1,0 +1,352 @@
+---
+/**
+ * সংগ্রহশালা - everything you have opened, standing on a shelf.
+ *
+ * Progress was a bar and a number: true, but not something a child crosses the
+ * room to show anybody. This is the same fact as a place. Every item opened is
+ * an object on a shelf; every item not yet opened is an empty pedestal next to
+ * it. Nothing is locked and nothing is for sale - the gaps are the point, and
+ * the way to fill one is to go and read the thing.
+ *
+ * The wall of categories is rendered here on the server, so the page is a full
+ * page before any script runs; the browser only marks which slots are filled,
+ * because only the browser knows that.
+ */
+import Base from '../../layouts/Base.astro';
+import { getWorlds } from '../../lib/content';
+import { buildCorpus } from '../../lib/corpus';
+import { catEmoji } from '../../data/cat-emoji';
+import { COVERAGE } from '../../lib/coverage';
+import { bn } from '../../lib/bn';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=900');
+
+const worlds = await getWorlds();
+const { entries } = await buildCorpus(worlds);
+const cov = COVERAGE;
+
+/**
+ * One shelf per category, in world order.
+ *
+ * The slots are tuples rather than objects, and the progress key is sent only
+ * where it is not simply "category:item" - which is space, where the key is the
+ * body id. Eight hundred repetitions of a field name is a real download on a
+ * phone in Rangpur, and this page already has to carry the whole catalogue.
+ */
+type Slot = [name: string, figure: string, emoji: string, key?: string];
+type Shelf = { w: string; wn: string; hue: string; c: string; ci: number; emoji: string; slots: Slot[] };
+const shelves: Shelf[] = [];
+for (const e of entries) {
+  let s = shelves.find((x) => x.w === e.w && x.c === e.c);
+  if (!s) {
+    s = { w: e.w, wn: e.wn, hue: e.hue, c: e.c, ci: e.ci, emoji: catEmoji(e.w, e.c), slots: [] };
+    shelves.push(s);
+  }
+  const derived = `${e.c}:${e.n}`;
+  s.slots.push(e.key === derived ? [e.n, e.fig ?? '', e.emoji ?? ''] : [e.n, e.fig ?? '', e.emoji ?? '', e.key]);
+}
+const total = entries.length;
+const first = shelves[0];
+---
+<Base
+  title="সংগ্রহশালা"
+  description={`তুমি যা যা খুলে দেখেছ, সব এক তাকে সাজানো। ${bn(total)}টি জিনিসের ঘর - যেগুলো এখনো দেখোনি, সেগুলোর জায়গা ফাঁকা পড়ে আছে।`}
+>
+  <div class="wrap page" id="coll" data-total={total}>
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> সংগ্রহশালা</p>
+
+    <header class="hd card">
+      <div>
+        <p class="eyebrow">সংগ্রহশালা</p>
+        <h1>তোমার তাক</h1>
+        <p class="lede">
+          যেটাই খুলে দেখেছ, সেটাই এখানে এসে দাঁড়িয়েছে। যেগুলো এখনো দেখোনি, তাদের জায়গা ফাঁকা -
+          কিছু বন্ধ নেই, শুধু এখনো যাওয়া হয়নি।
+        </p>
+        <p class="fine">
+          পসরায় লেখা আছে {bn(cov.covered)}টি জিনিসের কথা। তার মধ্যে {bn(total)}টি আলাদা করে
+          খোলা যায়, তাই তাকে ঠিক ততগুলো জায়গা। বাকিগুলো মহাকাশের ভেতরের অংশ আর হাতে-কলমে
+          পাতা, যেগুলো একেকটা করে গোনা হয় না।
+        </p>
+      </div>
+      <div class="tally">
+        <b class="num" id="have">০</b>
+        <span class="lbl">/ {bn(total)} সংগ্রহে</span>
+        <span class="tbar" aria-hidden="true"><i id="tbar"></i></span>
+        <span class="tnote" id="tnote">শুরু করতে যেকোনো ভুবনে যাও</span>
+      </div>
+    </header>
+
+    <div class="cols">
+      <aside class="wall card">
+        <div class="card-h"><span class="lbl">সব তাক</span><span class="lbl num" id="wall-n">{bn(shelves.length)}টি</span></div>
+        <div class="tiles" id="tiles">
+          {shelves.map((s, i) => (
+            <button type="button" class="tile" data-i={i} style={`--w:${s.hue}`} aria-pressed={i === 0 ? 'true' : 'false'}>
+              <span class="te" aria-hidden="true">{s.emoji}</span>
+              <span class="tt">
+                <b>{s.c}</b>
+                <small>{s.wn}</small>
+              </span>
+              <span class="tn num" data-n>০/{bn(s.slots.length)}</span>
+              <span class="tbar sm" aria-hidden="true"><i></i></span>
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <div class="mid">
+        <section class="card stage">
+          <div class="card-h">
+            <span class="lbl" id="sh-cat">{shelves[0]?.c}</span>
+            <span class="lbl num" id="sh-n"></span>
+          </div>
+          <div class="host" id="shelf-host" role="img" aria-label="সংগ্রহের তাক - থ্রিডি">
+            <canvas></canvas>
+            <div class="loading" id="sh-loading" aria-hidden="true"><span></span><span></span><span></span><p>তাক সাজানো হচ্ছে…</p></div>
+          </div>
+          <p class="pick" id="pick" role="status" aria-live="polite">একটা জিনিসে ক্লিক করো, নাম দেখাবে।</p>
+          <div class="sgo">
+            <a class="btn btn-primary" id="sh-go" href="/">ভুবনে যাও →</a>
+            <span class="snote" id="snote"></span>
+          </div>
+        </section>
+
+        {/* Plain text of the same shelf, so the page says what it holds with no
+            WebGL, no script, and to a crawler. Only the shelf the page opens on
+            is rendered here; the script rebuilds this one node when you switch,
+            out of the same data the 3D shelf uses. Rendering all eighty-seven
+            would be most of a megabyte for eighty-six lists nobody is looking at. */}
+        <section class="card list">
+          <div class="card-h"><span class="lbl">এই তাকের তালিকা</span></div>
+          <div class="lgrid" id="lgrid">
+            <div class="lset">
+              {first?.slots.map((it) => (
+                <span class="li" data-k={`${first.w}::${it[3] ?? `${first.c}:${it[0]}`}`}>
+                  <span class="lie" aria-hidden="true">{it[2] || '·'}</span>{it[0]}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card allworlds">
+      <div class="card-h"><span class="lbl">ভুবন ধরে</span><span class="lbl">যেগুলো তাকে রাখা যায়</span></div>
+      <div class="wrows" id="wrows">
+        {worlds.map((w) => (
+          <a class="wrow" href={w.open ? '/space/' : `/${w.slug}/`} data-w={w.slug} style={`--w:${w.hue}`}>
+            <span class="worb orb" aria-hidden="true"></span>
+            <b>{w.bn}</b>
+            <span class="wtrack" aria-hidden="true"><i></i></span>
+            <span class="wn num" data-n>০</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+
+  <script type="application/json" id="shelf-data" set:html={JSON.stringify(shelves)} is:inline />
+</Base>
+
+<style>
+  .page { padding-block: 1.25rem 4rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 1rem; display: flex; gap: 0.4rem; }
+  .crumbs a:hover { color: var(--brand); }
+  .card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--line-soft); }
+
+  .hd { display: flex; justify-content: space-between; gap: 2rem; flex-wrap: wrap; padding: 1.4rem 1.5rem; }
+  .hd h1 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); margin-top: 0.3rem; }
+  .lede { color: var(--muted); margin-top: 0.5rem; max-width: 52ch; font-size: 15px; line-height: 1.7; }
+  .fine { color: var(--muted); margin-top: 0.7rem; max-width: 56ch; font-size: 12.5px; line-height: 1.6; opacity: 0.85; }
+  .tally { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; min-width: 200px; }
+  .tally b { font-size: 38px; font-weight: 800; line-height: 1; }
+  .tbar { display: block; width: 100%; height: 8px; border-radius: 999px; background: var(--sunk); overflow: hidden; margin-top: 0.5rem; }
+  .tbar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--brand); transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
+  .tnote { font-size: 12.5px; color: var(--muted); margin-top: 0.35rem; text-align: right; }
+
+  .cols { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 1.1rem; margin-top: 1.1rem; align-items: start; }
+  @media (max-width: 1000px) { .cols { grid-template-columns: 1fr; } }
+  .mid { display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+
+  .tiles { max-height: 620px; overflow-y: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 2px; }
+  .tile { display: grid; grid-template-columns: 26px 1fr auto; grid-template-rows: auto auto; gap: 0 0.6rem; align-items: center; padding: 0.5rem 0.6rem; border-radius: var(--r-sm); text-align: start; transition: background 0.15s ease; }
+  .tile:hover { background: var(--panel-2); }
+  .tile[aria-pressed="true"] { background: color-mix(in oklab, var(--w) 13%, var(--panel)); }
+  .te { font-size: 17px; grid-row: 1 / 3; }
+  .tt { display: flex; flex-direction: column; min-width: 0; }
+  .tt b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tt small { font-size: 11px; color: var(--muted); }
+  .tn { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .tbar.sm { grid-column: 2 / 4; height: 4px; margin-top: 0.3rem; }
+  .tile .tbar.sm i { background: var(--w); }
+
+  .host { position: relative; aspect-ratio: 16 / 11; min-height: 320px; background: linear-gradient(180deg, color-mix(in oklab, var(--panel-2) 70%, var(--panel)) 0%, var(--panel-2) 100%); }
+  .host canvas { width: 100%; height: 100%; display: block; touch-action: manipulation; }
+  .loading { position: absolute; inset: 0; display: grid; place-content: center; gap: 0.6rem; justify-items: center; color: var(--muted); font-size: 13px; transition: opacity 0.35s ease; }
+  .loading.gone { opacity: 0; }
+  .loading span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; animation: b 1.1s ease-in-out infinite; }
+  .loading span:nth-child(2) { animation-delay: 0.15s; }
+  .loading span:nth-child(3) { animation-delay: 0.3s; }
+  .loading p { grid-column: 1 / -1; }
+  @keyframes b { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-5px); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .loading span { animation: none; } }
+
+  .pick { padding: 0.9rem 1.1rem 0; font-size: 14.5px; color: var(--ink-2); min-height: 2.6em; }
+  .pick b { font-weight: 700; }
+  .sgo { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; padding: 0.9rem 1.1rem 1.1rem; }
+  .snote { font-size: 12.5px; color: var(--muted); }
+
+  /* The chips are rebuilt by script when the shelf changes, and Astro's scoped
+     attribute never lands on a node JavaScript made, so these have to be global. */
+  .lgrid { padding: 0.9rem 1.1rem 1.1rem; }
+  :global(.lset) { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  :global(.li) { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.22rem 0.7rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 13px; color: var(--muted); }
+  :global(.li.got) { border-color: color-mix(in oklab, var(--brand) 42%, var(--line)); background: color-mix(in oklab, var(--brand) 10%, var(--panel)); color: var(--ink); font-weight: 600; }
+  :global(.lie) { font-size: 13px; }
+
+  .allworlds { margin-top: 1.1rem; }
+  .wrows { display: grid; gap: 2px; padding: 0.6rem; }
+  .wrow { display: grid; grid-template-columns: 12px 150px minmax(0, 1fr) 64px; gap: 0.8rem; align-items: center; padding: 0.5rem 0.7rem; border-radius: var(--r-sm); transition: background 0.15s ease; }
+  .wrow:hover { background: var(--panel-2); }
+  .wrow b { font-size: 14px; font-weight: 600; }
+  .worb { width: 12px; height: 12px; }
+  .wtrack { display: block; height: 8px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+  .wtrack i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--w); transition: width 0.7s cubic-bezier(.2,.8,.2,1); }
+  .wn { font-size: 12.5px; color: var(--muted); text-align: end; font-weight: 600; }
+  @media (max-width: 640px) {
+    .wrow { grid-template-columns: 12px 1fr 52px; }
+    .wtrack { grid-column: 2 / 4; }
+  }
+</style>
+
+<script>
+  import { getProgress, setProgressScope } from '../../lib/progress';
+  import { beginSession } from '../../lib/session';
+  import { bn } from '../../lib/bn';
+  import { track } from '../../lib/track';
+  import type { ShelfHandle, ShelfSlot } from '../../components/explorer/shelf';
+
+  type Slot = [name: string, figure: string, emoji: string, key?: string];
+  type Shelf = { w: string; wn: string; hue: string; c: string; ci: number; emoji: string; slots: Slot[] };
+
+  const root = document.getElementById('coll')!;
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const shelves: Shelf[] = JSON.parse(document.getElementById('shelf-data')!.textContent!);
+  const TOTAL = +(root.dataset.total ?? 0);
+
+  setProgressScope(null);
+  beginSession();
+
+  /** Every key this browser has opened, as "world::key", so lookups are flat. */
+  const seen = new Set<string>();
+  for (const [w, list] of Object.entries(getProgress().seen)) for (const k of list) seen.add(`${w}::${k}`);
+  /** The stored key: "category:item" everywhere except space, which sends its own. */
+  const keyOf = (s: Shelf, it: Slot) => it[3] ?? `${s.c}:${it[0]}`;
+  const got = (s: Shelf, it: Slot) => seen.has(`${s.w}::${keyOf(s, it)}`);
+
+  let cur = 0, shelf: ShelfHandle | null = null;
+
+  /* ---- the numbers, all from the same set ---- */
+  const tiles = [...root.querySelectorAll<HTMLButtonElement>('.tile')];
+  function renderCounts() {
+    let have = 0;
+    const perWorld = new Map<string, [number, number]>();
+    shelves.forEach((s, i) => {
+      const n = s.slots.filter((it) => got(s, it)).length;
+      have += n;
+      const [a, b] = perWorld.get(s.w) ?? [0, 0];
+      perWorld.set(s.w, [a + n, b + s.slots.length]);
+      const t = tiles[i]!;
+      t.querySelector<HTMLElement>('[data-n]')!.textContent = `${bn(n)}/${bn(s.slots.length)}`;
+      t.querySelector<HTMLElement>('.tbar.sm i')!.style.width = `${(n / s.slots.length) * 100}%`;
+      t.classList.toggle('full', n === s.slots.length);
+    });
+    $('#have').textContent = bn(have);
+    $('#tbar').style.width = `${(have / TOTAL) * 100}%`;
+    $('#tnote').textContent = have === 0
+      ? 'শুরু করতে যেকোনো ভুবনে যাও'
+      : have >= TOTAL ? 'সব কটাই সংগ্রহে! পুরো তাক ভরা।'
+        : `আর ${bn(TOTAL - have)}টা বাকি`;
+    root.querySelectorAll<HTMLElement>('.wrow').forEach((r) => {
+      const [a, b] = perWorld.get(r.dataset.w ?? '') ?? [0, 0];
+      if (!b) return;
+      r.querySelector<HTMLElement>('.wtrack i')!.style.width = `${(a / b) * 100}%`;
+      r.querySelector<HTMLElement>('[data-n]')!.textContent = `${bn(a)}/${bn(b)}`;
+    });
+  }
+
+  /* ---- the text list mirrors the shelf, with or without WebGL ---- */
+  function renderList() {
+    const s = shelves[cur]!;
+    const set = document.createElement('div');
+    set.className = 'lset';
+    for (const it of s.slots) {
+      const chip = document.createElement('span');
+      chip.className = got(s, it) ? 'li got' : 'li';
+      const e = document.createElement('span');
+      e.className = 'lie'; e.setAttribute('aria-hidden', 'true'); e.textContent = it[2] || '·';
+      chip.append(e, document.createTextNode(it[0]));
+      set.append(chip);
+    }
+    $('#lgrid').replaceChildren(set);
+  }
+
+  function slotsFor(s: Shelf): ShelfSlot[] {
+    return s.slots.map((it) => ({ label: it[0], figure: it[1] || undefined, emoji: it[2] || undefined, got: got(s, it) }));
+  }
+
+  function show(i: number) {
+    cur = i;
+    const s = shelves[i]!;
+    tiles.forEach((t, j) => t.setAttribute('aria-pressed', String(j === i)));
+    const n = s.slots.filter((it) => got(s, it)).length;
+    $('#sh-cat').textContent = s.c;
+    $('#sh-n').textContent = `${bn(n)} / ${bn(s.slots.length)} সংগ্রহে`;
+    $('#pick').textContent = n === s.slots.length
+      ? 'এই তাক ভরা। একটা জিনিসে ক্লিক করো, নাম দেখাবে।'
+      : 'একটা জিনিসে ক্লিক করো, নাম দেখাবে। ফাঁকা জায়গাগুলো এখনো দেখা হয়নি।';
+    const href = s.w === 'space' ? '/space/' : `/${s.w}/?cat=${s.ci}`;
+    $<HTMLAnchorElement>('#sh-go').href = href;
+    $<HTMLAnchorElement>('#sh-go').textContent = `${s.wn} ভুবনে যাও →`;
+    $('#snote').textContent = n === s.slots.length ? 'সব দেখা হয়ে গেছে' : `${bn(s.slots.length - n)}টা এখনো ফাঁকা`;
+    root.style.setProperty('--w', s.hue);
+    shelf?.set(slotsFor(s), s.hue);
+    renderList();
+    tiles[i]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  tiles.forEach((t) => t.addEventListener('click', () => {
+    show(+(t.dataset.i ?? 0));
+    track('collection_shelf', { world: shelves[cur]!.w, category: shelves[cur]!.c });
+  }));
+
+  renderCounts();
+  renderList();
+
+  // The shelf is 3D, so it loads after the page has painted, exactly the way
+  // every other model on the site does.
+  import('../../components/explorer/shelf').then(({ mountShelf }) => {
+    const loading = root.querySelector<HTMLElement>('#sh-loading');
+    if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
+    shelf = mountShelf($('#shelf-host'), (i) => {
+      const s = shelves[cur]!, it = s.slots[i];
+      if (!it) return;
+      const pick = $('#pick');
+      const b = document.createElement('b'); b.textContent = it[0];
+      if (got(s, it)) pick.replaceChildren(document.createTextNode('এটা '), b, document.createTextNode(`. ${s.c} থেকে, ${s.wn} ভুবনে।`));
+      else pick.replaceChildren(b, document.createTextNode(' এখনো দেখা হয়নি। ভুবনে গিয়ে খুলে দেখলেই এই জায়গাটা ভরে যাবে।'));
+    });
+    // Start on the first shelf that still has gaps, because that is the one
+    // with something to do in it.
+    const gap = shelves.findIndex((s) => s.slots.some((it) => !got(s, it)));
+    show(gap >= 0 ? gap : 0);
+  }).catch(() => {
+    // No WebGL: the text list below is the collection, and it already works.
+    const loading = root.querySelector<HTMLElement>('#sh-loading');
+    if (loading) loading.innerHTML = '<p>এই ব্রাউজারে থ্রিডি চলছে না। নিচের তালিকাতেই পুরো তাক আছে।</p>';
+    show(0);
+  });
+</script>

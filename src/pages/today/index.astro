@@ -237,6 +237,12 @@ const schema = [
           <p class="p-fine">শুধু বড়দের ইমেইল লাগে। শিশুর কোনো তথ্য চাওয়া হয় না।</p>
         </section>
 
+        <a class="card shelfcard" href="/collection/">
+          <span class="lbl">সংগ্রহশালা</span>
+          <b>তোমার তাক দেখো →</b>
+          <span>যা যা খুলে দেখেছ, সব এক জায়গায় সাজানো। ফাঁকা জায়গাগুলোই বলে দেবে কোথায় যাওয়া বাকি।</span>
+        </a>
+
         <section class="card wl">
           <div class="card-h"><span class="lbl">ভুবনে যাও</span></div>
           <div class="wls">
@@ -359,6 +365,12 @@ const schema = [
   .parent p { padding: 0.4rem 1.1rem 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
   .p-btns { display: flex; gap: 0.6rem; padding: 1rem 1.1rem 0; flex-wrap: wrap; }
   .p-fine { font-size: 12px; color: var(--muted); padding: 0.7rem 1.1rem 1.1rem; }
+
+  /* ---- shelf card ---- */
+  .shelfcard { display: flex; flex-direction: column; gap: 0.3rem; padding: 1.1rem; transition: border-color 0.15s ease, transform 0.15s ease; }
+  .shelfcard:hover { border-color: var(--brand); transform: translateY(-1px); }
+  .shelfcard b { font-size: 16px; }
+  .shelfcard span:last-child { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
   /* ---- world links ---- */
   .wls { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 1rem 1.1rem 1.1rem; }

@@ -1,0 +1,25 @@
+{
+  "name": "পসরা - জ্ঞানের পসরা",
+  "short_name": "পসরা",
+  "description": "বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। রোজ একটা নতুন জিনিস, পাঁচটা প্রশ্ন আর একটা খেলা।",
+  "lang": "bn",
+  "dir": "ltr",
+  "start_url": "/today/?src=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#e9edf2",
+  "theme_color": "#15544c",
+  "categories": ["education", "kids"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "আজকের পসরা", "short_name": "আজ", "url": "/today/", "description": "আজকের জিনিস, আজকের পরখ আর একটা খেলা" },
+    { "name": "সংগ্রহশালা", "short_name": "সংগ্রহ", "url": "/collection/", "description": "যা যা দেখেছ, সব এক তাকে" },
+    { "name": "মহাকাশ", "short_name": "মহাকাশ", "url": "/space/", "description": "থ্রিডি সৌরজগৎ" }
+  ]
+}

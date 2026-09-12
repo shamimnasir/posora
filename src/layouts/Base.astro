@@ -83,6 +83,11 @@ const graph = [
     <link rel="alternate" hreflang="bn" href={canonical} />
     <link rel="alternate" hreflang="x-default" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* The home-screen icon is the only return trigger this site can honestly
+        have: a website cannot notify a child, and should not. Pull, not push. */}
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="পসরা" />
     <meta name="theme-color" content="#e9edf2" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0c1116" media="(prefers-color-scheme: dark)" />
     <meta property="og:title" content={fullTitle} />
