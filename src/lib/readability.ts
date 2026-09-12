@@ -120,13 +120,21 @@ export function ladder<T>(items: readonly T[], textOf: (x: T) => string): Ranked
   return scored.map((s, i) => ({ ...s, rung: Math.min(RUNGS.length - 1, Math.floor(i / per)) }));
 }
 
-/** The average of one rung's measurements, for the sentence on its card. */
-export function rungStats(rows: Ranked<unknown>[]): { wps: number; conj: number; words: number } {
-  if (!rows.length) return { wps: 0, conj: 0, words: 0 };
+/**
+ * The average of one rung's measurements, for the sentence on its card.
+ *
+ * These are the three things the score is built from. An earlier version also
+ * showed the average length of a whole reading, which turned out to be the
+ * same number as the words-per-sentence for most items, because most of this
+ * site's short readings are a single sentence. Two measurements that always
+ * agree look like a mistake on the page.
+ */
+export function rungStats(rows: Ranked<unknown>[]): { wps: number; conj: number; cpw: number } {
+  if (!rows.length) return { wps: 0, conj: 0, cpw: 0 };
   const n = rows.length;
   return {
     wps: rows.reduce((s, r) => s + r.m.wps, 0) / n,
     conj: rows.reduce((s, r) => s + r.m.conj, 0) / n,
-    words: rows.reduce((s, r) => s + r.m.words, 0) / n,
+    cpw: rows.reduce((s, r) => s + r.m.cpw, 0) / n,
   };
 }
