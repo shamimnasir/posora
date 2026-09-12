@@ -16,7 +16,12 @@ export type HeroSpec = { type: string; hue: string; v?: string; p?: number };
 /** One thing in the category, shown as a badge orbiting the category's model. */
 export type HeroItem = { label: string; emoji?: string };
 type Ctx = { root: Group; hue: Color; v: string; font: string };
-type SceneObj = { update(t: number, dt: number, p: number): void; label: string };
+/**
+ * A scene may expose `anchors`: a marker object per item label, attached to the
+ * part of the model that item is about. Badges then sit on the model instead of
+ * orbiting it, and follow the part when the scene explodes.
+ */
+type SceneObj = { update(t: number, dt: number, p: number): void; label: string; anchors?: Record<string, Object3D> };
 type Builder = (c: Ctx) => SceneObj;
 
 /* ---------- helpers ---------- */
@@ -74,6 +79,67 @@ function sector(r: number, start: number, len: number, color: Color | string, h 
 
 /* ---------- scenes ---------- */
 const SCENES: Record<string, Builder> = {
+  /** গাছের অংশ: every part is its own group with a direction to explode along, and an anchor for its badge. */
+  treeparts({ root, hue }) {
+    const brown = new Color('#7a4f2a'), bark = new Color('#5c3a1e'), leaf = hue, leaf2 = lighten(hue, 0.25);
+    const parts: { g: Group; base: Vector3; dir: Vector3 }[] = [];
+    const anchors: Record<string, Object3D> = {};
+    const part = (base: Vector3, dir: Vector3) => { const g = new Group(); g.position.copy(base); root.add(g); parts.push({ g, base: base.clone(), dir: dir.clone().normalize() }); return g; };
+    const mark = (name: string, parent: Object3D, x: number, y: number, z: number) => { const m = new Object3D(); m.position.set(x, y, z); parent.add(m); anchors[name] = m; };
+
+    // ground
+    root.position.y = -0.35;   // the tree stands a little low so the exploded canopy stays in frame
+    const ground = new Mesh(new CylinderGeometry(2.6, 2.6, 0.12, 48), std('#3b5a3a', { roughness: 1 })); ground.position.y = -1.7; root.add(ground);
+    // roots
+    const roots = part(new Vector3(0, -1.75, 0), new Vector3(0, -1, 0));
+    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; const r = new Mesh(new CylinderGeometry(0.05, 0.13, 1.3, 8), std(brown)); r.position.set(Math.cos(a) * 0.55, -0.45, Math.sin(a) * 0.55); r.rotation.z = Math.cos(a) * 0.9; r.rotation.x = -Math.sin(a) * 0.9; roots.add(r); }
+    mark('মূল', roots, 0, -0.55, 0.9);
+    // trunk + bark
+    const trunk = part(new Vector3(0, -0.6, 0), new Vector3(0, 0, 1));
+    trunk.add(new Mesh(new CylinderGeometry(0.28, 0.42, 2.3, 16), std(brown)));
+    mark('কাণ্ড', trunk, 0.6, -0.55, 0.35);
+    const barkG = part(new Vector3(0, -0.6, 0), new Vector3(-1, 0, 0.3));
+    for (let i = 0; i < 7; i++) { const b = new Mesh(new BoxGeometry(0.1, 0.35, 0.06), std(bark)); const a = i * 0.9; b.position.set(Math.cos(a) * 0.4, -0.9 + i * 0.3, Math.sin(a) * 0.4); b.lookAt(0, b.position.y, 0); barkG.add(b); }
+    mark('ছাল', barkG, -0.65, 0.25, 0.3);
+    // branches
+    const branches = part(new Vector3(0, 0.55, 0), new Vector3(1, 0.4, 0));
+    [[0.7, 0.9, 0.2], [-0.8, 0.8, -0.3], [0.1, 1.0, 0.8], [-0.3, 0.9, -0.8]].forEach(([x, y, z]) => {
+      const dir = new Vector3(x, y, z); const len = dir.length(); const b = new Mesh(new CylinderGeometry(0.06, 0.13, len, 8), std(brown));
+      b.position.copy(dir.clone().multiplyScalar(0.5)); b.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), dir.clone().normalize()); branches.add(b);
+    });
+    mark('শাখা', branches, 1.05, 0.55, 0.45);
+    // canopy clusters
+    const canopy = part(new Vector3(0, 1.6, 0), new Vector3(0, 1, 0));
+    [[0, 0.3, 0], [0.8, 0, 0.2], [-0.8, 0.05, -0.2], [0.2, -0.1, 0.85], [-0.3, 0, -0.85], [0.5, 0.55, -0.4], [-0.5, 0.5, 0.4]].forEach(([x, y, z], i) => {
+      const c = new Mesh(new SphereGeometry(0.62, 18, 14), std(i % 2 ? leaf : leaf2)); c.position.set(x, y, z); canopy.add(c);
+    });
+    mark('পাতা', canopy, -1.1, 0.2, 0.5);
+    // one big leaf with veins
+    const leafG = part(new Vector3(1.7, 1.1, 0.9), new Vector3(1, 0.2, 0.6));
+    const blade = new Mesh(new CircleGeometry(0.42, 24), std(leaf2, { side: DoubleSide })); blade.scale.set(0.6, 1, 1); leafG.add(blade);
+    for (let i = -3; i <= 3; i++) { const v = new Mesh(new BoxGeometry(0.28, 0.015, 0.01), std(darken(leaf, 0.35))); v.position.set(i * 0.05, i * 0.1, 0.01); v.rotation.z = i * 0.35; leafG.add(v); }
+    const mid = new Mesh(new BoxGeometry(0.015, 0.8, 0.01), std(darken(leaf, 0.4))); mid.position.z = 0.012; leafG.add(mid);
+    mark('শিরা', leafG, 0.1, 0.3, 0.1);
+    // flowers
+    const flowers = part(new Vector3(0, 1.6, 0), new Vector3(0.3, 0.6, 1));
+    for (let i = 0; i < 7; i++) { const f = new Mesh(new SphereGeometry(0.11, 10, 8), std('#f4a7c3', { emissive: '#f4a7c3', emissiveIntensity: 0.25 })); const a = i * 1.7; f.position.set(Math.cos(a) * 0.9, Math.sin(a * 1.3) * 0.4, 0.7 + Math.sin(a) * 0.3); flowers.add(f); }
+    mark('ফুল', flowers, 0.9, 0.2, 0.9);
+    // fruit
+    const fruit = part(new Vector3(0, 1.3, 0), new Vector3(1, -0.4, 0.6));
+    for (let i = 0; i < 5; i++) { const fr = new Mesh(new SphereGeometry(0.15, 12, 10), std('#d94a3a')); const a = i * 1.4; fr.position.set(Math.cos(a) * 0.95, -0.35 + Math.sin(a) * 0.2, Math.sin(a) * 0.95); fruit.add(fr); }
+    mark('ফল', fruit, 0.95, -0.35, 0.0);
+    // seeds on the ground
+    const seeds = part(new Vector3(0, -1.6, 0), new Vector3(0.6, -0.2, 1));
+    for (let i = 0; i < 6; i++) { const sd = new Mesh(new SphereGeometry(0.07, 8, 6), std('#8b5a2b')); sd.position.set(1.1 + Math.cos(i * 1.1) * 0.35, 0.06, 1.0 + Math.sin(i * 1.1) * 0.35); sd.scale.y = 0.7; seeds.add(sd); }
+    mark('বীজ', seeds, 1.1, 0.1, 1.0);
+
+    return { label: 'খুলে দেখো', anchors, update(t, _dt, p) {
+      // p = 0 whole tree, p = 1 every part pulled out along its own direction
+      for (const pt of parts) pt.g.position.copy(pt.base).addScaledVector(pt.dir, p * 1.05);
+      canopy.rotation.y = Math.sin(t * 0.3) * 0.05; leafG.rotation.z = Math.sin(t * 1.1) * 0.08;
+    } };
+  },
+
   atom({ root, hue }) {
     const nuc = new Group(); root.add(nuc);
     for (let i = 0; i < 10; i++) { const m = new Mesh(new SphereGeometry(0.22, 16, 16), std(i % 2 ? hue : lighten(hue, 0.5))); m.position.set(rnd(-0.22, 0.22), rnd(-0.22, 0.22), rnd(-0.22, 0.22)); nuc.add(m); }
@@ -379,28 +445,34 @@ export function mountHero(
   /* ---- the item orbit: every item of the category as a badge around the model ---- */
   const ORBIT_R = 3.05;
   const orbit = new Group(); user.add(orbit);
-  let badges: { sp: Sprite; label: Sprite; a0: number }[] = [];
+  let badges: { sp: Sprite; label: Sprite; a0: number; marker?: Object3D }[] = [];
+  const pins = new Group(); user.add(pins);
+  let anchoredCount = 0;
   let active = -1, orbitYawTo = 0, orbitYaw = 0, hueNow = new Color(spec.hue);
   function clearItems() {
     for (const b of badges) { b.sp.material.map?.dispose(); b.sp.material.dispose(); b.label.material.map?.dispose(); b.label.material.dispose(); }
-    orbit.clear(); badges = [];
+    orbit.clear(); pins.clear(); badges = []; anchoredCount = 0;
   }
   function setItems(items: HeroItem[], act: number) {
     clearItems();
     const n = items.length;
+    const anchors = cur?.anchors ?? {};
     badges = items.map((it, i) => {
       const sp = badgeSprite(it, hueNow, font); const label = labelSprite(it.label, font);
       const a0 = (i / Math.max(1, n)) * Math.PI * 2;
-      sp.scale.setScalar(0.85); orbit.add(sp); orbit.add(label);
-      return { sp, label, a0 };
+      const marker = anchors[it.label];
+      if (marker) { anchoredCount++; sp.scale.setScalar(0.55); pins.add(sp); pins.add(label); }
+      else { sp.scale.setScalar(0.85); orbit.add(sp); orbit.add(label); }
+      return { sp, label, a0, marker };
     });
-    // the model sits smaller in the middle once it has company
-    root.scale.setScalar(n ? 0.5 : 1);
+    // when the items live on the model, the model stays full size; otherwise it
+    // sits smaller in the middle of the ring
+    root.scale.setScalar(n && anchoredCount < n / 2 ? 0.5 : 1);
     focus(act);
   }
   function focus(i: number) {
     active = i;
-    if (i < 0 || !badges[i]) return;
+    if (i < 0 || !badges[i] || badges[i]!.marker) return;
     // turn the ring so the chosen badge comes to the front (toward the camera, +z)
     orbitYawTo = Math.PI / 2 - badges[i]!.a0;
     // keep the shortest turn
@@ -414,6 +486,7 @@ export function mountHero(
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
     const hit = ray.intersectObjects(badges.map((b) => b.sp), false)[0];
+    if (hit) { /* nearest sprite wins */ }
     return hit ? badges.findIndex((b) => b.sp === hit.object) : -1;
   }
 
@@ -422,7 +495,7 @@ export function mountHero(
     user.remove(root); root = new Group(); user.add(root);
     hueNow = new Color(s.hue);
     const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font }); param = s.p ?? 0.5; popStart = performance.now();
-    if (badges.length) root.scale.setScalar(0.5);
+    if (badges.length && anchoredCount < badges.length / 2) root.scale.setScalar(0.5);
     return cur.label;
   }
   const firstLabel = build(spec);
@@ -444,7 +517,7 @@ export function mountHero(
   const up = () => { dragging = false; host.classList.remove('dragging'); }; host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
 
   let w = 1, h = 1, visible = true, raf = 0, last = performance.now(), t = 0;
-  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camera.position.z = (w < 600 ? 7.4 : 6.2) + (badges.length ? 1.9 : 0); camera.lookAt(0, 0.1, 0); }
+  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camera.position.z = (w < 600 ? 7.4 : 6.2) + (badges.length ? (anchoredCount ? 1.2 : 1.9) : 0); camera.lookAt(0, 0.1, 0); }
   new ResizeObserver(resize).observe(host); resize();
   function frame(now: number) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -464,9 +537,22 @@ export function mountHero(
       if (!dragging && auto && Math.abs(orbitYawTo - orbitYaw) < 0.01) { orbitYawTo += dt * 0.05; }
       // the ring counter-rotates the user's yaw so badges stay readable from the front
       orbit.rotation.y = orbitYaw - yaw;
+      const wp = new Vector3();
       badges.forEach((b, i) => {
-        const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
         const on = i === active;
+        if (b.marker) {
+          // pinned to its part: follow the part, hover slightly, face the camera
+          b.marker.getWorldPosition(wp); user.worldToLocal(wp);
+          b.sp.position.copy(wp); b.sp.position.y += 0.18 + Math.sin(t * 1.3 + i) * 0.04;
+          const target = on ? 0.95 : 0.55;
+          b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
+          (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.78;
+          b.label.position.copy(b.sp.position); b.label.position.y -= on ? 0.78 : 0.55;
+          (b.label.material as SpriteMaterial).opacity = on ? 1 : 0.85; b.label.visible = true;
+          const ls = on ? 0.95 : 0.6; b.label.scale.set(2.6 * ls, 0.52 * ls, 1);
+          return;
+        }
+        const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
         const target = on ? 1.45 : 0.8 + 0.18 * depth;
         b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.12);
         b.sp.position.set(Math.cos(b.a0) * ORBIT_R, Math.sin(t * 0.9 + i) * 0.12 + (on ? 0.15 : 0), Math.sin(b.a0) * ORBIT_R);
