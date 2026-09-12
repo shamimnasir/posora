@@ -1,0 +1,179 @@
+/**
+ * The mission player's styles.
+ *
+ * The panel is built on document.body at runtime, so Astro's scoped CSS can
+ * never reach it: a JS-created node carries no data-astro-cid. Every rule here
+ * is therefore global and namespaced under .mz. Imported by both pages that can
+ * run a mission, so the two never drift apart.
+ */
+body.mz-open { overflow: hidden; }
+  .mz { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1rem;
+    background: rgba(4, 6, 12, 0.72); backdrop-filter: blur(6px); animation: mz-in 0.25s ease; }
+  @keyframes mz-in { from { opacity: 0; } to { opacity: 1; } }
+  /* min-width:0 matters: without it the grid item takes its content's
+     min-content width, and a wide track pushes the panel off both edges */
+  .mz-panel { position: relative; width: min(720px, 100%); min-width: 0; max-height: 92vh; overflow: hidden auto; border-radius: 22px;
+    background: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--w) 26%, #141c2e) 0%, #0d1322 55%, #070a12 100%);
+    border: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); color: #eef4fb;
+    animation: mz-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.25); }
+  @keyframes mz-pop { from { transform: scale(0.9) translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .mz-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .mz-top { display: flex; align-items: center; gap: 0.8rem; padding: 0.9rem 1.1rem 0.7rem; }
+  .mz-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .mz-no { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(226, 235, 245, 0.6); }
+  .mz-title b { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; line-height: 1.25; }
+  .mz-hearts { display: flex; gap: 3px; font-size: 19px; line-height: 1; }
+  .mz-hearts .on { color: #ff5f74; text-shadow: 0 0 12px rgba(255, 95, 116, 0.55); }
+  .mz-hearts .off { color: rgba(255, 255, 255, 0.2); }
+  .mz-score { display: flex; align-items: baseline; gap: 0.3rem; font-size: 11px; color: rgba(226, 235, 245, 0.7); }
+  .mz-score b { font-family: var(--font-display); font-size: 1.25rem; color: #ffd76a; font-variant-numeric: tabular-nums; }
+  .mz-combo { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: #ffd76a; color: #241a00; }
+  .mz-close { width: 30px; height: 30px; border-radius: 50%; flex: none; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 13px; }
+  .mz-close:hover { background: rgba(255, 255, 255, 0.3); }
+  .mz-bar { height: 5px; margin: 0 1.1rem; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+  .mz-bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--w), #ffd76a); transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+  .mz-body { padding: 1.1rem 1.1rem 0.4rem; display: flex; flex-direction: column; align-items: center; gap: 0.85rem; min-width: 0; }
+  .mz-body > * { max-width: 100%; }
+  .mz-foot { min-height: 2.6em; padding: 0.5rem 1.2rem 1.1rem; text-align: center; font-size: 13.5px; line-height: 1.6; color: #ffe08a; }
+  .mz-plus { position: absolute; z-index: 3; transform: translate(-50%, 0); font-family: var(--font-display); font-weight: 800; font-size: 18px; color: #ffd76a; pointer-events: none; animation: mz-plus 1s ease-out forwards; }
+  @keyframes mz-plus { 0% { opacity: 0; transform: translate(-50%, 4px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -40px); } }
+
+  .mz-intro { text-align: center; padding: 1rem 0.5rem 0.5rem; }
+  .mz-rule { font-size: 1.05rem; line-height: 1.7; max-width: 46ch; margin: 0 auto; }
+  .mz-rule-s { margin: 0.9rem auto 0; max-width: 44ch; font-size: 12.5px; line-height: 1.7; color: rgba(226, 235, 245, 0.7); }
+  .mz-btn { font-size: 14px; font-weight: 800; padding: 0.6rem 1.3rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.1); color: #fff; transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.2); }
+  .mz-primary { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 55%, #ffd76a)); border-color: transparent; color: #0d1322; }
+  .mz-go { margin-top: 1.2rem; font-size: 16px; padding: 0.7rem 1.8rem; }
+  .mz-btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 1.1rem; }
+  .mz-round { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; color: rgba(226, 235, 245, 0.65); text-transform: uppercase; }
+
+  .mz-chain { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+  .mz-slot { min-width: 88px; min-height: 88px; padding: 0.5rem 0.4rem; border-radius: 16px; border: 2px dashed rgba(255, 255, 255, 0.22);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12.5px; font-weight: 700; text-align: center; }
+  .mz-slot.on { border-style: solid; border-color: transparent; background: color-mix(in oklab, var(--w) 34%, #0d1322); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+  .mz-em { font-size: 30px; line-height: 1.1; }
+  .mz-arrow { color: rgba(226, 235, 245, 0.45); font-size: 18px; }
+  .mz-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .mz-card { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 92px; padding: 0.6rem 0.7rem; border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font-size: 12.5px; font-weight: 700;
+    transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-card:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.2); }
+  .mz-card.used { opacity: 0.25; transform: none; }
+  .mz-next { margin-top: 0.2rem; }
+
+  /* the journey is one row that must not wrap, so on a narrow screen it
+     scrolls inside itself rather than stretching the panel */
+  .mz-track { position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 1.6rem 2px 4px; max-width: 100%; overflow-x: auto; scrollbar-width: thin; }
+  .mz-stop { width: 72px; padding: 0.45rem 0.2rem; border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.06); font-size: 11px; font-weight: 700; text-align: center; }
+  .mz-stop .mz-em { font-size: 24px; }
+  .mz-stop.here { border-color: transparent; background: color-mix(in oklab, var(--w) 40%, #0d1322); box-shadow: 0 0 0 3px color-mix(in oklab, var(--w) 30%, transparent); }
+  .mz-link { width: 14px; height: 2px; background: rgba(255, 255, 255, 0.25); }
+  .mz-token { position: absolute; font-size: 22px; transform: translate(-50%, -100%); transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1), top 0.5s ease; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)); }
+  .mz-fact { max-width: 52ch; text-align: center; font-size: 13.5px; line-height: 1.75; color: rgba(238, 244, 251, 0.92); }
+  .mz-ask { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; text-align: center; }
+  .mz-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .mz-choice { padding: 0.5rem 1.05rem; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff; font-size: 14px; font-weight: 700; transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-choice:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.22); }
+  .mz-choice.ok { background: #2fa360; border-color: transparent; }
+  .mz-choice.bad { background: rgba(224, 85, 106, 0.3); border-color: rgba(224, 85, 106, 0.6); opacity: 0.65; }
+
+  .mz-art { width: 160px; height: 160px; display: grid; place-items: center; border-radius: 20px; background: rgba(255, 255, 255, 0.94); }
+  .mz-art svg { width: 130px; height: 130px; color: #1d3524; fill: #2f6b3f; }
+  .mz-art-big { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); font-size: 84px; line-height: 1; }
+  .mz-art-word { width: auto; min-width: 180px; max-width: 100%; height: auto; min-height: 120px; padding: 1rem 1.6rem; font-family: var(--font-display); font-weight: 800; font-size: clamp(2.4rem, 9vw, 3.6rem); overflow-wrap: anywhere; text-align: center; }
+
+  /* sort: one thing at a time, the buckets always on screen */
+  .mz-em-xl { font-size: 54px; }
+  .mz-thing { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0.7rem 1.4rem; border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); min-width: 150px; }
+  .mz-thing b { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; text-align: center; }
+  .mz-buckets { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .mz-bucket { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 104px; padding: 0.6rem 0.7rem; border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font-size: 12.5px; font-weight: 700; text-align: center;
+    transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-bucket:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.2); }
+  .mz-bucket.hit { background: #2fa360; border-color: transparent; }
+
+  /* choice: a situation and three answers */
+  .mz-sit { display: flex; align-items: center; gap: 0.9rem; max-width: 52ch; padding: 0.8rem 1rem; border-radius: 18px;
+    background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.16); }
+  .mz-sit p { font-size: 15px; line-height: 1.65; }
+  .mz-opts { display: flex; flex-direction: column; align-items: stretch; gap: 7px; width: min(100%, 48ch); }
+  .mz-opt { padding: 0.65rem 1rem; border-radius: 14px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff; font-size: 14px; font-weight: 600; line-height: 1.5; text-align: left; transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-opt:hover { transform: translateX(3px); background: rgba(255, 255, 255, 0.2); }
+  .mz-opt.ok { background: #2fa360; border-color: transparent; }
+  .mz-opt.bad { background: rgba(224, 85, 106, 0.28); border-color: rgba(224, 85, 106, 0.55); opacity: 0.6; }
+
+  /* calc: a question and a Bangla keypad */
+  .mz-q { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; text-align: center; max-width: 22ch; line-height: 1.4; }
+  .mz-out { display: flex; align-items: baseline; justify-content: center; gap: 0.4rem; min-width: 190px; padding: 0.5rem 1rem; border-radius: 14px;
+    background: rgba(0, 0, 0, 0.35); border: 2px solid color-mix(in oklab, var(--w) 60%, transparent); }
+  .mz-out b { font-family: var(--font-display); font-size: 2rem; color: #ffd76a; font-variant-numeric: tabular-nums; }
+  .mz-out.empty b { color: rgba(255, 255, 255, 0.3); }
+  .mz-unit { font-size: 13px; color: rgba(226, 235, 245, 0.7); }
+  .mz-pad { display: grid; grid-template-columns: repeat(5, 56px); gap: 6px; justify-content: center; }
+  .mz-key { height: 46px; border-radius: 12px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff; font-family: var(--font-display); font-size: 20px; font-weight: 700; transition: background 0.12s ease, transform 0.12s ease; }
+  .mz-key:hover { background: rgba(255, 255, 255, 0.26); transform: translateY(-2px); }
+  .mz-key-w { grid-column: span 2; font-size: 16px; }
+  .mz-key-ok { grid-column: span 3; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 55%, #ffd76a)); border-color: transparent; color: #0d1322; }
+
+  /* build: a budget, a set of requirements, a pool to pick from */
+  .mz-budget { display: flex; align-items: baseline; gap: 0.45rem; font-size: 12.5px; color: rgba(226, 235, 245, 0.75); flex-wrap: wrap; justify-content: center; }
+  .mz-budget b { font-family: var(--font-display); font-size: 1.5rem; color: #ffd76a; font-variant-numeric: tabular-nums; }
+  .mz-blabel { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .mz-left { margin-left: 0.3rem; padding: 1px 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); font-size: 11.5px; }
+  .mz-btrack { display: block; width: min(100%, 380px); height: 7px; border-radius: 4px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+  .mz-btrack i { display: block; height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg, var(--w), #ffd76a); transition: width 0.3s ease; }
+  .mz-btrack.over i { background: #e0556a; }
+  .mz-needs { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+  .mz-need { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px dashed rgba(255, 255, 255, 0.35); color: rgba(226, 235, 245, 0.65); }
+  .mz-need.on { border-style: solid; border-color: transparent; background: #2fa360; color: #fff; }
+  .mz-need.on::before { content: "✓ "; }
+  .mz-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; width: 100%; }
+  .mz-pick { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 0.5rem 0.35rem; border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #fff; transition: background 0.14s ease, transform 0.14s ease; }
+  .mz-pick:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.18); }
+  .mz-pick .mz-em { font-size: 26px; }
+  .mz-pick-n { font-size: 12px; font-weight: 700; text-align: center; line-height: 1.25; }
+  .mz-pick-c { font-family: var(--font-mono); font-size: 10px; color: rgba(226, 235, 245, 0.7); }
+  .mz-pick.on { background: color-mix(in oklab, var(--w) 45%, #0d1322); border-color: color-mix(in oklab, var(--w) 70%, transparent); }
+  .mz-pick.on .mz-pick-n::after { content: " ✓"; color: #ffd76a; }
+  /* a shadow puzzle: the same glyph, lit flat black on a bright card */
+  .mz-art-shadow { background: #f2f5f8; }
+  .mz-art-shadow span { filter: brightness(0); }
+  .mz-next:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .mz-clue { max-width: 46ch; text-align: center; font-size: 14.5px; line-height: 1.7; }
+  .mz-cap { font-size: 11px; color: rgba(226, 235, 245, 0.55); }
+
+  .mz-end { text-align: center; padding: 0.6rem 0.5rem 0.5rem; }
+  .mz-stamp { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 0.3rem 0.9rem; border-radius: 8px; border: 2px solid #ffd76a; color: #ffd76a; transform: rotate(-4deg); }
+  .mz-fail .mz-stamp { border-color: #e0556a; color: #e0556a; }
+  .mz-stamp-ok { animation: mz-stamp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+  @keyframes mz-stamp { from { transform: rotate(-4deg) scale(2.4); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
+  .mz-stars { font-size: 40px; letter-spacing: 0.1em; color: #ffd76a; margin-top: 0.6rem; line-height: 1.1; }
+  .mz-end h3 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; margin-top: 0.2rem; }
+  .mz-sum { max-width: 44ch; margin: 0.5rem auto 0; font-size: 13.5px; line-height: 1.75; color: rgba(238, 244, 251, 0.85); }
+
+  @media (max-width: 560px) {
+    .mz { padding: 0; }
+    .mz-panel { width: 100%; max-height: 100vh; height: 100%; border-radius: 0; }
+    .mz-slot { min-width: 72px; min-height: 76px; }
+    .mz-em { font-size: 24px; }
+    .mz-stop { width: 62px; }
+    .mz-track { justify-content: flex-start; }
+    .mz-em-xl { font-size: 44px; }
+    .mz-bucket { min-width: 88px; }
+    .mz-pad { grid-template-columns: repeat(5, 50px); }
+    .mz-q { font-size: 1.25rem; }
+    .mz-sit { flex-direction: column; text-align: center; gap: 0.4rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mz, .mz-panel, .mz-stamp-ok, .mz-plus { animation: none; }
+    .mz-token, .mz-bar i { transition: none; }
+  }

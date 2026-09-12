@@ -9,7 +9,7 @@
  * It builds its own DOM, so its styles live in a global block on the page
  * (Astro's scoped CSS never reaches nodes made at runtime).
  */
-import type { Mission, OrderRound, IdRound, PathStop } from '../../data/missions';
+import type { Mission, OrderRound, IdRound, PathStop, SortItem, ChoiceRound, CalcRound, BuildItem } from '../../data/missions';
 import { bn } from '../../lib/bn';
 import { confetti, chime } from '../../lib/game';
 
@@ -23,6 +23,8 @@ const shuffle = <T,>(a: T[]) => { const b = a.slice(); for (let i = b.length - 1
 
 export function playMission(spec: Mission, o: Opts): { close(): void } {
   /* ---- shell ---- */
+  // only ever one mission panel on screen: a second one would stack on the first
+  document.querySelectorAll('.mz').forEach((n) => n.remove());
   const wrap = el('div', 'mz'); wrap.style.setProperty('--w', o.hue);
   wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-label', o.name);
   const panel = el('div', 'mz-panel');
@@ -212,7 +214,18 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
       const r = rounds[ri]!;
       body.replaceChildren();
       body.append(el('p', 'mz-round', `${bn(ri + 1)} / ${bn(rounds.length)}`));
-      const art = el('div', 'mz-art'); art.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">${r.art}</svg>`;
+      // a drawing where one is worth drawing, otherwise one big glyph
+      const art = el('div', 'mz-art');
+      if (r.art) art.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">${r.art}</svg>`;
+      // one class per call: classList.add throws on a string containing a space
+      else {
+        const glyph = r.big ?? '?';
+        art.classList.add('mz-art-big');
+        if (r.shadow) art.classList.add('mz-art-shadow');
+        // a whole word needs a card that grows sideways, not a square tile
+        else if (Array.from(glyph).length > 2) art.classList.add('mz-art-word');
+        art.append(el('span', '', glyph));
+      }
       const clue = el('p', 'mz-clue', r.clue);
       const opts = el('div', 'mz-choices');
       let locked = false;
@@ -237,9 +250,172 @@ export function playMission(spec: Mission, o: Opts): { close(): void } {
     round();
   }
 
+  /* ---- game type: put each thing in the right bucket ---- */
+  function runSort(buckets: { name: string; emoji: string }[], items: SortItem[]) {
+    steps = items.length; setProgress();
+    const order = shuffle(items);
+    let ri = 0;
+    body.replaceChildren();
+    const counter = el('p', 'mz-round');
+    const card = el('div', 'mz-thing');
+    const bar = el('div', 'mz-buckets');
+    const btns = buckets.map((b, bi) => {
+      const x = el('button', 'mz-bucket'); x.type = 'button';
+      x.append(el('span', 'mz-em', b.emoji), el('span', '', b.name));
+      x.addEventListener('click', () => {
+        if (over) return;
+        const it = order[ri]!;
+        if (bi === it.bucket) {
+          x.classList.add('hit'); setTimeout(() => x.classList.remove('hit'), 400);
+          correct(x); foot.textContent = it.fact;
+          ri++; if (ri >= order.length) { setTimeout(finish, 550); return; }
+          setTimeout(show, 480);
+        } else { foot.textContent = `${it.name} ${buckets[bi]!.name} নয়।`; wrong(x); }
+      });
+      bar.append(x); return x;
+    });
+    const show = () => {
+      if (over) return;
+      const it = order[ri]!;
+      counter.textContent = `${bn(ri + 1)} / ${bn(order.length)}`;
+      card.replaceChildren(el('span', 'mz-em mz-em-xl', it.emoji), el('b', '', it.name));
+      if (!reduced()) card.animate([{ transform: 'translateY(-14px) scale(0.85)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+      stepStart = performance.now();
+    };
+    body.append(counter, card, el('p', 'mz-ask', 'কোন ঘরে যাবে?'), bar);
+    void btns; show();
+  }
+
+  /* ---- game type: a situation, three ways to answer ---- */
+  function runChoice(rounds: ChoiceRound[]) {
+    steps = rounds.length; setProgress();
+    let ri = 0;
+    const round = () => {
+      const r = rounds[ri]!;
+      body.replaceChildren();
+      body.append(el('p', 'mz-round', `${bn(ri + 1)} / ${bn(rounds.length)}`));
+      const sit = el('div', 'mz-sit');
+      sit.append(el('span', 'mz-em mz-em-xl', r.emoji), el('p', '', r.situation));
+      const opts = el('div', 'mz-opts');
+      let locked = false;
+      for (const opt of shuffle(r.options)) {
+        const b = el('button', 'mz-opt', opt.text); b.type = 'button';
+        b.addEventListener('click', () => {
+          if (over || locked) return;
+          if (opt.good) {
+            locked = true; b.classList.add('ok'); correct(b); foot.textContent = opt.why;
+            const next = el('button', 'mz-btn mz-primary mz-next', ri + 1 < rounds.length ? 'পরের পরিস্থিতি ▶' : 'শেষ করো ✔'); next.type = 'button';
+            next.addEventListener('click', () => { ri++; if (ri < rounds.length) round(); else finish(); });
+            opts.append(next); next.focus();
+          } else { b.classList.add('bad'); b.disabled = true; foot.textContent = opt.why; wrong(b); }
+        });
+        opts.append(b);
+      }
+      body.append(sit, opts);
+      foot.textContent = '';
+      stepStart = performance.now();
+    };
+    round();
+  }
+
+  /* ---- game type: numbers on a Bangla keypad ---- */
+  const BN_D = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  function runCalc(unit: string, rounds: CalcRound[]) {
+    steps = rounds.length; setProgress();
+    let ri = 0, typed = '';
+    body.replaceChildren();
+    const counter = el('p', 'mz-round');
+    const q = el('p', 'mz-q');
+    const out = el('div', 'mz-out'); const outN = el('b', '', '-'); const outU = el('span', 'mz-unit', unit);
+    out.append(outN, outU);
+    const pad = el('div', 'mz-pad');
+    const paint = () => { outN.textContent = typed ? typed.split('').map((d) => BN_D[+d]).join('') : '-'; out.classList.toggle('empty', !typed); };
+    const submit = (btn: Element) => {
+      if (over || !typed) return;
+      if (+typed === rounds[ri]!.a) {
+        correct(btn); foot.textContent = rounds[ri]!.fact ?? '';
+        ri++; typed = ''; paint();
+        if (ri >= rounds.length) { setTimeout(finish, 450); return; }
+        setTimeout(show, 420);
+      } else {
+        foot.textContent = `${outN.textContent} ঠিক নয়। আরেকবার হিসাব করো।`;
+        typed = ''; paint(); wrong(out);
+      }
+    };
+    for (let d = 1; d <= 10; d++) {
+      const n = d % 10;
+      const b = el('button', 'mz-key', BN_D[n]!); b.type = 'button';
+      b.addEventListener('click', () => { if (typed.length < 6) { typed += String(n); paint(); chime('tick'); } });
+      pad.append(b);
+    }
+    const del = el('button', 'mz-key mz-key-w', '⌫'); del.type = 'button';
+    del.addEventListener('click', () => { typed = typed.slice(0, -1); paint(); });
+    const ok = el('button', 'mz-key mz-key-ok', 'ঠিক আছে ✔'); ok.type = 'button';
+    ok.addEventListener('click', () => submit(ok));
+    pad.append(del, ok);
+    const show = () => { if (over) return; counter.textContent = `${bn(ri + 1)} / ${bn(rounds.length)}`; q.textContent = rounds[ri]!.q; stepStart = performance.now(); };
+    body.append(counter, q, out, pad);
+    paint(); show();
+  }
+
+  /* ---- game type: fill a basket under a budget ---- */
+  function runBuild(budget: number, budgetLabel: string, unit: string, need: { tag: string; label: string }[], pool: BuildItem[], submit: string, note: string) {
+    steps = need.length; setProgress();
+    const chosen = new Set<BuildItem>();
+    body.replaceChildren();
+    const top = el('div', 'mz-budget');
+    const spentN = el('b', '', '০'); const left = el('span', 'mz-left', '');
+    top.append(el('span', 'mz-blabel', budgetLabel), spentN, el('span', '', `/ ${bn(budget)} ${unit}`), left);
+    const track = el('span', 'mz-btrack'); const trackI = el('i'); track.append(trackI);
+    const needBar = el('div', 'mz-needs');
+    const needEls = need.map((n) => { const x = el('span', 'mz-need', n.label); needBar.append(x); return x; });
+    const grid = el('div', 'mz-pool');
+    const doneBtn = el('button', 'mz-btn mz-primary mz-next', submit); doneBtn.type = 'button';
+    let metBefore = 0;
+    const spent = () => [...chosen].reduce((s, i) => s + i.cost, 0);
+    const repaint = () => {
+      const s = spent();
+      spentN.textContent = bn(s);
+      trackI.style.width = `${Math.min(100, (s / budget) * 100)}%`;
+      track.classList.toggle('over', s > budget);
+      left.textContent = s > budget ? `${bn(s - budget)} ${unit} বেশি` : `বাকি ${bn(budget - s)} ${unit}`;
+      let met = 0;
+      need.forEach((n, i) => { const on = [...chosen].some((it) => it.tags.includes(n.tag)); needEls[i]!.classList.toggle('on', on); if (on) met++; });
+      // each newly covered requirement is one step of progress and one payout
+      while (met > metBefore) { metBefore++; done++; setProgress(); addPoints(STEP_BASE, needEls[metBefore - 1]!); chime('ok'); burstAt(needEls[metBefore - 1]!); }
+      if (met < metBefore) { metBefore = met; done = met; setProgress(); }
+      doneBtn.disabled = !(met === need.length && s <= budget);
+      doneBtn.textContent = met < need.length ? `আরও ${bn(need.length - met)}টি বাকি` : s > budget ? `${bn(s - budget)} ${unit} কমাতে হবে` : submit;
+    };
+    for (const it of pool) {
+      const b = el('button', 'mz-pick'); b.type = 'button';
+      b.append(el('span', 'mz-em', it.emoji), el('span', 'mz-pick-n', it.name), el('span', 'mz-pick-c', `${bn(it.cost)} ${unit}`));
+      b.addEventListener('click', () => {
+        if (over) return;
+        if (chosen.has(it)) { chosen.delete(it); b.classList.remove('on'); repaint(); return; }
+        chosen.add(it); b.classList.add('on');
+        // an item that covers no requirement is a real mistake here: it eats the
+        // budget and feeds nothing, so it costs a heart like any wrong answer
+        if (!it.tags.length) { foot.textContent = it.warn ?? `${it.name} কোনো দরকারি ঘর ভরায় না, শুধু ${bn(it.cost)} ${unit} নিয়ে নেয়।`; if (!wrong(b)) return; }
+        else chime('tick');
+        repaint();
+      });
+      grid.append(b);
+    }
+    doneBtn.addEventListener('click', () => { if (!doneBtn.disabled) finish(); });
+    body.append(top, track, needBar, grid, doneBtn);
+    foot.textContent = note;
+    stepStart = performance.now();
+    repaint();
+  }
+
   function run() {
     if (spec.type === 'order') intro(spec.intro, () => runOrder(spec.rounds));
     else if (spec.type === 'path') intro(spec.intro, () => runPath(spec.token, spec.tokenName, spec.stops));
+    else if (spec.type === 'sort') intro(spec.intro, () => runSort(spec.buckets, spec.items));
+    else if (spec.type === 'choice') intro(spec.intro, () => runChoice(spec.rounds));
+    else if (spec.type === 'calc') intro(spec.intro, () => runCalc(spec.unit, spec.rounds));
+    else if (spec.type === 'build') intro(spec.intro, () => runBuild(spec.budget, spec.budgetLabel, spec.unit, spec.need, spec.pool, spec.submit, spec.note));
     else intro(spec.intro, () => runIdentify(spec.caption, spec.rounds));
   }
   renderHearts(); setProgress(); run();

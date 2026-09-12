@@ -18,7 +18,8 @@ import type { ItemDetail } from '../../data/explorer-types';
 import { getMember, hasPlan, activeChild } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
-import { missionSpec } from '../../data/missions';
+import { missionSpec, missionKind, missionLength } from '../../data/missions';
+import '../../styles/mission-panel.css';
 
 export const prerender = false;
 
@@ -280,8 +281,8 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
                     <b>{m.n}</b>
                     <p>{m.d}</p>
                     <span class="m-meta">
-                      <span class="m-kind">{spec.type === 'order' ? 'সাজানোর খেলা' : spec.type === 'path' ? 'যাত্রার খেলা' : 'চেনার খেলা'}</span>
-                      <span class="m-len">{spec.type === 'order' ? `${bn(spec.rounds.length)} রাউন্ড` : spec.type === 'path' ? `${bn(spec.stops.length)} ধাপ` : `${bn(spec.rounds.length)} ধাঁধা`}</span>
+                      <span class="m-kind">{missionKind(spec)}</span>
+                      <span class="m-len">{`${bn(missionLength(spec)[0])} ${missionLength(spec)[1]}`}</span>
                       <span class="m-hearts" aria-hidden="true">♥♥♥</span>
                     </span>
                   </div>
@@ -671,113 +672,6 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
   @media (max-width: 560px) {
     .awards { grid-template-columns: repeat(3, 1fr); }
     .m-go { flex-direction: row; align-items: center; }
-  }
-</style>
-
-{/* The mission player builds its own DOM on document.body, so its rules can
-    never be scoped: Astro stamps data-astro-cid at build time and a runtime
-    node never carries one. Everything here is namespaced under .mz. */}
-<style is:global>
-  body.mz-open { overflow: hidden; }
-  .mz { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1rem;
-    background: rgba(4, 6, 12, 0.72); backdrop-filter: blur(6px); animation: mz-in 0.25s ease; }
-  @keyframes mz-in { from { opacity: 0; } to { opacity: 1; } }
-  /* min-width:0 matters: without it the grid item takes its content's
-     min-content width, and a wide track pushes the panel off both edges */
-  .mz-panel { position: relative; width: min(720px, 100%); min-width: 0; max-height: 92vh; overflow: hidden auto; border-radius: 22px;
-    background: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--w) 26%, #141c2e) 0%, #0d1322 55%, #070a12 100%);
-    border: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); color: #eef4fb;
-    animation: mz-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.25); }
-  @keyframes mz-pop { from { transform: scale(0.9) translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
-  .mz-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .mz-top { display: flex; align-items: center; gap: 0.8rem; padding: 0.9rem 1.1rem 0.7rem; }
-  .mz-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-  .mz-no { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(226, 235, 245, 0.6); }
-  .mz-title b { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; line-height: 1.25; }
-  .mz-hearts { display: flex; gap: 3px; font-size: 19px; line-height: 1; }
-  .mz-hearts .on { color: #ff5f74; text-shadow: 0 0 12px rgba(255, 95, 116, 0.55); }
-  .mz-hearts .off { color: rgba(255, 255, 255, 0.2); }
-  .mz-score { display: flex; align-items: baseline; gap: 0.3rem; font-size: 11px; color: rgba(226, 235, 245, 0.7); }
-  .mz-score b { font-family: var(--font-display); font-size: 1.25rem; color: #ffd76a; font-variant-numeric: tabular-nums; }
-  .mz-combo { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: #ffd76a; color: #241a00; }
-  .mz-close { width: 30px; height: 30px; border-radius: 50%; flex: none; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 13px; }
-  .mz-close:hover { background: rgba(255, 255, 255, 0.3); }
-  .mz-bar { height: 5px; margin: 0 1.1rem; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
-  .mz-bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--w), #ffd76a); transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
-  .mz-body { padding: 1.1rem 1.1rem 0.4rem; display: flex; flex-direction: column; align-items: center; gap: 0.85rem; min-width: 0; }
-  .mz-body > * { max-width: 100%; }
-  .mz-foot { min-height: 2.6em; padding: 0.5rem 1.2rem 1.1rem; text-align: center; font-size: 13.5px; line-height: 1.6; color: #ffe08a; }
-  .mz-plus { position: absolute; z-index: 3; transform: translate(-50%, 0); font-family: var(--font-display); font-weight: 800; font-size: 18px; color: #ffd76a; pointer-events: none; animation: mz-plus 1s ease-out forwards; }
-  @keyframes mz-plus { 0% { opacity: 0; transform: translate(-50%, 4px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -40px); } }
-
-  .mz-intro { text-align: center; padding: 1rem 0.5rem 0.5rem; }
-  .mz-rule { font-size: 1.05rem; line-height: 1.7; max-width: 46ch; margin: 0 auto; }
-  .mz-rule-s { margin: 0.9rem auto 0; max-width: 44ch; font-size: 12.5px; line-height: 1.7; color: rgba(226, 235, 245, 0.7); }
-  .mz-btn { font-size: 14px; font-weight: 800; padding: 0.6rem 1.3rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.1); color: #fff; transition: transform 0.15s ease, background 0.15s ease; }
-  .mz-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.2); }
-  .mz-primary { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 55%, #ffd76a)); border-color: transparent; color: #0d1322; }
-  .mz-go { margin-top: 1.2rem; font-size: 16px; padding: 0.7rem 1.8rem; }
-  .mz-btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 1.1rem; }
-  .mz-round { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; color: rgba(226, 235, 245, 0.65); text-transform: uppercase; }
-
-  .mz-chain { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
-  .mz-slot { min-width: 88px; min-height: 88px; padding: 0.5rem 0.4rem; border-radius: 16px; border: 2px dashed rgba(255, 255, 255, 0.22);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12.5px; font-weight: 700; text-align: center; }
-  .mz-slot.on { border-style: solid; border-color: transparent; background: color-mix(in oklab, var(--w) 34%, #0d1322); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
-  .mz-em { font-size: 30px; line-height: 1.1; }
-  .mz-arrow { color: rgba(226, 235, 245, 0.45); font-size: 18px; }
-  .mz-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-  .mz-card { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 92px; padding: 0.6rem 0.7rem; border-radius: 16px;
-    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font-size: 12.5px; font-weight: 700;
-    transition: transform 0.15s ease, background 0.15s ease; }
-  .mz-card:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.2); }
-  .mz-card.used { opacity: 0.25; transform: none; }
-  .mz-next { margin-top: 0.2rem; }
-
-  /* the journey is one row that must not wrap, so on a narrow screen it
-     scrolls inside itself rather than stretching the panel */
-  .mz-track { position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 1.6rem 2px 4px; max-width: 100%; overflow-x: auto; scrollbar-width: thin; }
-  .mz-stop { width: 72px; padding: 0.45rem 0.2rem; border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.06); font-size: 11px; font-weight: 700; text-align: center; }
-  .mz-stop .mz-em { font-size: 24px; }
-  .mz-stop.here { border-color: transparent; background: color-mix(in oklab, var(--w) 40%, #0d1322); box-shadow: 0 0 0 3px color-mix(in oklab, var(--w) 30%, transparent); }
-  .mz-link { width: 14px; height: 2px; background: rgba(255, 255, 255, 0.25); }
-  .mz-token { position: absolute; font-size: 22px; transform: translate(-50%, -100%); transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1), top 0.5s ease; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)); }
-  .mz-fact { max-width: 52ch; text-align: center; font-size: 13.5px; line-height: 1.75; color: rgba(238, 244, 251, 0.92); }
-  .mz-ask { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; text-align: center; }
-  .mz-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-  .mz-choice { padding: 0.5rem 1.05rem; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22);
-    color: #fff; font-size: 14px; font-weight: 700; transition: transform 0.15s ease, background 0.15s ease; }
-  .mz-choice:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.22); }
-  .mz-choice.ok { background: #2fa360; border-color: transparent; }
-  .mz-choice.bad { background: rgba(224, 85, 106, 0.3); border-color: rgba(224, 85, 106, 0.6); opacity: 0.65; }
-
-  .mz-art { width: 160px; height: 160px; display: grid; place-items: center; border-radius: 20px; background: rgba(255, 255, 255, 0.94); }
-  .mz-art svg { width: 130px; height: 130px; color: #1d3524; fill: #2f6b3f; }
-  .mz-clue { max-width: 46ch; text-align: center; font-size: 14.5px; line-height: 1.7; }
-  .mz-cap { font-size: 11px; color: rgba(226, 235, 245, 0.55); }
-
-  .mz-end { text-align: center; padding: 0.6rem 0.5rem 0.5rem; }
-  .mz-stamp { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-    padding: 0.3rem 0.9rem; border-radius: 8px; border: 2px solid #ffd76a; color: #ffd76a; transform: rotate(-4deg); }
-  .mz-fail .mz-stamp { border-color: #e0556a; color: #e0556a; }
-  .mz-stamp-ok { animation: mz-stamp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
-  @keyframes mz-stamp { from { transform: rotate(-4deg) scale(2.4); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
-  .mz-stars { font-size: 40px; letter-spacing: 0.1em; color: #ffd76a; margin-top: 0.6rem; line-height: 1.1; }
-  .mz-end h3 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; margin-top: 0.2rem; }
-  .mz-sum { max-width: 44ch; margin: 0.5rem auto 0; font-size: 13.5px; line-height: 1.75; color: rgba(238, 244, 251, 0.85); }
-
-  @media (max-width: 560px) {
-    .mz { padding: 0; }
-    .mz-panel { width: 100%; max-height: 100vh; height: 100%; border-radius: 0; }
-    .mz-slot { min-width: 72px; min-height: 76px; }
-    .mz-em { font-size: 24px; }
-    .mz-stop { width: 62px; }
-    .mz-track { justify-content: flex-start; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .mz, .mz-panel, .mz-stamp-ok, .mz-plus { animation: none; }
-    .mz-token, .mz-bar i { transition: none; }
   }
 </style>
 
