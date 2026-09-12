@@ -11,7 +11,7 @@ import Base from '../../layouts/Base.astro';
 import { db } from '../../lib/db';
 import { getWorlds } from '../../lib/content';
 import { bn } from '../../lib/bn';
-import { getMember, hasPlan, activeChild, progressSummary, bestQuizResults, MAX_CHILDREN } from '../../lib/members';
+import { getMember, hasPlan, activeChild, progressSummary, bestQuizResults, familyWeek, MAX_CHILDREN } from '../../lib/members';
 import { readableCount, readableCats } from '../../lib/explorers';
 import { passMark } from '../../lib/quiz';
 
@@ -27,6 +27,18 @@ const LEVELS = [['l1', 'ছোট ৫–৮'], ['l2', 'মাঝারি ৯–
 
 const familyEnd = member?.entitlements.find((e) => e.plan === 'family' && e.status === 'active')?.endsAt ?? null;
 const when = (ms: number) => new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium' }).format(ms);
+
+/**
+ * The family week. Siblings on one plan, and nobody else, ever: it is the one
+ * shape of leaderboard this site can carry, because it adds no stranger and no
+ * new data about anybody. The numbers come from rows the children's own
+ * devices already wrote.
+ */
+const week = member && plan && member.children.length > 1 ? await familyWeek(member.children) : [];
+const board = week.slice().sort((a, b) => b.items - a.items || b.days - a.days);
+const weekTop = board[0]?.items ?? 0;
+const weekAny = board.some((r) => r.items > 0 || r.quizzes > 0);
+const worldName = new Map((await getWorlds()).map((w) => [w.slug, w.bn]));
 
 type Row = { slug: string; bn: string; hue: string; seen: number; total: number; quizzes: number; quizTotal: number; done: boolean };
 let rows: Row[] = [];
@@ -122,6 +134,42 @@ if (member && plan && child) {
           </section>
         )}
 
+        {board.length > 1 && (
+          <section class="card box">
+            <div class="sh"><h2>এই সপ্তাহে</h2><span class="lbl">শেষ সাত দিন</span></div>
+            {weekAny ? (
+              <>
+                <ol class="board">
+                  {board.map((r, i) => (
+                    <li class={i === 0 && r.items > 0 ? 'lead' : undefined}>
+                      <span class="rank">{bn(i + 1)}</span>
+                      <span class="who">
+                        <b>{r.nickname}</b>
+                        <small>
+                          {r.items > 0
+                            ? `${bn(r.days)} দিন · ${r.worlds.slice(0, 2).map((w) => worldName.get(w) ?? w).join(', ')}${r.worlds.length > 2 ? ` আরও ${bn(r.worlds.length - 2)}টি` : ''}`
+                            : 'এই সপ্তাহে এখনো কিছু খোলা হয়নি'}
+                        </small>
+                      </span>
+                      <span class="btrack" aria-hidden="true"><i style={`width:${weekTop ? Math.round((r.items / weekTop) * 100) : 0}%`}></i></span>
+                      <span class="bnum">
+                        <b>{bn(r.items)}</b> নতুন
+                        {r.quizzes > 0 && <small>যাচাই {bn(r.passed)}/{bn(r.quizzes)} পাশ</small>}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+                <p class="note">
+                  প্রতি সোমবার শূন্য থেকে শুরু। এটা শুধু এই পরিবারের ভেতরের হিসাব - বাইরের কেউ নেই,
+                  কারও সঙ্গে তুলনাও হয় না। কম হলে কিছু হারায় না, কেবল পরের সপ্তাহ আছে।
+                </p>
+              </>
+            ) : (
+              <p class="note">এই সপ্তাহে এখনো কারও হিসাব জমা হয়নি। কেউ কিছু খুললেই এখানে দেখাবে।</p>
+            )}
+          </section>
+        )}
+
         {plan && child && (
           <section class="card box">
             <div class="sh"><h2>{child.nickname} কতদূর</h2><span class="lbl">ভুবন ধরে</span></div>
@@ -183,6 +231,24 @@ if (member && plan && child) {
   .mini:hover { background: var(--panel-2); }
   .mini.danger:hover { color: var(--danger); border-color: color-mix(in oklab, var(--danger) 45%, var(--line)); }
   .kform { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.6rem; align-items: end; margin-top: 0.4rem; }
+
+  /* the family week */
+  .board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+  .board li { display: grid; grid-template-columns: 26px minmax(0, 1fr) minmax(60px, 1.1fr) auto; gap: 0.8rem; align-items: center; padding: 0.6rem 0.8rem; border-radius: var(--r-sm); background: var(--panel-2); border: 1px solid var(--line-soft); }
+  .board li.lead { background: color-mix(in oklab, var(--brand) 10%, var(--panel)); border-color: color-mix(in oklab, var(--brand) 32%, var(--line-soft)); }
+  .rank { font-weight: 800; font-size: 15px; color: var(--muted); text-align: center; }
+  .board li.lead .rank { color: var(--brand-ink); }
+  .who { display: flex; flex-direction: column; min-width: 0; }
+  .who b { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+  .who small { font-size: 12px; color: var(--muted); }
+  .btrack { display: block; height: 8px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+  .btrack i { display: block; height: 100%; border-radius: 999px; background: var(--brand); }
+  .bnum { display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .bnum b { font-size: 17px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) {
+    .board li { grid-template-columns: 22px minmax(0, 1fr) auto; }
+    .btrack { grid-column: 2 / 4; }
+  }
 
   .worlds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
   .worlds li { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto auto; gap: 0.7rem; align-items: center; padding: 0.5rem 0.3rem; border-bottom: 1px solid var(--line-soft); }

@@ -336,7 +336,7 @@ const first = shelves[0];
       if (!it) return;
       const pick = $('#pick');
       const b = document.createElement('b'); b.textContent = it[0];
-      if (got(s, it)) pick.replaceChildren(document.createTextNode('এটা '), b, document.createTextNode(`. ${s.c} থেকে, ${s.wn} ভুবনে।`));
+      if (got(s, it)) pick.replaceChildren(document.createTextNode('এটা '), b, document.createTextNode(` - ${s.c} থেকে, ${s.wn} ভুবনে।`));
       else pick.replaceChildren(b, document.createTextNode(' এখনো দেখা হয়নি। ভুবনে গিয়ে খুলে দেখলেই এই জায়গাটা ভরে যাবে।'));
     });
     // Start on the first shelf that still has gaps, because that is the one

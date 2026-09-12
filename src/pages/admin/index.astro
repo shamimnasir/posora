@@ -84,6 +84,25 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
       }
     </div>
 
+    <div class="card">
+      <h2>সপ্তাহের চিঠি</h2>
+      <p class="note">
+        পরিবার প্ল্যান চালু আছে এমন প্রতিটি অ্যাকাউন্টে সপ্তাহে একবার যায় - শুধু সেই সপ্তাহে,
+        যে সপ্তাহে সত্যিই কিছু হয়েছে। চুপচাপ সপ্তাহে কোনো মেইল যায় না।
+        আগে "দেখে নাও" চেপে লেখাটা পড়ুন, তারপর পাঠান।
+      </p>
+      <div class="wrow">
+        <button type="button" class="btn" id="letter-dry">দেখে নাও (পাঠাবে না)</button>
+        <button type="button" class="btn btn-primary" id="letter-send">সবাইকে পাঠাও</button>
+      </div>
+      <p class="note" id="letter-out" role="status" aria-live="polite"></p>
+      <pre class="letter-pre" id="letter-pre" hidden></pre>
+      <p class="note">
+        স্বয়ংক্রিয় করতে: <code>CRON_SECRET</code> সেট করে বাইরের যেকোনো শিডিউলার থেকে
+        <code>POST /api/cron/weekly</code> ডাকলেই হবে, হেডারে <code>Authorization: Bearer …</code>।
+      </p>
+    </div>
+
     {
       activity.length > 0 && (
         <div class="card">
@@ -122,4 +141,42 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
       if (out) out.textContent = `ব্যর্থ: ${(e as Error).message}`;
     }
   });
+
+  /* ---- the weekly letter ---- */
+  type Run = { ok?: boolean; error?: string; members?: number; sent?: number; quiet?: number; failed?: number;
+    preview?: { to: string; subject: string; text: string }[] };
+  const lOut = document.getElementById('letter-out');
+  const lPre = document.getElementById('letter-pre') as HTMLPreElement | null;
+  const run = async (dry: boolean) => {
+    const dryBtn = document.getElementById('letter-dry') as HTMLButtonElement;
+    const sendBtn = document.getElementById('letter-send') as HTMLButtonElement;
+    if (!dry && !confirm('প্রতিটি পরিবার প্ল্যান অ্যাকাউন্টে চিঠি চলে যাবে। পাঠাব?')) return;
+    dryBtn.disabled = sendBtn.disabled = true;
+    if (lOut) lOut.textContent = dry ? 'চিঠি তৈরি হচ্ছে…' : 'পাঠানো হচ্ছে…';
+    try {
+      const res = await fetch(`/api/cron/weekly${dry ? '?dry=1' : ''}`, { method: 'POST' });
+      const data = (await res.json()) as Run;
+      if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      if (lOut) lOut.textContent = dry
+        ? `${data.members}টি অ্যাকাউন্ট, ${data.preview?.length ?? 0}টি চিঠি তৈরি, ${data.quiet}টি চুপচাপ সপ্তাহ। কিছু পাঠানো হয়নি।`
+        : `পাঠানো: ${data.sent}. চুপচাপ সপ্তাহ: ${data.quiet}. ব্যর্থ: ${data.failed}.`;
+      if (lPre) {
+        const list = data.preview ?? [];
+        lPre.hidden = list.length === 0;
+        lPre.textContent = list.map((p) => `→ ${p.to}\n${p.subject}\n${'-'.repeat(40)}\n${p.text}`).join('\n\n');
+      }
+    } catch (e) {
+      if (lOut) lOut.textContent = `ব্যর্থ: ${(e as Error).message}`;
+    } finally {
+      dryBtn.disabled = sendBtn.disabled = false;
+    }
+  };
+  document.getElementById('letter-dry')?.addEventListener('click', () => void run(true));
+  document.getElementById('letter-send')?.addEventListener('click', () => void run(false));
 </script>
+
+<style>
+  .wrow { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.8rem; }
+  .letter-pre { margin-top: 0.9rem; padding: 0.9rem 1rem; border-radius: 10px; background: var(--sunk); border: 1px solid var(--line-soft);
+    font-family: var(--font-mono); font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow-y: auto; }
+</style>

@@ -13,6 +13,7 @@
 import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
 import { requireDb, db } from './db';
+import { passMark } from './quiz';
 
 export const MEMBER_COOKIE = 'posora_member';
 export const CHILD_COOKIE = 'posora_child';
@@ -267,6 +268,91 @@ export async function bestQuizResults(childId: string, world?: string): Promise<
     ? d.prepare('SELECT world, cat, MAX(score) AS score, total, MAX(at) AS at FROM quiz_results WHERE child_id = ? AND world = ? GROUP BY world, cat').bind(childId, world)
     : d.prepare('SELECT world, cat, MAX(score) AS score, total, MAX(at) AS at FROM quiz_results WHERE child_id = ? GROUP BY world, cat').bind(childId);
   const { results } = await stmt.all<QuizResult>();
+  return results;
+}
+
+/* ---------- the family week ---------- */
+
+/** Asia/Dhaka is UTC+6 with no daylight saving, so one constant is the whole rule. */
+const DHAKA_MS = 6 * 3600_000;
+
+export type WeekRow = {
+  childId: string;
+  nickname: string;
+  /** Items opened in the window. */
+  items: number;
+  /** Days in the window on which anything was opened at all. */
+  days: number;
+  /** Quizzes taken in the window, and how many of those were passed. */
+  quizzes: number;
+  passed: number;
+  /** Worlds touched in the window, newest first, for the parent's sentence. */
+  worlds: string[];
+  /** Last time anything happened, or 0. */
+  last: number;
+};
+
+/**
+ * What each child on one plan did in the last `days` days.
+ *
+ * Two jobs, one query set. It is the family board the children see, which is
+ * the only leaderboard this site will ever have: siblings on one account, no
+ * strangers, no extra data about anybody. And it is the body of the weekly
+ * email to the adult, which is the only way this site can reach a household,
+ * since a website cannot notify a child and must not try.
+ *
+ * Everything here is counted from rows the child's own devices already wrote.
+ * Nothing new is collected to make it.
+ */
+export async function familyWeek(kids: Child[], days = 7): Promise<WeekRow[]> {
+  if (!kids.length) return [];
+  const d = requireDb();
+  const since = Date.now() - days * 86400000;
+  const ids = kids.map((k) => k.id);
+  const marks = ids.map(() => '?').join(', ');
+
+  const prog = await d.prepare(
+    `SELECT child_id, world, COUNT(*) AS n, MAX(seen_at) AS last
+     FROM child_progress WHERE child_id IN (${marks}) AND seen_at >= ?
+     GROUP BY child_id, world`,
+  ).bind(...ids, since).all<{ child_id: string; world: string; n: number; last: number }>();
+
+  // Days have to be counted across every world at once, or a child who opened
+  // two worlds on one evening reads as two separate days. DHAKA_MS shifts the
+  // bucket boundary off UTC midnight and onto Bangladesh's, so a session at
+  // half past midnight belongs to the evening it actually was.
+  const dayRows = await d.prepare(
+    `SELECT child_id, COUNT(DISTINCT CAST((seen_at + ${DHAKA_MS}) / 86400000 AS INTEGER)) AS days
+     FROM child_progress WHERE child_id IN (${marks}) AND seen_at >= ?
+     GROUP BY child_id`,
+  ).bind(...ids, since).all<{ child_id: string; days: number }>();
+
+  const quiz = await d.prepare(
+    `SELECT child_id, score, total, at FROM quiz_results
+     WHERE child_id IN (${marks}) AND at >= ?`,
+  ).bind(...ids, since).all<{ child_id: string; score: number; total: number; at: number }>();
+
+  return kids.map((k) => {
+    const rows = prog.results.filter((r) => r.child_id === k.id);
+    const qs = quiz.results.filter((r) => r.child_id === k.id);
+    return {
+      childId: k.id,
+      nickname: k.nickname,
+      items: rows.reduce((n, r) => n + r.n, 0),
+      days: dayRows.results.find((r) => r.child_id === k.id)?.days ?? 0,
+      quizzes: qs.length,
+      passed: qs.filter((q) => q.score >= passMark(q.total)).length,
+      worlds: rows.sort((a, b) => b.last - a.last).map((r) => r.world),
+      last: Math.max(0, ...rows.map((r) => r.last), ...qs.map((q) => q.at)),
+    };
+  });
+}
+
+/** The children on a plan, in their display order. For callers with no session. */
+export async function listChildren(memberId: string): Promise<Child[]> {
+  const { results } = await requireDb()
+    .prepare('SELECT id, nickname, level, sort, created_at AS createdAt FROM children WHERE member_id = ? ORDER BY sort, created_at')
+    .bind(memberId).all<Child>();
   return results;
 }
 

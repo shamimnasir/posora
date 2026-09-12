@@ -62,7 +62,7 @@ const schema = [
         <div>
           <p class="eyebrow">আজকের লক্ষ্য</p>
           <h1>তিনটা কাজ, তারপর ছুটি</h1>
-          <p class="lede">{dayLabel(key)}. তিনটাই হয়ে গেলে আজকের মতো শেষ - কালকে আবার নতুন কিছু থাকবে।</p>
+          <p class="lede">{dayLabel(key)}। তিনটাই হয়ে গেলে আজকের মতো শেষ - কালকে আবার নতুন কিছু থাকবে।</p>
         </div>
         <div class="streakbox">
           <span class="flame" id="flame">🔥</span>
@@ -229,7 +229,7 @@ const schema = [
         <section class="card parent" id="parent" hidden>
           <div class="card-h"><span class="lbl">বাড়ির বড়দের জন্য</span></div>
           <h3 id="p-h">সাত দিন টানা হয়ে গেছে</h3>
-          <p id="p-p">এই হিসাবটা এখন শুধু এই ব্রাউজারে আছে. নতুন ফোনে বা ট্যাবে গেলে হারিয়ে যাবে। একটা পরিবার অ্যাকাউন্ট খুললে যেকোনো যন্ত্র থেকে একই হিসাব দেখা যাবে।</p>
+          <p id="p-p">এই হিসাবটা এখন শুধু এই ব্রাউজারে আছে। নতুন ফোনে বা ট্যাবে গেলে হারিয়ে যাবে। একটা পরিবার অ্যাকাউন্ট খুললে যেকোনো যন্ত্র থেকে একই হিসাব দেখা যাবে।</p>
           <div class="p-btns">
             <a class="btn btn-primary" href="/account/" id="p-go">অ্যাকাউন্ট খোলো</a>
             <button type="button" class="btn" id="p-no">এখন নয়</button>
@@ -553,7 +553,7 @@ const schema = [
       const name = block.querySelectorAll('.qo')[want]!.textContent ?? '';
       why.innerHTML = ok
         ? `ঠিক! <a href="/${w}/?cat=${ci}">${name}</a> সম্পর্কে আরও পড়তে পারো।`
-        : `উত্তর <b>${name}</b>. <a href="/${w}/?cat=${ci}">গিয়ে পড়ে আসো →</a>`;
+        : `উত্তর <b>${name}</b>। <a href="/${w}/?cat=${ci}">গিয়ে পড়ে আসো →</a>`;
       const score = $('#q-score');
       score.hidden = false;
       score.querySelector('b')!.textContent = bn(right);
