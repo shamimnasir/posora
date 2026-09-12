@@ -1,42 +1,72 @@
 ---
 /**
- * Where the emailed sign-in link lands. Turns the one-time token into a
- * session cookie and moves on; a stale or reused link explains itself and
- * offers a fresh one. Never cached: the response sets a cookie.
+ * Where the emailed sign-in link lands.
+ *
+ * This page does not sign anybody in. It looks at the token, says whose it is,
+ * and puts a button in front of you; the button posts to /api/account/verify,
+ * which is what spends it.
+ *
+ * That extra tap is not ceremony. Mail gateways fetch every URL in a message
+ * to scan it, so a link that signed you in on GET would be spent by the
+ * scanner before you ever clicked, and you would be locked out of your own
+ * account with nothing on screen to explain it. A scanner issues GETs; it does
+ * not submit a same-origin form. The tap is what tells the two apart.
+ *
+ * It works with JavaScript off, which the fragment-based alternative does not.
  */
 import Base from '../../layouts/Base.astro';
 import { db } from '../../lib/db';
-import { verifyMagicLink, MEMBER_COOKIE, cookieOptions } from '../../lib/members';
+import { peekMagicLink } from '../../lib/members';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'private, no-store');
 
 const token = Astro.url.searchParams.get('t') ?? '';
-let ok = false;
-if (db() && token) {
-  try {
-    const session = await verifyMagicLink(token, Astro.request.headers.get('user-agent'));
-    if (session) {
-      Astro.cookies.set(MEMBER_COOKIE, session, cookieOptions(Astro.url.protocol === 'https:'));
-      ok = true;
-    }
-  } catch (err) {
-    console.error('verify failed', err);
-  }
-}
-if (ok) return Astro.redirect('/account/?welcome=1', 303);
+const failed = Astro.url.searchParams.get('e');
+const peek = db() && token && !failed ? await peekMagicLink(token) : { ok: false as const };
+
+/** Hide the middle of the address: enough to recognise, not enough to harvest. */
+const veil = (email: string) => {
+  const [user = '', host = ''] = email.split('@');
+  const head = user.slice(0, 2), tail = user.length > 3 ? user.slice(-1) : '';
+  return `${head}${'•'.repeat(Math.max(1, user.length - head.length - tail.length))}${tail}@${host}`;
+};
 ---
-<Base title="ঢোকা যায়নি" description="পসরায় ঢোকার লিংক" noindex>
+<Base title={peek.ok ? 'ঢোকা হবে?' : 'ঢোকা যায়নি'} description="পসরায় ঢোকার লিংক" noindex>
   <div class="wrap page">
-    <div class="card box">
-      <p class="eyebrow">পসরা পরিবার</p>
-      <h1>এই লিংকটা আর কাজ করছে না</h1>
-      <p>
-        ঢোকার লিংক বিশ মিনিট পর্যন্ত কাজ করে, আর একবারই। হয় সময় পেরিয়ে গেছে, নয়তো
-        লিংকটা আগেই একবার ব্যবহার হয়েছে। নতুন একটা চাইলে এক মিনিটের কাজ।
-      </p>
-      <a class="btn btn-primary" href="/account/">নতুন লিংক চাও</a>
-    </div>
+    {peek.ok ? (
+      <div class="card box">
+        <p class="eyebrow">পসরা পরিবার</p>
+        <h1>ঢুকে পড়ি?</h1>
+        <p>
+          এই লিংকটা <b>{veil(peek.email)}</b> ঠিকানার। নিচের বোতামে চাপলেই ঢুকে যাবেন,
+          আর এই ব্রাউজারে তিরিশ দিন ঢোকা থাকবে।
+        </p>
+        <form method="post" action="/api/account/verify">
+          <input type="hidden" name="t" value={token} />
+          <button class="btn btn-primary" type="submit">হ্যাঁ, ঢুকে পড়ো</button>
+        </form>
+        <p class="fine">
+          একটা বোতাম বেশি চাপতে হলো কেন: অনেক ইমেইল সার্ভিস নিরাপত্তার জন্য চিঠির ভেতরের
+          লিংকগুলো নিজেরাই একবার খুলে দেখে। বোতামটা না থাকলে আপনার আগেই ওরা লিংকটা খরচ
+          করে ফেলত, আর আপনি আর ঢুকতেই পারতেন না।
+        </p>
+      </div>
+    ) : (
+      <div class="card box">
+        <p class="eyebrow">পসরা পরিবার</p>
+        <h1>এই লিংকটা আর কাজ করছে না</h1>
+        <p>
+          ঢোকার লিংক বিশ মিনিট পর্যন্ত কাজ করে, আর একবারই। হয় সময় পেরিয়ে গেছে, নয়তো
+          লিংকটা আগেই একবার ব্যবহার হয়েছে। নতুন একটা চাইলে এক মিনিটের কাজ।
+        </p>
+        <p class="fine">
+          ইমেইলে লিংকের সঙ্গে ছয় সংখ্যার একটা কোডও গিয়েছিল। সেটা এখনো হাতে থাকলে
+          ঢোকার পাতায় গিয়ে ওটাই বসিয়ে দিন - কোড আর লিংক দুটোই একই সময় পর্যন্ত চলে।
+        </p>
+        <a class="btn btn-primary" href="/account/">ঢোকার পাতায় যাও</a>
+      </div>
+    )}
   </div>
 </Base>
 
@@ -45,5 +75,7 @@ if (ok) return Astro.redirect('/account/?welcome=1', 303);
   .box { max-width: 520px; padding: 1.6rem 1.7rem 1.8rem; display: flex; flex-direction: column; gap: 0.7rem; }
   h1 { font-size: clamp(1.5rem, 3.5vw, 2rem); font-weight: 800; }
   p { color: var(--ink-2); line-height: 1.7; }
+  .fine { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
+  form { margin-top: 0.4rem; }
   .btn { align-self: flex-start; margin-top: 0.4rem; }
 </style>

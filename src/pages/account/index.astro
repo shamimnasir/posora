@@ -66,14 +66,34 @@ if (member && plan && child) {
       <div class="signin">
         <div class="card box">
           <p class="eyebrow">পসরা পরিবার</p>
-          <h1>ইমেইলে একটা লিংক পাঠাই</h1>
-          <p class="lede">পাসওয়ার্ড নেই, মনে রাখারও কিছু নেই। ইমেইল দিন, যে লিংকটা যাবে তাতে চাপলেই ঢুকে যাবেন। লিংকটা বিশ মিনিট কাজ করে, একবারই।</p>
+          <h1>ইমেইলে একটা কোড পাঠাই</h1>
+          <p class="lede">
+            পাসওয়ার্ড নেই, মনে রাখারও কিছু নেই। ইমেইল দিন, ছয় সংখ্যার একটা কোড যাবে -
+            সেটা এখানেই বসিয়ে দিলে ঢুকে যাবেন। একই মেইলে একটা লিংকও থাকবে, চাইলে তাতেও
+            চাপতে পারেন। দুটোই বিশ মিনিট কাজ করে, একবারই।
+          </p>
           <form id="lform" novalidate>
             <label>ইমেইল <input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="আপনার ইমেইল" /></label>
             <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
-            <button class="btn btn-primary" type="submit">লিংক পাঠাও</button>
+            <button class="btn btn-primary" type="submit">কোড পাঠাও</button>
             <p class="msg" id="lmsg" role="status" aria-live="polite"></p>
           </form>
+
+          {/* The code is the path that works everywhere. The link in the same
+              email can be eaten by a mail scanner, and on a phone it opens
+              inside the mail app's own browser where the session is stranded.
+              Typing six digits into this tab has neither problem. */}
+          <form id="cform" novalidate hidden>
+            <p class="sent" id="csent"></p>
+            <label>ইমেইলে পাঠানো ছয় সংখ্যার কোড
+              <input name="code" id="cinput" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*"
+                maxlength="6" required placeholder="------" spellcheck="false" />
+            </label>
+            <button class="btn btn-primary" type="submit">ঢুকে পড়ো</button>
+            <p class="msg" id="cmsg" role="status" aria-live="polite"></p>
+            <button type="button" class="mini" id="cback">অন্য ইমেইলে পাঠাই</button>
+          </form>
+
           <p class="fine">এই ফর্মটা অভিভাবকের জন্য। সন্তানের কোনো অ্যাকাউন্ট হয় না, হবেও না।</p>
         </div>
         <aside class="card side">
@@ -207,6 +227,12 @@ if (member && plan && child) {
   .hp { position: absolute; left: -9999px; }
   .fine { font-size: 12.5px; color: var(--muted); }
   .msg { font-size: 14px; color: var(--muted); min-height: 1.4em; }
+  .sent { font-size: 14px; color: var(--ink-2); line-height: 1.7; }
+  /* Wide, spaced digits: this is read off a phone notification and typed back,
+     often by somebody holding the phone in the other hand. */
+  #cinput { font-family: var(--font-mono); font-size: 26px; letter-spacing: 0.3em; text-align: center; padding: 0.6rem 0.5rem; }
+  #cform { gap: 0.8rem; }
+  #cback { align-self: flex-start; }
   .msg.ok { color: var(--ok); font-weight: 600; }
   .msg.err { color: var(--danger); }
   .btn { align-self: flex-start; }
@@ -282,13 +308,53 @@ if (member && plan && child) {
       try {
         const res = await fetch('/api/account/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, website: String(fd.get('website') ?? '') }) });
         const data = (await res.json()) as { ok?: boolean; error?: string };
-        if (data.ok) { msg.className = 'msg ok'; msg.textContent = `${email}-এ লিংক পাঠানো হয়েছে। ইনবক্স দেখুন, স্প্যামেও একবার।`; lform.reset(); return; }
+        if (data.ok) { msg.className = 'msg'; msg.textContent = ''; showCode(email); return; }
         msg.className = 'msg err';
         msg.textContent = data.error === 'throttled' ? 'একটু বেশি বার চাওয়া হয়ে গেছে। এক ঘণ্টা পরে আবার।'
           : data.error === 'email-unavailable' ? 'ইমেইল পাঠানোর ব্যবস্থা এই মুহূর্তে বন্ধ। support@posora.com-এ লিখুন।'
           : 'পাঠানো গেল না। আরেকবার চেষ্টা করুন।';
       } catch { msg.className = 'msg err'; msg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না।'; }
       finally { btn.disabled = false; }
+    });
+  }
+
+  /* ---- the six digit code ---- */
+  const cform = document.getElementById('cform') as HTMLFormElement | null;
+  let codeFor = '';
+  function showCode(email: string) {
+    if (!cform || !lform) return;
+    codeFor = email;
+    lform.hidden = true;
+    cform.hidden = false;
+    document.getElementById('csent')!.textContent = `${email}-এ একটা কোড আর একটা লিংক পাঠানো হয়েছে। ইনবক্স দেখুন, স্প্যামেও একবার। কোডটা এখানে বসালেই হবে।`;
+    (document.getElementById('cinput') as HTMLInputElement).focus();
+  }
+  if (cform) {
+    const cmsg = document.getElementById('cmsg')!;
+    const cbtn = cform.querySelector('button')!;
+    const cin = document.getElementById('cinput') as HTMLInputElement;
+    // Phones paste the code from the notification with spaces in it.
+    cin.addEventListener('input', () => { cin.value = cin.value.replace(/\D/g, '').slice(0, 6); });
+    document.getElementById('cback')?.addEventListener('click', () => {
+      cform.hidden = true;
+      if (lform) { lform.hidden = false; lform.reset(); }
+    });
+    cform.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = cin.value.replace(/\D/g, '');
+      if (code.length !== 6) { cmsg.className = 'msg err'; cmsg.textContent = 'ছয়টা সংখ্যা লাগবে।'; return; }
+      cbtn.disabled = true; cmsg.className = 'msg'; cmsg.textContent = 'দেখা হচ্ছে...';
+      try {
+        const res = await fetch('/api/account/code', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: codeFor, code }) });
+        const data = (await res.json()) as { ok?: boolean; error?: string };
+        if (data.ok) { cmsg.className = 'msg ok'; cmsg.textContent = 'ঢুকে পড়ছেন...'; location.href = '/account/?welcome=1'; return; }
+        cmsg.className = 'msg err';
+        cmsg.textContent = data.error === 'locked' ? 'অনেকবার ভুল হয়েছে, এই কোডটা আর চলবে না। নতুন একটা চান।'
+          : data.error === 'expired' ? 'কোডের সময় পেরিয়ে গেছে। নতুন একটা চান।'
+          : data.error === 'throttled' ? 'একটু জিরিয়ে আবার চেষ্টা করুন।'
+          : 'কোডটা মিলল না। আরেকবার দেখুন।';
+      } catch { cmsg.className = 'msg err'; cmsg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না।'; }
+      finally { cbtn.disabled = false; }
     });
   }
 

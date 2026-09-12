@@ -14,6 +14,7 @@ import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
 import { requireDb, db } from './db';
 import { passMark } from './quiz';
+import { bn } from './bn';
 
 export const MEMBER_COOKIE = 'posora_member';
 export const CHILD_COOKIE = 'posora_child';
@@ -22,6 +23,14 @@ const LINK_MINUTES = 20;
 /** Sign-in links per email or per IP inside one hour before we stop sending. */
 const LINK_LIMIT = 5;
 const LINK_WINDOW_MS = 60 * 60_000;
+/**
+ * Wrong codes allowed before the whole sign-in request is dead.
+ *
+ * Six digits is about twenty bits, which is only safe because this number is
+ * small. Five requests an hour times this is a few dozen guesses against a
+ * million, per hour, per address.
+ */
+const CODE_TRIES = 5;
 export const MAX_CHILDREN = 6;
 export const PLAN_FAMILY = 'family';
 
@@ -51,6 +60,20 @@ const b64url = (bytes: Uint8Array): string => {
   return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
 const randomToken = () => b64url(crypto.getRandomValues(new Uint8Array(32)));
+/**
+ * Six digits, drawn without modulo bias: the naive `% 1000000` over a 32-bit
+ * value makes the low codes very slightly likelier, and for something this
+ * short that is worth not doing.
+ */
+function randomCode(): string {
+  const max = 1_000_000, limit = Math.floor(0xffffffff / max) * max;
+  const buf = new Uint32Array(1);
+  let n = 0;
+  do { crypto.getRandomValues(buf); n = buf[0]!; } while (n >= limit);
+  return String(n % max).padStart(6, '0');
+}
+/** The code is hashed with the address, so one rainbow table cannot cover every user. */
+const codeHash = (code: string, email: string) => sha256Hex(`${email}:${code}`);
 const newId = () => b64url(crypto.getRandomValues(new Uint8Array(12)));
 
 async function sha256Hex(s: string): Promise<string> {
@@ -101,24 +124,88 @@ export async function requestMagicLink(rawEmail: string, origin: string, ip: str
   if (!mail.EMAIL) return 'email-unavailable';
 
   const token = randomToken();
+  const code = randomCode();
   const now = Date.now();
-  await d.prepare('INSERT INTO member_tokens (token_hash, email, created_at, expires_at) VALUES (?, ?, ?, ?)')
-    .bind(await sha256Hex(token), email, now, now + LINK_MINUTES * 60_000).run();
+  await d.prepare('INSERT INTO member_tokens (token_hash, email, created_at, expires_at, code_hash) VALUES (?, ?, ?, ?, ?)')
+    .bind(await sha256Hex(token), email, now, now + LINK_MINUTES * 60_000, await codeHash(code, email)).run();
 
   const link = `${origin}/account/verify?t=${token}`;
-  const text = `পসরায় ঢুকতে নিচের লিংকে চাপুন। লিংকটা ${LINK_MINUTES} মিনিট পর্যন্ত কাজ করবে, একবারই।\n\n${link}\n\nআপনি যদি এটা না চেয়ে থাকেন, কিছু করতে হবে না - কেউ আপনার অ্যাকাউন্টে ঢুকতে পারবে না।`;
+  /**
+   * The code comes first and the link second, deliberately. Typing six digits
+   * into the tab that is already open is the path that works everywhere; the
+   * link is the convenience, and on a phone it is the one more likely to go
+   * wrong (see migrations/0004 for why).
+   */
+  const text = [
+    `পসরায় ঢোকার কোড: ${code}`,
+    '',
+    `যে পাতায় ইমেইল লিখেছিলেন, সেখানেই এই ছয় সংখ্যা বসিয়ে দিন। ${bn(LINK_MINUTES)} মিনিট কাজ করবে।`,
+    '',
+    'অথবা এই লিংকে চাপুন:',
+    link,
+    '',
+    'আপনি যদি এটা না চেয়ে থাকেন, কিছু করতে হবে না - কেউ আপনার অ্যাকাউন্টে ঢুকতে পারবে না।',
+  ].join('\n');
+  const html = `<!doctype html><html lang="bn"><body style="margin:0;background:#e9edf2;font-family:'Noto Sans Bengali',system-ui,sans-serif;line-height:1.7">
+  <div style="max-width:520px;margin:0 auto;padding:24px 16px">
+    <div style="background:#fcfdfe;border:1px solid #e3e9f0;border-radius:16px;padding:22px">
+      <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b7987">পসরায় ঢোকার কোড</p>
+      <p style="margin:0 0 14px;font-size:34px;font-weight:800;letter-spacing:.22em;color:#111820;font-family:ui-monospace,Menlo,monospace">${code}</p>
+      <p style="margin:0 0 18px;font-size:15px;color:#3c4854">যে পাতায় ইমেইল লিখেছিলেন, সেখানেই এই ছয় সংখ্যা বসিয়ে দিন। ${bn(LINK_MINUTES)} মিনিট কাজ করবে।</p>
+      <p style="margin:0 0 8px;font-size:13px;color:#6b7987">অথবা এই বোতামে চাপুন:</p>
+      <p style="margin:0"><a href="${link}" style="display:inline-block;background:#15544c;color:#f4fbf9;text-decoration:none;padding:11px 20px;border-radius:999px;font-weight:700;font-size:15px">পসরায় ঢোকো</a></p>
+    </div>
+    <p style="margin:14px 0 0;font-size:12px;color:#6b7987">আপনি যদি এটা না চেয়ে থাকেন, কিছু করতে হবে না - কেউ আপনার অ্যাকাউন্টে ঢুকতে পারবে না।</p>
+  </div>
+</body></html>`;
   await mail.EMAIL.send({
     to: email,
     from: { email: mail.CONTACT_FROM ?? 'no-reply@posora.com', name: 'পসরা' },
-    subject: 'পসরায় ঢোকার লিংক',
+    subject: `পসরায় ঢোকার কোড ${code}`,
     text,
-    html: `<p>পসরায় ঢুকতে নিচের লিংকে চাপুন। লিংকটা ${LINK_MINUTES} মিনিট পর্যন্ত কাজ করবে, একবারই।</p><p><a href="${link}">${link}</a></p><p style="color:#666">আপনি যদি এটা না চেয়ে থাকেন, কিছু করতে হবে না।</p>`,
+    html,
   });
   return 'sent';
 }
 
-/** Turn a clicked link into a session. Returns the raw session token, or null. */
-export async function verifyMagicLink(token: string, ua: string | null): Promise<string | null> {
+/**
+ * Look at a link's token without spending it.
+ *
+ * This exists because mail gateways fetch every URL in a message to scan it.
+ * If a GET signed you in, the scanner would spend the link before the person
+ * ever clicked and they would be locked out with no explanation. So the page
+ * behind the link only *looks*, shows who it is about, and a form POST does
+ * the signing in. Scanners issue GETs, not same-origin form posts.
+ */
+export type LinkPeek = { ok: true; email: string } | { ok: false };
+export async function peekMagicLink(token: string): Promise<LinkPeek> {
+  if (!token || token.length < 20) return { ok: false };
+  const row = await requireDb().prepare('SELECT email, expires_at, used_at FROM member_tokens WHERE token_hash = ?')
+    .bind(await sha256Hex(token)).first<{ email: string; expires_at: number; used_at: number | null }>();
+  if (!row || row.used_at || row.expires_at < Date.now()) return { ok: false };
+  return { ok: true, email: row.email };
+}
+
+/** Start the session for an address, creating the member on first sign-in. */
+async function startSession(email: string, ua: string | null): Promise<string> {
+  const d = requireDb();
+  const now = Date.now();
+  let member = await d.prepare('SELECT id FROM members WHERE email = ?').bind(email).first<{ id: string }>();
+  if (!member) {
+    const id = newId();
+    await d.prepare('INSERT INTO members (id, email, created_at, last_login_at) VALUES (?, ?, ?, ?)').bind(id, email, now, now).run();
+    member = { id };
+  } else {
+    await d.prepare('UPDATE members SET last_login_at = ? WHERE id = ?').bind(now, member.id).run();
+  }
+  const session = randomToken();
+  await d.prepare('INSERT INTO member_sessions (id_hash, member_id, created_at, expires_at, ua) VALUES (?, ?, ?, ?, ?)')
+    .bind(await sha256Hex(session), member.id, now, now + SESSION_DAYS * 86_400_000, ua?.slice(0, 200) ?? null).run();
+  return session;
+}
+
+/** Spend a link's token. Returns the raw session token, or null. */
+export async function consumeMagicLink(token: string, ua: string | null): Promise<string | null> {
   if (!token || token.length < 20) return null;
   const d = requireDb();
   const hash = await sha256Hex(token);
@@ -127,20 +214,42 @@ export async function verifyMagicLink(token: string, ua: string | null): Promise
   const now = Date.now();
   if (!row || row.used_at || row.expires_at < now) return null;
   await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ?').bind(now, hash).run();
+  return startSession(row.email, ua);
+}
 
-  let member = await d.prepare('SELECT id FROM members WHERE email = ?').bind(row.email).first<{ id: string }>();
-  if (!member) {
-    const id = newId();
-    await d.prepare('INSERT INTO members (id, email, created_at, last_login_at) VALUES (?, ?, ?, ?)').bind(id, row.email, now, now).run();
-    member = { id };
-  } else {
-    await d.prepare('UPDATE members SET last_login_at = ? WHERE id = ?').bind(now, member.id).run();
+export type CodeResult =
+  | { ok: true; session: string }
+  | { ok: false; error: 'bad' | 'expired' | 'locked' };
+
+/**
+ * Spend a typed code. Scoped to the address, because six digits on their own
+ * are trivially enumerable, and counted, because six digits are only about
+ * twenty bits: after CODE_TRIES wrong guesses the whole request is dead and
+ * the parent has to ask for a new one.
+ */
+export async function consumeCode(rawEmail: string, rawCode: string, ua: string | null): Promise<CodeResult> {
+  const email = normalizeEmail(rawEmail);
+  const code = rawCode.replace(/\D/g, '');
+  if (!isEmail(email) || code.length !== 6) return { ok: false, error: 'bad' };
+  const d = requireDb();
+  const now = Date.now();
+
+  // The newest live request for this address is the one being answered.
+  const row = await d.prepare(
+    `SELECT token_hash, code_hash, expires_at, used_at, attempts FROM member_tokens
+     WHERE email = ? AND code_hash IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
+  ).bind(email).first<{ token_hash: string; code_hash: string; expires_at: number; used_at: number | null; attempts: number }>();
+  if (!row || row.used_at || row.expires_at < now) return { ok: false, error: 'expired' };
+  if (row.attempts >= CODE_TRIES) return { ok: false, error: 'locked' };
+
+  if (row.code_hash !== (await codeHash(code, email))) {
+    await d.prepare('UPDATE member_tokens SET attempts = attempts + 1 WHERE token_hash = ?').bind(row.token_hash).run();
+    return { ok: false, error: row.attempts + 1 >= CODE_TRIES ? 'locked' : 'bad' };
   }
-
-  const session = randomToken();
-  await d.prepare('INSERT INTO member_sessions (id_hash, member_id, created_at, expires_at, ua) VALUES (?, ?, ?, ?, ?)')
-    .bind(await sha256Hex(session), member.id, now, now + SESSION_DAYS * 86_400_000, ua?.slice(0, 200) ?? null).run();
-  return session;
+  // One request, one sign-in: spending the code also kills the link in the
+  // same email, so a scanner cannot follow it afterwards either.
+  await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ?').bind(now, row.token_hash).run();
+  return { ok: true, session: await startSession(email, ua) };
 }
 
 export async function destroyMemberSession(token: string | undefined): Promise<void> {
