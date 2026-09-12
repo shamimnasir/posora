@@ -1,5 +1,5 @@
 ---
-import { bodies, branchesFor, FACTS, type Body } from '../../data/space';
+import { bodies, branchesFor, FACTS, METRICS, type Body } from '../../data/space';
 import { bn, pad2 } from '../../lib/bn';
 interface Props { current: Body }
 const { current: cur } = Astro.props;
@@ -21,6 +21,7 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     </div>
   </aside>
 
+  <div class="mid">
   <section class="stage card" aria-live="polite">
     <header class="stage-h">
       <div>
@@ -61,6 +62,33 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
       <button type="button" data-act="next">পরেরটা →</button>
     </div>
   </section>
+
+  <section class="card glance" id="glance">
+    <div class="card-h">
+      <span class="lbl">সৌরজগৎ এক নজরে</span>
+      <span class="lbl gauto" id="gauto">নিজে নিজে বদলাচ্ছে</span>
+    </div>
+    <div class="gseg" role="tablist" aria-label="কোন হিসাবে তুলনা">
+      {METRICS.map((m, i) => (
+        <button type="button" role="tab" data-m={m.id} aria-selected={i === 0 ? 'true' : 'false'}>{m.bn}</button>
+      ))}
+    </div>
+    <div class="gchart" id="gchart">
+      {bodies.map((b) => (
+        <button type="button" class="grow" data-id={b.id} style={`--o:${b.visual.colors[0]}`}>
+          <span class="gn">{b.bn}</span>
+          <span class="gtrack"><i></i></span>
+          <span class="gv"></span>
+        </button>
+      ))}
+    </div>
+    <p class="gcap" id="gcap"></p>
+    <div class="agebox">
+      <label class="kg" for="age">তোমার বয়স <input type="number" id="age" inputmode="numeric" min="1" max="120" value="10" /> বছর</label>
+      <p class="out" id="age-out"></p>
+    </div>
+  </section>
+  </div>
 
   <aside class="info">
     <section class="card">
@@ -171,7 +199,8 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
   .no { margin-left: auto; font-size: 10px; }
 
   /* stage */
-  .stage { display: flex; flex-direction: column; min-height: 760px; overflow: hidden; }
+  .mid { display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; }
+  .stage { display: flex; flex-direction: column; min-height: 620px; overflow: hidden; }
   .stage-h { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem 0; flex-wrap: wrap; }
   .stage-h h1 { font-size: clamp(2rem, 4vw, 2.8rem); letter-spacing: -0.01em; line-height: 1.15; font-weight: 800; margin-top: 0.1rem; }
   .tag { color: var(--muted); font-size: 14px; }
@@ -203,11 +232,11 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     display: flex; flex-direction: column; gap: 0.5rem; }
   .branchbar .lbl { color: rgba(226, 235, 245, 0.66); }
   .branch-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-  .branch-chips button { font-size: 13px; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 999px; line-height: 1.3;
+  .branch-chips :global(button) { font-size: 13px; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 999px; line-height: 1.3;
     background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.24); color: #f2f6fb; backdrop-filter: blur(4px);
     transition: transform 0.15s ease, background 0.15s ease; }
-  .branch-chips button:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.2); }
-  .branch-chips button[aria-pressed="true"] { background: var(--w); color: #fff; border-color: transparent; }
+  .branch-chips :global(button:hover) { transform: translateY(-1px); background: rgba(255, 255, 255, 0.2); }
+  .branch-chips :global(button[aria-pressed="true"]) { background: var(--w); color: #fff; border-color: transparent; }
   .hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #d7e2f0; background: rgba(9, 14, 24, 0.72); padding: 3px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); pointer-events: none; transition: opacity 0.4s ease; z-index: 2; }
   .actions { display: flex; justify-content: center; gap: 6px; padding: 0.75rem; border-top: 1px solid var(--line-soft); background: var(--panel-2); }
   .actions button { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.05rem; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease; }
@@ -215,6 +244,33 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
   .actions button[aria-pressed="true"] { background: var(--brand-soft); color: var(--brand-ink); }
   .actions .primary { background: var(--brand); color: var(--on-brand); }
   .actions .primary:hover { background: var(--brand-ink); }
+
+  /* সৌরজগৎ এক নজরে - the animated comparison chart under the stage */
+  .glance { overflow: hidden; }
+  .gauto { color: var(--w); transition: opacity 0.3s ease; }
+  .gauto[hidden] { display: none; }
+  .gseg { display: flex; flex-wrap: wrap; gap: 6px; padding: 0.75rem 1.1rem 0.2rem; }
+  .gseg button { font-size: 12.5px; font-weight: 700; padding: 0.28rem 0.8rem; border-radius: 999px; color: var(--ink-2);
+    background: var(--panel-2); border: 1px solid var(--line-soft); transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+  .gseg button:hover { transform: translateY(-1px); background: var(--panel); }
+  .gseg button[aria-selected="true"] { background: var(--w); color: #fff; border-color: transparent; }
+  .gchart { padding: 0.6rem 1.1rem 0.2rem; display: flex; flex-direction: column; gap: 1px; }
+  .grow { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; align-items: center; column-gap: 0.7rem;
+    width: 100%; text-align: left; padding: 0.3rem 0.4rem; border-radius: 8px; transition: background 0.15s ease; }
+  .grow:hover { background: color-mix(in oklab, var(--w) 8%, transparent); }
+  .grow[aria-current="true"] { background: color-mix(in oklab, var(--o) 14%, transparent); }
+  .gn { font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+  .grow[aria-current="true"] .gn { color: var(--ink); font-weight: 800; }
+  .gtrack { display: block; height: 13px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+  .gtrack i { display: block; height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, color-mix(in oklab, var(--o) 55%, var(--panel)), var(--o));
+    transition: width 0.75s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: calc(var(--i, 0) * 45ms); }
+  .gv { font-size: 12.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 92px; text-align: right; }
+  .gv.none { color: var(--muted); font-weight: 500; font-size: 11.5px; white-space: normal; max-width: 210px; line-height: 1.4; }
+  .gcap { padding: 0.5rem 1.15rem 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .agebox { margin: 0.8rem 1.1rem 1rem; padding: 0.7rem 0.85rem; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line-soft); }
+  .agebox .out { margin-top: 0.3rem; }
+  @media (prefers-reduced-motion: reduce) { .gtrack i { transition: none; } }
 
   /* info */
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
@@ -225,31 +281,34 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
   .row .dig { grid-column: 3; grid-row: 1; font-family: var(--font-mono); font-size: 13px; color: var(--w); width: 14px; text-align: center; transition: transform 0.2s ease; }
   .row[aria-expanded="true"] .dig { transform: rotate(45deg); }
   .row[aria-expanded="true"] { background: color-mix(in oklab, var(--w) 10%, transparent); }
-  .dive { padding: 0.2rem 0.3rem 0.8rem; }
-  .dive canvas { width: 100%; height: 118px; display: block; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line-soft); }
-  .dive p { margin-top: 0.5rem; font-size: 12.5px; color: var(--ink-2); line-height: 1.6; }
+  .spec :global(.dive) { padding: 0.2rem 0.3rem 0.8rem; }
+  .spec :global(.dive canvas) { width: 100%; height: 118px; display: block; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line-soft); }
+  .spec :global(.dive p) { margin-top: 0.5rem; font-size: 12.5px; color: var(--ink-2); line-height: 1.6; }
   .sub .text { padding-top: 0.7rem; }
   .mini { font-size: 11px; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--panel-2); }
   .mini:hover { background: var(--panel); }
   .mini[aria-pressed="true"] { background: var(--w); color: #fff; border-color: transparent; }
   .size { padding: 0.8rem 0.95rem 0.95rem; }
   .size-bars { display: flex; align-items: flex-end; gap: 0.75rem; height: 84px; margin-bottom: 0.7rem; }
-  .size-bars span { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--muted); }
-  .size-bars i { display: block; border-radius: 50%; background: var(--c, var(--w)); }
+  .size-bars :global(span) { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--muted); }
+  .size-bars :global(i) { display: block; border-radius: 50%; background: var(--c, var(--w)); }
   .size-out { font-size: 13px; color: var(--ink-2); line-height: 1.65; }
   .size-out b { color: var(--ink); font-family: var(--font-display); font-size: 15px; }
+  /* NOTE: everything below that the script creates at runtime must be :global().
+     Astro scopes styles by stamping data-astro-cid onto elements at build time,
+     so a JS-created .t or <button> would otherwise match nothing at all. */
   .trav { padding: 0.3rem 0.95rem 0.7rem; }
-  .trav .t { display: flex; justify-content: space-between; gap: 0.6rem; padding: 0.45rem 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
-  .trav .t:last-child { border-bottom: 0; }
-  .trav .t span { color: var(--muted); }
-  .trav .t b { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .trav :global(.t) { display: flex; justify-content: space-between; gap: 0.6rem; padding: 0.45rem 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+  .trav :global(.t:last-child) { border-bottom: 0; }
+  .trav :global(.t span) { color: var(--muted); }
+  .trav :global(.t b) { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
   .recs { padding: 0.3rem 0.95rem 0.7rem; }
-  .recs button { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; width: 100%; text-align: left; padding: 0.45rem 0.3rem; border-radius: 8px; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
-  .recs button:last-child { border-bottom: 0; }
-  .recs button:hover { background: color-mix(in oklab, var(--w) 10%, transparent); }
-  .recs button span { color: var(--muted); font-size: 12px; }
-  .recs button b { font-family: var(--font-display); }
-  .recs button.is-cur b { color: var(--w); }
+  .recs :global(button) { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; width: 100%; text-align: left; padding: 0.45rem 0.3rem; border-radius: 8px; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+  .recs :global(button:last-child) { border-bottom: 0; }
+  .recs :global(button:hover) { background: color-mix(in oklab, var(--w) 10%, transparent); }
+  .recs :global(button span) { color: var(--muted); font-size: 12px; }
+  .recs :global(button b) { font-family: var(--font-display); }
+  .recs :global(button.is-cur b) { color: var(--w); }
   .x { font-size: 13px; color: var(--muted); padding: 0 0.2rem; }
   .x:hover { color: var(--ink); }
   .k { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); }
@@ -290,12 +349,17 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     .stage { min-height: 0; }
     .scene { min-height: min(96vw, 480px); }
   }
+  @media (max-width: 460px) {
+    .grow { grid-template-columns: 66px minmax(0, 1fr) auto; column-gap: 0.5rem; }
+    .gn { font-size: 12px; }
+    .gv { font-size: 11.5px; min-width: 70px; }
+  }
 </style>
 
 <script>
   import { bn, bnNum } from '../../lib/bn';
   import { markSeen, getProgress } from '../../lib/progress';
-  import { lightMinutes, EARTH_DIAMETER_KM, SPEEDS, fitsInside, type Body, type Branch, type Facts } from '../../data/space';
+  import { lightMinutes, EARTH_DIAMETER_KM, SPEEDS, fitsInside, METRICS, AU_KM, orbitYears, type Body, type Branch, type Facts } from '../../data/space';
   import type { CosmosHandle, Level, Pick } from './cosmos';
   import { mountStatViz, kindFor, parseNum, type VizHandle } from './statviz';
   type BodyX = Body & { branches: Branch[]; facts?: Facts };
@@ -444,7 +508,7 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     const f = cur.facts; const box = $('#trav');
     if (!f || f.nearestKm === 0) {
       $('#trav-dist').textContent = '';
-      box.innerHTML = '<p class="out" style="padding:.5rem 0">তুমি তো এখানেই আছো!</p>';
+      box.innerHTML = '<div class="t"><span>তুমি তো এখানেই আছো!</span></div>';
       return;
     }
     $('#trav-dist').textContent = `${big(f.nearestKm)} কিমি`;
@@ -488,6 +552,98 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
       btn.innerHTML = `<span>${r.label}</span><b>${r.b.bn} <small style="font-weight:500;color:var(--muted)">${r.val}</small></b>`;
       return btn;
     }));
+  }
+
+  /* ---- সৌরজগৎ এক নজরে: one animated chart, six ways to compare ---- */
+  const gseg = [...root.querySelectorAll<HTMLButtonElement>('.gseg [data-m]')];
+  const grows = [...root.querySelectorAll<HTMLElement>('.gchart .grow')];
+  let metric = 0, autoTimer = 0;
+
+  /** A body either has a plottable number for this metric, or a short honest reason it has none. */
+  type MVal = { v: number } | { text: string };
+  const NOTE: Record<string, Record<string, string>> = {
+    dist:  { sun: 'সৌরজগতের কেন্দ্র', moon: 'পৃথিবীর সঙ্গী' },
+    temp:  { sun: '৫,৫০০ °সে - তারা, তাই তুলনার বাইরে' },
+    moons: { sun: '৮টি গ্রহ ঘোরে', moon: 'নিজেই একটা চাঁদ' },
+    year:  { sun: 'কারও চারপাশে ঘোরে না', moon: 'পৃথিবীর সঙ্গে ৩৬৫ দিন' },
+  };
+  function metricValue(b: BodyX, id: string): MVal | null {
+    const note = NOTE[id]?.[b.id];
+    if (note) return { text: note };
+    switch (id) {
+      case 'dia': return b.facts ? { v: b.facts.diameterKm } : null;
+      case 'dist': return b.au ? { v: b.au * AU_KM } : null;
+      case 'temp': {
+        const st = b.stats.find((x) => x.k.includes('তাপমাত্রা'));
+        if (!st) return null;
+        // "−১৮০ / +৪৩০" is a day/night range; picking one end and calling it the temperature would be wrong
+        if (st.v.includes('/')) return { text: `${st.v.replace('°C', '°সে')} (রাত / দিন)` };
+        const t = parseNum(st.v);
+        return t === null ? null : { v: t };
+      }
+      case 'grav': return { v: b.gravity };
+      case 'moons': { const n = statNum(b, 'চাঁদ'); return n === null ? null : { v: n }; }
+      case 'year': return b.au ? { v: orbitYears(b.au) } : null;
+      default: return null;
+    }
+  }
+  function metricLabel(id: string, v: number): string {
+    if (id === 'dia' || id === 'dist') return `${big(v)} কিমি`;
+    if (id === 'temp') return `${bn(Math.round(v))} °সে`;
+    if (id === 'grav') return `${bn(v.toFixed(2))}× পৃথিবী`;
+    if (id === 'moons') return `${bn(v)}টি`;
+    return v < 1 ? `${bn(Math.round(v * 365))} দিন` : `${bn(v.toFixed(v < 10 ? 1 : 0))} বছর`;
+  }
+  function renderGlance() {
+    const m = METRICS[metric];
+    const vals = data.map((b) => metricValue(b, m.id));
+    const nums = vals.flatMap((x) => (x && 'v' in x ? [x.v] : []));
+    const max = Math.max(...nums), min = Math.min(...nums, 0);
+    gseg.forEach((b, i) => b.setAttribute('aria-selected', String(i === metric)));
+    grows.forEach((row, i) => {
+      const x = vals[i], bar = row.querySelector<HTMLElement>('.gtrack i')!, out = row.querySelector<HTMLElement>('.gv')!;
+      row.style.setProperty('--i', String(i));
+      row.setAttribute('aria-current', String(data[i].id === cur.id));
+      if (!x || 'text' in x) {
+        bar.style.width = '0%'; out.textContent = x ? x.text : 'জানা নেই'; out.classList.add('none');
+        return;
+      }
+      // compressed metrics span orders of magnitude, so a linear bar would hide the small bodies
+      const frac = m.compress ? Math.pow(x.v / max, 0.35) : (x.v - min) / (max - min || 1);
+      bar.style.width = x.v === 0 ? '0%' : `${Math.max(2, Math.min(100, frac * 100))}%`;
+      out.textContent = metricLabel(m.id, x.v); out.classList.remove('none');
+    });
+    $('#gcap').textContent = m.compress
+      ? 'সংখ্যাগুলো এত আলাদা যে বারগুলো চাপা স্কেলে আঁকা, নইলে ছোটগুলো দেখাই যেত না। আসল সংখ্যা ডান পাশে লেখা।'
+      : 'এখানে বারের লম্বা সরাসরি সংখ্যার অনুপাতে আঁকা।';
+  }
+  function stopAuto() {
+    if (!autoTimer) return;
+    clearInterval(autoTimer); autoTimer = 0; $('#gauto').hidden = true;
+  }
+  function startAuto() {
+    if (autoTimer || reduced) return;
+    autoTimer = window.setInterval(() => { metric = (metric + 1) % METRICS.length; renderGlance(); }, 6500);
+  }
+  if (reduced) $('#gauto').hidden = true;
+  else new IntersectionObserver((es) => {                       // only cycle while it is actually on screen
+    if (!$('#gauto').hidden) es[0].isIntersecting ? startAuto() : (clearInterval(autoTimer), autoTimer = 0);
+  }, { threshold: 0.25 }).observe($('#glance'));
+
+  function renderAge() {
+    const yrs = Math.max(0, +$<HTMLInputElement>('#age').value || 0);
+    const out = $('#age-out');
+    if (!yrs) { out.textContent = 'তোমার বয়স লেখো, দেখি এই গ্রহে কত হতো।'; return; }
+    if (cur.au === null) {
+      out.innerHTML = `চাঁদ পৃথিবীর সঙ্গে সঙ্গেই সূর্যকে ঘোরে, তাই এখানে বয়স পৃথিবীর মতোই - <strong>${bn(yrs)} বছর</strong>।`;
+    } else if (cur.au === 0) {
+      out.textContent = 'সূর্য কারও চারপাশে ঘোরে না, তাই এখানে জন্মদিনের হিসাবই নেই।';
+    } else {
+      const p = orbitYears(cur.au), a = yrs / p;
+      out.innerHTML = a >= 1
+        ? `${cur.bn}ে তোমার বয়স হতো <strong>${bn(a.toFixed(1))} বছর</strong> - কারণ এখানে এক বছর মানে পৃথিবীর ${bn(p < 10 ? p.toFixed(1) : Math.round(p))} বছর।`
+        : `${cur.bn}ে তুমি এখনো এক বছরও পূর্ণ করোনি! প্রথম জন্মদিন আসতে আরও <strong>${bn(((1 - a) * p).toFixed(1))} পৃথিবী-বছর</strong> লাগত।`;
+    }
   }
 
   /* ---- render helpers ---- */
@@ -535,7 +691,7 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     $('#b-fun').textContent = cur.fun;
     host.setAttribute('aria-label', `${cur.bn}ের থ্রিডি মডেল - টেনে ঘোরাও`);
     rail.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.id === cur.id)));
-    renderText(); renderSpec(); renderMissions(); renderBranches(); renderSize(); renderTravel(); renderRecords();
+    renderText(); renderSpec(); renderMissions(); renderBranches(); renderSize(); renderTravel(); renderRecords(); renderGlance(); renderAge();
     closeDive(); toggleBranches(false); $('#subtopic').hidden = true; renderCrumbs(cosmos?.level() ?? 'body');
     if (!reduced) $('.stage-h').animate([{ opacity: 0.3, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'ease-out' });
   }
@@ -571,6 +727,12 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-id]');
     if (b) select(b.dataset.id!);
   });
+  gseg.forEach((b, i) => b.addEventListener('click', () => { stopAuto(); metric = i; renderGlance(); }));
+  $('#gchart').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-id]');
+    if (b) { stopAuto(); select(b.dataset.id!); }
+  });
+  $<HTMLInputElement>('#age').addEventListener('input', () => { stopAuto(); renderAge(); });
   seg.forEach((b) => b.addEventListener('click', () => { level = b.dataset.l as typeof level; localStorage.setItem('posora:level', level); renderText(); }));
   $<HTMLInputElement>('#kg').addEventListener('input', renderMissions);
   $<HTMLSelectElement>('#cmp').addEventListener('change', renderSpec);
@@ -588,5 +750,6 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     if (e.key === 'ArrowLeft') select(data[(i - 1 + data.length) % data.length].id);
   });
 
-  renderText(); renderMissions(); renderBranches(); renderSize(); renderTravel(); renderRecords(); markSeen(WORLD, cur.id); renderProgress();
+  renderText(); renderMissions(); renderBranches(); renderSize(); renderTravel(); renderRecords();
+  renderGlance(); renderAge(); markSeen(WORLD, cur.id); renderProgress();
 </script>

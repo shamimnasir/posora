@@ -369,3 +369,23 @@ export const SPEEDS = [
 export const factsFor = (id: string): Facts | undefined => FACTS[id];
 /** (D₁/D₂)³ - how many of the smaller body fit inside the bigger one. */
 export const fitsInside = (bigKm: number, smallKm: number) => Math.pow(bigKm / smallKm, 3);
+
+/** One astronomical unit, so distances can be stated in real kilometres. */
+export const AU_KM = 149_597_871;
+/** Kepler's third law: orbital period in Earth years from the semi-major axis in AU. */
+export const orbitYears = (au: number) => Math.pow(au, 1.5);
+
+/**
+ * The comparisons the "সৌরজগৎ এক নজরে" chart can draw.
+ * `compress` marks the ones whose numbers span so many orders of magnitude
+ * that a linear bar would leave the small bodies invisible.
+ */
+export type Metric = { id: 'dia' | 'dist' | 'temp' | 'grav' | 'moons' | 'year'; bn: string; unit: string; compress: boolean };
+export const METRICS: Metric[] = [
+  { id: 'dia',   bn: 'ব্যাস',              unit: 'কিমি',        compress: true },
+  { id: 'dist',  bn: 'সূর্য থেকে দূরত্ব',   unit: 'কিমি',        compress: true },
+  { id: 'temp',  bn: 'তাপমাত্রা',            unit: '°সে',         compress: false },
+  { id: 'grav',  bn: 'মাধ্যাকর্ষণ',         unit: '× পৃথিবী',    compress: true },
+  { id: 'moons', bn: 'চাঁদ',                unit: 'টি',          compress: true },
+  { id: 'year',  bn: 'এক বছর',             unit: 'পৃথিবী-বছর',  compress: true },
+];
