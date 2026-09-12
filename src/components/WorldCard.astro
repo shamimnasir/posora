@@ -12,7 +12,9 @@ const { w, i } = Astro.props;
   <span class="tag">{w.tag}</span>
   <span class="meta">
     <span class="pill pill-w">{bn(w.cats.length)} বিভাগ · {bn(itemCount(w))} আইটেম</span>
-    {w.open ? <span class="pill open">পুরো পাঠ খোলা</span> : <span class="pill open">থ্রিডি খোলা · {w.phase}</span>}
+    {/* Every world now has the full reading for every item; space adds the
+        zoomable solar system on top, so only that card claims it. */}
+    {w.open ? <span class="pill open">থ্রিডি সৌরজগৎ · পুরো পাঠ</span> : <span class="pill open">পুরো পাঠ · থ্রিডি মডেল</span>}
   </span>
 </a>
 
