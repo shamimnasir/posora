@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getWorld, itemCount } from '../../lib/content';
+import { getWorld, getWorlds, itemCount } from '../../lib/content';
 import { isLoggedIn } from '../../lib/auth';
 import { bn, pad2 } from '../../lib/bn';
 import { heroFor } from '../../data/heroes';
@@ -86,6 +86,9 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 // How many of this world's missions are actually playable today. The card
 // counts against this, never against the wish list, so the number is honest.
 const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).length;
+// Sideways links between worlds, so every world is two clicks from every
+// other one rather than only reachable back through the home page.
+const otherWorlds = (await getWorlds()).filter((o) => o.slug !== w.slug);
 
 /**
  * What this world actually is, said in schema.org so a search or answer engine
@@ -417,6 +420,13 @@ const schema = [
           </p>
         </div>
       </div>
+      <p class="index-worlds">
+        অন্য ভুবন:
+        {otherWorlds.map((o, i) => (
+          <>{i > 0 && <span aria-hidden="true"> · </span>}
+          <a href={o.slug === 'space' ? '/space/' : `/${o.slug}/`}>{o.bn}</a></>
+        ))}
+      </p>
       {payload.map((c, ci) => (
         <div class="index-cat">
           <h3><span class="lbl">বিভাগ {pad2(ci + 1)}</span>{c.n}</h3>
@@ -724,6 +734,9 @@ const schema = [
   .index { margin-top: 2.5rem; padding-top: 1.6rem; border-top: 1px solid var(--line-soft); }
   .index-h h2 { font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 800; margin: 0.2rem 0 0.5rem; }
   .index-s { font-size: 14px; color: var(--muted); line-height: 1.75; max-width: 70ch; }
+  .index-worlds { margin-top: 0.9rem; font-size: 13.5px; line-height: 2; color: var(--muted); }
+  .index-worlds :global(a) { color: var(--brand-ink); font-weight: 600; }
+  .index-worlds :global(a:hover) { text-decoration: underline; }
   .index-cat { margin-top: 1.8rem; }
   .index-cat h3 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
   .index-play { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0.3rem 0 0.7rem; max-width: 76ch; }
