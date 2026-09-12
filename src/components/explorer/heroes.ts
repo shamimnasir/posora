@@ -7,7 +7,7 @@ import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Object3D, Color, Vector3, MathUtils, Raycaster, Vector2,
   SphereGeometry, BoxGeometry, CylinderGeometry, TorusGeometry, ConeGeometry, PlaneGeometry, CircleGeometry,
   IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, DodecahedronGeometry, TubeGeometry, ExtrudeGeometry,
-  Shape, CatmullRomCurve3, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, Line, LineBasicMaterial,
+  Shape, CatmullRomCurve3, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, Line, LineBasicMaterial, Box3, Sphere,
   MeshStandardMaterial, MeshBasicMaterial, AmbientLight, DirectionalLight, PointLight, CanvasTexture, Sprite, SpriteMaterial,
   DoubleSide, InstancedMesh, Matrix4, Quaternion, Euler,
 } from 'three';
@@ -133,9 +133,13 @@ const SCENES: Record<string, Builder> = {
     for (let i = 0; i < 6; i++) { const sd = new Mesh(new SphereGeometry(0.07, 8, 6), std('#8b5a2b')); sd.position.set(1.1 + Math.cos(i * 1.1) * 0.35, 0.06, 1.0 + Math.sin(i * 1.1) * 0.35); sd.scale.y = 0.7; seeds.add(sd); }
     mark('বীজ', seeds, 1.1, 0.1, 1.0);
 
-    return { label: 'খুলে দেখো', anchors, update(t, _dt, p) {
-      // p = 0 whole tree, p = 1 every part pulled out along its own direction
-      for (const pt of parts) pt.g.position.copy(pt.base).addScaledVector(pt.dir, p * 1.05);
+    // the slider grows the tree; the engine's খুলে দেখো control pulls it apart
+    return { label: 'বড় হও', anchors, update(t, _dt, p) {
+      const g = 0.3 + p * 0.7;
+      canopy.scale.setScalar(g); flowers.scale.setScalar(Math.max(0.001, (p - 0.35) / 0.65));
+      fruit.scale.setScalar(Math.max(0.001, (p - 0.6) / 0.4)); leafG.scale.setScalar(0.4 + p * 0.6);
+      trunk.scale.set(0.55 + p * 0.45, 0.5 + p * 0.5, 0.55 + p * 0.45);
+      branches.scale.setScalar(0.45 + p * 0.55);
       canopy.rotation.y = Math.sin(t * 0.3) * 0.05; leafG.rotation.z = Math.sin(t * 1.1) * 0.08;
     } };
   },
@@ -269,15 +273,16 @@ const SCENES: Record<string, Builder> = {
     for (const s of [-1, 1]) ell(kid, std('#8b3a3a'), s * 0.19, 0, 0, 0.085, 0.13, 0.065);
     mark('কিডনি', kid, -0.36, 0.0, -0.1);
 
-    return { label: 'খুলে দেখো', anchors, update(t, _dt, p) {
-      // p = 0 the figure stands whole, p = 1 skin and bones to the sides, every organ out on its own
-      for (const pt of parts) pt.g.position.copy(pt.base).addScaledVector(pt.dir, p * 1.05 * pt.k);
-      const beat = 1 + Math.max(0, Math.sin(t * 5.2)) * 0.12 * Math.max(0, Math.sin(t * 2.6));
+    // the slider sets the pulse: resting on the left, hard exercise on the right
+    return { label: 'হৃৎস্পন্দন', anchors, update(t, _dt, p) {
+      void parts;
+      const rate = 3 + p * 7;                                   // roughly 60 to 200 beats a minute
+      const beat = 1 + Math.max(0, Math.sin(t * rate)) * (0.1 + p * 0.08);
       heartB.scale.setScalar(beat);
-      const br = 1 + Math.sin(t * 1.4) * 0.06; lungL.scale.set(0.16 * br, 0.3 * br, 0.13 * br); lungR.scale.set(0.15 * br, 0.28 * br, 0.13 * br);
-      bloodM.emissiveIntensity = 0.3 + Math.max(0, Math.sin(t * 5.2)) * 0.5;
+      const br = 1 + Math.sin(t * (1.1 + p * 2.4)) * (0.05 + p * 0.05);
+      lungL.scale.set(0.16 * br, 0.3 * br, 0.13 * br); lungR.scale.set(0.15 * br, 0.28 * br, 0.13 * br);
+      bloodM.emissiveIntensity = 0.3 + Math.max(0, Math.sin(t * rate)) * (0.4 + p * 0.4);
       nerveM.emissiveIntensity = 0.25 + Math.max(0, Math.sin(t * 9 + 1)) * 0.35;
-      (skinM as MeshStandardMaterial).opacity = 0.3 - p * 0.05;
     } };
   },
 
@@ -563,6 +568,12 @@ export type HeroHandle = {
   /** Start or stop the idle turntable. Dragging works either way. */
   setAuto(on: boolean): void;
   isAuto(): boolean;
+  /**
+   * Pull the model apart, 0 whole to 1 fully exploded. Every scene supports
+   * this: the engine moves the model's own parts outward, and the item badges
+   * pinned to those parts ride along.
+   */
+  setExplode(v: number): void;
   /** Ease the model back to its default orientation. */
   resetView(): void;
   /** Where badge `i` currently sits on the canvas, in CSS pixels from the host's top-left. */
@@ -601,13 +612,18 @@ export function mountHero(
   function setItems(items: HeroItem[], act: number) {
     clearItems();
     const n = items.length;
-    const anchors = cur?.anchors ?? {};
+    // A scene may name its own parts, and then each badge lands on the part it
+    // is actually about. Where it does not, the engine spreads the badges over
+    // the model's own pieces, so every category reads the same way.
+    const named = cur?.anchors ?? {};
+    collectParts(n);
+    const generic = genericAnchors(n);
     // pinned badges shrink as a model carries more of them, so fourteen organs do not bury the figure
     pinScale = MathUtils.clamp(0.66 - n * 0.018, 0.4, 0.55);
     badges = items.map((it, i) => {
       const sp = badgeSprite(it, hueNow, font); const label = labelSprite(it.label, font);
       const a0 = (i / Math.max(1, n)) * Math.PI * 2;
-      const marker = anchors[it.label];
+      const marker = named[it.label] ?? generic[i];
       if (marker) { anchoredCount++; sp.scale.setScalar(pinScale); pins.add(sp); pins.add(label); }
       else { sp.scale.setScalar(0.85); orbit.add(sp); orbit.add(label); }
       return { sp, label, a0, marker };
@@ -637,12 +653,106 @@ export function mountHero(
     return hit ? badges.findIndex((b) => b.sp === hit.object) : -1;
   }
 
+  /* ---- the exploded view, for any scene ----
+   * A scene does not have to know how to come apart. After it is built the
+   * engine walks its own objects, wraps each one in a group that nothing else
+   * touches, and slides those groups outward along the direction each part
+   * already sits in. The scene keeps animating inside its wrapper, so the
+   * explode never fights the scene's own motion.
+   */
+  type Part = { wrap: Group; dir: Vector3; centre: Vector3; radius: number; obj: Object3D };
+  let parts: Part[] = [];
+  let spread = 1, explodeTo = 0, explodeNow = 0;
+  const boxTmp = new Box3(), sphTmp = new Sphere(), vTmp = new Vector3();
+  /** Model centre and radius, measured once with the view transforms neutral. */
+  let modelCentre = new Vector3(), modelRadius = 1;
+  /**
+   * Measure and wrap the scene's parts. The user's turntable rotation and the
+   * pop-in scale are both parked first: measuring through them would read a
+   * moving, and at the first frame a zero-sized, model.
+   */
+  function collectParts(want: number) {
+    parts = [];
+    const keepRot = user.rotation.clone(), keepPos = user.position.clone(), keepScale = root.scale.clone();
+    user.rotation.set(0, 0, 0); user.position.set(0, 0, 0); root.scale.setScalar(1);
+    root.updateMatrixWorld(true);
+    try {
+      // start from the scene's own top-level objects, splitting groups until
+      // there are enough distinct pieces to carry the category's items
+      let nodes: Object3D[] = root.children.filter((c) => !(c as { isLight?: boolean }).isLight);
+      for (let pass = 0; pass < 3 && nodes.length < want; pass++) {
+        const next: Object3D[] = [];
+        for (const n of nodes) next.push(...(n.children.length > 1 ? n.children : [n]));
+        if (next.length <= nodes.length) break;
+        nodes = next;
+      }
+      boxTmp.setFromObject(root);
+      if (boxTmp.isEmpty()) return;
+      boxTmp.getBoundingSphere(sphTmp);
+      modelCentre = sphTmp.center.clone(); modelRadius = Math.max(0.4, sphTmp.radius);
+      spread = modelRadius * 0.5;
+      for (const n of nodes) {
+        const parent = n.parent;
+        if (!parent) continue;
+        boxTmp.setFromObject(n);
+        if (boxTmp.isEmpty()) continue;
+        const centre = boxTmp.getCenter(new Vector3());
+        const radius = Math.max(0.08, boxTmp.getSize(vTmp).length() * 0.3);
+        // the direction to fly out along, expressed where the wrapper lives
+        const here = parent.worldToLocal(centre.clone());
+        const hub = parent.worldToLocal(modelCentre.clone());
+        const dir = here.sub(hub);
+        // a part sitting dead centre has no direction of its own, so send it up
+        if (dir.lengthSq() < 1e-4) dir.set(0, 1, 0); else dir.normalize();
+        const wrap = new Group();
+        parent.add(wrap); wrap.add(n);
+        parts.push({ wrap, dir, centre, radius, obj: n });
+      }
+    } finally {
+      user.rotation.copy(keepRot); user.position.copy(keepPos); root.scale.copy(keepScale);
+      root.updateMatrixWorld(true);
+    }
+  }
+  /**
+   * One marker per item when the scene names none of its own. The markers sit
+   * on an even spiral over the model's own surface and each attaches to the
+   * nearest piece, so they read as pins on the thing and travel with it when
+   * the model comes apart.
+   */
+  function genericAnchors(n: number): Object3D[] {
+    if (!parts.length || !n) return [];
+    const keepRot = user.rotation.clone(), keepPos = user.position.clone(), keepScale = root.scale.clone();
+    user.rotation.set(0, 0, 0); user.position.set(0, 0, 0); root.scale.setScalar(1);
+    root.updateMatrixWorld(true);
+    const out: Object3D[] = [];
+    try {
+      for (let i = 0; i < n; i++) {
+        // a Fibonacci spiral: n points spaced as evenly as a sphere allows
+        const y = n === 1 ? 0 : 1 - (i / (n - 1)) * 2;
+        const r = Math.sqrt(Math.max(0, 1 - y * y));
+        const th = i * 2.399963;
+        const at = new Vector3(Math.cos(th) * r, y, Math.sin(th) * r)
+          .multiplyScalar(modelRadius * 0.92).add(modelCentre);
+        // hang it off whichever piece of the model it is closest to
+        let best = parts[0]!, bestD = Infinity;
+        for (const p of parts) { const d = p.centre.distanceToSquared(at); if (d < bestD) { bestD = d; best = p; } }
+        const m = new Object3D();
+        m.position.copy(best.obj.worldToLocal(at.clone()));
+        best.obj.add(m);
+        out.push(m);
+      }
+    } finally {
+      user.rotation.copy(keepRot); user.position.copy(keepPos); root.scale.copy(keepScale);
+      root.updateMatrixWorld(true);
+    }
+    return out;
+  }
+
   function build(s: HeroSpec) {
     root.traverse((o) => { const m = o as Mesh; m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
-    user.remove(root); root = new Group(); user.add(root);
+    user.remove(root); root = new Group(); user.add(root); parts = [];
     hueNow = new Color(s.hue);
     const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font }); param = s.p ?? 0.5; popStart = performance.now();
-    baseScale = badges.length && anchoredCount < badges.length / 2 ? 0.5 : 1;
     return cur.label;
   }
   const firstLabel = build(spec);
@@ -664,7 +774,8 @@ export function mountHero(
   const up = () => { dragging = false; host.classList.remove('dragging'); }; host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
 
   let w = 1, h = 1, visible = true, raf = 0, last = performance.now(), t = 0;
-  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camera.position.z = (w < 600 ? 7.4 : 6.2) + (badges.length ? (anchoredCount ? 1.2 : 1.9) : 0); camera.lookAt(0, 0.1, 0); }
+  let camZBase = 6.2;
+  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camZBase = (w < 600 ? 7.4 : 6.2) + (badges.length ? (anchoredCount ? 1.2 : 1.9) : 0); camera.position.z = camZBase; camera.lookAt(0, 0.1, 0); }
   new ResizeObserver(resize).observe(host); resize();
   function frame(now: number) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -711,7 +822,14 @@ export function mountHero(
       });
     }
     const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(baseScale * (1 - Math.pow(1 - pop, 3)));
-    cur?.update(t, run ? dt : 0, param); renderer.render(scene, camera);
+    cur?.update(t, run ? dt : 0, param);
+    // the explode rides on top of whatever the scene just did to its own parts
+    explodeNow += (explodeTo - explodeNow) * 0.16;
+    if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
+    // the camera eases back as the model opens up, so nothing leaves the frame
+    camera.position.z = camZBase + explodeNow * spread * 2.1;
+    camera.lookAt(0, 0.1, 0);
+    renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
     raf = visible && !document.hidden ? requestAnimationFrame(frame) : 0;
   }
@@ -724,6 +842,7 @@ export function mountHero(
     setItems: (items, act) => { setItems(items, act); resize(); start(); },
     focus: (i) => { focus(i); start(); },
     setParam: (v) => { param = v; start(); },
+    setExplode: (v) => { explodeTo = MathUtils.clamp(v, 0, 1); start(); },
     setAuto: (on) => { auto = on; start(); },
     isAuto: () => auto,
     resetView: () => { vx = vy = 0; pitch = 0; yawTo = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; start(); },

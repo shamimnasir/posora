@@ -64,10 +64,35 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
         <span class="lbl" id="branch-title">ভেতরে কী কী আছে</span>
         <div class="branch-chips" id="branch-chips"></div>
       </div>
+      <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+      {/* খোঁজার খেলা: the cosmos asks for one body and the child has to find it
+          out there. Nothing is read out; finding it in the sky is the game. */}
+      <div class="quest" id="quest" hidden>
+        <div class="q-card" id="q-card" role="status" aria-live="polite">
+          <span class="lbl q-l">খুঁজে বের করো</span>
+          <span class="q-target"><span class="q-emoji" id="q-emoji">🔭</span><b id="q-name"></b></span>
+          <span class="q-meta"><span id="q-count">০ / ০</span> · <span id="q-time">০ সেকেন্ড</span></span>
+          <button type="button" class="q-x" id="q-quit" aria-label="খেলা বন্ধ করো">✕</button>
+        </div>
+        <p class="q-hint" id="q-hint"></p>
+      </div>
+      <div class="qres" id="qres" hidden>
+        <div class="qres-card">
+          <p class="lbl">খোঁজার খেলা শেষ</p>
+          <p class="q-stars" id="q-stars" aria-label="তারা">★★★</p>
+          <h3 id="q-head">দারুণ!</h3>
+          <p class="q-sum" id="q-sum"></p>
+          <div class="q-btns">
+            <button type="button" id="q-again">আবার খেলো</button>
+            <button type="button" id="q-read" class="primary">পড়তে যাও</button>
+          </div>
+        </div>
+      </div>
       <p class="hint" id="scene-hint">গ্রহে ক্লিক করো - আরও কাছ থেকে দেখো</p>
       <noscript><p class="hint">থ্রিডি মডেল দেখতে জাভাস্ক্রিপ্ট চালু করো।</p></noscript>
     </div>
     <div class="actions">
+      <button type="button" id="q-start" class="q-start">🎯 খোঁজার খেলা</button>
       <button type="button" data-act="compare" aria-pressed="false">
         <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="7" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="13" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
         তুলনা
@@ -419,6 +444,34 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .aw.on { background: color-mix(in oklab, var(--sun) 16%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 55%, var(--line)); color: var(--ink); }
   .aw.on .aw-e { filter: none; opacity: 1; transform: scale(1.12); }
 
+  /* খোঁজার খেলা, over the cosmos */
+  .fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+  .quest { position: absolute; top: 48px; left: 0; right: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; pointer-events: none; }
+  .q-card { pointer-events: auto; display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 0.9rem; align-items: center; padding: 0.55rem 0.9rem 0.55rem 1rem; border-radius: 16px; background: rgba(9, 14, 24, 0.86); border: 1px solid rgba(255, 255, 255, 0.2); color: #f4f8fc; backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+  .q-card.shake { animation: shake 0.4s ease; }
+  @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+  .q-l { color: #cfe0f2; grid-column: 1; }
+  .q-target { grid-column: 1; grid-row: 2; display: flex; align-items: center; gap: 0.5rem; }
+  .q-emoji { font-size: 28px; line-height: 1; }
+  .q-target b { font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; }
+  .q-meta { grid-column: 2; grid-row: 2; font-family: var(--font-mono); font-size: 11px; color: rgba(226, 235, 245, 0.75); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .q-x { grid-column: 2; grid-row: 1; justify-self: end; width: 24px; height: 24px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 12px; }
+  .q-x:hover { background: rgba(255, 255, 255, 0.28); }
+  .q-hint { font-size: 12.5px; color: #ffe08a; background: rgba(9, 14, 24, 0.7); padding: 3px 12px; border-radius: 999px; min-height: 1.6em; text-align: center; max-width: 90%; }
+  .q-hint:empty { display: none; }
+  .q-start { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 60%, #f0b429)); color: #fff; }
+  .qres { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(5, 7, 14, 0.62); backdrop-filter: blur(3px); }
+  .qres-card { text-align: center; padding: 1.3rem 1.5rem 1.2rem; border-radius: 20px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: 0 20px 50px rgba(0,0,0,.4); max-width: 92%; width: 380px; animation: qpop 0.45s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes qpop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+  .q-stars { font-size: 34px; letter-spacing: 0.1em; color: var(--sun); line-height: 1.1; margin-top: 0.3rem; }
+  .qres-card h3 { font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem; }
+  .q-sum { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; margin-top: 0.4rem; }
+  .q-btns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 0.9rem; }
+  .q-btns button { font-size: 13px; font-weight: 700; padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); transition: transform 0.15s ease; }
+  .q-btns button:hover { transform: translateY(-1px); }
+  .q-btns .primary { background: var(--w); color: #fff; border-color: transparent; }
+  @media (prefers-reduced-motion: reduce) { .q-card.shake, .qres-card { animation: none; } }
+
   /* missions */
   .miss-card { border-color: color-mix(in oklab, var(--w) 30%, var(--line)); }
   .miss { padding: 0.45rem 0.7rem 0.6rem; display: flex; flex-direction: column; gap: 5px; }
@@ -472,8 +525,8 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
 
 <script>
   import { bn, bnNum } from '../../lib/bn';
-  import { markSeen, getProgress, addXp, grantAward, setMission, touchDay } from '../../lib/progress';
-  import { levelOf, AWARDS, awardKey, chime, soundOn, setSound } from '../../lib/game';
+  import { markSeen, getProgress, addXp, grantAward, setMission, setBest, touchDay } from '../../lib/progress';
+  import { levelOf, AWARDS, awardKey, chime, soundOn, setSound, confetti, starsFor, starText, secText } from '../../lib/game';
   import { track, trackItem, trackDepth, trackPlay } from '../../lib/track';
   import { pad2 } from '../../lib/bn';
   import { lightMinutes, EARTH_DIAMETER_KM, SPEEDS, fitsInside, METRICS, AU_KM, orbitYears, DEFAULT_BODY, type Body, type Branch, type Facts } from '../../data/space';
@@ -500,6 +553,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   import('./cosmos').then(({ mountCosmos }) => {
     cosmos = mountCosmos(host, $('#moon-labels'), data, cur.id, {
       onPick(pk: Pick) {
+        if (quest.on) { if (pk.kind === 'body') questPick(pk.id); return; }
         if (pk.kind === 'body') { if (pk.id === cur.id) cosmos?.focusBody(pk.id); else select(pk.id); }
         else if (pk.kind === 'moon') { cosmos?.focusMoon(pk.index); showMoon(pk.index); }
         else toggleBranches(true);
@@ -819,6 +873,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
 
   /* ---- the player bar: points, a title from the points, days in a row ---- */
   const streakDays = touchDay();
+  let questsDone = 0, perfectEver = false, playedEver = false;
   const worldHue = getComputedStyle(root).getPropertyValue('--w').trim() || '#5A6BD4';
   function renderPlayer() {
     const xp = getProgress().xp, lv = levelOf(xp);
@@ -868,7 +923,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
     const all = seen >= data.length;
     const ctx = {
       seen, total: data.length, catsDone: all ? 1 : 0, played: playedEver,
-      questsDone: 0, perfect: false, streak: streakDays,
+      questsDone, perfect: perfectEver, streak: streakDays,
       missionsDone: missionKeys.filter((k) => (mDone[k] ?? 0) > 0).length, missionsTotal: missionKeys.length,
     };
     let any = false;
@@ -879,6 +934,82 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
     }
     if (any) { chime('win'); renderAwards(); }
   }
+
+  /* ---- খোঁজার খেলা: find each body out in the solar system ---- */
+  const fx = confetti($<HTMLCanvasElement>('#fx'));
+  const quest = { on: false, order: [] as string[], i: 0, mistakes: 0, wrongHere: 0, t0: 0, timer: 0 };
+  const qEl = $('#quest'), qCard = $('#q-card'), qHint = $('#q-hint'), qRes = $('#qres'), qStart = $<HTMLButtonElement>('#q-start');
+  const QUEST_KEY = `${WORLD}:সৌরজগৎ`;
+  function renderQuestBtn() {
+    const best = getProgress().best[QUEST_KEY] ?? 0;
+    qStart.textContent = best ? `🎯 খোঁজার খেলা ${starText(best)}` : '🎯 খোঁজার খেলা';
+  }
+  const questBody = () => byId(quest.order[quest.i]!);
+  function questShow() {
+    const b = questBody();
+    $('#q-name').textContent = b.bn;
+    $('#q-count').textContent = `${bn(quest.i + 1)} / ${bn(quest.order.length)}`;
+    qHint.textContent = '';
+    if (!reduced) qCard.animate([{ transform: 'scale(0.92)' }, { transform: 'none' }], { duration: 220, easing: 'ease-out' });
+  }
+  const questTick = () => { $('#q-time').textContent = secText(performance.now() - quest.t0); };
+  function questStart() {
+    quest.on = true; quest.i = 0; quest.mistakes = 0; quest.wrongHere = 0; quest.t0 = performance.now();
+    quest.order = data.map((b) => b.id);
+    for (let k = quest.order.length - 1; k > 0; k--) { const r = Math.floor(Math.random() * (k + 1)); [quest.order[k], quest.order[r]] = [quest.order[r]!, quest.order[k]!]; }
+    // the whole system in view, so every body is actually there to be found
+    cosmos?.showSystem(); toggleBranches(false); $('#subtopic').hidden = true;
+    root.querySelector('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    qRes.hidden = true; qEl.hidden = false; $('#scene-hint').style.opacity = '0';
+    clearInterval(quest.timer); quest.timer = window.setInterval(questTick, 500); questTick();
+    questShow(); chime('tick');
+    track('quest_start', { world: WORLD, category: 'সৌরজগৎ' });
+  }
+  function questQuit(silent = false) {
+    if (!quest.on) return;
+    quest.on = false; clearInterval(quest.timer); qEl.hidden = true;
+    if (!silent) track('quest_quit', { world: WORLD, category: 'সৌরজগৎ', found: quest.i });
+  }
+  function questPick(id: string) {
+    const want = quest.order[quest.i]!;
+    if (id === want) {
+      const gained = quest.wrongHere ? 2 : 5;
+      addXp(gained); floatXp(gained); chime('ok');
+      const r = host.getBoundingClientRect();
+      fx.burst(r.width / 2, r.height / 2, worldHue);
+      quest.i++; quest.wrongHere = 0;
+      if (quest.i >= quest.order.length) { questFinish(); return; }
+      questShow();
+      return;
+    }
+    quest.mistakes++; quest.wrongHere++; chime('no');
+    qCard.classList.remove('shake'); void qCard.offsetWidth; qCard.classList.add('shake');
+    const hit = byId(id);
+    qHint.textContent = quest.wrongHere >= 2
+      ? `ইঙ্গিত: ${byId(want).tagline}`
+      : `উঁহু, ওটা ${hit.bn}। আবার খোঁজো - টেনে ঘোরাও।`;
+  }
+  function questFinish() {
+    const ms = performance.now() - quest.t0, stars = starsFor(quest.mistakes);
+    const bonus = stars === 3 ? 20 : stars === 2 ? 10 : 0;
+    if (bonus) { addXp(bonus); floatXp(bonus); }
+    const improved = setBest(QUEST_KEY, stars);
+    questsDone++; if (stars === 3) perfectEver = true;
+    quest.on = false; clearInterval(quest.timer); qEl.hidden = true;
+    $('#q-stars').textContent = starText(stars);
+    $('#q-head').textContent = stars === 3 ? 'নিখুঁত!' : stars === 2 ? 'দারুণ!' : 'শেষ করেছ!';
+    $('#q-sum').textContent = `সৌরজগতের ${bn(quest.order.length)}টিই খুঁজে পেয়েছ ${secText(ms)}-এ, ভুল ${bn(quest.mistakes)}টি।${bonus ? ` বোনাস +${bn(bonus)} জ্ঞানবিন্দু।` : ''}${improved ? ' এটা তোমার সেরা।' : ''}`;
+    qRes.hidden = false;
+    const r = host.getBoundingClientRect(); fx.burst(r.width / 2, r.height * 0.45, worldHue, true);
+    chime('win'); renderQuestBtn(); renderPlayer();
+    track('quest_done', { world: WORLD, category: 'সৌরজগৎ', stars, mistakes: quest.mistakes, seconds: Math.round(ms / 1000) });
+    checkAwards();
+  }
+  qStart.addEventListener('click', questStart);
+  $('#q-quit').addEventListener('click', () => questQuit());
+  $('#q-again').addEventListener('click', () => { qRes.hidden = true; questStart(); });
+  $('#q-read').addEventListener('click', () => { qRes.hidden = true; $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!qRes.hidden) qRes.hidden = true; else questQuit(); } });
 
   /* ---- missions: the same three-hearts games every other world has ---- */
   const missionBtns = [...root.querySelectorAll<HTMLButtonElement>('.mission-play')];
@@ -995,12 +1126,11 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
     if (e.key === 'ArrowLeft') select(data[(i - 1 + data.length) % data.length].id);
   });
 
-  let playedEver = false;
   host.addEventListener('pointerdown', () => { playedEver = true; checkAwards(); });
   host.addEventListener('pointerdown', () => trackPlay(WORLD, 'সৌরজগৎ'), { once: true });
 
   renderText(); renderTools(); renderBranches(); toggleBranches(true); renderSize(); renderTravel(); renderRecords();
   renderGlance(); renderAge(); markSeen(WORLD, cur.id);
-  renderPlayer(); renderAwards(); renderMissions(); renderProgress();
+  renderPlayer(); renderAwards(); renderMissions(); renderQuestBtn(); renderProgress();
   trackItem(WORLD, 'সৌরজগৎ', cur.bn);
 </script>

@@ -167,10 +167,13 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
               </div>
             </div>
             <p class="award-toast" id="award-toast" role="status" aria-live="polite" hidden></p>
-            <p class="hint" id="hero-hint">গোল ছবিগুলোয় ক্লিক করো - টেনে ঘোরাও</p>
+            <p class="hint" id="hero-hint">গোল ছবিগুলোয় ক্লিক করো · টেনে ঘোরাও · খুলে দেখো টানো</p>
             <noscript><p class="hint">থ্রিডি মডেল দেখতে জাভাস্ক্রিপ্ট চালু করো।</p></noscript>
             <div class="scenebar">
               <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-labelledby="ctl-label" /></label>
+              {/* Every model comes apart: the engine slides the scene's own
+                  pieces outward and the item badges ride with them. */}
+              <label class="ctl-r ctl-x"><span id="ctl-x-label" class="lbl">খুলে দেখো</span><input type="range" id="ctl-x" min="0" max="100" value="0" aria-labelledby="ctl-x-label" /></label>
               <div class="hctl">
                 <button type="button" id="q-start" class="q-start">🎯 খোঁজার খেলা</button>
                 <button type="button" id="h-spin" aria-pressed="true">ঘোরানো থামাও</button>
@@ -476,6 +479,8 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
   .ctl-r { display: flex; align-items: center; gap: 0.75rem; }
   .ctl-r .lbl { white-space: nowrap; min-width: 6ch; color: #cfe0f2; }
   .ctl-r input { flex: 1; accent-color: var(--w); height: 4px; cursor: pointer; }
+  .ctl-x .lbl { color: #ffd76a; }
+  .ctl-x input { accent-color: #f0b429; }
   .hctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .hctl button { font-size: 12px; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #eef4fb; backdrop-filter: blur(4px); transition: background 0.15s ease, transform 0.15s ease; }
   .hctl button:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.2); }
@@ -736,6 +741,7 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
 
   /* ---- 3D hero: loaded after first paint so the text is readable immediately ---- */
   const host = $('#hero-host'), ctl = $<HTMLInputElement>('#ctl'), ctlLabel = $('#ctl-label');
+  const ctlX = $<HTMLInputElement>('#ctl-x');
   const spinBtn = $<HTMLButtonElement>('#h-spin'), resetBtn = $<HTMLButtonElement>('#h-reset'), angleEl = $('#h-angle');
   const syncSpin = (on: boolean) => { spinBtn.setAttribute('aria-pressed', String(on)); spinBtn.textContent = on ? 'ঘোরানো থামাও' : 'ঘোরানো চালাও'; };
   const onHeroFrame = ({ yawDeg }: { yawDeg: number }) => {
@@ -757,6 +763,7 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
   spinBtn.addEventListener('click', () => { if (!hero) return; const on = !hero.isAuto(); hero.setAuto(on); syncSpin(on); });
   resetBtn.addEventListener('click', () => hero?.resetView());
   ctl.addEventListener('input', () => { hero?.setParam(+ctl.value / 100); countPlay(); });
+  ctlX.addEventListener('input', () => { hero?.setExplode(+ctlX.value / 100); countPlay(); });
   host.addEventListener('pointerdown', countPlay);
 
   /* ---- the player bar: points, title, days in a row ---- */
@@ -1208,7 +1215,13 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
     $('#c-name').textContent = c.n;
     $('#c-play').innerHTML = '<b>পর্দায়</b>';
     $('#c-play').append(c.play);
-    if (hero) { ctlLabel.textContent = hero.set(c.hero); ctl.value = String(Math.round((c.hero.p ?? 0.5) * 100)); hero.setItems(heroItems(c), curItem); }
+    if (hero) {
+      ctlLabel.textContent = hero.set(c.hero);
+      ctl.value = String(Math.round((c.hero.p ?? 0.5) * 100));
+      // a new model starts whole, however the last one was left
+      ctlX.value = '0'; hero.setExplode(0);
+      hero.setItems(heroItems(c), curItem);
+    }
     renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
     if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); renderProgress(); renderGlance(); renderRecords(); renderChips(); } }
     // the gated features follow the category
