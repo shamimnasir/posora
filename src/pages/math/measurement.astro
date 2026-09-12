@@ -163,7 +163,7 @@ const items = [
   .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
   .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 60ch; }
   .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); }
-  .readout b { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
 
   /* ruler */
   .ruler-wrap { overflow-x: auto; padding-bottom: 4px; }
@@ -190,10 +190,12 @@ const items = [
   .cal-nav button:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel)); }
   .cal-nav b { font-family: var(--font-display); font-size: 17px; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .cal-grid .wd { text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); padding-bottom: 4px; }
-  .cal-grid .d { aspect-ratio: 1; display: grid; place-items: center; border-radius: 8px; font-size: 13.5px; background: var(--panel-2); font-variant-numeric: tabular-nums; }
-  .cal-grid .d.empty { background: transparent; }
-  .cal-grid .d.today { background: var(--w); color: var(--on-brand); font-weight: 700; }
+  /* NOTE: the day cells are built by the script, so they need :global() - a
+     JS-created div never receives Astro's data-astro-cid stamp. */
+  .cal-grid :global(.wd) { text-align: center; font-size: 11px; color: var(--muted); font-family: var(--font-mono); padding-bottom: 4px; }
+  .cal-grid :global(.d) { aspect-ratio: 1; display: grid; place-items: center; border-radius: 8px; font-size: 13.5px; background: var(--panel-2); font-variant-numeric: tabular-nums; }
+  .cal-grid :global(.d.empty) { background: transparent; }
+  .cal-grid :global(.d.today) { background: var(--w); color: var(--on-brand); font-weight: 700; }
 
   /* temperature */
   .temp-wrap { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 1.4rem; align-items: center; }
@@ -203,7 +205,7 @@ const items = [
   /* convert */
   .conv-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.7rem; flex-wrap: wrap; }
   .conv-eq { color: var(--muted); font-weight: 700; }
-  #conv-out b { font-size: 20px; }
+  #conv-out :global(b) { font-size: 20px; }
 
   /* estimate */
   .est-q { font-size: 15.5px; font-weight: 600; margin-bottom: 0.9rem; }

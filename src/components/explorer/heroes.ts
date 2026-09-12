@@ -318,9 +318,22 @@ const SCENES: Record<string, Builder> = {
 };
 
 /* ---------- engine ---------- */
-export type HeroHandle = { set(spec: HeroSpec): string; setParam(v: number): void; destroy(): void };
+export type HeroHandle = {
+  set(spec: HeroSpec): string;
+  setParam(v: number): void;
+  /** Start or stop the idle turntable. Dragging works either way. */
+  setAuto(on: boolean): void;
+  isAuto(): boolean;
+  /** Ease the model back to its default orientation. */
+  resetView(): void;
+  destroy(): void;
+};
 
-export function mountHero(host: HTMLElement, spec: HeroSpec): HeroHandle {
+export function mountHero(
+  host: HTMLElement,
+  spec: HeroSpec,
+  onFrame?: (info: { yawDeg: number; auto: boolean }) => void,
+): HeroHandle {
   const canvas = host.querySelector('canvas')!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const font = getComputedStyle(document.body).fontFamily;
@@ -339,7 +352,11 @@ export function mountHero(host: HTMLElement, spec: HeroSpec): HeroHandle {
 
   const IDLE_YAW = 0.22; // rad/s - a full turn every ~28s: enough to read as alive within a glance, never dizzying
   let dragging = false, lx = 0, ly = 0, vx = 0, vy = 0, yaw = 0, pitch = 0;
-  host.addEventListener('pointerdown', (e) => { dragging = true; lx = e.clientX; ly = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
+  // The turntable is a switchable camera behaviour, not decoration: visitors who
+  // ask for reduced motion start still, and anyone can pause or reset it.
+  let auto = !reduced, yawTo: number | null = null;
+  const yawDeg = () => { const d = ((yaw * 180) / Math.PI) % 360; return d < 0 ? d + 360 : d; };
+  host.addEventListener('pointerdown', (e) => { dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
   host.addEventListener('pointermove', (e) => { if (!dragging) return; vx = (e.clientX - lx) * 0.006; vy = (e.clientY - ly) * 0.006; lx = e.clientX; ly = e.clientY; yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); });
   const up = () => { dragging = false; host.classList.remove('dragging'); }; host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
 
@@ -347,20 +364,32 @@ export function mountHero(host: HTMLElement, spec: HeroSpec): HeroHandle {
   function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camera.position.z = w < 600 ? 7.4 : 6.2; camera.lookAt(0, 0.1, 0); }
   new ResizeObserver(resize).observe(host); resize();
   function frame(now: number) {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; if (!reduced || dragging) t += dt;
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const run = auto || dragging; if (run) t += dt;
     if (!dragging) {
       yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); vx *= 0.92; vy *= 0.92;
-      if (!reduced && Math.abs(vx) < 0.002) yaw += dt * IDLE_YAW; // drag momentum fades into a steady idle turntable
+      if (yawTo !== null) {
+        yaw += (yawTo - yaw) * 0.18;
+        if (Math.abs(yawTo - yaw) < 0.002) { yaw = yawTo; yawTo = null; }
+      } else if (auto && Math.abs(vx) < 0.002) yaw += dt * IDLE_YAW; // drag momentum fades into a steady idle turntable
     }
     user.rotation.set(pitch, yaw, 0);
-    user.position.y = reduced ? 0 : Math.sin(t * 0.55) * 0.045; // faint breathing bob - a still photo never does this
+    user.position.y = run ? Math.sin(t * 0.55) * 0.045 : 0; // faint breathing bob - a still photo never does this
     const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(1 - Math.pow(1 - pop, 3));
-    cur?.update(t, reduced && !dragging ? 0 : dt, param); renderer.render(scene, camera);
+    cur?.update(t, run ? dt : 0, param); renderer.render(scene, camera);
+    onFrame?.({ yawDeg: yawDeg(), auto });
     raf = visible && !document.hidden ? requestAnimationFrame(frame) : 0;
   }
   const start = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } };
   const io = new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) start(); }); io.observe(host);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); }); start();
   void firstLabel;
-  return { set: (s) => { const l = build(s); start(); return l; }, setParam: (v) => { param = v; start(); }, destroy() { cancelAnimationFrame(raf); io.disconnect(); renderer.dispose(); } };
+  return {
+    set: (s) => { const l = build(s); start(); return l; },
+    setParam: (v) => { param = v; start(); },
+    setAuto: (on) => { auto = on; start(); },
+    isAuto: () => auto,
+    resetView: () => { vx = vy = 0; pitch = 0; yawTo = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; start(); },
+    destroy() { cancelAnimationFrame(raf); io.disconnect(); renderer.dispose(); },
+  };
 }

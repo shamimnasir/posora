@@ -56,7 +56,7 @@ const wa = 'https://wa.me/8801771553141';
   .msg { font-size: 14px; color: var(--muted); min-height: 1.5em; }
   .msg.ok { color: var(--ok); font-weight: 600; }
   .msg.err { color: var(--danger); }
-  .msg a { text-decoration: underline; }
+  .msg :global(a) { text-decoration: underline; }
   @media (max-width: 800px) { .cols { grid-template-columns: 1fr; } }
 </style>
 

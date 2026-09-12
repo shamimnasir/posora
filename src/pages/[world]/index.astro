@@ -52,7 +52,14 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
             <canvas></canvas>
             <p class="hint" id="hero-hint">টেনে ঘোরাও</p>
           </div>
-          <label class="ctl"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-label="মডেল নিয়ন্ত্রণ" /></label>
+          <div class="ctl">
+            <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-label="মডেল নিয়ন্ত্রণ" /></label>
+            <div class="hctl">
+              <button type="button" id="h-spin" aria-pressed="true">ঘোরানো থামাও</button>
+              <button type="button" id="h-reset">সোজা করো</button>
+              <span class="hang" id="h-angle">কোণ ০°</span>
+            </div>
+          </div>
           <div class="scene-t">
             <p class="lbl">বিভাগ <span id="c-no">০১</span></p>
             <h2 id="c-name">{first.n}</h2>
@@ -150,13 +157,21 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .hero3d.dragging { cursor: grabbing; }
   .hero3d canvas { width: 100%; height: 100%; }
   .hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--muted); background: var(--panel); padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line-soft); pointer-events: none; transition: opacity 0.4s ease; }
-  .ctl { grid-row: 2; grid-column: 1; display: flex; align-items: center; gap: 0.75rem; }
+  .ctl { grid-row: 2; grid-column: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+  .ctl-r { display: flex; align-items: center; gap: 0.75rem; }
   .ctl .lbl { white-space: nowrap; min-width: 6ch; color: var(--w); }
   .ctl input { flex: 1; accent-color: var(--w); height: 4px; cursor: pointer; }
+  /* Real camera controls. A paused turntable and a live angle only exist because
+     the scene is rendered live; a looping clip cannot offer either. */
+  .hctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .hctl button { font-size: 12px; font-weight: 600; padding: 0.25rem 0.7rem; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease; }
+  .hctl button:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 14%, var(--panel)); }
+  .hctl button[aria-pressed="true"] { background: color-mix(in oklab, var(--w) 16%, var(--panel)); border-color: color-mix(in oklab, var(--w) 40%, var(--line)); color: var(--ink); }
+  .hang { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .scene-t { grid-row: 1 / 3; grid-column: 2; }
   .scene-t h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); margin: 0.2rem 0 0.6rem; }
   .play { font-size: 14.5px; color: var(--ink-2); padding-left: 0.85rem; border-left: 2px solid color-mix(in oklab, var(--w) 50%, var(--line)); }
-  .play b { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--w); }
+  .play :global(b) { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--w); }
   .items { border-top: 1px solid var(--line-soft); padding: 1rem 1.4rem 1.25rem; }
   .items-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.85rem; }
   .items-h-t { font-weight: 700; font-size: 14.5px; }
@@ -164,16 +179,21 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   .star-count { flex: none; display: flex; align-items: baseline; gap: 0.3rem; font-size: 12px; color: var(--sun); background: color-mix(in oklab, var(--sun) 14%, var(--panel)); border: 1px solid color-mix(in oklab, var(--sun) 40%, var(--line)); border-radius: 999px; padding: 0.3rem 0.7rem; white-space: nowrap; }
   .star-count b { font-family: var(--font-display); font-size: 14px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13.5px; padding: 6px 13px 6px 10px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
-  .chip:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel)); border-color: color-mix(in oklab, var(--w) 34%, var(--line)); transform: translateY(-1px); }
-  .chip .star { color: var(--line); font-size: 15px; line-height: 1; transition: color 0.15s ease, transform 0.2s ease; }
-  .chip[aria-pressed="true"] { border-color: color-mix(in oklab, var(--sun) 60%, var(--line)); background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: var(--ink); font-weight: 600; }
-  .chip[aria-pressed="true"] .star { color: var(--sun); transform: scale(1.3) rotate(-12deg); }
+  /* NOTE: the chips are rebuilt by the script on every category change, so the
+     rules for them must be :global(). Astro stamps data-astro-cid onto elements
+     at build time, and a JS-created <button class="chip"> never gets one, so a
+     scoped .chip selector would match nothing and the list would render as bare
+     default buttons. */
+  .chips :global(.chip) { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13.5px; padding: 6px 13px 6px 10px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
+  .chips :global(.chip:hover) { background: color-mix(in oklab, var(--w) 14%, var(--panel)); border-color: color-mix(in oklab, var(--w) 34%, var(--line)); transform: translateY(-1px); }
+  .chips :global(.chip .star) { color: var(--line); font-size: 15px; line-height: 1; transition: color 0.15s ease, transform 0.2s ease; }
+  .chips :global(.chip[aria-pressed="true"]) { border-color: color-mix(in oklab, var(--sun) 60%, var(--line)); background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: var(--ink); font-weight: 600; }
+  .chips :global(.chip[aria-pressed="true"] .star) { color: var(--sun); transform: scale(1.3) rotate(-12deg); }
   .toast { margin-top: 0.7rem; font-size: 12.5px; font-weight: 600; color: var(--brand-ink); opacity: 0; transition: opacity 0.25s ease; }
   .toast.show { opacity: 1; }
-  .chip-real { border-style: solid; background: color-mix(in oklab, var(--ok) 12%, var(--panel)); border-color: color-mix(in oklab, var(--ok) 36%, var(--line)); color: var(--ink); font-weight: 600; }
-  .chip-real:hover { background: color-mix(in oklab, var(--ok) 20%, var(--panel)); transform: translateY(-1px); }
-  .chip-real .check { color: var(--ok); font-size: 13px; }
+  .chips :global(.chip-real) { border-style: solid; background: color-mix(in oklab, var(--ok) 12%, var(--panel)); border-color: color-mix(in oklab, var(--ok) 36%, var(--line)); color: var(--ink); font-weight: 600; }
+  .chips :global(.chip-real:hover) { background: color-mix(in oklab, var(--ok) 20%, var(--panel)); transform: translateY(-1px); }
+  .chips :global(.chip-real .check) { color: var(--ok); font-size: 13px; }
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
   .spec { padding: 0.3rem 0.95rem 0.5rem; }
   .row { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
@@ -228,10 +248,16 @@ const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, he
   let toastTimer = 0;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const host = document.getElementById('hero-host')!, ctl = document.getElementById('ctl') as HTMLInputElement, ctlLabel = document.getElementById('ctl-label')!;
-  let hero: HeroHandle | null = null, curCat = 0;
+  const spinBtn = document.getElementById('h-spin') as HTMLButtonElement, resetBtn = document.getElementById('h-reset') as HTMLButtonElement, angleEl = document.getElementById('h-angle')!;
+  let hero: HeroHandle | null = null, curCat = 0, lastDeg = -1;
   const applyHero = (spec: HeroSpec) => { if (!hero) return; ctlLabel.textContent = hero.set(spec); ctl.value = String(Math.round((spec.p ?? 0.5) * 100)); };
+  const syncSpin = (on: boolean) => { spinBtn.setAttribute('aria-pressed', String(on)); spinBtn.textContent = on ? 'ঘোরানো থামাও' : 'ঘোরানো চালাও'; };
+  const onHeroFrame = ({ yawDeg }: { yawDeg: number }) => { const d = Math.round(yawDeg); if (d === lastDeg) return; lastDeg = d; angleEl.textContent = `কোণ ${bn(d)}°`; };
+  spinBtn.addEventListener('click', () => { if (!hero) return; const on = !hero.isAuto(); hero.setAuto(on); syncSpin(on); });
+  resetBtn.addEventListener('click', () => hero?.resetView());
   import('../../components/explorer/heroes').then(({ mountHero }) => {
-    hero = mountHero(host, cats[0].hero); ctlLabel.textContent = hero.set(cats[curCat].hero); ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
+    hero = mountHero(host, cats[0].hero, onHeroFrame); ctlLabel.textContent = hero.set(cats[curCat].hero); ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
+    syncSpin(hero.isAuto());
     host.addEventListener('pointerdown', () => { document.getElementById('hero-hint')!.style.opacity = '0'; }, { once: true });
   });
   ctl.addEventListener('input', () => hero?.setParam(+ctl.value / 100));
