@@ -10,9 +10,10 @@
  * Content is fully authored for every category except পরিমাপ (index 4, which
  * intentionally has none - it links straight to its real tool page instead).
  */
-export type MathItemDetail = { chips: string[]; l1: string; l2: string; l3: string; fun: string };
+import type { ItemDetail } from './explorer-types';
+export type MathItemDetail = ItemDetail;
 
-export const mathExplorer: (MathItemDetail[] | null)[] = [
+export const mathExplorer: (ItemDetail[] | null)[] = [
   /* 0. সংখ্যা */
   [
     {

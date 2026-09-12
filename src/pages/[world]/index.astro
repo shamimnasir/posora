@@ -5,6 +5,16 @@ import { isLoggedIn } from '../../lib/auth';
 import { bn, pad2 } from '../../lib/bn';
 import { heroFor } from '../../data/heroes';
 import { mathExplorer } from '../../data/math-explorer';
+import { physicsExplorer } from '../../data/physics-explorer';
+import { chemistryExplorer } from '../../data/chemistry-explorer';
+import { lifeExplorer } from '../../data/life-explorer';
+import { natureExplorer } from '../../data/nature-explorer';
+import { foodExplorer } from '../../data/food-explorer';
+import { moneyExplorer } from '../../data/money-explorer';
+import { languageExplorer } from '../../data/language-explorer';
+import { socialExplorer } from '../../data/social-explorer';
+import { discoveryExplorer } from '../../data/discovery-explorer';
+import type { ItemDetail } from '../../data/explorer-types';
 
 export const prerender = false;
 
@@ -23,7 +33,13 @@ Astro.response.headers.set(
 const first = w.cats[0];
 // Categories that ship a per-item "more info" dataset render as a reading sheet,
 // like the space explorer; the rest keep the honest wishlist / lab behaviour.
-const explorer = w.slug === 'math' ? mathExplorer : null;
+const EXPLORERS: Record<string, (ItemDetail[] | null)[]> = {
+  math: mathExplorer, physics: physicsExplorer, chemistry: chemistryExplorer,
+  life: lifeExplorer, nature: natureExplorer, food: foodExplorer,
+  money: moneyExplorer, language: languageExplorer, social: socialExplorer,
+  discovery: discoveryExplorer,
+};
+const explorer = EXPLORERS[w.slug] ?? null;
 const payload = w.cats.map((c, i) => ({ n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i), lab: c.lab, labAnchors: c.labAnchors, detail: explorer?.[i] ?? null }));
 ---
 <Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue}>
