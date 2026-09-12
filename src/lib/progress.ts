@@ -20,8 +20,10 @@ export type Progress = {
   best: Record<string, number>;
   /** Days this learner opened a world, as YYYY-MM-DD, newest last (capped). */
   days: string[];
+  /** Best result per mission, "world:index" to 1..3 stars. */
+  missions: Record<string, number>;
 };
-const EMPTY: Progress = { xp: 0, seen: {}, stars: [], awards: [], best: {}, days: [] };
+const EMPTY: Progress = { xp: 0, seen: {}, stars: [], awards: [], best: {}, days: [], missions: {} };
 const XP_PER_ITEM = 10;
 
 function read(): Progress {
@@ -29,7 +31,7 @@ function read(): Progress {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(EMPTY);
     const p = JSON.parse(raw) as Partial<Progress>;
-    return { xp: p.xp ?? 0, seen: p.seen ?? {}, stars: p.stars ?? [], awards: p.awards ?? [], best: p.best ?? {}, days: p.days ?? [] };
+    return { xp: p.xp ?? 0, seen: p.seen ?? {}, stars: p.stars ?? [], awards: p.awards ?? [], best: p.best ?? {}, days: p.days ?? [], missions: p.missions ?? {} };
   } catch {
     return structuredClone(EMPTY);
   }
@@ -89,6 +91,15 @@ export function setBest(key: string, stars: number): boolean {
   const p = read();
   if ((p.best[key] ?? 0) >= stars) return false;
   p.best[key] = stars;
+  write(p);
+  return true;
+}
+
+/** Keep the best stars for a mission. Returns true when it improved. */
+export function setMission(key: string, stars: number): boolean {
+  const p = read();
+  if ((p.missions[key] ?? 0) >= stars) return false;
+  p.missions[key] = stars;
   write(p);
   return true;
 }

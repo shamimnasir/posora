@@ -5,6 +5,8 @@ export type World = {
   age: string; dep: string; phase: string; intro: string; keys: string[];
   /** Category index each `keys[i]` is demonstrated by right now, or null if not built yet. */
   keyCats: (number | null)[];
+  /** Mission index each `keys[i]` is delivered by, when a mission and not a category is the real answer. */
+  keyMissions?: (number | null)[];
   open: boolean; cats: Category[]; missions: { n: string; d: string }[];
   /** Category index each `missions[i]` can genuinely be tried on right now, or null if not built yet. */
   missionCats: (number | null)[];
@@ -621,10 +623,16 @@ export const worlds: World[] = [
    null,
    2
   ],
-  "missionCats": [
+  "keyMissions": [
    null,
    null,
+   0,
    null
+  ],
+  "missionCats": [
+   6,
+   7,
+   3
   ]
  },
  {

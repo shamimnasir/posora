@@ -21,6 +21,7 @@ export function levelOf(xp: number): { n: number; title: string; next: number | 
 export type AwardCtx = {
   seen: number; total: number; catsDone: number; played: boolean;
   questsDone: number; perfect: boolean; streak: number;
+  missionsDone: number; missionsTotal: number;
 };
 export type Award = { id: string; name: string; desc: string; emoji: string; global?: boolean; test(c: AwardCtx): boolean };
 export const AWARDS: Award[] = [
@@ -32,7 +33,10 @@ export const AWARDS: Award[] = [
   { id: 'play', name: 'হাতে-কলমে', desc: 'মডেল ঘুরিয়ে বা স্লাইডার টেনে দেখা', emoji: '🎛️', test: (c) => c.played },
   { id: 'quest', name: 'খোঁজার খেলা', desc: 'একটা খোঁজার খেলা শেষ করা', emoji: '🎯', test: (c) => c.questsDone >= 1 },
   { id: 'perfect', name: 'নিখুঁত খোঁজ', desc: 'একটাও ভুল না করে খেলা শেষ', emoji: '💯', test: (c) => c.perfect },
+  { id: 'mission', name: 'প্রথম মিশন', desc: 'একটা মিশন শেষ করা', emoji: '🚀', test: (c) => c.missionsDone >= 1 },
+  { id: 'missions', name: 'মিশন মাস্টার', desc: 'এই ভুবনের সব মিশন শেষ করা', emoji: '🎖️', test: (c) => c.missionsTotal > 0 && c.missionsDone >= c.missionsTotal },
   { id: 'streak3', name: 'টানা তিন দিন', desc: 'পরপর তিন দিন ফিরে আসা', emoji: '🔥', global: true, test: (c) => c.streak >= 3 },
+  { id: 'streak7', name: 'টানা সাত দিন', desc: 'পরপর সাত দিন ফিরে আসা', emoji: '🗓️', global: true, test: (c) => c.streak >= 7 },
 ];
 export const awardKey = (a: Award, world: string) => (a.global ? a.id : `${world}:${a.id}`);
 

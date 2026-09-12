@@ -18,6 +18,7 @@ import type { ItemDetail } from '../../data/explorer-types';
 import { getMember, hasPlan, activeChild } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
+import { missionSpec } from '../../data/missions';
 
 export const prerender = false;
 
@@ -81,6 +82,9 @@ const readableTotal = payload.reduce(
 const shade = (i: number) => `color-mix(in oklab, ${w.hue} ${96 - (i % 6) * 9}%, #8894a8)`;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
 const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'পড়ার সময়'], ['read', 'তুমি যত দেখেছ']] as const;
+// How many of this world's missions are actually playable today. The card
+// counts against this, never against the wish list, so the number is honest.
+const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).length;
 ---
 <Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare>
   <div class="wrap page" id="world" data-slug={w.slug} data-total={total} data-child={child?.id} data-plan={plan ? '1' : '0'}>
@@ -259,16 +263,43 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
           <p class="text lab-note" id="lab-note" hidden></p>
         </section>
 
-        <section class="card">
-          <div class="card-h"><span class="lbl">ভুবন পরিচিতি</span></div>
-          <div class="spec">
-            <div class="row"><span class="k">বয়স উপযোগিতা</span><span class="v">{w.age}</span></div>
-            <div class="row"><span class="k">বিভাগ</span><span class="v">{bn(w.cats.length)}</span></div>
-            <div class="row"><span class="k">শেখার আইটেম</span><span class="v">{bn(total)}</span></div>
-            <div class="row"><span class="k">পূর্বশর্ত</span><span class="v">{w.dep}</span></div>
-            <div class="row"><span class="k">নির্মাণ ফেজ</span><span class="v">{w.phase}</span></div>
-            <div class="row"><span class="k">তুমি দেখেছ</span><span class="v" id="spec-read">০</span><span class="meter"><i id="spec-meter"></i></span></div>
+        {/* Missions sit directly under the reading card: they are the thing a
+            child comes back for, so they are never below the fold of the rail. */}
+        <section class="card miss-card" id="miss-card">
+          <div class="card-h">
+            <span class="lbl">মিশন</span>
+            <span class="lbl num" id="miss-count">০ / {bn(playableMissions)}</span>
           </div>
+          <div class="miss">
+            {w.missions.map((m, i) => {
+              const spec = missionSpec(w.slug, i);
+              return spec ? (
+                <button type="button" class="m mission-play" data-mi={i} data-cat={w.missionCats[i] ?? ''}>
+                  <span class="mb">{pad2(i + 1)}</span>
+                  <div class="m-t">
+                    <b>{m.n}</b>
+                    <p>{m.d}</p>
+                    <span class="m-meta">
+                      <span class="m-kind">{spec.type === 'order' ? 'সাজানোর খেলা' : spec.type === 'path' ? 'যাত্রার খেলা' : 'চেনার খেলা'}</span>
+                      <span class="m-len">{spec.type === 'order' ? `${bn(spec.rounds.length)} রাউন্ড` : spec.type === 'path' ? `${bn(spec.stops.length)} ধাপ` : `${bn(spec.rounds.length)} ধাঁধা`}</span>
+                      <span class="m-hearts" aria-hidden="true">♥♥♥</span>
+                    </span>
+                  </div>
+                  <span class="m-go">
+                    <span class="m-stars" data-mk={`${w.slug}:${i}`} aria-hidden="true">☆☆☆</span>
+                    <span class="m-play">খেলো ▶</span>
+                  </span>
+                </button>
+              ) : (
+                <div class="m m-soon">
+                  <span class="mb">{pad2(i + 1)}</span>
+                  <div class="m-t"><b>{m.n}</b><p>{m.d}</p></div>
+                  <span class="try soon">শীঘ্রই আসছে</span>
+                </div>
+              );
+            })}
+          </div>
+          {playableMissions > 0 && <p class="miss-foot" id="miss-foot"></p>}
         </section>
 
         <section class="card">
@@ -294,6 +325,8 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
           <div class="keys">
             {w.keys.map((k, i) => w.keyCats[i] !== null ? (
               <button type="button" class="pill pill-w key-jump" data-cat={w.keyCats[i]}>{k}</button>
+            ) : w.keyMissions?.[i] != null ? (
+              <button type="button" class="pill pill-w key-mission" data-km={w.keyMissions[i]}>{k}<small>মিশন</small></button>
             ) : (
               <span class="pill key-soon">{k}<small>শীঘ্রই</small></span>
             ))}
@@ -301,27 +334,22 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
           <p class="intro">{w.intro}</p>
         </section>
 
-        <section class="card">
-          <div class="card-h"><span class="lbl">মিশন</span><span class="lbl">+১০ জ্ঞানবিন্দু</span></div>
-          <div class="miss">
-            {w.missions.map((m, i) => w.missionCats[i] !== null ? (
-              <button type="button" class="m mission-jump" data-cat={w.missionCats[i]}>
-                <span class="mb">{pad2(i + 1)}</span>
-                <div><b>{m.n}</b><p>{m.d}</p><span class="try">এখনই চেষ্টা করো →</span></div>
-              </button>
-            ) : (
-              <div class="m m-soon">
-                <span class="mb">{pad2(i + 1)}</span>
-                <div><b>{m.n}</b><p>{m.d}</p><span class="try soon">শীঘ্রই আসছে</span></div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <a class="card cta" href="/space/">
           <span class="lbl">থ্রিডি সৌরজগৎ ঘুরে আসবে?</span>
           <b>মহাকাশ ভুবন খোলা আছে →</b>
         </a>
+
+        <section class="card">
+          <div class="card-h"><span class="lbl">ভুবন পরিচিতি</span></div>
+          <div class="spec">
+            <div class="row"><span class="k">বয়স উপযোগিতা</span><span class="v">{w.age}</span></div>
+            <div class="row"><span class="k">বিভাগ</span><span class="v">{bn(w.cats.length)}</span></div>
+            <div class="row"><span class="k">শেখার আইটেম</span><span class="v">{bn(total)}</span></div>
+            <div class="row"><span class="k">পূর্বশর্ত</span><span class="v">{w.dep}</span></div>
+            <div class="row"><span class="k">নির্মাণ ফেজ</span><span class="v">{w.phase}</span></div>
+            <div class="row"><span class="k">তুমি দেখেছ</span><span class="v" id="spec-read">০</span><span class="meter"><i id="spec-meter"></i></span></div>
+          </div>
+        </section>
       </aside>
     </div>
 
@@ -555,24 +583,39 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   .recs :global(.rnone) { font-size: 12.5px; color: var(--muted); line-height: 1.6; padding: 0.45rem 0.3rem; }
 
   .keys { display: flex; flex-wrap: wrap; gap: 6px; padding: 0.8rem 0.95rem 0; }
-  .key-jump { cursor: pointer; transition: transform 0.15s ease, background 0.15s ease; }
-  .key-jump:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 22%, var(--panel)); }
+  .key-jump, .key-mission { cursor: pointer; transition: transform 0.15s ease, background 0.15s ease; }
+  .key-jump:hover, .key-mission:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 22%, var(--panel)); }
+  .key-mission { display: inline-flex; align-items: center; gap: 5px; }
+  .key-mission small { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; opacity: 0.75; }
   .key-soon { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 5px 12px; border-radius: 9px;
     background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: default; }
   .key-soon small { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; }
   .intro { padding: 0.7rem 0.95rem 0.95rem; font-size: 13.5px; color: var(--ink-2); }
-  .miss { padding: 0.3rem 0.95rem 0.7rem; }
-  .m { display: flex; gap: 0.7rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line-soft); width: 100%; text-align: left; }
-  .m:last-child { border-bottom: 0; }
-  .mission-jump { cursor: pointer; border-radius: 8px; transition: background 0.15s ease, transform 0.15s ease; }
-  .mission-jump:hover { background: color-mix(in oklab, var(--w) 8%, transparent); }
-  .m-soon { opacity: 0.72; }
-  .mb { width: 26px; height: 26px; border-radius: 8px; flex: none; display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; background: color-mix(in oklab, var(--w) 18%, var(--panel)); color: var(--w); border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); }
+  /* missions: the card sits directly under the reading card */
+  .miss-card { border-color: color-mix(in oklab, var(--w) 30%, var(--line)); }
+  .miss { padding: 0.45rem 0.7rem 0.6rem; display: flex; flex-direction: column; gap: 5px; }
+  .m { display: flex; gap: 0.7rem; align-items: center; padding: 0.6rem 0.6rem; border-radius: 12px; width: 100%; text-align: left; border: 1px solid var(--line-soft); background: var(--panel-2); }
+  .mission-play { cursor: pointer; transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease; }
+  .mission-play:hover { transform: translateY(-2px); border-color: color-mix(in oklab, var(--w) 55%, var(--line)); background: color-mix(in oklab, var(--w) 10%, var(--panel)); box-shadow: 0 8px 20px color-mix(in oklab, var(--w) 18%, transparent); }
+  .mission-play:hover .m-play { background: var(--w); color: #fff; }
+  .mission-play.done { border-color: color-mix(in oklab, var(--sun) 55%, var(--line)); background: color-mix(in oklab, var(--sun) 10%, var(--panel)); }
+  .m-soon { opacity: 0.66; border-style: dashed; background: transparent; }
+  .m-t { min-width: 0; flex: 1; }
+  .mb { width: 28px; height: 28px; border-radius: 9px; flex: none; display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; background: color-mix(in oklab, var(--w) 18%, var(--panel)); color: var(--w); border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); }
+  .mission-play.done .mb { background: color-mix(in oklab, var(--sun) 25%, var(--panel)); color: color-mix(in oklab, var(--sun) 55%, var(--ink)); border-color: color-mix(in oklab, var(--sun) 50%, var(--line)); }
   .m-soon .mb { background: transparent; color: var(--muted); border-style: dashed; }
   .m b { font-size: 14px; display: block; }
-  .m p { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .m p { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .m-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 0.35rem; }
+  .m-kind { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: color-mix(in oklab, var(--w) 16%, var(--panel)); color: var(--w); }
+  .m-len { font-family: var(--font-mono); font-size: 9.5px; color: var(--muted); letter-spacing: 0.04em; }
+  .m-hearts { font-size: 10px; color: #e0556a; letter-spacing: 0.08em; }
+  .m-go { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .m-stars { font-size: 13px; letter-spacing: 0.06em; color: var(--sun); }
+  .m-play { font-size: 11.5px; font-weight: 800; padding: 0.22rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); color: var(--w); transition: background 0.18s ease, color 0.18s ease; }
+  .miss-foot { padding: 0 0.95rem 0.9rem; font-size: 12px; color: var(--muted); line-height: 1.55; }
   .try { display: inline-block; margin-top: 0.3rem; font-size: 11.5px; font-weight: 700; color: var(--w); }
-  .try.soon { font-weight: 500; color: var(--muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; }
+  .try.soon { flex: none; font-weight: 500; color: var(--muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; margin: 0; }
   .mini { font-size: 11.5px; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--panel); transition: background 0.15s ease, transform 0.15s ease; }
   .mini:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 14%, var(--panel)); }
   .cta { padding: 0.9rem 0.95rem; display: flex; flex-direction: column; gap: 0.15rem; background: var(--brand-soft); border-color: transparent; transition: transform 0.15s ease; }
@@ -599,6 +642,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     .printable :global(.p-text) { font-size: 11pt; line-height: 1.55; }
     .printable :global(.p-fun) { font-size: 9.5pt; color: #333; margin-top: 0.25rem; font-style: italic; }
     .printable :global(.p-foot) { margin-top: 1.2rem; font-size: 9pt; color: #555; }
+    .mz { display: none !important; }
   }
 
   @media (max-width: 1080px) {
@@ -621,10 +665,124 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     .gn { font-size: 12px; }
     .gv { font-size: 11.5px; min-width: 64px; }
   }
+  @media (max-width: 1080px) {
+    .awards { grid-template-columns: repeat(6, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .awards { grid-template-columns: repeat(3, 1fr); }
+    .m-go { flex-direction: row; align-items: center; }
+  }
+</style>
+
+{/* The mission player builds its own DOM on document.body, so its rules can
+    never be scoped: Astro stamps data-astro-cid at build time and a runtime
+    node never carries one. Everything here is namespaced under .mz. */}
+<style is:global>
+  body.mz-open { overflow: hidden; }
+  .mz { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1rem;
+    background: rgba(4, 6, 12, 0.72); backdrop-filter: blur(6px); animation: mz-in 0.25s ease; }
+  @keyframes mz-in { from { opacity: 0; } to { opacity: 1; } }
+  /* min-width:0 matters: without it the grid item takes its content's
+     min-content width, and a wide track pushes the panel off both edges */
+  .mz-panel { position: relative; width: min(720px, 100%); min-width: 0; max-height: 92vh; overflow: hidden auto; border-radius: 22px;
+    background: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--w) 26%, #141c2e) 0%, #0d1322 55%, #070a12 100%);
+    border: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); color: #eef4fb;
+    animation: mz-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.25); }
+  @keyframes mz-pop { from { transform: scale(0.9) translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .mz-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .mz-top { display: flex; align-items: center; gap: 0.8rem; padding: 0.9rem 1.1rem 0.7rem; }
+  .mz-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .mz-no { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(226, 235, 245, 0.6); }
+  .mz-title b { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; line-height: 1.25; }
+  .mz-hearts { display: flex; gap: 3px; font-size: 19px; line-height: 1; }
+  .mz-hearts .on { color: #ff5f74; text-shadow: 0 0 12px rgba(255, 95, 116, 0.55); }
+  .mz-hearts .off { color: rgba(255, 255, 255, 0.2); }
+  .mz-score { display: flex; align-items: baseline; gap: 0.3rem; font-size: 11px; color: rgba(226, 235, 245, 0.7); }
+  .mz-score b { font-family: var(--font-display); font-size: 1.25rem; color: #ffd76a; font-variant-numeric: tabular-nums; }
+  .mz-combo { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: #ffd76a; color: #241a00; }
+  .mz-close { width: 30px; height: 30px; border-radius: 50%; flex: none; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 13px; }
+  .mz-close:hover { background: rgba(255, 255, 255, 0.3); }
+  .mz-bar { height: 5px; margin: 0 1.1rem; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+  .mz-bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--w), #ffd76a); transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+  .mz-body { padding: 1.1rem 1.1rem 0.4rem; display: flex; flex-direction: column; align-items: center; gap: 0.85rem; min-width: 0; }
+  .mz-body > * { max-width: 100%; }
+  .mz-foot { min-height: 2.6em; padding: 0.5rem 1.2rem 1.1rem; text-align: center; font-size: 13.5px; line-height: 1.6; color: #ffe08a; }
+  .mz-plus { position: absolute; z-index: 3; transform: translate(-50%, 0); font-family: var(--font-display); font-weight: 800; font-size: 18px; color: #ffd76a; pointer-events: none; animation: mz-plus 1s ease-out forwards; }
+  @keyframes mz-plus { 0% { opacity: 0; transform: translate(-50%, 4px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -40px); } }
+
+  .mz-intro { text-align: center; padding: 1rem 0.5rem 0.5rem; }
+  .mz-rule { font-size: 1.05rem; line-height: 1.7; max-width: 46ch; margin: 0 auto; }
+  .mz-rule-s { margin: 0.9rem auto 0; max-width: 44ch; font-size: 12.5px; line-height: 1.7; color: rgba(226, 235, 245, 0.7); }
+  .mz-btn { font-size: 14px; font-weight: 800; padding: 0.6rem 1.3rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.1); color: #fff; transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.2); }
+  .mz-primary { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 55%, #ffd76a)); border-color: transparent; color: #0d1322; }
+  .mz-go { margin-top: 1.2rem; font-size: 16px; padding: 0.7rem 1.8rem; }
+  .mz-btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 1.1rem; }
+  .mz-round { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; color: rgba(226, 235, 245, 0.65); text-transform: uppercase; }
+
+  .mz-chain { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+  .mz-slot { min-width: 88px; min-height: 88px; padding: 0.5rem 0.4rem; border-radius: 16px; border: 2px dashed rgba(255, 255, 255, 0.22);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12.5px; font-weight: 700; text-align: center; }
+  .mz-slot.on { border-style: solid; border-color: transparent; background: color-mix(in oklab, var(--w) 34%, #0d1322); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+  .mz-em { font-size: 30px; line-height: 1.1; }
+  .mz-arrow { color: rgba(226, 235, 245, 0.45); font-size: 18px; }
+  .mz-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .mz-card { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 92px; padding: 0.6rem 0.7rem; border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font-size: 12.5px; font-weight: 700;
+    transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-card:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.2); }
+  .mz-card.used { opacity: 0.25; transform: none; }
+  .mz-next { margin-top: 0.2rem; }
+
+  /* the journey is one row that must not wrap, so on a narrow screen it
+     scrolls inside itself rather than stretching the panel */
+  .mz-track { position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 1.6rem 2px 4px; max-width: 100%; overflow-x: auto; scrollbar-width: thin; }
+  .mz-stop { width: 72px; padding: 0.45rem 0.2rem; border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.06); font-size: 11px; font-weight: 700; text-align: center; }
+  .mz-stop .mz-em { font-size: 24px; }
+  .mz-stop.here { border-color: transparent; background: color-mix(in oklab, var(--w) 40%, #0d1322); box-shadow: 0 0 0 3px color-mix(in oklab, var(--w) 30%, transparent); }
+  .mz-link { width: 14px; height: 2px; background: rgba(255, 255, 255, 0.25); }
+  .mz-token { position: absolute; font-size: 22px; transform: translate(-50%, -100%); transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1), top 0.5s ease; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)); }
+  .mz-fact { max-width: 52ch; text-align: center; font-size: 13.5px; line-height: 1.75; color: rgba(238, 244, 251, 0.92); }
+  .mz-ask { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; text-align: center; }
+  .mz-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .mz-choice { padding: 0.5rem 1.05rem; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff; font-size: 14px; font-weight: 700; transition: transform 0.15s ease, background 0.15s ease; }
+  .mz-choice:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.22); }
+  .mz-choice.ok { background: #2fa360; border-color: transparent; }
+  .mz-choice.bad { background: rgba(224, 85, 106, 0.3); border-color: rgba(224, 85, 106, 0.6); opacity: 0.65; }
+
+  .mz-art { width: 160px; height: 160px; display: grid; place-items: center; border-radius: 20px; background: rgba(255, 255, 255, 0.94); }
+  .mz-art svg { width: 130px; height: 130px; color: #1d3524; fill: #2f6b3f; }
+  .mz-clue { max-width: 46ch; text-align: center; font-size: 14.5px; line-height: 1.7; }
+  .mz-cap { font-size: 11px; color: rgba(226, 235, 245, 0.55); }
+
+  .mz-end { text-align: center; padding: 0.6rem 0.5rem 0.5rem; }
+  .mz-stamp { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 0.3rem 0.9rem; border-radius: 8px; border: 2px solid #ffd76a; color: #ffd76a; transform: rotate(-4deg); }
+  .mz-fail .mz-stamp { border-color: #e0556a; color: #e0556a; }
+  .mz-stamp-ok { animation: mz-stamp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+  @keyframes mz-stamp { from { transform: rotate(-4deg) scale(2.4); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
+  .mz-stars { font-size: 40px; letter-spacing: 0.1em; color: #ffd76a; margin-top: 0.6rem; line-height: 1.1; }
+  .mz-end h3 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; margin-top: 0.2rem; }
+  .mz-sum { max-width: 44ch; margin: 0.5rem auto 0; font-size: 13.5px; line-height: 1.75; color: rgba(238, 244, 251, 0.85); }
+
+  @media (max-width: 560px) {
+    .mz { padding: 0; }
+    .mz-panel { width: 100%; max-height: 100vh; height: 100%; border-radius: 0; }
+    .mz-slot { min-width: 72px; min-height: 76px; }
+    .mz-em { font-size: 24px; }
+    .mz-stop { width: 62px; }
+    .mz-track { justify-content: flex-start; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mz, .mz-panel, .mz-stamp-ok, .mz-plus { animation: none; }
+    .mz-token, .mz-bar i { transition: none; }
+  }
 </style>
 
 <script>
-  import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, touchDay } from '../../lib/progress';
+  import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, setMission, touchDay } from '../../lib/progress';
   import { levelOf, AWARDS, awardKey, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
   import { bn, pad2 } from '../../lib/bn';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
@@ -756,10 +914,12 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   }
   function checkAwards() {
     const seen = new Set(seenList());
+    const mDone = getProgress().missions;
     const ctx = {
       seen: cats.reduce((s, _c, i) => s + readCount(i, seen), 0), total: TOTAL,
       catsDone: cats.filter((c, i) => readable(c) && readCount(i, seen) === c.items.length).length,
       played: playedEver, questsDone, perfect: perfectEver, streak: streakDays,
+      missionsDone: missionKeys.filter((k) => (mDone[k] ?? 0) > 0).length, missionsTotal: missionKeys.length,
     };
     let any = false;
     for (const a of AWARDS) {
@@ -769,6 +929,67 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     }
     if (any) { chime('win'); renderAwards(); }
   }
+
+  /* ---- missions: a real game each, run in their own panel ---- */
+  const missionBtns = [...root.querySelectorAll<HTMLButtonElement>('.mission-play')];
+  const missionKeys = missionBtns.map((b) => `${slug}:${b.dataset.mi}`);
+  function renderMissions() {
+    if (!missionBtns.length) return;
+    const best = getProgress().missions;
+    let done = 0;
+    missionBtns.forEach((b, i) => {
+      const s = best[missionKeys[i]!] ?? 0;
+      if (s > 0) done++;
+      b.classList.toggle('done', s > 0);
+      const st = b.querySelector<HTMLElement>('.m-stars')!;
+      st.textContent = '★'.repeat(s) + '☆'.repeat(3 - s);
+      b.querySelector<HTMLElement>('.m-play')!.textContent = s > 0 ? 'আবার ▶' : 'খেলো ▶';
+    });
+    $('#miss-count').textContent = `${bn(done)} / ${bn(missionBtns.length)}`;
+    const foot = root.querySelector<HTMLElement>('#miss-foot');
+    if (foot) {
+      const three = missionKeys.filter((k) => (best[k] ?? 0) === 3).length;
+      foot.textContent = done === 0
+        ? 'প্রতিটি মিশন একেকটা ছোট খেলা: তিনটি হৃদয়, দ্রুত উত্তরে বেশি পয়েন্ট, শেষে তারা।'
+        : done < missionBtns.length
+          ? `${bn(missionBtns.length - done)}টি মিশন এখনও বাকি। সব হৃদয় বাঁচিয়ে শেষ করলে তিন তারা।`
+          : three === missionBtns.length
+            ? 'সব মিশনে তিন তারা! এই ভুবনে তোমাকে আর কিছু শেখানোর নেই।'
+            : `সব মিশন শেষ, ${bn(missionBtns.length - three)}টিতে এখনও তিন তারা বাকি।`;
+    }
+  }
+  // a key on the "যা যা করা যাবে" card whose real answer is a mission opens it
+  root.querySelectorAll<HTMLButtonElement>('.key-mission').forEach((b) => b.addEventListener('click', () => {
+    const target = missionBtns.find((m) => m.dataset.mi === b.dataset.km);
+    if (!target) return;
+    target.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+    target.click();
+  }));
+  missionBtns.forEach((b, i) => b.addEventListener('click', async () => {
+    const mi = +b.dataset.mi!;
+    const { missionSpec } = await import('../../data/missions');
+    const spec = missionSpec(slug, mi);
+    if (!spec) return;
+    const { playMission } = await import('../../components/explorer/missions');
+    // If the mission belongs to a category, move the model there first, so
+    // closing the panel leaves the child looking at what they just played with.
+    const cat = b.dataset.cat;
+    if (cat) showCat(+cat);
+    track('mission_start', { world: slug, mission: mi });
+    playMission(spec, {
+      name: b.querySelector('b')!.textContent!,
+      no: pad2(mi + 1),
+      hue: worldHue,
+      onDone(r) {
+        addXp(r.points);
+        const improved = setMission(missionKeys[i]!, r.stars);
+        renderMissions(); renderPlayer(); checkAwards();
+        track('mission_done', { world: slug, mission: mi, stars: r.stars, points: r.points, seconds: r.seconds });
+        if (improved && r.stars === 3) toast('🎖️ তিন তারা! নিখুঁত মিশন');
+      },
+      onClose() { renderMissions(); renderPlayer(); },
+    });
+  }));
 
   /* ---- খোঁজার খেলা: find each item on the model ---- */
   const quest = { on: false, order: [] as number[], i: 0, mistakes: 0, wrongHere: 0, t0: 0, timer: 0 };
@@ -1138,7 +1359,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     clearTimeout(toastTimer);
     toastTimer = window.setTimeout(() => starToast.classList.remove('show'), 2600);
   });
-  root.querySelectorAll<HTMLButtonElement>('.key-jump, .mission-jump').forEach((b) => b.addEventListener('click', () => {
+  root.querySelectorAll<HTMLButtonElement>('.key-jump').forEach((b) => b.addEventListener('click', () => {
     showCat(+b.dataset.cat!);
     $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   }));
@@ -1206,7 +1427,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   renderProgress();
   renderChips();
   $('#extras').hidden = !readable(cats[0]);
-  renderPlayer(); renderAwards(); renderQuestBtn(); checkAwards();
+  renderPlayer(); renderAwards(); renderQuestBtn(); renderMissions(); checkAwards();
   // Pull the child's progress from other devices, then repaint what it changes.
   if (childId) syncWorld(slug).then(() => { renderProgress(); renderGlance(); renderRecords(); renderChips(); renderPlayer(); checkAwards(); });
   // count the category and item the page lands on the same way a click is
