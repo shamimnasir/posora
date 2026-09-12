@@ -1,6 +1,6 @@
 ---
-import { bodies, branchesFor, FACTS, METRICS, type Body } from '../../data/space';
-import { bn, pad2 } from '../../lib/bn';
+import { bodies, branchesFor, FACTS, METRICS, SPEEDS, EARTH_DIAMETER_KM, type Body } from '../../data/space';
+import { bn, pad2, bnNum, bnDuration } from '../../lib/bn';
 import { worlds } from '../../data/worlds';
 import { missionSpec, missionKind, missionLength } from '../../data/missions';
 import { AWARDS, awardKey } from '../../lib/game';
@@ -13,6 +13,48 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
 // The space page carries the same missions and the same player bar as every
 // other world, read from the same place, so the two can never drift apart.
 const world = worlds.find((w) => w.slug === 'space')!;
+/**
+ * The branch chips, the size comparison and the travel times used to be drawn
+ * by script alone, which left three cards as a heading over an empty box until
+ * it ran. They are all computed from this body's own figures, so the server can
+ * draw them; the script still redraws them on every change, from the same
+ * helpers in lib/bn.ts, so the two cannot say different things.
+ */
+const facts = FACTS[cur.id];
+const seedSize = facts ? (() => {
+  const rel = facts.diameterKm / EARTH_DIAMETER_KM;
+  const maxPx = 76;
+  return {
+    bigPx: rel >= 1 ? maxPx : maxPx * rel,
+    smallPx: rel >= 1 ? Math.max(3, maxPx / rel) : maxPx,
+  };
+})() : null;
+/** The five solar-system records, all read off the bodies themselves. */
+const seedRecords = (() => {
+  const planets = bodies.filter((b) => b.id !== 'sun' && b.id !== 'moon' && b.id !== 'pluto');
+  const statNum = (b: Body, key: string) => {
+    const st = b.stats.find((x) => x.k.includes(key));
+    if (!st) return null;
+    const m = st.v.replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+    return m ? Number(m[0]) : null;
+  };
+  const dia = (b: Body) => FACTS[b.id]?.diameterKm ?? null;
+  const pick = (f: (b: Body) => number | null, max: boolean) =>
+    planets.filter((b) => f(b) !== null).sort((x, y) => (max ? (f(y)! - f(x)!) : (f(x)! - f(y)!)))[0];
+  const temp = (b: Body) => statNum(b, 'তাপমাত্রা');
+  const moons = (b: Body) => statNum(b, 'চাঁদ');
+  const rows: { label: string; b: Body; val: string }[] = [];
+  const add = (label: string, b: Body | undefined, val: (b: Body) => string) => { if (b) rows.push({ label, b, val: val(b) }); };
+  add('সবচেয়ে বড় গ্রহ', pick(dia, true), (b) => `${bnNum(dia(b)!)} কিমি`);
+  add('সবচেয়ে ছোট গ্রহ', pick(dia, false), (b) => `${bnNum(dia(b)!)} কিমি`);
+  add('সবচেয়ে গরম গ্রহ', pick(temp, true), (b) => `${bn(temp(b)!)} °সে`);
+  add('সবচেয়ে ঠান্ডা গ্রহ', pick(temp, false), (b) => `${bn(temp(b)!)} °সে`);
+  add('সবচেয়ে বেশি চাঁদ', pick(moons, true), (b) => `${bn(moons(b)!)}টি`);
+  return rows;
+})();
+const seedTravel = facts && facts.nearestKm > 0
+  ? SPEEDS.map((sp) => ({ bn: sp.bn, t: bnDuration(facts.nearestKm / sp.kmh) }))
+  : null;
 const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i)).length;
 ---
 <div class="xp" id="explorer" data-current={cur.id}>
@@ -62,7 +104,11 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
       </div>
       <div class="branchbar" id="branchbar" hidden>
         <span class="lbl" id="branch-title">ভেতরে কী কী আছে</span>
-        <div class="branch-chips" id="branch-chips"></div>
+        <div class="branch-chips" id="branch-chips">
+          {branchesFor(cur.id).map((br) => (
+            <button type="button" data-br={br.id} aria-pressed="false">{br.bn}</button>
+          ))}
+        </div>
       </div>
       <canvas class="fx" id="fx" aria-hidden="true"></canvas>
       {/* খোঁজার খেলা: the cosmos asks for one body and the child has to find it
@@ -205,19 +251,31 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
         <button type="button" class="mini" id="cmp3d" aria-pressed="false">পাশে পৃথিবী রাখো</button>
       </div>
       <div class="size">
-        <div class="size-bars" id="size-bars" aria-hidden="true"></div>
+        <div class="size-bars" id="size-bars" aria-hidden="true">
+          {seedSize && <><span><i style={`width:${seedSize.bigPx}px;height:${seedSize.bigPx}px;--c:${world?.hue ?? '#5A6BD4'}`}></i>{cur.bn}</span><span><i style={`width:${seedSize.smallPx}px;height:${seedSize.smallPx}px;--c:#3f9a4a`}></i>পৃথিবী</span></>}
+        </div>
         <p class="size-out" id="size-out"></p>
       </div>
     </section>
 
     <section class="card">
       <div class="card-h"><span class="lbl">কতদিনে পৌঁছাবে</span><span class="lbl" id="trav-dist"></span></div>
-      <div class="trav" id="trav"></div>
+      <div class="trav" id="trav">
+        {seedTravel
+          ? seedTravel.map((r) => <div class="t"><span>{r.bn}</span><b>{r.t}</b></div>)
+          : <div class="t"><span>তুমি তো এখানেই আছো!</span></div>}
+      </div>
     </section>
 
     <section class="card">
       <div class="card-h"><span class="lbl">রেকর্ড</span><span class="lbl">সৌরজগতে</span></div>
-      <div class="recs" id="recs"></div>
+      <div class="recs" id="recs">
+        {seedRecords.map((r) => (
+          <button type="button" data-id={r.b.id} class={r.b.id === cur.id ? 'is-cur' : undefined}>
+            <span>{r.label}</span><b>{r.b.bn} <small style="font-weight:500;color:var(--muted)">{r.val}</small></b>
+          </button>
+        ))}
+      </div>
     </section>
 
     {/* Three live calculators, each computed from this body's real numbers. */}
@@ -526,7 +584,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
 </style>
 
 <script>
-  import { bn, bnNum } from '../../lib/bn';
+  import { bn, bnNum, bnBig, bnDuration } from '../../lib/bn';
   import { markSeen, getProgress, addXp, grantAward, setMission, setBest, touchDay } from '../../lib/progress';
   import { levelOf, AWARDS, awardKey, chime, soundOn, setSound, confetti, starsFor, starText, secText } from '../../lib/game';
   import { track, trackItem, trackDepth, trackPlay } from '../../lib/track';
@@ -631,22 +689,8 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   }
 
   /* ---- big numbers, said the way people say them ---- */
-  function big(n: number): string {
-    if (n >= 1e7) return `${bn((n / 1e7).toFixed(n >= 1e8 ? 0 : 1))} কোটি`;
-    if (n >= 1e5) return `${bn((n / 1e5).toFixed(n >= 1e6 ? 0 : 1))} লাখ`;
-    if (n >= 1000) return bnNum(Math.round(n));
-    if (n >= 10) return bn(Math.round(n));
-    return bn(n.toFixed(1));
-  }
-  function dur(hours: number): string {
-    if (hours * 3600 < 90) return `${bn((hours * 3600).toFixed(1))} সেকেন্ড`;  // light to the Moon is 1.3s
-    if (hours < 1) return `${bn(Math.round(hours * 60))} মিনিট`;
-    if (hours < 48) return `${bn(hours.toFixed(1))} ঘণ্টা`;
-    const days = hours / 24;
-    if (days < 365) return `${bn(Math.round(days))} দিন`;
-    const years = days / 365;
-    return years >= 1000 ? `${big(years)} বছর` : `${bn(Math.round(years))} বছর`;
-  }
+  // both live in lib/bn.ts now, because the server renders these same numbers
+  const big = bnBig, dur = bnDuration;
 
   /* ---- how big is it, really ---- */
   function renderSize() {
