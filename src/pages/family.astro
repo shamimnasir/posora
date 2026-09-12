@@ -53,8 +53,23 @@ const faqs = [
   { q: 'দেশের বাইরে থাকি, টাকা দেব কীভাবে?', a: 'কার্ডে, ডলারে। দেশের ভেতরে বিকাশ, নগদ, রকেট বা কার্ড - দুই দিকের জন্য দুই ব্যবস্থা থাকবে।' },
   { q: 'এক বছর পরে ভালো না লাগলে?', a: 'পুরো টাকা ফেরত। শর্ত নেই, প্রশ্ন নেই। যে জিনিস এক বছরেও কাজে লাগল না, তার টাকা আমাদের রাখার কথা নয়।' },
 ];
+
+// The questions parents actually ask, in a form an answer engine can quote
+// whole. Same array the page renders, so the answer on screen and the answer
+// in the markup can never say different things.
+const schema = [
+  {
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+];
 ---
 <Base
+  schema={schema}
   title="পসরা পরিবার"
   description="পসরা পরিবার - প্রতি সন্তানের নিজের প্রোফাইল, সাপ্তাহিক অভিভাবক রিপোর্ট, অনুশীলনী প্যাক। ৮৩৩টি বিষয় ফ্রিই থাকবে। প্রতিষ্ঠাতা পরিবারের তালিকায় নাম লেখান, এখন টাকা লাগবে না।"
 >

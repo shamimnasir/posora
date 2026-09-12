@@ -12,7 +12,8 @@
     "admin:hash": "node scripts/hash-password.mjs",
     "db:create": "wrangler d1 create posora",
     "db:migrate": "wrangler d1 migrations apply posora --remote",
-    "db:migrate:local": "wrangler d1 migrations apply posora --local"
+    "db:migrate:local": "wrangler d1 migrations apply posora --local",
+    "og": "node scripts/make-og.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.1",

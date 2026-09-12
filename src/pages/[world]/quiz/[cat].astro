@@ -31,7 +31,7 @@ const unlocked = plan && !!child;
 const need = passMark(questions.length);
 const payload = { world: w.slug, cat, questions: unlocked ? questions : questions.slice(0, 1), need };
 ---
-<Base title={`যাচাই · ${c.n}`} description={`${w.bn} - ${c.n} বিভাগের যাচাই, পড়া থেকেই তৈরি ${bn(questions.length)}টি প্রশ্ন।`} hue={w.hue}>
+<Base title={`যাচাই · ${c.n}`} description={`${w.bn} - ${c.n} বিভাগের যাচাই, পড়া থেকেই তৈরি ${bn(questions.length)}টি প্রশ্ন।`} hue={w.hue} noindex>
   <div class="wrap page" id="quiz" data-unlocked={unlocked ? '1' : '0'}>
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href={`/${w.slug}/`}>{w.bn}</a> <span>/</span> যাচাই</p>
 

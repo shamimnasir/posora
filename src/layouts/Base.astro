@@ -13,10 +13,63 @@ interface Props {
   hue?: string;
   /** Hide the global footer (explorer pages have their own status bar). */
   bare?: boolean;
+  /**
+   * Keep this page out of search results. For pages that are gated, personal,
+   * or one of many near-identical generated sheets: indexing them would spend
+   * the site's crawl budget on pages nobody can arrive at cold.
+   */
+  noindex?: boolean;
+  /** Extra schema.org objects for this page, appended to the site-wide graph. */
+  schema?: Record<string, unknown>[];
 }
-const { title, description, hue, bare = false } = Astro.props;
+const { title, description, hue, bare = false, noindex = false, schema = [] } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হোক খেলার মতো' : `${title} · পসরা`;
+const ogImage = new URL('/og.png', Astro.site ?? 'https://posora.com').href;
+
+/**
+ * One linked graph rather than a pile of loose blocks, so a crawler reading
+ * any page can see that the organisation, the site and this page are the same
+ * three things everywhere. Every claim here is something the site really does.
+ */
+const graph = [
+  {
+    '@type': 'EducationalOrganization',
+    '@id': 'https://posora.com/#org',
+    name: 'পসরা',
+    alternateName: ['Posora', 'GyanerPosora'],
+    url: 'https://posora.com/',
+    logo: 'https://posora.com/og-square.png',
+    image: ogImage,
+    email: 'support@posora.com',
+    telephone: '+8801771553141',
+    areaServed: 'BD',
+    inLanguage: 'bn',
+    description: 'বাংলা ভাষায় শিশুদের জন্য ইন্টারঅ্যাকটিভ শেখার ওয়েবসাইট।',
+  },
+  {
+    '@type': 'WebSite',
+    '@id': 'https://posora.com/#site',
+    name: 'পসরা',
+    alternateName: 'Posora',
+    url: 'https://posora.com/',
+    inLanguage: 'bn',
+    isAccessibleForFree: true,
+    publisher: { '@id': 'https://posora.com/#org' },
+    description: 'বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা - ১১টি ভুবন, প্রতিটি বিষয়ে থ্রিডি মডেল ও তিন গভীরতার লেখা।',
+  },
+  {
+    '@type': 'WebPage',
+    '@id': `${canonical.href}#page`,
+    url: canonical.href,
+    name: fullTitle,
+    description,
+    inLanguage: 'bn',
+    isPartOf: { '@id': 'https://posora.com/#site' },
+    primaryImageOfPage: ogImage,
+  },
+  ...schema,
+];
 ---
 <!doctype html>
 <html lang="bn" dir="ltr">
@@ -26,6 +79,9 @@ const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হো
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <link rel="alternate" hreflang="bn" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#e9edf2" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0c1116" media="(prefers-color-scheme: dark)" />
@@ -35,22 +91,17 @@ const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হো
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="bn_BD" />
     <meta property="og:site_name" content="পসরা" />
-    {/* summary, not summary_large_image: there is no share image yet, and
-        claiming one produces an empty card. */}
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="পসরা - বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     {/* Not executed, so the CSP's script-src does not apply to it. Describes
         only what the site actually is; no ratings, no prices, nothing unearned. */}
-    <script type="application/ld+json" is:inline set:html={JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'পসরা',
-      alternateName: 'Posora',
-      url: 'https://posora.com/',
-      inLanguage: 'bn',
-      description: 'বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা - ১১টি ভুবন, প্রতিটি বিষয়ে থ্রিডি মডেল ও তিন গভীরতার লেখা।',
-      isAccessibleForFree: true,
-      publisher: { '@type': 'Organization', name: 'পসরা', url: 'https://posora.com/', email: 'support@posora.com' },
-    })} />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />
     {/* Preload only the Bengali faces the first paint needs; Latin + other weights load on demand. */}
     <Font cssVariable="--font-body" preload={[{ subset: 'bengali', weight: 400 }]} />
     <Font cssVariable="--font-display" preload={[{ subset: 'bengali' }]} />

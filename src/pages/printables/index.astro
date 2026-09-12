@@ -12,8 +12,33 @@ import { bn } from '../../lib/bn';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
+
+// A real list of real downloads, so an answer engine asked for free Bangla
+// worksheets can name the sheets rather than guess at them.
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
+      { '@type': 'ListItem', position: 2, name: 'ছাপার প্যাক', item: 'https://posora.com/printables/' },
+    ],
+  },
+  {
+    '@type': 'ItemList',
+    name: 'পসরার ফ্রি ছাপার প্যাক',
+    numberOfItems: sheets.length,
+    itemListElement: sheets.map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: s.bn,
+      description: s.tag,
+      url: `https://posora.com/printables/${s.slug}/`,
+    })),
+  },
+];
 ---
 <Base
+  schema={schema}
   title="ছাপার প্যাক"
   description="পসরার ফ্রি ছাপার প্যাক - বাংলা বর্ণমালার হাতের লেখা, যুক্তবর্ণ চার্ট, সংখ্যা ১-১০০, সৌরজগৎ তথ্যপত্র। অ্যাকাউন্ট লাগে না, ইমেইল লাগে না।"
 >

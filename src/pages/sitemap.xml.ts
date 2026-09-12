@@ -42,10 +42,15 @@ export const GET: APIRoute = async ({ site }) => {
     // above are still worth serving.
   }
 
+  // One date for the whole file. Per-page dates would be a guess: content comes
+  // from D1 and the data modules, neither of which records when a given page's
+  // text last changed, and a made-up lastmod is worse than none.
+  const lastmod = new Date().toISOString().slice(0, 10);
+
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${entries
-  .map((e) => `  <url><loc>${origin}${e.loc}</loc><priority>${e.priority}</priority></url>`)
+  .map((e) => `  <url><loc>${origin}${e.loc}</loc><lastmod>${lastmod}</lastmod><priority>${e.priority}</priority></url>`)
   .join('\n')}
 </urlset>
 `;

@@ -27,7 +27,7 @@ const member = await getMember(Astro);
 const unlocked = hasPlan(member);
 const shown = unlocked ? ws.blanks : ws.blanks.slice(0, 1);
 ---
-<Base title={`অনুশীলনী · ${c.n}`} description={`${w.bn} - ${c.n} বিভাগের ছাপার অনুশীলনী: শূন্যস্থান পূরণ আর মিলানো, উত্তরপত্র সহ।`} hue={w.hue}>
+<Base title={`অনুশীলনী · ${c.n}`} description={`${w.bn} - ${c.n} বিভাগের ছাপার অনুশীলনী: শূন্যস্থান পূরণ আর মিলানো, উত্তরপত্র সহ।`} hue={w.hue} noindex>
   <div class="wrap page">
     <p class="crumbs no-print"><a href="/#worlds">ভুবন</a> <span>/</span> <a href={`/${w.slug}/`}>{w.bn}</a> <span>/</span> অনুশীলনী</p>
 

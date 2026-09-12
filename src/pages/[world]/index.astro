@@ -86,8 +86,50 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 // How many of this world's missions are actually playable today. The card
 // counts against this, never against the wish list, so the number is honest.
 const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).length;
+
+/**
+ * What this world actually is, said in schema.org so a search or answer engine
+ * can repeat it correctly: a free Bangla learning resource, what it teaches,
+ * and the list of categories inside it. Every field is read from the same data
+ * the page renders, so none of it can drift.
+ */
+const pageUrl = new URL(`/${w.slug}/`, Astro.site ?? 'https://posora.com').href;
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
+      { '@type': 'ListItem', position: 2, name: 'ভুবন', item: 'https://posora.com/#worlds' },
+      { '@type': 'ListItem', position: 3, name: w.bn, item: pageUrl },
+    ],
+  },
+  {
+    '@type': 'LearningResource',
+    '@id': `${pageUrl}#resource`,
+    name: `${w.bn} - পসরা`,
+    url: pageUrl,
+    inLanguage: 'bn',
+    isAccessibleForFree: true,
+    learningResourceType: ['interactive 3D model', 'reading', 'quiz', 'worksheet'],
+    educationalUse: ['self study', 'classroom activity'],
+    typicalAgeRange: w.age.replace('+', '-16'),
+    teaches: w.cats.map((c) => c.n),
+    about: w.cats.flatMap((c) => c.items).slice(0, 40),
+    description: `${w.tag} - ${w.intro}`,
+    provider: { '@id': 'https://posora.com/#org' },
+    audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
+  },
+  {
+    '@type': 'ItemList',
+    name: `${w.bn}ের বিভাগ`,
+    numberOfItems: w.cats.length,
+    itemListElement: w.cats.map((c, i) => ({
+      '@type': 'ListItem', position: i + 1, name: c.n, description: c.play,
+    })),
+  },
+];
 ---
-<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare>
+<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare schema={schema}>
   <div class="wrap page" id="world" data-slug={w.slug} data-total={total} data-child={child?.id} data-plan={plan ? '1' : '0'}>
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> {w.bn}</p>
 

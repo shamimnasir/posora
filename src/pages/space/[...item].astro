@@ -14,8 +14,38 @@ if (!cur) return Astro.rewrite('/404');
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
 const title = Astro.params.item ? `${cur.bn} · মহাকাশ` : 'মহাকাশ';
 const description = `${cur.bn} (${cur.en}) - ${cur.tagline}। ${cur.l1}`;
+
+// One body, named in both languages, with its own measured facts as the
+// answer an engine can quote. The stats are the same ones the page shows.
+const pageUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://posora.com').href;
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
+      { '@type': 'ListItem', position: 2, name: 'মহাকাশ', item: 'https://posora.com/space/' },
+      ...(Astro.params.item ? [{ '@type': 'ListItem', position: 3, name: cur.bn, item: pageUrl }] : []),
+    ],
+  },
+  {
+    '@type': 'LearningResource',
+    '@id': `${pageUrl}#resource`,
+    name: `${cur.bn} (${cur.en}) - পসরা`,
+    url: pageUrl,
+    inLanguage: 'bn',
+    isAccessibleForFree: true,
+    learningResourceType: ['interactive 3D model', 'reading'],
+    teaches: cur.bn,
+    about: { '@type': 'Thing', name: cur.bn, alternateName: cur.en, description: cur.tagline },
+    description,
+    provider: { '@id': 'https://posora.com/#org' },
+    audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
+    // the numbers the page puts on screen, so a quote of them is a quote of us
+    additionalProperty: cur.stats.map((s) => ({ '@type': 'PropertyValue', name: s.k, value: s.v })),
+  },
+];
 ---
-<Base title={title} description={description} hue={world?.hue ?? '#5A6BD4'} bare>
+<Base title={title} description={description} hue={world?.hue ?? '#5A6BD4'} bare schema={schema}>
   <div class="wrap page">
     <SpaceExplorer current={cur} />
     <p class="back"><a href="/#worlds">← সব ভুবন</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ?</a></p>

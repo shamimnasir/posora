@@ -50,7 +50,7 @@ if (plan && child) {
 const earned = plan && !!child && missing.length === 0 && total > 0;
 const today = new Intl.DateTimeFormat('bn-BD', { dateStyle: 'long' }).format(Date.now());
 ---
-<Base title={`সার্টিফিকেট · ${w.bn}`} description={`${w.bn} ভুবন শেষ করার সার্টিফিকেট`} hue={w.hue}>
+<Base title={`সার্টিফিকেট · ${w.bn}`} description={`${w.bn} ভুবন শেষ করার সার্টিফিকেট`} hue={w.hue} noindex>
   <div class="wrap page">
     <p class="crumbs no-print"><a href="/account/">আমার পসরা</a> <span>/</span> সার্টিফিকেট</p>
 

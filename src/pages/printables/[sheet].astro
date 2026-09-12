@@ -23,10 +23,33 @@ Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, st
 
 const letters = [...vowels, ...consonants];
 const others = sheets.filter((s) => s.slug !== sheet.slug);
+const sheetUrl = `https://posora.com/printables/${sheet.slug}/`;
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
+      { '@type': 'ListItem', position: 2, name: 'ছাপার প্যাক', item: 'https://posora.com/printables/' },
+      { '@type': 'ListItem', position: 3, name: sheet.bn, item: sheetUrl },
+    ],
+  },
+  {
+    '@type': 'LearningResource',
+    '@id': `${sheetUrl}#resource`,
+    name: sheet.bn,
+    url: sheetUrl,
+    inLanguage: 'bn',
+    isAccessibleForFree: true,
+    learningResourceType: 'worksheet',
+    educationalUse: ['practice', 'homework'],
+    description: sheet.tag,
+    provider: { '@id': 'https://posora.com/#org' },
+  },
+];
 // A tracing row: the solid letter, then hollow copies to go over.
 const TRACE_COPIES = 5;
 ---
-<Base title={sheet.bn} description={`${sheet.tag} পসরার ফ্রি ছাপার প্যাক - ডাউনলোড বা প্রিন্ট করুন, কোনো অ্যাকাউন্ট লাগে না।`}>
+<Base title={sheet.bn} description={`${sheet.tag} পসরার ফ্রি ছাপার প্যাক - ডাউনলোড বা প্রিন্ট করুন, কোনো অ্যাকাউন্ট লাগে না।`} schema={schema}>
   <div class="wrap page">
     <p class="crumbs no-print"><a href="/">পসরা</a> <span>/</span> <a href="/printables/">ছাপার প্যাক</a> <span>/</span> {sheet.bn}</p>
 

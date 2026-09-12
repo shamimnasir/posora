@@ -22,8 +22,72 @@ Astro.response.headers.set(
   'cache-control',
   preview ? 'private, no-store' : 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
 );
+
+/**
+ * The questions a first-time visitor arrives with. Each answer is self
+ * contained, so it reads correctly whether someone sees it on the page, in a
+ * search result, or quoted by an assistant that never shows the page at all.
+ * Counts come from COVERAGE, never typed by hand.
+ */
+const faqs = [
+  {
+    q: 'পসরা কী?',
+    a: `পসরা বাংলা ভাষায় শিশুদের জন্য একটি ফ্রি ইন্টারঅ্যাকটিভ শেখার ওয়েবসাইট, ঠিকানা posora.com। এখানে ${bn(worlds.length)}টি ভুবনে ${bn(COVERAGE.total)}টি বিষয় আছে, আর প্রতিটি বিষয়ের জন্য একটা থ্রিডি মডেল আছে যেটা ঘোরানো যায়, খুলে ফেলা যায় আর ক্লিক করা যায়। পড়তে কোনো অ্যাকাউন্ট লাগে না, কোনো টাকা লাগে না, কোনো বিজ্ঞাপনও নেই।`,
+  },
+  {
+    q: 'এটা কোন বয়সের জন্য?',
+    a: 'পাঁচ থেকে তেরো, একই পাতায়। প্রতিটি লেখা তিনটি গভীরতায় লেখা আছে - ছোট (৫-৮), মাঝারি (৯-১২) আর বড় (১৩+)। উপরের বোতামে গভীরতা বদলে দিলে একই বিষয় ছোট ভাইবোন আর বড় ভাইবোন দুজনেই পড়তে পারে।',
+  },
+  {
+    q: 'টাকা লাগে?',
+    a: 'না। যা কিছু পড়া যায়, যা কিছু ঘোরানো যায়, সব মিশন আর সব ছাপার শিট সম্পূর্ণ ফ্রি, আর ফ্রিই থাকবে। ভবিষ্যতে একটা পরিবার প্ল্যান আসবে যাতে সন্তানের আলাদা প্রোফাইল আর অভিভাবকের রিপোর্ট থাকবে, কিন্তু এখন পেমেন্টের ব্যবস্থাই বসানো হয়নি, তাই আজ কিছু কেনার উপায় নেই।',
+  },
+  {
+    q: 'বাচ্চার কোনো তথ্য লাগে?',
+    a: 'না। সন্তানের কোনো অ্যাকাউন্ট হয় না। পড়ার হিসাব শুধু ওই ব্রাউজারেই জমা থাকে, আমাদের কাছে আসে না। অ্যাকাউন্ট খুললে সেটা অভিভাবকের, আর সন্তানের জন্য শুধু একটা ডাকনাম আর একটা স্তর লাগে - নাম, ছবি বা ঠিকানা কিছুই নয়।',
+  },
+  {
+    q: 'অ্যাপ ডাউনলোড করতে হবে?',
+    a: 'না, কিছু নামাতে হয় না। পসরা ব্রাউজারেই চলে - ফোন, ট্যাব বা কম্পিউটার, যেকোনোটায়। posora.com খুললেই হলো।',
+  },
+  {
+    q: 'কী কী শেখা যায়?',
+    a: `${worlds.map((w) => w.bn).join(', ')} - মোট ${bn(worlds.length)}টি ভুবন। প্রতিটি ভুবনে কয়েকটি বিভাগ, প্রতিটি বিভাগে থ্রিডি মডেল, খোঁজার খেলা আর তিনটি করে মিশন।`,
+  },
+  {
+    q: 'ইন্টারনেট ছাড়া চলে?',
+    a: 'না, পাতা খুলতে ইন্টারনেট লাগে। তবে ছাপার প্যাকের শিটগুলো একবার ছেপে নিলে পর্দা ছাড়াই কাজে লাগে, আর সেগুলোর জন্য অ্যাকাউন্টও লাগে না।',
+  },
+  {
+    q: 'স্কুলে ব্যবহার করা যাবে?',
+    a: 'যাবে। প্রতিটি বিভাগের পুরো লেখা এক ক্লিকে হ্যান্ডআউট হিসেবে ছাপানো যায়, আর ছাপার প্যাকের শিটগুলো ক্লাসে সরাসরি বিলি করা যায়। স্কুলের জন্য আলাদা সুবিধা এখনো পাইলট পর্যায়ে, বিস্তারিত /schools/ পাতায় লেখা আছে।',
+  },
+];
+
+const homeSchema = [
+  {
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+  {
+    '@type': 'ItemList',
+    name: 'পসরার ভুবন',
+    numberOfItems: worlds.length,
+    itemListElement: worlds.map((w, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: w.bn,
+      description: w.tag,
+      url: `https://posora.com/${w.slug}/`,
+    })),
+  },
+];
 ---
-<Base title="পসরা" description="শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা - মহাকাশ, বিজ্ঞান, গণিত, ভাষা, প্রকৃতি। প্রতিটি জিনিস ছোঁয়া যায়, ঘোরানো যায়, খেলা যায়।">
+<Base title="পসরা" description="শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা - মহাকাশ, বিজ্ঞান, গণিত, ভাষা, প্রকৃতি। প্রতিটি জিনিস ছোঁয়া যায়, ঘোরানো যায়, খেলা যায়।" schema={homeSchema}>
 
   <section class="hero wrap">
     <div class="copy">
@@ -97,6 +161,24 @@ Astro.response.headers.set(
     </div>
   </section>
 
+  {/* The questions people actually arrive with, answered in full on the page
+      itself. A short answer that stands on its own is what a search result or
+      an assistant can quote, and what a hurried parent can read in one go. */}
+  <section class="sec wrap" id="faq">
+    <div class="sec-h">
+      <p class="eyebrow">সাধারণ প্রশ্ন</p>
+      <h2>পসরা জিনিসটা আসলে কী</h2>
+    </div>
+    <div class="faq">
+      {faqs.map((f) => (
+        <details class="fq">
+          <summary><h3>{f.q}</h3></summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
   <section class="sec wrap contact">
     <div class="card cbox">
       <div>
@@ -112,6 +194,18 @@ Astro.response.headers.set(
 </Base>
 
 <style>
+  /* FAQ: open one at a time by hand, but every answer is in the HTML from the
+     first byte, so a crawler that runs no JavaScript still reads all of them. */
+  .faq { display: flex; flex-direction: column; gap: 6px; max-width: 78ch; }
+  .fq { border: 1px solid var(--line-soft); border-radius: 12px; background: var(--panel); overflow: hidden; }
+  .fq summary { list-style: none; cursor: pointer; padding: 0.8rem 1rem; display: flex; align-items: center; gap: 0.6rem; transition: background 0.15s ease; }
+  .fq summary::-webkit-details-marker { display: none; }
+  .fq summary::after { content: "+"; margin-left: auto; font-family: var(--font-mono); font-size: 18px; color: var(--muted); line-height: 1; }
+  .fq[open] summary::after { content: "−"; }
+  .fq summary:hover { background: var(--panel-2); }
+  .fq h3 { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+  .fq p { padding: 0 1rem 1rem; font-size: 14.5px; line-height: 1.8; color: var(--ink-2); max-width: 72ch; }
+
   .hero { display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: 2rem; padding-block: clamp(2rem, 6vw, 4.5rem) 1rem; }
   .copy { display: flex; flex-direction: column; gap: 1.1rem; }
   h1 { font-size: clamp(2.4rem, 5.6vw, 4.2rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; }

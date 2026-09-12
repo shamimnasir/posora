@@ -2,4 +2,55 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
+# /account/ and the generated quiz, worksheet and certificate pages are left
+# crawlable on purpose: they carry <meta name="robots" content="noindex">, and a
+# crawler has to be allowed to fetch a page before it can read that.
+
+# Answer engines are welcome. Being quoted in an answer is how a Bangla site
+# this small gets found at all, so the assistants that read the web are allowed
+# everything a person is allowed, and llms.txt tells them what is worth reading.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
 Sitemap: https://posora.com/sitemap.xml
+# Plain-language description of this site for language models:
+# https://posora.com/llms.txt
