@@ -24,7 +24,12 @@
   //
   // Cron triggers are at-least-once, so the run is idempotent by week (see
   // src/lib/weekly.ts) and a double fire cannot mean two letters.
-  // Watch a run with:  npx wrangler tail
+  //
+  // Watch a real run with:  npx wrangler tail
+  // Fire one locally with:  npx wrangler dev --local
+  //   then  curl 'http://127.0.0.1:8787/cdn-cgi/handler/scheduled'
+  // (not /__scheduled: this project builds through the adapter's redirected
+  //  config, and wrangler's --test-scheduled route does not get installed.)
   "triggers": { "crons": ["0 3 * * 5"] },
   // Admin panel content store. The binding name `DB` is what src/lib/db.ts reads -
   // it is deliberately not the database name. Schema changes:
