@@ -1,0 +1,295 @@
+---
+/**
+ * One printable sheet, rendered from the site's own data.
+ *
+ * The page is readable on screen and correct on paper: everything that is not
+ * the sheet itself disappears in the print stylesheet, and the letters print as
+ * hollow outlines a child can trace over. No PDF is generated or shipped; the
+ * browser's own print-to-PDF is what every phone and laptop already has.
+ */
+import Base from '../../layouts/Base.astro';
+import { sheetBySlug, sheets } from '../../data/printables';
+import { vowels, consonants, kars, conjuncts } from '../../data/language';
+import { numberWords, denominations, shopItems } from '../../data/math';
+import { bodies, FACTS } from '../../data/space';
+import { bn, bnNum } from '../../lib/bn';
+
+export const prerender = false;
+
+const sheet = sheetBySlug(Astro.params.sheet!);
+if (!sheet) return Astro.rewrite('/404');
+
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
+
+const letters = [...vowels, ...consonants];
+const others = sheets.filter((s) => s.slug !== sheet.slug);
+// A tracing row: the solid letter, then hollow copies to go over.
+const TRACE_COPIES = 5;
+---
+<Base title={sheet.bn} description={`${sheet.tag} পসরার ফ্রি ছাপার প্যাক - ডাউনলোড বা প্রিন্ট করুন, কোনো অ্যাকাউন্ট লাগে না।`}>
+  <div class="wrap page">
+    <p class="crumbs no-print"><a href="/">পসরা</a> <span>/</span> <a href="/printables/">ছাপার প্যাক</a> <span>/</span> {sheet.bn}</p>
+
+    <header class="head no-print">
+      <div>
+        <p class="eyebrow">ছাপার প্যাক · ফ্রি</p>
+        <h1>{sheet.emoji} {sheet.bn}</h1>
+        <p class="lede">{sheet.tag}</p>
+        <p class="meta">{sheet.who} · {sheet.pages}</p>
+      </div>
+      <div class="acts">
+        <button type="button" class="btn btn-primary" id="print">ছাপাও বা PDF করো</button>
+        <p class="tip">প্রিন্ট উইন্ডোতে “Save as PDF” বেছে নিলে ফাইল হিসেবে নেমে আসবে।</p>
+      </div>
+    </header>
+
+    <div class="paper">
+      <header class="ph">
+        <h2>{sheet.bn}</h2>
+        <span>পসরা · posora.com</span>
+      </header>
+
+      {sheet.kind === 'letters' && (
+        <div class="trace">
+          {letters.map((l) => (
+            <div class="trow">
+              <div class="tinfo">
+                <b class="tch">{l.ch}</b>
+                <span class="tname">{l.name}</span>
+                <span class="troman">{l.roman}</span>
+              </div>
+              <div class="tboxes">
+                {Array.from({ length: TRACE_COPIES }).map(() => <span class="ghost">{l.ch}</span>)}
+                <span class="blank"></span>
+                <span class="blank"></span>
+              </div>
+              <div class="texample"><span class="temoji">{l.emoji}</span><span>{l.word}</span></div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {sheet.kind === 'kars' && (
+        <>
+          <p class="note">প্রতিটি কার একই বর্ণ <b>ক</b>-এর সঙ্গে বসিয়ে দেখানো হয়েছে, যাতে চিহ্নটা কোথায় বসে তা চোখে পড়ে।</p>
+          <div class="grid4">
+            {kars.map((k) => (
+              <div class="cell">
+                <b class="big">{`ক${k.sign}`}</b>
+                <span class="cname">{k.name}</span>
+                <span class="croman">{k.roman}</span>
+                <span class="cword">{k.emoji} {k.word}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {sheet.kind === 'conjuncts' && (
+        <>
+          <p class="note">বাঁ পাশে যুক্তবর্ণ, মাঝে সেটা কোন দুটো বর্ণ মিলে তৈরি, ডানে একটা চেনা শব্দ।</p>
+          <div class="grid3">
+            {conjuncts.map((c) => (
+              <div class="cell cj">
+                <b class="big">{c.ch}</b>
+                <span class="parts">{c.parts[0]} + {c.parts[1]}</span>
+                <span class="cword">{c.emoji} {c.word}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {sheet.kind === 'numbers' && (
+        <>
+          <p class="note">বাংলা অঙ্ক, তার নিচে কথায়। শূন্য থেকে একশো।</p>
+          <div class="ngrid">
+            {numberWords.map((w, i) => (
+              <div class="ncell">
+                <b>{bn(i)}</b>
+                <span>{w}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {sheet.kind === 'space' && (
+        <>
+          <p class="note">সংখ্যাগুলো আসল মাপের, গোল করে লেখা। ব্যাস কিলোমিটারে।</p>
+          <table class="tbl">
+            <thead>
+              <tr><th>বস্তু</th><th>কী</th><th>ব্যাস</th>{bodies[0]?.stats.slice(0, 3).map((s) => <th>{s.k}</th>)}</tr>
+            </thead>
+            <tbody>
+              {bodies.map((b) => (
+                <tr>
+                  <th>{b.bn}<small>{b.en}</small></th>
+                  <td>{b.tagline}</td>
+                  <td class="num">{FACTS[b.id] ? `${bnNum(FACTS[b.id]!.diameterKm)} কিমি` : '-'}</td>
+                  {b.stats.slice(0, 3).map((s) => <td class="num">{s.v}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {sheet.kind === 'money' && (
+        <>
+          <p class="note">উপরে বাংলাদেশের চালু নোট আর কয়েন। নিচের খেলায় দাম যোগ করে দেখো কত টাকা লাগবে, আর কোন নোটে দিলে কত ফেরত আসবে।</p>
+          <div class="grid5">
+            {denominations.map((d) => (
+              <div class={`cell money ${d.kind}`}>
+                <b class="big">৳{bn(d.v)}</b>
+                <span class="cname">{d.kind === 'note' ? 'নোট' : 'কয়েন'}</span>
+              </div>
+            ))}
+          </div>
+          <h3 class="sub">দোকান খেলা</h3>
+          <table class="tbl shop">
+            <thead><tr><th>জিনিস</th><th>দাম</th><th>কয়টা</th><th>মোট</th></tr></thead>
+            <tbody>
+              {shopItems.map((it) => (
+                <tr>
+                  <th>{it.emoji} {it.name}</th>
+                  <td class="num">৳{bn(it.price)}</td>
+                  <td class="fill"></td>
+                  <td class="fill"></td>
+                </tr>
+              ))}
+              <tr class="total"><th>সব মিলিয়ে</th><td></td><td></td><td class="fill"></td></tr>
+              <tr class="total"><th>৫০০ টাকার নোট দিলে ফেরত</th><td></td><td></td><td class="fill"></td></tr>
+            </tbody>
+          </table>
+        </>
+      )}
+
+      <footer class="pf">
+        পসরা · posora.com · বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। এই পাতাটি ফ্রি, যত খুশি ছাপানো যায়।
+      </footer>
+    </div>
+
+    <section class="more no-print">
+      <h2>আরও ছাপার মতো</h2>
+      <div class="mgrid">
+        {others.map((s) => (
+          <a class="mcard" href={`/printables/${s.slug}/`}>
+            <span class="memoji">{s.emoji}</span>
+            <b>{s.bn}</b>
+            <span class="mtag">{s.pages}</span>
+          </a>
+        ))}
+      </div>
+      <p class="back"><a href="/printables/">← সব ছাপার প্যাক</a> · <a href="/family/">পসরা পরিবার কী</a></p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; display: flex; flex-direction: column; gap: 1.6rem; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { display: flex; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start; }
+  .head h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); font-weight: 800; margin: 0.2rem 0 0.4rem; }
+  .lede { color: var(--ink-2); font-size: 1.02rem; max-width: 52ch; line-height: 1.65; }
+  .meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-top: 0.4rem; letter-spacing: 0.04em; }
+  .acts { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-end; }
+  .tip { font-size: 12px; color: var(--muted); max-width: 26ch; text-align: right; }
+
+  /* the sheet itself, shown on screen roughly as it will print */
+  .paper { background: #fff; color: #111820; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 1.6rem 1.5rem 1.2rem; box-shadow: var(--shadow-sm); }
+  .ph { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border-bottom: 2px solid #111820; padding-bottom: 0.4rem; margin-bottom: 0.9rem; }
+  .ph h2 { font-size: 1.4rem; font-weight: 800; }
+  .ph span { font-family: var(--font-mono); font-size: 10.5px; color: #555; letter-spacing: 0.08em; }
+  .note { font-size: 12.5px; color: #444; margin-bottom: 0.9rem; }
+  .note b { font-weight: 700; }
+  .pf { margin-top: 1.1rem; padding-top: 0.5rem; border-top: 1px solid #ccc; font-size: 10px; color: #666; }
+  .sub { font-size: 1.05rem; font-weight: 800; margin: 1.1rem 0 0.5rem; }
+
+  /* tracing rows */
+  .trace { display: flex; flex-direction: column; gap: 0.3rem; }
+  .trow { display: grid; grid-template-columns: 92px minmax(0, 1fr) 108px; align-items: center; gap: 0.7rem; padding: 0.32rem 0; border-bottom: 1px solid #e2e2e2; break-inside: avoid; }
+  .tinfo { display: flex; flex-direction: column; line-height: 1.15; }
+  .tch { font-size: 30px; font-weight: 700; line-height: 1.1; }
+  .tname { font-size: 10px; color: #555; }
+  .troman { font-family: var(--font-mono); font-size: 9px; color: #888; }
+  .tboxes { display: flex; gap: 5px; align-items: center; }
+  .ghost, .blank { width: 42px; height: 42px; border: 1px dashed #bbb; border-radius: 5px; display: grid; place-items: center; font-size: 26px; flex: none; }
+  .ghost { color: #cfcfcf; }
+  .texample { display: flex; align-items: center; gap: 0.35rem; font-size: 13px; }
+  .temoji { font-size: 17px; }
+
+  /* chart grids */
+  .grid3, .grid4, .grid5 { display: grid; gap: 6px; }
+  .grid3 { grid-template-columns: repeat(3, 1fr); }
+  .grid4 { grid-template-columns: repeat(4, 1fr); }
+  .grid5 { grid-template-columns: repeat(5, 1fr); }
+  .cell { border: 1px solid #d5d5d5; border-radius: 7px; padding: 0.55rem 0.5rem 0.6rem; display: flex; flex-direction: column; align-items: center; gap: 0.1rem; text-align: center; break-inside: avoid; }
+  .big { font-size: 30px; font-weight: 700; line-height: 1.15; }
+  .cname { font-size: 10.5px; color: #555; }
+  .croman { font-family: var(--font-mono); font-size: 9px; color: #888; }
+  .cword { font-size: 12px; margin-top: 0.15rem; }
+  .parts { font-size: 13px; color: #444; font-weight: 600; }
+  .cj .big { font-size: 28px; }
+  .money.coin .big { color: #7a5c00; }
+
+  /* numbers */
+  .ngrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+  .ncell { border: 1px solid #ddd; border-radius: 5px; padding: 0.3rem 0.1rem; text-align: center; break-inside: avoid; display: flex; flex-direction: column; }
+  .ncell b { font-size: 15px; font-weight: 700; line-height: 1.1; }
+  .ncell span { font-size: 8px; color: #555; line-height: 1.2; overflow-wrap: anywhere; }
+
+  /* tables */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th, .tbl td { border: 1px solid #d5d5d5; padding: 0.35rem 0.45rem; text-align: left; vertical-align: middle; }
+  .tbl thead th { background: #f2f2f2; font-size: 10px; letter-spacing: 0.04em; }
+  .tbl tbody th { font-weight: 700; white-space: nowrap; }
+  .tbl tbody th small { display: block; font-weight: 400; font-size: 9px; color: #777; }
+  .tbl .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .shop .fill { height: 26px; background: repeating-linear-gradient(90deg, transparent 0 6px, #eee 6px 7px); }
+  .shop .total th { background: #f7f7f7; }
+
+  /* related */
+  .more h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.7rem; }
+  .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; }
+  .mcard { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.8rem 0.9rem; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); transition: transform 0.15s ease, border-color 0.15s ease; }
+  .mcard:hover { transform: translateY(-2px); border-color: color-mix(in oklab, var(--brand) 40%, var(--line)); }
+  .memoji { font-size: 20px; }
+  .mcard b { font-size: 14.5px; }
+  .mtag { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+  .back { margin-top: 1rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 700px) {
+    .trow { grid-template-columns: 72px minmax(0, 1fr); }
+    .texample { grid-column: 1 / -1; }
+    .tboxes { flex-wrap: wrap; }
+    .grid4, .grid5 { grid-template-columns: repeat(3, 1fr); }
+    .grid3 { grid-template-columns: repeat(2, 1fr); }
+    .ngrid { grid-template-columns: repeat(5, 1fr); }
+    .acts { align-items: flex-start; }
+    .tip { text-align: left; }
+  }
+
+  /* ---------- paper ---------- */
+  @media print {
+    .no-print { display: none !important; }
+    .page { padding: 0; gap: 0; }
+    .paper { border: 0; box-shadow: none; padding: 0; border-radius: 0; background: #fff; }
+    .ngrid { grid-template-columns: repeat(10, 1fr); }
+    .grid3 { grid-template-columns: repeat(3, 1fr); }
+    .grid4 { grid-template-columns: repeat(4, 1fr); }
+    .grid5 { grid-template-columns: repeat(5, 1fr); }
+    .pf { position: running(foot); }
+  }
+</style>
+
+<script>
+  import { track } from '../../lib/track';
+  const btn = document.getElementById('print');
+  btn?.addEventListener('click', () => {
+    track('printable_print', { sheet: location.pathname.split('/').filter(Boolean)[1] ?? '' });
+    window.print();
+  });
+</script>

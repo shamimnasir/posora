@@ -9,6 +9,7 @@
  */
 import type { APIRoute } from 'astro';
 import { getWorlds, getBodies } from '../lib/content';
+import { sheets } from '../data/printables';
 
 export const prerender = false;
 
@@ -20,6 +21,8 @@ export const GET: APIRoute = async ({ site }) => {
   const entries: Entry[] = [
     { loc: '/', priority: '1.0' },
     { loc: '/space/', priority: '0.9' },
+    { loc: '/family/', priority: '0.9' },
+    { loc: '/printables/', priority: '0.9' },
     { loc: '/schools/', priority: '0.8' },
     { loc: '/math/measurement/', priority: '0.7' },
     { loc: '/contact/', priority: '0.5' },
@@ -32,6 +35,8 @@ export const GET: APIRoute = async ({ site }) => {
 
     const bodies = await getBodies();
     for (const b of bodies) entries.push({ loc: `/space/${b.id}/`, priority: '0.7' });
+
+    for (const s of sheets) entries.push({ loc: `/printables/${s.slug}/`, priority: '0.7' });
   } catch {
     // A content-layer failure must not take the sitemap down; the fixed pages
     // above are still worth serving.

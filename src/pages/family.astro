@@ -1,0 +1,375 @@
+---
+/**
+ * পসরা পরিবার - the family plan offer page.
+ *
+ * This is the page that talks about money, so the honesty rules bind hardest
+ * here. Three things are kept true on purpose:
+ *
+ *  1. Nothing can be bought. There is no payment rail and no account system, so
+ *     the only action is joining the founding list, which is free and says so
+ *     twice before the form.
+ *  2. Every line in the stack is marked আছে or হবে. A reader can tell at a
+ *     glance which half of the offer exists today.
+ *  3. The comparison prices are real, published prices of real alternatives,
+ *     not invented "value" numbers. No struck-through fake retail price.
+ *
+ * The scarcity is a genuine cap the founder can honour, not a countdown.
+ */
+import Base from '../layouts/Base.astro';
+import { totals } from '../data/worlds';
+import { bn } from '../lib/bn';
+import { COVERAGE } from '../lib/coverage';
+import { sheets } from '../data/printables';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
+
+const FOUNDING_SEATS = 100;
+const KIDS = 6;
+
+/** The stack. `have` means it works on posora.com right now. */
+const stack: { t: string; d: string; have: boolean }[] = [
+  { have: true,  t: `${bn(COVERAGE.covered)}টি বিষয়ের পুরো পাঠ, তিন গভীরতায়`, d: 'মহাকাশ, পদার্থ, রসায়ন, প্রাণিজগৎ, প্রকৃতি, খাদ্য, গণিত, টাকা, ভাষা, সামাজিক দক্ষতা, আবিষ্কার। একই লেখা ছোট, মাঝারি আর বড় - তাই পাঁচ বছরের আর তেরো বছরের সন্তান একই পাতায় বসতে পারে।' },
+  { have: true,  t: '৮৭টি বিভাগে জীবন্ত থ্রিডি মডেল', d: 'ঢালু তল, দোলক, কেলাস, ঋতুচক্র, বর্ণমালা - টেনে ঘোরানো যায়, স্লাইডারে বদলায়। ভিডিও নয়, সত্যিকারের চালু মডেল।' },
+  { have: true,  t: 'যেকোনো বিভাগ এক চাপে ছেপে নেওয়া', d: '“ছাপাও” চাপলেই পুরো বিভাগ কাগজে নেমে আসে - মডেল আর মেনু বাদ দিয়ে, আপনার বেছে নেওয়া গভীরতায়।' },
+  { have: true,  t: `${bn(sheets.length)}টি ছাপার শিট`, d: 'বর্ণমালার হাতের লেখা, যুক্তবর্ণ ভাঙা চার্ট, কার চিহ্ন, সংখ্যা ১-১০০, সৌরজগৎ তথ্যপত্র, টাকা চেনা।' },
+  { have: false, t: `${bn(KIDS)} জন সন্তান পর্যন্ত, প্রত্যেকের নিজের প্রোফাইল`, d: 'নিজের নাম, নিজের বয়স, নিজের গভীরতা। ভাইবোন আর যে কাজিন ট্যাবটা ভাগ করে নেয় - সবার জায়গা হবে।' },
+  { have: false, t: 'যেকোনো ডিভাইসে অগ্রগতি', d: 'বাসার ফোন, স্কুলের ল্যাপটপ, দাদুর বাড়ির ট্যাব। এখন হিসাবটা এক ব্রাউজারেই আটকে থাকে, ক্যাশ মুছলে হারিয়ে যায়।' },
+  { have: false, t: 'প্রতি সপ্তাহে অভিভাবকের ইমেইল', d: 'এই সপ্তাহে কে কী খুলেছে, আর আগামী সপ্তাহের জন্য প্রত্যেকের স্তর অনুযায়ী ছয়টা বিষয়। আপনাকে আর মনে করিয়ে দিতে হবে না।' },
+  { have: false, t: 'যাচাই ও সার্টিফিকেট', d: 'প্রতি বিভাগের শেষে ছোট পরীক্ষা, ফল জমা থাকে। ভুবন শেষ হলে নাম-তারিখ সহ ছাপার মতো সার্টিফিকেট।' },
+  { have: false, t: 'অনুশীলনী প্যাক', d: 'শুধু পড়া নয় - প্রশ্ন, খালি জায়গা পূরণ, হাতের লেখার শিট। প্রতিটি বিভাগের জন্য।' },
+  { have: false, t: 'পর্দা ছাড়া কার্ড', d: 'প্রতি বিষয়ে একটা কাজ যা পর্দা ছাড়াই করা যায় - ছায়া মাপা, ডিম ভাসানো, গাছের বয়স গোনা।' },
+  { have: false, t: 'অফলাইন প্যাক', d: 'ইন্টারনেট দুর্বল হলেও মডেলগুলো চলবে। গ্রামের স্কুল আর যাত্রাপথের জন্য।' },
+  { have: false, t: 'দাদু-দিদার সঙ্গে', d: 'প্রতি বিষয়ে একটা প্রশ্ন, যেটা সন্তান বাংলায় দাদু-দিদাকে জিজ্ঞেস করবে। দেশের বাইরের পরিবারের জন্য এটাই আসল কারণ।' },
+];
+
+const haveCount = stack.filter((s) => s.have).length;
+
+const faqs = [
+  { q: 'এখন টাকা দিতে হবে?', a: 'না। এই মুহূর্তে পসরায় কিছু কেনার ব্যবস্থাই নেই - কোনো অ্যাকাউন্ট নেই, পেমেন্ট গেটওয়ে বসানো হয়নি। নিচের তালিকায় নাম লেখালে কার্ড লাগে না, টাকাও কাটা যায় না।' },
+  { q: 'তাহলে তালিকায় নাম লিখে লাভ কী?', a: 'দুটো। এক, প্রতিষ্ঠাতা দামটা আপনার জন্য আজীবন একই থাকবে। দুই, আমরা আগে আপনার কথা শুনে তারপর বানাবো - কোন জিনিসটা আগে দরকার, সেটা আপনিই বলবেন।' },
+  { q: 'যেগুলো এখন ফ্রি, সেগুলো কি পরে টাকার পেছনে চলে যাবে?', a: 'না, কখনো না। আজ যে ৮৩৩টি বিষয়, থ্রিডি মডেল আর ছাপার শিট ফ্রি, সেগুলো ফ্রিই থাকবে। পরিবার প্ল্যান বিক্রি করে সেগুলোর চারপাশের জিনিস - প্রোফাইল, রিপোর্ট, অনুশীলনী। পুরোনো জিনিসের চারপাশে বেড়া দেওয়া হবে না।' },
+  { q: 'সন্তানের কোনো তথ্য নেবেন?', a: 'সন্তানের কোনো অ্যাকাউন্ট থাকবে না। অ্যাকাউন্ট থাকবে শুধু অভিভাবকের। সন্তানের জন্য যা লাগবে তা হলো আপনার দেওয়া একটা ডাকনাম আর একটা স্তর - নাম-ঠিকানা, ছবি, ইমেইল কিছুই নয়।' },
+  { q: 'দেশের বাইরে থাকি, টাকা দেব কীভাবে?', a: 'কার্ডে, ডলারে। দেশের ভেতরে বিকাশ, নগদ, রকেট বা কার্ড - দুই দিকের জন্য দুই ব্যবস্থা থাকবে।' },
+  { q: 'এক বছর পরে ভালো না লাগলে?', a: 'পুরো টাকা ফেরত। শর্ত নেই, প্রশ্ন নেই। যে জিনিস এক বছরেও কাজে লাগল না, তার টাকা আমাদের রাখার কথা নয়।' },
+];
+---
+<Base
+  title="পসরা পরিবার"
+  description="পসরা পরিবার - প্রতি সন্তানের নিজের প্রোফাইল, সাপ্তাহিক অভিভাবক রিপোর্ট, অনুশীলনী প্যাক। ৮৩৩টি বিষয় ফ্রিই থাকবে। প্রতিষ্ঠাতা পরিবারের তালিকায় নাম লেখান, এখন টাকা লাগবে না।"
+>
+  <div class="wrap page">
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> পসরা পরিবার</p>
+
+    <header class="hero">
+      <p class="eyebrow">পসরা পরিবার · প্রতিষ্ঠাতা তালিকা</p>
+      <h1>আপনার সন্তান বাংলায় পড়বে, ভাববে, প্রশ্ন করবে</h1>
+      <p class="lede">
+        পসরার {bn(totals.items)}টি বিষয় ওয়েবসাইটে ফ্রি, আর ফ্রিই থাকবে। পরিবার
+        প্ল্যান সেই পড়াটা বিক্রি করে না - বিক্রি করে তার চারপাশের জিনিসটা।
+        প্রত্যেক সন্তানের নিজের হিসাব, প্রতি সপ্তাহে আপনার হাতে একটা রিপোর্ট,
+        আর এমন কাজ যা পর্দা বন্ধ করেও করা যায়।
+      </p>
+
+      <div class="statusbox">
+        <p><b>পরিষ্কার করে বলি:</b> এখনো কিছু বিক্রি হচ্ছে না। পসরায় অ্যাকাউন্টই নেই,
+        পেমেন্টের ব্যবস্থাও বসানো হয়নি। নিচে নাম লেখালে <b>কার্ড লাগে না, এক পয়সাও কাটা যায় না।</b>
+        তালিকার {bn(haveCount)}টি জিনিস <em>আজই চালু</em>, বাকিগুলো <em>এখনো বানানো হয়নি</em> -
+        কোনটা কী, প্রতিটা লাইনের পাশে লেখা আছে।</p>
+      </div>
+
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#join">প্রতিষ্ঠাতা তালিকায় নাম লেখাও</a>
+        <a class="btn" href="/printables/">আগে ফ্রি শিটগুলো নিয়ে যান →</a>
+      </div>
+    </header>
+
+    <section class="sec">
+      <div class="sec-h">
+        <h2>প্রথমে যেটা বিনামূল্যে নিয়ে যাবেন</h2>
+        <p class="sec-note">কিছু না কিনেই, আজ, এই মুহূর্তে। ইমেইলও চাওয়া হবে না।</p>
+      </div>
+      <div class="sgrid">
+        {sheets.map((s) => (
+          <a class="scard" href={`/printables/${s.slug}/`}>
+            <span class="semoji" aria-hidden="true">{s.emoji}</span>
+            <b>{s.bn}</b>
+            <span class="stag">{s.pages}</span>
+          </a>
+        ))}
+      </div>
+      <p class="sec-note">
+        এগুলো টোপ নয় - ছাপিয়ে নিয়ে চলে গেলে আমাদের কোনো আপত্তি নেই। যদি কাজে লাগে,
+        তখন নিচের কথাটা পড়ুন।
+      </p>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h">
+        <h2>পরিবার প্ল্যানে কী কী থাকবে</h2>
+        <p class="sec-note">
+          {bn(stack.length)}টি জিনিস। সবুজ মানে আজই চালু আছে, ধূসর মানে এখনো বানানো হয়নি।
+          প্রতিষ্ঠাতা পরিবারগুলোই ঠিক করবে কোনটা আগে বানানো হবে।
+        </p>
+      </div>
+      <ol class="stack">
+        {stack.map((s, i) => (
+          <li class={s.have ? 'on' : 'off'}>
+            <span class="sn">{bn(i + 1)}</span>
+            <span class="sicon" aria-hidden="true">{s.have ? '✓' : '○'}</span>
+            <div>
+              <b>{s.t}</b>
+              <p>{s.d}</p>
+              <span class={s.have ? 'badge yes' : 'badge no'}>{s.have ? 'আজই চালু' : 'এখনো বানানো হয়নি'}</span>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h">
+        <h2>দাম</h2>
+        <p class="sec-note">
+          এক পরিবার, {bn(KIDS)} জন সন্তান পর্যন্ত, বছরে একবার। মাসিক কিস্তি রাখছি না -
+          একবার দেওয়া বারো বার দেওয়ার চেয়ে সহজ।
+        </p>
+      </div>
+      <div class="prices">
+        <div class="price">
+          <span class="where">বাংলাদেশে</span>
+          <span class="big">৳১,২০০</span>
+          <span class="per">বছরে, পুরো পরিবারের জন্য</span>
+          <span class="unit">সন্তানপ্রতি মাসে প্রায় ৳১৭</span>
+          <ul>
+            <li>বিকাশ, নগদ, রকেট বা কার্ড</li>
+            <li>একজন গৃহশিক্ষকের এক দিনের বেতনেরও কম</li>
+            <li>অনলাইন কোচিংয়ের বছরে ২০-২৫ হাজারের তুলনায় বিশ ভাগের এক ভাগ</li>
+          </ul>
+        </div>
+        <div class="price intl">
+          <span class="where">দেশের বাইরে</span>
+          <span class="big">$৩৯</span>
+          <span class="per">বছরে, পুরো পরিবারের জন্য</span>
+          <span class="unit">সন্তানপ্রতি মাসে প্রায় $০.৫৪</span>
+          <ul>
+            <li>কার্ডে, ডলারে</li>
+            <li>অনলাইন বাংলা ক্লাসের মাসিক $২৫-এর সাত ভাগের এক ভাগ, বছরে</li>
+            <li>ডুয়োলিঙ্গোর পরিবার প্ল্যানের ($১১৯.৯৯) তিন ভাগের এক ভাগ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="guards">
+        <div class="guard">
+          <span class="gemoji" aria-hidden="true">🛡️</span>
+          <div>
+            <b>এক বছরের শর্তহীন ফেরত</b>
+            <p>বারো মাস ব্যবহার করেও যদি মনে হয় কাজে লাগেনি, এক লাইন লিখলেই পুরো টাকা ফেরত। কারণ জানতে চাইব না।</p>
+          </div>
+        </div>
+        <div class="guard">
+          <span class="gemoji" aria-hidden="true">🔒</span>
+          <div>
+            <b>প্রতিষ্ঠাতা দাম আজীবন</b>
+            <p>প্রথম {bn(FOUNDING_SEATS)}টি পরিবারের দাম আর কখনো বাড়বে না, প্ল্যানে যত জিনিসই যোগ হোক। এই {bn(FOUNDING_SEATS)}টির পরে দাম নতুন করে ঠিক হবে।</p>
+          </div>
+        </div>
+        <div class="guard">
+          <span class="gemoji" aria-hidden="true">🎁</span>
+          <div>
+            <b>ফ্রি জিনিস ফ্রিই থাকবে</b>
+            <p>আজ যা বিনামূল্যে আছে তার একটাও কোনোদিন টাকার পেছনে যাবে না। এটা লিখিত কথা।</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="join">
+      <div class="sec-h">
+        <h2>প্রতিষ্ঠাতা তালিকা</h2>
+        <p class="sec-note">
+          ফর্মটা অভিভাবকের জন্য - বড়দের জন্য। সন্তানের কোনো তথ্য চাওয়া হচ্ছে না,
+          কার্ডও লাগছে না। প্ল্যান তৈরি হলে আমরা আপনাকে লিখব, তার আগে নয়।
+        </p>
+      </div>
+      <form class="card form" id="fform" novalidate>
+        <div class="two">
+          <label>আপনার নাম <input name="person" required minlength="2" maxlength="80" autocomplete="name" /></label>
+          <label>ইমেইল বা হোয়াটসঅ্যাপ নম্বর <input name="contact" required minlength="5" maxlength="120" autocomplete="email" inputmode="email" /></label>
+        </div>
+        <div class="two">
+          <label>কোথায় থাকেন <input name="place" maxlength="60" placeholder="যেমন: ঢাকা, বা লন্ডন" /></label>
+          <label>সন্তানের বয়স <input name="ages" maxlength="40" placeholder="যেমন: ৬ আর ৯" /></label>
+        </div>
+        <label>তালিকার কোন জিনিসটা আপনার সবচেয়ে আগে দরকার
+          <textarea name="message" required minlength="5" maxlength="2000" rows="4" placeholder="যেমন: অনুশীলনী প্যাক, কারণ বাচ্চা পর্দায় বেশি সময় কাটায়"></textarea>
+        </label>
+        <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+        <button class="btn btn-primary" type="submit">তালিকায় নাম লেখাও</button>
+        <p class="fine">নাম লেখালে কোনো টাকা কাটা যাবে না, কার্ডও চাওয়া হবে না। যেকোনো সময় বলে দিলে নাম মুছে দেব।</p>
+        <p class="msg" id="fmsg" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><h2>যা সবাই জিজ্ঞেস করে</h2></div>
+      <div class="faq">
+        {faqs.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+      <p class="back">
+        <a href="/printables/">ফ্রি ছাপার প্যাক</a> ·
+        <a href="/schools/">স্কুলের জন্য</a> ·
+        <a href="/contact/">সরাসরি যোগাযোগ</a>
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 2.75rem; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 0.35rem; }
+
+  .hero { display: flex; flex-direction: column; gap: 0.9rem; max-width: 64ch; }
+  h1 { font-size: clamp(2rem, 5vw, 3.3rem); font-weight: 800; line-height: 1.14; letter-spacing: -0.01em; }
+  .lede { font-size: clamp(1.05rem, 2vw, 1.22rem); color: var(--ink-2); line-height: 1.72; }
+  .statusbox { font-size: 14.5px; line-height: 1.72; color: var(--ink-2); background: color-mix(in oklab, var(--sun) 13%, var(--panel));
+    border: 1px solid color-mix(in oklab, var(--sun) 42%, var(--line)); border-radius: var(--r-sm); padding: 0.9rem 1.05rem; }
+  .statusbox b { color: var(--ink); }
+  .statusbox em { font-style: normal; font-weight: 700; color: var(--ink); }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.3rem; }
+
+  .sec { display: flex; flex-direction: column; gap: 1rem; }
+  .sec-h { display: flex; flex-direction: column; gap: 0.35rem; }
+  h2 { font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 800; }
+  .sec-note { font-size: 14.5px; color: var(--muted); max-width: 64ch; line-height: 1.7; }
+
+  /* free sheets strip */
+  .sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 0.6rem; }
+  .scard { display: flex; flex-direction: column; gap: 0.12rem; padding: 0.85rem 0.9rem; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); transition: transform 0.15s ease, border-color 0.15s ease; }
+  .scard:hover { transform: translateY(-2px); border-color: color-mix(in oklab, var(--brand) 45%, var(--line)); }
+  .semoji { font-size: 20px; }
+  .scard b { font-size: 14px; line-height: 1.35; }
+  .stag { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+
+  /* the stack */
+  .stack { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; counter-reset: none; }
+  .stack li { display: grid; grid-template-columns: 30px 26px minmax(0, 1fr); gap: 0 0.7rem; align-items: start;
+    background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: 0.9rem 1.1rem 1rem; }
+  .stack li.off { background: transparent; border-style: dashed; }
+  .sn { font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding-top: 0.3rem; }
+  .sicon { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 0.1rem; }
+  .on .sicon { background: color-mix(in oklab, var(--ok) 17%, var(--panel)); color: var(--ok); }
+  .off .sicon { border: 1px dashed var(--line); color: var(--muted); }
+  .stack b { font-size: 16px; font-weight: 700; display: block; line-height: 1.35; }
+  .stack p { font-size: 14px; color: var(--ink-2); line-height: 1.65; margin-top: 0.2rem; }
+  .badge { display: inline-block; margin-top: 0.45rem; font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 5px; }
+  .badge.yes { background: color-mix(in oklab, var(--ok) 15%, var(--panel)); color: var(--ok); }
+  .badge.no { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+
+  /* price */
+  .prices { display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: 0.9rem; }
+  .price { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 1.3rem 1.4rem 1.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .price.intl { border-color: var(--brand); box-shadow: var(--shadow); }
+  .where { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .big { font-family: var(--font-display); font-size: 2.6rem; font-weight: 800; line-height: 1.05; color: var(--brand-ink); }
+  .per { font-size: 14px; color: var(--ink-2); }
+  .unit { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .price ul { margin: 0.6rem 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+  .price li { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; }
+  .price li::marker { color: var(--brand); }
+
+  .guards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.85rem; margin-top: 0.4rem; }
+  .guard { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0 0.7rem; background: var(--brand-soft); border-radius: var(--r-sm); padding: 0.95rem 1.05rem 1rem; }
+  .gemoji { font-size: 22px; line-height: 1.2; }
+  .guard b { font-size: 15px; color: var(--brand-ink); display: block; }
+  .guard p { font-size: 13.5px; color: var(--brand-ink); line-height: 1.6; margin-top: 0.15rem; opacity: 0.92; }
+
+  /* form */
+  .form { padding: 1.4rem; display: flex; flex-direction: column; gap: 0.95rem; max-width: 760px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.95rem; }
+  label { display: flex; flex-direction: column; gap: 0.35rem; font-weight: 600; font-size: 14px; }
+  input, textarea { font: inherit; font-size: 15px; padding: 0.6rem 0.8rem; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
+  .hp { position: absolute; left: -9999px; }
+  .fine { font-size: 12.5px; color: var(--muted); }
+  .msg { font-size: 14px; color: var(--muted); min-height: 1.5em; }
+  .msg.ok { color: var(--ok); font-weight: 600; }
+  .msg.err { color: var(--danger); }
+
+  /* faq */
+  .faq { display: flex; flex-direction: column; gap: 0.5rem; max-width: 72ch; }
+  details { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: 0.85rem 1.05rem; }
+  summary { font-weight: 700; font-size: 15.5px; cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-family: var(--font-mono); color: var(--brand); font-size: 16px; }
+  details[open] summary::after { content: "−"; }
+  details p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; margin-top: 0.6rem; }
+  .back { margin-top: 1rem; font-size: 14px; color: var(--muted); }
+  .back a { color: var(--brand-ink); font-weight: 600; }
+  .back a:hover { text-decoration: underline; }
+
+  @media (max-width: 620px) { .two { grid-template-columns: 1fr; } .stack li { grid-template-columns: 24px minmax(0, 1fr); } .sicon { display: none; } }
+</style>
+
+<script>
+  import { track } from '../lib/track';
+
+  const form = document.getElementById('fform') as HTMLFormElement;
+  const msg = document.getElementById('fmsg')!;
+  const btn = form.querySelector('button')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const get = (k: string) => String(fd.get(k) ?? '').trim();
+    const person = get('person'), contact = get('contact');
+    const place = get('place'), ages = get('ages'), message = get('message');
+
+    if (person.length < 2 || contact.length < 5 || message.length < 5) {
+      msg.className = 'msg err';
+      msg.textContent = 'নাম, যোগাযোগ আর কোন জিনিসটা আগে দরকার - তিনটিই লাগবে।';
+      return;
+    }
+
+    btn.disabled = true;
+    msg.className = 'msg';
+    msg.textContent = 'পাঠানো হচ্ছে...';
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          topic: 'family',
+          name: person,
+          contact,
+          message: `কোথায়: ${place || 'বলা হয়নি'}\nসন্তানের বয়স: ${ages || 'বলা হয়নি'}\n\n${message}`,
+          website: get('website'),
+        }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (data.ok) {
+        form.reset();
+        msg.className = 'msg ok';
+        msg.textContent = 'নাম উঠে গেছে। প্ল্যান তৈরি হলে আমরাই আপনাকে লিখব - তার আগে কোনো ইমেইল পাঠাবো না।';
+        track('family_waitlist');
+        return;
+      }
+      msg.className = 'msg err';
+      msg.textContent = data.error === 'email-unavailable'
+        ? 'ফর্মটা এই মুহূর্তে কাজ করছে না। সরাসরি support@posora.com-এ লিখুন।'
+        : 'পাঠানো গেল না। আরেকবার চেষ্টা করুন, বা support@posora.com-এ লিখুন।';
+    } catch {
+      msg.className = 'msg err';
+      msg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না। আরেকবার চেষ্টা করুন, বা support@posora.com-এ লিখুন।';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>

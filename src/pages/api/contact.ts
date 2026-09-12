@@ -26,7 +26,8 @@ export const POST: APIRoute = async ({ request }) => {
   // Which form this came from, so school enquiries are not lost in the general
   // inbox. Anything unrecognised is treated as a normal message rather than
   // trusted into the subject line.
-  const topic = clip(body.topic, 24) === 'school' ? 'school' : 'general';
+  const raw = clip(body.topic, 24);
+  const topic = raw === 'school' || raw === 'family' ? raw : 'general';
 
   const e = env as unknown as Env;
   if (!e.EMAIL) return json({ ok: false, error: 'email-unavailable' }, 503);
@@ -38,7 +39,9 @@ export const POST: APIRoute = async ({ request }) => {
       to: e.CONTACT_TO ?? 'support@posora.com',
       from: { email: e.CONTACT_FROM ?? 'no-reply@posora.com', name: 'পসরা যোগাযোগ ফর্ম' },
       replyTo,
-      subject: topic === 'school' ? `পসরা স্কুল পাইলট: ${name}` : `পসরা: ${name} লিখেছেন`,
+      subject: topic === 'school' ? `পসরা স্কুল পাইলট: ${name}`
+        : topic === 'family' ? `পসরা পরিবার তালিকা: ${name}`
+        : `পসরা: ${name} লিখেছেন`,
       text,
       html: `<p><b>নাম:</b> ${esc(name)}<br><b>যোগাযোগ:</b> ${esc(contact)}</p><p>${esc(message).replace(/\n/g, '<br>')}</p>`,
     });
