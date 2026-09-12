@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import SpaceExplorer from '../../components/explorer/SpaceExplorer.astro';
-import { DEFAULT_BODY } from '../../data/space';
+import { DEFAULT_BODY, branchesFor } from '../../data/space';
 import { getBodies, getWorld } from '../../lib/content';
 
 export const prerender = false;
@@ -12,6 +12,7 @@ const cur = bodies.find((b) => b.id === (Astro.params.item ?? DEFAULT_BODY));
 if (!cur) return Astro.rewrite('/404');
 
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+const branches = branchesFor(cur.id);
 const title = Astro.params.item ? `${cur.bn} · মহাকাশ` : 'মহাকাশ';
 const description = `${cur.bn} (${cur.en}) - ${cur.tagline}। ${cur.l1}`;
 
@@ -48,6 +49,51 @@ const schema = [
 <Base title={title} description={description} hue={world?.hue ?? '#5A6BD4'} bare schema={schema}>
   <div class="wrap page">
     <SpaceExplorer current={cur} />
+
+    {/* This body's full text, in the HTML from the first byte. The explorer
+        above swaps readings through JavaScript, which left the deeper two
+        depths and every sub-topic reachable only by a script. Here they are as
+        markup, so find-on-page works, a script-less reader gets the whole
+        thing, and a search result or an assistant has something to quote. */}
+    <section class="body-text">
+      <h2>{cur.bn} সম্পর্কে</h2>
+      <p class="bt-tag">{cur.en} · {cur.tagline}</p>
+      <div class="bt-chips">{cur.chips.map((c) => <span class="pill">{c}</span>)}</div>
+      <div class="bt-depths">
+        <article><h3>ছোট <small>বয়স ৫–৮</small></h3><p>{cur.l1}</p></article>
+        <article><h3>মাঝারি <small>বয়স ৯–১২</small></h3><p>{cur.l2}</p></article>
+        <article><h3>বড় <small>বয়স ১৩+</small></h3><p>{cur.l3}</p></article>
+      </div>
+      <p class="bt-fun"><span class="lbl">মজার তথ্য</span>{cur.fun}</p>
+
+      <h3 class="bt-h">{cur.bn}ের সংখ্যা</h3>
+      <dl class="bt-stats">
+        {cur.stats.map((s) => <><dt>{s.k}</dt><dd>{s.v}</dd></>)}
+      </dl>
+
+      {branches.length > 0 && (
+        <>
+          <h3 class="bt-h">{cur.bn}ের ভেতরে</h3>
+          <div class="bt-branches">
+            {branches.map((b) => (
+              <details class="ix">
+                <summary><b>{b.bn}</b></summary>
+                <p>{b.text}</p>
+              </details>
+            ))}
+          </div>
+        </>
+      )}
+
+      <h3 class="bt-h">সৌরজগতের বাকি সব</h3>
+      <p class="bt-all">
+        {bodies.map((b, i) => (
+          <>{i > 0 && <span aria-hidden="true"> · </span>}
+          {b.id === cur.id ? <b>{b.bn}</b> : <a href={`/space/${b.id}/`}>{b.bn}</a>}</>
+        ))}
+      </p>
+    </section>
+
     <p class="back"><a href="/#worlds">← সব ভুবন</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ?</a></p>
   </div>
 </Base>
@@ -56,4 +102,32 @@ const schema = [
   .page { padding-block: 1rem 3.5rem; }
   .back { margin-top: 1.5rem; font-size: 14px; color: var(--muted); }
   .back a:hover { color: var(--brand-ink); }
+
+  .body-text { margin-top: 2.5rem; padding-top: 1.6rem; border-top: 1px solid var(--line-soft); }
+  .body-text h2 { font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 800; }
+  .bt-tag { font-size: 14px; color: var(--muted); margin-top: 0.2rem; }
+  .bt-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 0.6rem; }
+  .bt-depths { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.8rem; margin-top: 1.1rem; }
+  .bt-depths article { padding: 0.85rem 1rem; border-radius: 12px; background: var(--panel); border: 1px solid var(--line-soft); }
+  .bt-depths h3 { font-family: var(--font-display); font-size: 15px; font-weight: 800; display: flex; align-items: baseline; gap: 0.4rem; }
+  .bt-depths h3 small { font-size: 10.5px; font-weight: 500; color: var(--muted); }
+  .bt-depths p { font-size: 14px; line-height: 1.85; color: var(--ink-2); margin-top: 0.4rem; }
+  .bt-fun { margin-top: 0.9rem; padding: 0.7rem 0.9rem; border-radius: 12px; background: color-mix(in oklab, var(--sun) 14%, var(--panel)); font-size: 13.5px; line-height: 1.8; max-width: 80ch; }
+  .bt-fun .lbl { display: block; color: color-mix(in oklab, var(--sun) 60%, var(--ink)); margin-bottom: 0.15rem; }
+  .bt-h { font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; margin-top: 1.8rem; }
+  .bt-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px; margin-top: 0.6rem; }
+  .bt-stats dt { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .bt-stats dd { font-size: 14px; font-weight: 700; margin-bottom: 0.5rem; }
+  .bt-branches { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; margin-top: 0.6rem; }
+  .ix { border: 1px solid var(--line-soft); border-radius: 12px; background: var(--panel); overflow: hidden; align-self: start; }
+  .ix summary { list-style: none; cursor: pointer; padding: 0.6rem 0.85rem; display: flex; align-items: center; gap: 0.4rem; }
+  .ix summary::-webkit-details-marker { display: none; }
+  .ix summary::after { content: "+"; margin-left: auto; font-family: var(--font-mono); color: var(--muted); }
+  .ix[open] summary::after { content: "−"; }
+  .ix summary:hover { background: var(--panel-2); }
+  .ix p { padding: 0 0.85rem 0.7rem; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+  .bt-all { margin-top: 0.5rem; font-size: 14px; line-height: 2; color: var(--muted); }
+  .bt-all a { color: var(--brand-ink); font-weight: 600; }
+  .bt-all a:hover { text-decoration: underline; }
+  @media print { .body-text { display: none; } }
 </style>

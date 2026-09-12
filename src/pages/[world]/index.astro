@@ -399,6 +399,50 @@ const schema = [
       </aside>
     </div>
 
+    {/* The whole world as plain text, in the HTML from the first byte.
+        The explorer above shows one item at a time through JavaScript, which
+        means the reading for the other eighty-odd items existed only inside a
+        JSON blob: unreachable by find-on-page, unreadable without scripts, and
+        invisible as prose to anything that reads the web. This section is the
+        same readings as real markup. It costs about 20KB and it is the part of
+        the page a search result or an assistant can actually quote. */}
+    <section class="index" id="all">
+      <div class="index-h">
+        <div>
+          <p class="eyebrow">সবকিছু এক জায়গায়</p>
+          <h2>{w.bn} ভুবনের পুরো তালিকা</h2>
+          <p class="index-s">
+            {bn(w.cats.length)}টি বিভাগ, {bn(total)}টি বিষয়। নিচের যেকোনো শিরোনামে চাপলে
+            সংক্ষিপ্ত লেখাটা খুলবে। পুরো লেখা আর তিনটি গভীরতা উপরের অন্বেষকে।
+          </p>
+        </div>
+      </div>
+      {payload.map((c, ci) => (
+        <div class="index-cat">
+          <h3><span class="lbl">বিভাগ {pad2(ci + 1)}</span>{c.n}</h3>
+          <p class="index-play">{c.play}</p>
+          {c.detail && c.detail.length === c.items.length ? (
+            <div class="index-items">
+              {c.items.map((it, ii) => (
+                <details class="ix">
+                  <summary><b>{it}</b>{c.detail![ii].chips.slice(0, 2).map((ch) => <span class="pill">{ch}</span>)}</summary>
+                  <p>{c.detail![ii].l1}</p>
+                  <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{c.detail![ii].fun}</p>
+                  <p class="ix-more">
+                    <button type="button" class="ix-open" data-c={ci} data-i={ii}>অন্বেষকে খুলে দেখো →</button>
+                  </p>
+                </details>
+              ))}
+            </div>
+          ) : c.lab ? (
+            <p class="index-note">এই বিভাগের প্রতিটি আইটেম আলাদা একটা চালু টুল: {c.items.join(', ')}। <a href={c.lab}>{c.n} টুলে যাও →</a></p>
+          ) : (
+            <p class="index-note">এই বিভাগের লেখা এখনও তৈরি হয়নি। বিষয়গুলো হলো {c.items.join(', ')}।</p>
+          )}
+        </div>
+      ))}
+    </section>
+
     {/* Built on demand when someone presses ছাপাও, and only ever visible on
         paper. A teacher gets the whole category as a handout at the reading
         depth they already chose, with no 3D canvas and no navigation on it. */}
@@ -676,10 +720,35 @@ const schema = [
   .back { margin-top: 1.2rem; font-size: 14px; color: var(--muted); }
   .back a:hover { color: var(--brand-ink); }
 
+  /* ---------- the plain-text index of the whole world ---------- */
+  .index { margin-top: 2.5rem; padding-top: 1.6rem; border-top: 1px solid var(--line-soft); }
+  .index-h h2 { font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 800; margin: 0.2rem 0 0.5rem; }
+  .index-s { font-size: 14px; color: var(--muted); line-height: 1.75; max-width: 70ch; }
+  .index-cat { margin-top: 1.8rem; }
+  .index-cat h3 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+  .index-play { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0.3rem 0 0.7rem; max-width: 76ch; }
+  .index-note { font-size: 13.5px; color: var(--ink-2); line-height: 1.8; max-width: 76ch; }
+  .index-note :global(a) { color: var(--brand-ink); font-weight: 700; }
+  .index-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; }
+  .ix { border: 1px solid var(--line-soft); border-radius: 12px; background: var(--panel); overflow: hidden; align-self: start; }
+  .ix summary { list-style: none; cursor: pointer; padding: 0.6rem 0.85rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; transition: background 0.15s ease; }
+  .ix summary::-webkit-details-marker { display: none; }
+  .ix summary::after { content: "+"; margin-left: auto; font-family: var(--font-mono); color: var(--muted); }
+  .ix[open] summary::after { content: "−"; }
+  .ix summary:hover { background: var(--panel-2); }
+  .ix summary b { font-size: 14.5px; }
+  .ix summary .pill { font-size: 10.5px; padding: 1px 7px; }
+  .ix p { padding: 0 0.85rem 0.6rem; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+  .ix-fun { color: var(--ink-2); font-size: 13px; }
+  .ix-fun .lbl { display: block; color: color-mix(in oklab, var(--sun) 55%, var(--ink)); margin-bottom: 0.15rem; }
+  .ix-more { padding-bottom: 0.75rem; }
+  .ix-open { font-size: 12px; font-weight: 700; color: var(--w); padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); transition: background 0.15s ease, color 0.15s ease; }
+  .ix-open:hover { background: var(--w); color: #fff; }
+
   /* ---------- paper ---------- */
   .printable { display: none; }
   @media print {
-    .xp, .status, .back, .crumbs { display: none !important; }
+    .xp, .status, .back, .crumbs, .index { display: none !important; }
     .printable { display: block; }
     .printable :global(.p-h) { border-bottom: 2px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem; }
     .printable :global(.p-h h1) { font-size: 20pt; font-weight: 800; }
@@ -1369,6 +1438,14 @@ const schema = [
     if (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA') return;
     if (e.key === 'ArrowRight') step(1);
     if (e.key === 'ArrowLeft') step(-1);
+  });
+
+  // the plain-text index at the bottom hands you back to the 3D explorer
+  root.querySelector('#all')?.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.ix-open');
+    if (!b) return;
+    showCat(+b.dataset.c!, +b.dataset.i!);
+    $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   });
 
   renderChips(); renderRead(); renderCrumbs(); renderGlance(); renderRecords();
