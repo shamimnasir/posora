@@ -80,6 +80,29 @@ const readableTotal = payload.reduce(
 );
 // A ladder of the world hue so each category reads as its own colour without
 // ever leaving the palette. Lightest at the top, steadily deeper down the rail.
+/**
+ * The three records that come from the shape of the world rather than from
+ * this visitor: biggest category, smallest, longest read. They used to be
+ * drawn by script alone, which left the card an empty box until it ran. The
+ * personal record ("তুমি সবচেয়ে এগিয়ে") still comes from the browser, because
+ * only the browser knows it.
+ */
+const seedRecords = (() => {
+  const mins = (i: number) => {
+    const d = payload[i]?.detail;
+    return d ? Math.max(1, Math.round(payload[i]!.chars / 600)) : 0;
+  };
+  const n = (i: number) => w.cats[i]!.items.length;
+  const idx = (f: (i: number) => number, better: (a: number, b: number) => boolean) =>
+    w.cats.reduce((best, _c, i) => (better(f(i), f(best)) ? i : best), 0);
+  const big = idx(n, (a, b) => a > b), small = idx(n, (a, b) => a < b), longest = idx(mins, (a, b) => a > b);
+  return [
+    { label: 'সবচেয়ে বড় বিভাগ', i: big, name: w.cats[big]!.n, val: `${bn(n(big))}টি` },
+    { label: 'সবচেয়ে ছোট বিভাগ', i: small, name: w.cats[small]!.n, val: `${bn(n(small))}টি` },
+    { label: 'সবচেয়ে লম্বা পড়া', i: longest, name: w.cats[longest]!.n, val: `${bn(mins(longest))} মিনিট` },
+  ];
+})();
+
 const shade = (i: number) => `color-mix(in oklab, ${w.hue} ${96 - (i % 6) * 9}%, #8894a8)`;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
 const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'পড়ার সময়'], ['read', 'তুমি যত দেখেছ']] as const;
@@ -357,7 +380,13 @@ const schema = [
 
         <section class="card">
           <div class="card-h"><span class="lbl">রেকর্ড</span><span class="lbl">এই ভুবনে</span></div>
-          <div class="recs" id="recs"></div>
+          <div class="recs" id="recs">
+            {seedRecords.map((r) => (
+              <button type="button" data-i={r.i}>
+                <span>{r.label}</span><b>{r.name} <small>{r.val}</small></b>
+              </button>
+            ))}
+          </div>
         </section>
 
         <section class="card">

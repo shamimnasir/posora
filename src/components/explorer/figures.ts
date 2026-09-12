@@ -509,8 +509,374 @@ const house = (wall = '#e2d6bf', roof = '#a8563c'): Figure => (g) => {
   box(g, '#6b4a2a', 0.16, 0.24, 0.02, 0, 0.12, 0.24);
 };
 
+
+/* ---------- faces, one per feeling ---------- */
+/** A head with brows, eyes and a mouth built from primitives. */
+const faceFig = (opts: { brow?: 'flat' | 'angry' | 'sad' | 'up'; eye?: 'open' | 'wide' | 'squint' | 'droop'; mouth?: 'smile' | 'frown' | 'o' | 'flat' | 'small'; cheek?: string }): Figure => (g) => {
+  const skin = '#e8b98e';
+  ball(g, skin, 0.36, 0, 0.5);
+  if (opts.cheek) for (const s of [1, -1]) ball(g, opts.cheek, 0.08, s * 0.22, 0.46, 0.27).scale.set(1, 0.7, 0.4);
+  const eye = opts.eye ?? 'open';
+  for (const s of [1, -1]) {
+    if (eye === 'squint') { const b = box(g, '#2a2118', 0.12, 0.025, 0.02, s * 0.14, 0.56, 0.32); b.rotation.z = s * 0.35; }
+    else {
+      const r = eye === 'wide' ? 0.06 : 0.045;
+      ball(g, '#f8fbff', r, s * 0.14, 0.56, 0.3);
+      ball(g, '#2a2118', r * 0.55, s * 0.14, 0.56 - (eye === 'droop' ? 0.015 : 0), 0.33);
+    }
+  }
+  const brow = opts.brow ?? 'flat';
+  for (const s of [1, -1]) {
+    const b = box(g, '#3b2d22', 0.14, 0.028, 0.025, s * 0.14, 0.67, 0.3);
+    b.rotation.z = brow === 'angry' ? -s * 0.45 : brow === 'sad' ? s * 0.4 : brow === 'up' ? s * 0.15 : 0;
+    if (brow === 'up') b.position.y = 0.71;
+  }
+  const mouth = opts.mouth ?? 'smile';
+  if (mouth === 'o') { put(g, new Mesh(new TorusGeometry(0.07, 0.025, 8, 14), std('#8a3b3b')), 0, 0.35, 0.32); }
+  else if (mouth === 'flat') box(g, '#8a3b3b', 0.18, 0.028, 0.02, 0, 0.35, 0.33);
+  else {
+    const w = mouth === 'small' ? 0.1 : 0.15;
+    const m = put(g, new Mesh(new TorusGeometry(w, 0.028, 8, 14, Math.PI), std('#8a3b3b')), 0, 0.37, 0.31);
+    m.rotation.z = mouth === 'frown' ? 0 : Math.PI;
+    if (mouth === 'frown') m.position.y = 0.31;
+  }
+};
+
+/* ---------- places ---------- */
+/** Mangrove: stilt roots in shallow water. */
+const mangrove: Figure = (g) => {
+  disc(g, '#2f5a6b', 0.6, 0, 0.02);
+  for (let i = 0; i < 3; i++) {
+    const x = (i - 1) * 0.26;
+    rod(g, '#5b4a3a', 0.04, 0.5, x, 0.3);
+    ball(g, '#2f6b4a', 0.24, x, 0.66);
+    for (const s of [1, -1]) rod(g, '#5b4a3a', 0.02, 0.22, x + s * 0.1, 0.1, 0, s * 0.5);
+  }
+};
+/** A beach: sand, a wave line, a palm. */
+const beach: Figure = (g) => {
+  const sand = put(g, new Mesh(new CylinderGeometry(0.6, 0.6, 0.08, 24), std('#e6d2a8')), 0, 0.04);
+  void sand;
+  disc(g, '#3f86b8', 0.62, 0, 0.09, -Math.PI / 2).scale.set(1, 0.45, 1);
+  rod(g, '#8a6a44', 0.04, 0.55, -0.2, 0.34, 0.1, 0.18);
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const b = new Mesh(new ConeGeometry(0.05, 0.32, 5), std('#4b8f4f'));
+    b.position.set(-0.28 + Math.cos(a) * 0.14, 0.64, 0.1 + Math.sin(a) * 0.14);
+    b.rotation.set(Math.cos(a) * 1.0, 0, -Math.sin(a) * 1.0);
+    g.add(b);
+  }
+};
+/** A small island ringed by water. */
+const island: Figure = (g) => {
+  disc(g, '#3f86b8', 0.62, 0, 0.02);
+  put(g, new Mesh(new SphereGeometry(0.3, 16, 10), std('#e6d2a8')), 0, 0.06).scale.set(1, 0.4, 1);
+  ball(g, '#4b8f4f', 0.14, 0.06, 0.2);
+  ball(g, '#e07a8a', 0.07, -0.16, 0.12, 0.12);
+};
+/** A wetland: open water with reeds. */
+const wetland: Figure = (g) => {
+  disc(g, '#3b7a8f', 0.6, 0, 0.02);
+  for (let i = 0; i < 9; i++) {
+    const a = i * 1.4, r = 0.2 + (i % 3) * 0.14;
+    rod(g, '#7f9e4a', 0.018, 0.3 + (i % 3) * 0.1, Math.cos(a) * r, 0.18, Math.sin(a) * r);
+  }
+  ball(g, '#f4f6f8', 0.06, 0.1, 0.08, -0.1).scale.set(1.6, 0.5, 1);
+};
+/** Terraced rows on a slope: the tea garden. */
+const teaGarden: Figure = (g) => {
+  for (let i = 0; i < 4; i++) {
+    const y = i * 0.13, z = -i * 0.18;
+    const t = put(g, new Mesh(new BoxGeometry(1.0 - i * 0.12, 0.1, 0.22), std('#3f6b3a')), 0, y + 0.05, z);
+    void t;
+    for (let k = 0; k < 4; k++) ball(g, '#4f8f4a', 0.06, (k - 1.5) * 0.22, y + 0.14, z);
+  }
+};
+/** Layered hills. */
+const hills: Figure = (g) => {
+  for (let i = 0; i < 3; i++) {
+    const c = ['#5b7a5a', '#4a6b52', '#3c5a49'][i]!;
+    const m = put(g, new Mesh(new ConeGeometry(0.42 - i * 0.05, 0.5 + i * 0.12, 5), std(c)), (i - 1) * 0.34, 0.25 + i * 0.06, -i * 0.2);
+    void m;
+  }
+};
+/** A dense patch of forest. */
+const forest: Figure = (g) => {
+  for (let i = 0; i < 5; i++) {
+    const a = i * 1.25, r = 0.22;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    rod(g, '#6b4a2a', 0.035, 0.34, x, 0.17, z);
+    ball(g, i % 2 ? '#2f6b3f' : '#3f7a42', 0.2, x, 0.5, z);
+  }
+};
+/** A road bridge on piers over water. */
+const bridge: Figure = (g) => {
+  disc(g, '#3b6b8f', 0.7, 0, 0.02);
+  box(g, '#c3ccd6', 1.2, 0.07, 0.24, 0, 0.44);
+  for (let i = 0; i < 4; i++) rod(g, '#9aa5b1', 0.05, 0.42, (i - 1.5) * 0.32, 0.22);
+  for (let i = 0; i < 4; i++) box(g, '#8a94a0', 0.03, 0.2, 0.03, (i - 1.5) * 0.32, 0.57, 0.1);
+};
+
+/* ---------- dishes ---------- */
+/** A plate with a mound and a side. */
+const dish = (main: string, side: string, extra?: string): Figure => (g) => {
+  put(g, new Mesh(new CylinderGeometry(0.4, 0.34, 0.06, 24), std('#f4f7fa')), 0, 0.03);
+  const m = put(g, new Mesh(new SphereGeometry(0.22, 14, 10), std(main)), -0.08, 0.12);
+  m.scale.set(1, 0.55, 1);
+  const s2 = put(g, new Mesh(new SphereGeometry(0.13, 12, 8), std(side)), 0.18, 0.1, 0.05);
+  s2.scale.set(1, 0.6, 1);
+  if (extra) ball(g, extra, 0.07, 0.12, 0.12, -0.16);
+};
+/** A bowl of something thick. */
+const bowlDish = (color: string): Figure => (g) => {
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.2, 0.22, 20), std('#eef2f6')), 0, 0.12);
+  const h = put(g, new Mesh(new SphereGeometry(0.26, 14, 10), std(color)), 0, 0.24);
+  h.scale.set(1, 0.45, 1);
+};
+/** A stack of flat cakes. */
+const pitha: Figure = (g) => {
+  for (let i = 0; i < 3; i++) put(g, new Mesh(new CylinderGeometry(0.24 - i * 0.02, 0.24 - i * 0.02, 0.07, 18), std(i % 2 ? '#f0e2c8' : '#e6d2a8')), 0, 0.05 + i * 0.075);
+  ball(g, '#c08a3a', 0.05, 0, 0.3);
+};
+/** A round sweet in syrup. */
+const sweet: Figure = (g) => {
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.26, 0.1, 20), std('#e8eef5')), 0, 0.05);
+  for (let i = 0; i < 3; i++) {
+    const a = i * 2.1;
+    ball(g, '#b5762f', 0.12, Math.cos(a) * 0.11, 0.15, Math.sin(a) * 0.11);
+  }
+};
+
+/* ---------- geology ---------- */
+/** A rough rock. */
+const rock = (color = '#7d848c'): Figure => (g) => {
+  const r = put(g, new Mesh(new IcosahedronGeometry(0.3, 0), std(color, { flatShading: true })), 0, 0.26);
+  r.rotation.set(0.5, 0.8, 0.2);
+};
+/** A shell pressed into stone. */
+const fossil: Figure = (g) => {
+  const slab = put(g, new Mesh(new CylinderGeometry(0.34, 0.34, 0.12, 8), std('#a89a86')), 0, 0.06);
+  void slab;
+  for (let i = 0; i < 5; i++) {
+    const t = put(g, new Mesh(new TorusGeometry(0.06 + i * 0.04, 0.016, 6, 18, Math.PI * 1.5), std('#6b6257')), 0, 0.13, 0, -Math.PI / 2);
+    t.rotation.z = i * 0.5;
+  }
+};
+/** A long-necked dinosaur. */
+const dino: Figure = (g) => {
+  const b = put(g, new Mesh(new SphereGeometry(0.26, 14, 10), std('#5f7a4a')), 0, 0.34);
+  b.scale.set(1.5, 0.9, 0.9);
+  rod(g, '#5f7a4a', 0.05, 0.44, 0.3, 0.56, 0, -0.35);
+  ball(g, '#5f7a4a', 0.09, 0.44, 0.76);
+  const t = rod(g, '#5f7a4a', 0.04, 0.5, -0.38, 0.38, 0, 0.8);
+  void t;
+  for (const [dx, dz] of [[0.16, 0.14], [0.16, -0.14], [-0.16, 0.14], [-0.16, -0.14]] as const)
+    rod(g, '#4f6a3a', 0.055, 0.3, dx, 0.15, dz);
+};
+/** An iceberg on water. */
+const iceberg: Figure = (g) => {
+  disc(g, '#3b6b8f', 0.6, 0, 0.02);
+  const i1 = put(g, new Mesh(new ConeGeometry(0.3, 0.5, 5), std('#dff0fb')), 0, 0.25);
+  i1.rotation.y = 0.4;
+  put(g, new Mesh(new ConeGeometry(0.18, 0.26, 5), std('#eaf7ff')), 0.22, 0.13);
+};
+/** Stacked bands of soil. */
+const strata: Figure = (g) => {
+  const cols = ['#6b5233', '#8a6a44', '#b09873', '#cbb894'];
+  for (let i = 0; i < cols.length; i++)
+    put(g, new Mesh(new CylinderGeometry(0.34, 0.34, 0.12, 18), std(cols[i]!)), 0, 0.06 + i * 0.12);
+};
+/** A black lump and a dark drop: coal and oil. */
+const coalOil: Figure = (g) => {
+  const r = put(g, new Mesh(new IcosahedronGeometry(0.22, 0), std('#2b2b2e', { flatShading: true })), -0.16, 0.2);
+  r.rotation.set(0.4, 0.9, 0.1);
+  const d = ball(g, '#1d1a16', 0.16, 0.2, 0.22);
+  d.scale.set(1, 1.2, 1);
+  cone(g, '#1d1a16', 0.11, 0.2, 0.2, 0.42);
+};
+/** A globe split into drifting pieces. */
+const continents: Figure = (g) => {
+  ball(g, '#3b6b8f', 0.32, 0, 0.36);
+  for (let i = 0; i < 4; i++) {
+    const a = i * 1.6;
+    const p = put(g, new Mesh(new SphereGeometry(0.14, 10, 8), std('#4f8f4a')), Math.cos(a) * 0.24, 0.36 + Math.sin(a) * 0.16, 0.2);
+    p.scale.set(1, 0.7, 0.4);
+  }
+};
+
+/* ---------- safety and everyday ---------- */
+/** An open palm: touch, and saying no. */
+const palmHand = (color = '#e8b98e'): Figure => (g) => {
+  const p = put(g, new Mesh(new SphereGeometry(0.2, 14, 10), std(color)), 0, 0.34);
+  p.scale.set(1, 1.15, 0.45);
+  for (let i = 0; i < 4; i++) put(g, new Mesh(new CylinderGeometry(0.035, 0.035, 0.2, 8), std(color)), (i - 1.5) * 0.09, 0.58, 0);
+  put(g, new Mesh(new CylinderGeometry(0.038, 0.038, 0.16, 8), std(color)), -0.2, 0.36, 0, 0, 0, 0.9);
+};
+/** A red octagon on a post. */
+const stopSign: Figure = (g) => {
+  rod(g, '#8a94a0', 0.03, 0.5, 0, 0.25);
+  const s = put(g, new Mesh(new CylinderGeometry(0.26, 0.26, 0.05, 8), std('#c0392b')), 0, 0.62, 0, Math.PI / 2);
+  s.rotation.z = Math.PI / 8;
+  box(g, '#f8fbff', 0.26, 0.05, 0.02, 0, 0.62, 0.04);
+};
+/** Black and white bars: the crossing. */
+const crossing: Figure = (g) => {
+  box(g, '#33383f', 0.9, 0.04, 0.6, 0, 0.02);
+  for (let i = 0; i < 4; i++) box(g, '#f4f7fa', 0.12, 0.05, 0.56, (i - 1.5) * 0.2, 0.04);
+};
+/** A flame. */
+const flame: Figure = (g) => {
+  for (let i = 0; i < 3; i++) {
+    const c = ['#e8622b', '#f0a52b', '#f7d84a'][i]!;
+    const f = put(g, new Mesh(new ConeGeometry(0.2 - i * 0.05, 0.5 - i * 0.1, 10), std(c, { emissive: c, emissiveIntensity: 0.4 })), 0, 0.25 + i * 0.03);
+    void f;
+  }
+};
+/** A medicine bottle with a cap. */
+const medicine: Figure = (g) => {
+  put(g, new Mesh(new CylinderGeometry(0.17, 0.17, 0.4, 16), std('#c9603f', { transparent: true, opacity: 0.9 })), 0, 0.22);
+  put(g, new Mesh(new CylinderGeometry(0.12, 0.12, 0.1, 14), std('#e8eef5')), 0, 0.46);
+  box(g, '#f8fbff', 0.2, 0.14, 0.02, 0, 0.24, 0.17);
+};
+/** Waves with a warning buoy. */
+const water: Figure = (g) => {
+  disc(g, '#3b7a9e', 0.6, 0, 0.02);
+  for (let i = 0; i < 3; i++) {
+    const w = put(g, new Mesh(new TorusGeometry(0.18 + i * 0.13, 0.02, 6, 22, Math.PI), std('#7fc2e0')), 0, 0.06, 0, -Math.PI / 2);
+    void w;
+  }
+  ball(g, '#e8622b', 0.1, 0.05, 0.12);
+};
+/** Colour swatches, for the words about colour. */
+const swatches: Figure = (g) => {
+  const cols = ['#c0392b', '#2f8f5b', '#3d6b8f', '#f0b429', '#8a4a9e'];
+  for (let i = 0; i < cols.length; i++) box(g, cols[i]!, 0.16, 0.34, 0.05, (i - 2) * 0.18, 0.2, 0, (i - 2) * 0.06);
+};
+/** A shirt on a hanger. */
+const shirt = (color = '#3d6b8f'): Figure => (g) => {
+  box(g, color, 0.42, 0.4, 0.08, 0, 0.32);
+  for (const s of [1, -1]) box(g, color, 0.16, 0.12, 0.08, s * 0.28, 0.48, 0, s * 0.5);
+  put(g, new Mesh(new TorusGeometry(0.06, 0.014, 6, 14, Math.PI), std('#9aa5b1')), 0, 0.6, 0);
+};
+/** A bus, for the words about vehicles. */
+const bus = (color = '#c8a24a'): Figure => (g) => {
+  box(g, color, 0.8, 0.34, 0.34, 0, 0.3);
+  box(g, '#9fd8ff', 0.6, 0.14, 0.36, 0.02, 0.38);
+  for (const dx of [-0.25, 0.25]) put(g, new Mesh(new CylinderGeometry(0.11, 0.11, 0.36, 14), std('#2b2b2e')), dx, 0.11, 0, Math.PI / 2);
+};
+/** A pair of figures side by side: family, and words about people. */
+const family: Figure = (g) => {
+  const one = (x: number, h: number, coat: string) => {
+    ball(g, '#e8b98e', 0.11 * h, x, 0.56 * h);
+    put(g, new Mesh(new CylinderGeometry(0.13 * h, 0.17 * h, 0.36 * h, 12), std(coat)), x, 0.3 * h);
+  };
+  one(-0.2, 1.15, '#3d6b8f'); one(0.12, 1.0, '#a8563c'); one(0.34, 0.7, '#2f8f5b');
+};
+/** A speech bubble: sounds and words. */
+const bubble = (color = '#f4f7fa'): Figure => (g) => {
+  const b = ball(g, color, 0.28, 0, 0.48);
+  b.scale.set(1.3, 1, 0.5);
+  cone(g, color, 0.08, 0.16, -0.1, 0.24, 0, 0.4);
+  for (let i = 0; i < 3; i++) ball(g, '#8a94a0', 0.035, (i - 1) * 0.11, 0.48, 0.15);
+};
+/** Two arrows facing away: opposites. */
+const opposites: Figure = (g) => {
+  for (const s of [1, -1]) {
+    box(g, s > 0 ? '#3d6b8f' : '#c0392b', 0.3, 0.08, 0.08, s * 0.2, 0.34);
+    cone(g, s > 0 ? '#3d6b8f' : '#c0392b', 0.11, 0.16, s * 0.42, 0.34, 0, -s * Math.PI / 2);
+  }
+};
+/** A volcano of foam. */
+const volcano: Figure = (g) => {
+  put(g, new Mesh(new ConeGeometry(0.36, 0.44, 14, 1, true), std('#7a5a45', { side: DoubleSide })), 0, 0.22);
+  for (let i = 0; i < 7; i++) {
+    const a = i * 1.2, r = 0.06 + (i % 3) * 0.07;
+    ball(g, '#e8622b', 0.07, Math.cos(a) * r, 0.46 + (i % 3) * 0.09, Math.sin(a) * r);
+  }
+};
+/** A lemon with two electrodes. */
+const lemonBattery: Figure = (g) => {
+  const l = ball(g, '#e8d44a', 0.22, 0, 0.24);
+  l.scale.set(1.35, 1, 1);
+  box(g, '#b5762f', 0.05, 0.22, 0.05, -0.1, 0.44);
+  box(g, '#9aa5b1', 0.05, 0.22, 0.05, 0.1, 0.44);
+  ball(g, '#ffe9a8', 0.06, 0.24, 0.5);
+};
+/** Strips of colour climbing a sheet. */
+const rainbowPaper: Figure = (g) => {
+  box(g, '#f8fbff', 0.44, 0.6, 0.02, 0, 0.32);
+  const cols = ['#c0392b', '#f0a52b', '#f7d84a', '#2f8f5b', '#3d6b8f'];
+  for (let i = 0; i < cols.length; i++) box(g, cols[i]!, 0.36, 0.07, 0.025, 0, 0.14 + i * 0.1, 0.012);
+};
+/** A glass of separated layers. */
+const layers: Figure = (g) => {
+  put(g, new Mesh(new CylinderGeometry(0.19, 0.16, 0.48, 18, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.32, side: DoubleSide })), 0, 0.26);
+  const cols = ['#b5762f', '#3d6b8f', '#e8c86a'];
+  for (let i = 0; i < 3; i++) put(g, new Mesh(new CylinderGeometry(0.17, 0.16, 0.14, 18), std(cols[i]!, { transparent: true, opacity: 0.9 })), 0, 0.1 + i * 0.14);
+};
+/** A balloon with a jet of air. */
+const balloonRocket: Figure = (g) => {
+  const b = ball(g, '#c0392b', 0.22, 0.08, 0.42);
+  b.scale.set(1.4, 1, 1);
+  cone(g, '#c0392b', 0.08, 0.16, -0.2, 0.42, 0, Math.PI / 2);
+  for (let i = 0; i < 3; i++) ball(g, '#cfe0f0', 0.04, -0.34 - i * 0.1, 0.42);
+};
+/** An egg floating in a glass. */
+const floatEgg: Figure = (g) => {
+  put(g, new Mesh(new CylinderGeometry(0.21, 0.18, 0.5, 18, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.32, side: DoubleSide })), 0, 0.27);
+  put(g, new Mesh(new CylinderGeometry(0.19, 0.18, 0.3, 18), std('#9fd0ea', { transparent: true, opacity: 0.6 })), 0, 0.18);
+  const e = ball(g, '#f6efe2', 0.11, 0, 0.34);
+  e.scale.set(1, 1.25, 1);
+};
+/** A gnomon casting a shadow on a dial. */
+const sundial: Figure = (g) => {
+  put(g, new Mesh(new CylinderGeometry(0.36, 0.36, 0.06, 22), std('#d9cdb4')), 0, 0.03);
+  const gn = put(g, new Mesh(new ConeGeometry(0.06, 0.4, 3), std('#8a6a44')), 0, 0.24, 0, 0, 0, 0.35);
+  void gn;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    box(g, '#8a7a5a', 0.02, 0.01, 0.08, Math.cos(a) * 0.27, 0.07, Math.sin(a) * 0.27, a);
+  }
+};
+/** A bar magnet with iron filings. */
+const magnet: Figure = (g) => {
+  box(g, '#c0392b', 0.18, 0.42, 0.14, -0.11, 0.28);
+  box(g, '#3d6b8f', 0.18, 0.42, 0.14, 0.11, 0.28);
+  box(g, '#8a94a0', 0.4, 0.12, 0.14, 0, 0.05);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI;
+    const f = box(g, '#6b7583', 0.02, 0.08, 0.02, Math.cos(a) * 0.3, 0.55 + Math.sin(a) * 0.12, 0, a);
+    void f;
+  }
+};
+
 /** Everything a category can be built from, keyed by name. */
 export const FIGURES: Record<string, Figure> = {
+  // faces, one per feeling
+  faceHappy: faceFig({ brow: 'up', eye: 'squint', mouth: 'smile', cheek: '#e8a0a0' }),
+  faceSad: faceFig({ brow: 'sad', eye: 'droop', mouth: 'frown' }),
+  faceAngry: faceFig({ brow: 'angry', eye: 'open', mouth: 'flat' }),
+  faceAfraid: faceFig({ brow: 'up', eye: 'wide', mouth: 'o' }),
+  faceShy: faceFig({ brow: 'sad', eye: 'squint', mouth: 'small', cheek: '#e8a0a0' }),
+  faceJealous: faceFig({ brow: 'angry', eye: 'squint', mouth: 'small' }),
+  faceProud: faceFig({ brow: 'up', eye: 'open', mouth: 'smile' }),
+  faceLonely: faceFig({ brow: 'sad', eye: 'droop', mouth: 'flat' }),
+  faceExcited: faceFig({ brow: 'up', eye: 'wide', mouth: 'smile', cheek: '#e8a0a0' }),
+  faceFlat: faceFig({ brow: 'flat', eye: 'droop', mouth: 'flat' }),
+  // places
+  mangrove, beach, island, wetland, teaGarden, hills, forest, bridge,
+  // dishes
+  riceDal: dish('#fbfbf6', '#e8c05a'), friedFish: dish('#d8b070', '#e8c05a'),
+  bhorta: dish('#b5762f', '#4f8f4a', '#c0392b'), khichuri: bowlDish('#e2c05a'),
+  pitha, payesh: bowlDish('#f2e6d0'), sweet, haleem: bowlDish('#8a5a33'),
+  panta: bowlDish('#eef2f6'), dateBowl: bowlDish('#7a4a2a'),
+  // geology
+  rock: rock(), mineral: crystal('#8fd6e8'), fossil, dino, iceberg, strata, coalOil, continents,
+  // safety and everyday words
+  palmHand: palmHand(), stopSign, crossing, flame, medicine, waterSafe: water,
+  swatches, shirt: shirt(), bus: bus(), family, bubble: bubble(), opposites,
+  // home experiments
+  volcano, lemonBattery, rainbowPaper, layers, balloonRocket, floatEgg, sundial, magnet,
   // plants
   mango: broadleaf('#3f7a42'), jackfruit: broadleaf('#356b39', '#6b4a2a', 0.6, 0.44),
   banyan: broadleaf('#2f6b3f', '#8a6a44', 0.42, 0.5), palm: palm('#4b8f4f'),

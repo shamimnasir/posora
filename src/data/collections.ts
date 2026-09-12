@@ -153,6 +153,76 @@ export const COLLECTIONS: Record<string, Collection> = {
       'ঘড়ি': 'clockFace', 'ব্যারোমিটার': 'barometer', 'স্টপওয়াচ': 'stopwatch',
     },
   },
+
+  /* ---------- প্রকৃতি: the places themselves ---------- */
+  'nature:বাংলাদেশের প্রকৃতি': {
+    fallback: 'forest',
+    items: {
+      'সুন্দরবন': 'mangrove', 'কক্সবাজার': 'beach', 'সেন্ট মার্টিন': 'island',
+      'হাওর': 'wetland', 'চা বাগান': 'teaGarden', 'পার্বত্য চট্টগ্রাম': 'hills',
+      'মধুপুর বন': 'forest', 'পদ্মা সেতু অঞ্চল': 'bridge', 'লালমাই পাহাড়': 'hills',
+    },
+  },
+
+  /* ---------- খাবার: the dishes themselves ---------- */
+  'food:বাংলার খাবার': {
+    fallback: 'riceDal',
+    items: {
+      'ভাত ও ডাল': 'riceDal', 'মাছ ভাজা': 'friedFish', 'ভর্তা': 'bhorta',
+      'খিচুড়ি': 'khichuri', 'পিঠা': 'pitha', 'পায়েস': 'payesh',
+      'মিষ্টি': 'sweet', 'হালিম': 'haleem', 'ইফতার': 'dateBowl', 'পান্তা ভাত': 'panta',
+    },
+  },
+
+  /* ---------- ভাষা: a picture for each kind of word ---------- */
+  'language:শব্দভাণ্ডার': {
+    fallback: 'bubble',
+    items: {
+      'ছবি ও শব্দ': 'bubble', 'রং': 'swatches', 'ফল': 'mangoFruit',
+      'সবজি': 'greenFruit', 'প্রাণী': 'tiger', 'পরিবার': 'family',
+      'শরীরের অংশ': 'palmHand', 'পোশাক': 'shirt', 'যানবাহন': 'bus',
+      'বিপরীত শব্দ': 'opposites', 'সমার্থক শব্দ': 'bubble', 'ধ্বনি-শব্দ': 'bubble',
+    },
+  },
+
+  /* ---------- সামাজিক: a face per feeling, an object per risk ---------- */
+  'social:আবেগ চেনা': {
+    fallback: 'faceHappy',
+    items: {
+      'খুশি': 'faceHappy', 'দুঃখ': 'faceSad', 'রাগ': 'faceAngry', 'ভয়': 'faceAfraid',
+      'লজ্জা': 'faceShy', 'ঈর্ষা': 'faceJealous', 'গর্ব': 'faceProud',
+      'একাকিত্ব': 'faceLonely', 'উত্তেজনা': 'faceExcited', 'হতাশা': 'faceFlat',
+    },
+  },
+  'social:নিরাপত্তা': {
+    fallback: 'palmHand',
+    items: {
+      'ভালো ও খারাপ স্পর্শ': 'palmHand', 'না বলার অধিকার': 'stopSign',
+      'অচেনা মানুষ': 'personSlate', 'হারিয়ে গেলে': 'family',
+      'জরুরি নম্বর ৯৯৯': 'phone', 'রাস্তা পার': 'crossing', 'আগুন': 'flame',
+      'পানিতে সাবধানতা': 'waterSafe', 'ওষুধ ও রাসায়নিক': 'medicine',
+    },
+  },
+
+  /* ---------- আবিষ্কার: the experiment, and the ground under it ---------- */
+  'discovery:ঘরে বসে পরীক্ষা': {
+    fallback: 'flask',
+    items: {
+      'বেকিং সোডার আগ্নেয়গিরি': 'volcano', 'লেবুর ব্যাটারি': 'lemonBattery',
+      'রংধনু কাগজ': 'rainbowPaper', 'ঘনত্বের স্তর': 'layers',
+      'বেলুন রকেট': 'balloonRocket', 'অদৃশ্য কালি': 'sheet',
+      'ডিম ভাসানো': 'floatEgg', 'মেঘ বানানো': 'cloudDrop',
+      'ছায়া ঘড়ি': 'sundial', 'চুম্বকের খেলা': 'magnet', '… ৬০টি': 'flask',
+    },
+  },
+  'discovery:পৃথিবী ও ভূতত্ত্ব': {
+    fallback: 'rock',
+    items: {
+      'শিলা': 'rock', 'খনিজ': 'mineral', 'জীবাশ্ম': 'fossil', 'ডাইনোসর': 'dino',
+      'বরফযুগ': 'iceberg', 'মাটির স্তর': 'strata', 'কয়লা ও তেল': 'coalOil',
+      'মহাদেশের সরণ': 'continents',
+    },
+  },
 };
 
 export const collectionFor = (slug: string, cat: string): Collection | undefined =>
