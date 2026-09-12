@@ -23,6 +23,11 @@ export const CSP = [
 
 export const SECURITY_HEADERS: Record<string, string> = {
   'content-security-policy': CSP,
+  // 180 days, this host only. No includeSubDomains and no preload: posora.com
+  // itself has always been HTTPS behind Cloudflare, but a future subdomain
+  // served over plain HTTP would be locked out by the wider forms, and preload
+  // is effectively permanent.
+  'strict-transport-security': 'max-age=15552000',
   'x-content-type-options': 'nosniff',
   'x-frame-options': 'DENY',
   'referrer-policy': 'strict-origin-when-cross-origin',

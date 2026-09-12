@@ -10,9 +10,22 @@
 ---
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z0XR1TFYSJ"></script>
 <script>
-  declare global { interface Window { dataLayer: unknown[][] } }
+  declare global { interface Window { dataLayer: unknown[][]; gtag?: (...args: unknown[]) => void } }
   window.dataLayer = window.dataLayer || [];
   function gtag(...args: unknown[]) { window.dataLayer.push(args); }
+  // Exposed so src/lib/track.ts can count which worlds and items get opened.
+  // That helper is a no-op whenever this is missing, so a blocked or failed
+  // Analytics load never changes how a page behaves.
+  window.gtag = gtag;
   gtag('js', new Date());
-  gtag('config', 'G-Z0XR1TFYSJ');
+  // পসরা is made for children, so the advertising side of Analytics is switched
+  // off: no Google Signals (cross-device advertising profiles) and no
+  // ad-personalisation signal. Visits are still counted, which is all the
+  // footer claims. Google's own policy bars personalised ads and third-party
+  // trackers on child-directed content, and this keeps us on the right side of
+  // it even though the site carries no ads.
+  gtag('config', 'G-Z0XR1TFYSJ', {
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false,
+  });
 </script>

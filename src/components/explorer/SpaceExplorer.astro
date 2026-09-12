@@ -359,6 +359,7 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
 <script>
   import { bn, bnNum } from '../../lib/bn';
   import { markSeen, getProgress } from '../../lib/progress';
+  import { trackItem, trackDepth, trackPlay } from '../../lib/track';
   import { lightMinutes, EARTH_DIAMETER_KM, SPEEDS, fitsInside, METRICS, AU_KM, orbitYears, type Body, type Branch, type Facts } from '../../data/space';
   import type { CosmosHandle, Level, Pick } from './cosmos';
   import { mountStatViz, kindFor, parseNum, type VizHandle } from './statviz';
@@ -703,6 +704,7 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     if (push) history.pushState({ id }, '', `/space/${id}/`);
     cosmos?.focusBody(cur.id);
     renderAll();
+    trackItem(WORLD, 'সৌরজগৎ', cur.bn);
     if (markSeen(WORLD, cur.id)) renderProgress();
     rail.find((b) => b.dataset.id === id)?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
   }
@@ -733,7 +735,7 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     if (b) { stopAuto(); select(b.dataset.id!); }
   });
   $<HTMLInputElement>('#age').addEventListener('input', () => { stopAuto(); renderAge(); });
-  seg.forEach((b) => b.addEventListener('click', () => { level = b.dataset.l as typeof level; localStorage.setItem('posora:level', level); renderText(); }));
+  seg.forEach((b) => b.addEventListener('click', () => { level = b.dataset.l as typeof level; localStorage.setItem('posora:level', level); renderText(); trackDepth(WORLD, level); }));
   $<HTMLInputElement>('#kg').addEventListener('input', renderMissions);
   $<HTMLSelectElement>('#cmp').addEventListener('change', renderSpec);
   root.querySelector('[data-act="compare"]')!.addEventListener('click', (e) => {
@@ -750,6 +752,9 @@ const payload = bodies.map(({ id, bn, en, tagline, chips, stats, gravity, au, l1
     if (e.key === 'ArrowLeft') select(data[(i - 1 + data.length) % data.length].id);
   });
 
+  host.addEventListener('pointerdown', () => trackPlay(WORLD, 'সৌরজগৎ'), { once: true });
+
   renderText(); renderMissions(); renderBranches(); renderSize(); renderTravel(); renderRecords();
   renderGlance(); renderAge(); markSeen(WORLD, cur.id); renderProgress();
+  trackItem(WORLD, 'সৌরজগৎ', cur.bn);
 </script>

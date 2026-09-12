@@ -465,6 +465,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
 <script>
   import { toggleStar, isStarred, getProgress, markSeen } from '../../lib/progress';
   import { bn, pad2 } from '../../lib/bn';
+  import { trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
   import type { ItemDetail } from '../../data/explorer-types';
 
@@ -491,6 +492,14 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   let curCat = 0, curItem = 0;
   let level = (localStorage.getItem('posora:level') as 'l1' | 'l2' | 'l3' | null) ?? 'l1';
   let hero: HeroHandle | null = null, lastDeg = -1;
+  // "did this visitor actually touch the model", counted once per category so a
+  // single drag does not turn into a hundred events
+  let playCounted = false;
+  const countPlay = () => {
+    if (playCounted) return;
+    playCounted = true;
+    trackPlay(slug, cats[curCat].n);
+  };
 
   const readable = (c: Cat) => !!c.detail && c.detail.length === c.items.length;
   const keyOf = (ci: number, ii: number) => `${cats[ci].n}:${cats[ci].items[ii]}`;
@@ -516,7 +525,8 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   });
   spinBtn.addEventListener('click', () => { if (!hero) return; const on = !hero.isAuto(); hero.setAuto(on); syncSpin(on); });
   resetBtn.addEventListener('click', () => hero?.resetView());
-  ctl.addEventListener('input', () => hero?.setParam(+ctl.value / 100));
+  ctl.addEventListener('input', () => { hero?.setParam(+ctl.value / 100); countPlay(); });
+  host.addEventListener('pointerdown', countPlay);
 
   /* ---- the reading card: one item, three depths ---- */
   const seg = [...root.querySelectorAll<HTMLButtonElement>('.seg [data-l]')];
@@ -551,6 +561,7 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     level = b.dataset.l as typeof level;
     localStorage.setItem('posora:level', level);
     renderRead();
+    trackDepth(slug, level);
   }));
 
   /* ---- the item strip ---- */
@@ -725,15 +736,17 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
     curItem = ii;
     chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
     renderRead(); renderCrumbs();
+    trackItem(slug, c.n, c.items[ii]);
     if (mark && markSeen(slug, keyOf(curCat, ii))) {
       chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`)?.classList.add('done');
       renderProgress(); renderGlance(); renderRecords();
     }
   }
   function showCat(i: number, item = 0) {
-    curCat = i; curItem = item;
+    curCat = i; curItem = item; playCounted = false;
     rail.forEach((b) => b.setAttribute('aria-selected', String(+b.dataset.i! === i)));
     const c = cats[i];
+    trackCategory(slug, c.n);
     $('#c-no').textContent = pad2(i + 1);
     $('#c-name').textContent = c.n;
     $('#c-play').innerHTML = '<b>পর্দায়</b>';
@@ -800,4 +813,8 @@ const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'প
   if (readable(cats[0])) markSeen(slug, keyOf(0, 0));
   renderProgress();
   renderChips();
+  // count the category and item the page lands on the same way a click is
+  // counted, so the totals are not skewed toward whatever happens to be first
+  trackCategory(slug, cats[0].n);
+  if (readable(cats[0])) trackItem(slug, cats[0].n, cats[0].items[0]);
 </script>

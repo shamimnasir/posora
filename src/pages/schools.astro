@@ -1,0 +1,244 @@
+---
+/**
+ * স্কুলের জন্য পসরা - the school pilot page.
+ *
+ * Honesty rules apply here more than anywhere else on the site, because this is
+ * the one page that talks about money. Two lists, kept strictly apart: what a
+ * school can use today (all of it true and live right now), and what the pilot
+ * would build (none of it built yet, and labelled as such). No price is quoted,
+ * because no price has been set. Nothing on this page can be bought.
+ */
+import Base from '../layouts/Base.astro';
+import { totals } from '../data/worlds';
+import { bn } from '../lib/bn';
+
+export const prerender = false;
+
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
+
+const now = [
+  { t: `${bn(totals.worlds)}টি ভুবন, ${bn(totals.items)}টি বিষয়`, d: 'মহাকাশ থেকে টাকা ম্যানেজমেন্ট - সবকটাই এখন খোলা, পুরোটাই বাংলায়।' },
+  { t: 'প্রতিটি বিভাগে থ্রিডি মডেল', d: 'ঢালু তল, দোলক, কেলাস, ঋতুচক্র - টেনে ঘোরানো যায়, স্লাইডারে বদলায়। ক্লাসে প্রজেক্টরে চালালে পুরো বোর্ড হয়ে যায়।' },
+  { t: 'একই লেখা তিন গভীরতায়', d: 'ছোট (৫–৮), মাঝারি (৯–১২), বড় (১৩+)। এক ক্লাসে বিভিন্ন স্তরের শিক্ষার্থীকে একই পাতা দেওয়া যায়।' },
+  { t: 'কোনো অ্যাকাউন্ট লাগে না', d: 'লিংক খুললেই চলে। শিক্ষার্থীর নাম, ইমেইল বা ফোন কিছুই চাওয়া হয় না।' },
+  { t: 'ফোন, ট্যাব, ল্যাপটপ - সবেতেই', d: 'আলাদা অ্যাপ ইনস্টল করতে হয় না, ব্রাউজারেই চলে।' },
+  { t: 'এখন এবং সবসময় ফ্রি', d: 'শিক্ষার্থীর জন্য যা যা আছে তার একটাও কখনো পয়সার পেছনে যাবে না। এটা প্রতিশ্রুতি।' },
+];
+
+const pilot = [
+  { t: 'শিক্ষকের অ্যাকাউন্ট', d: 'শুধু শিক্ষকের - শিক্ষার্থীর কোনো অ্যাকাউন্ট বা ব্যক্তিগত তথ্য নয়, কোনোদিনই নয়।' },
+  { t: 'ছাপার মতো ওয়ার্কশিট', d: 'প্রতিটি বিভাগের জন্য পিডিএফ, যাতে ক্লাসের পরেও কাজ চলে।' },
+  { t: 'অফলাইন প্যাক', d: 'যে ঘরে ইন্টারনেট দুর্বল, সেখানেও মডেলগুলো চলবে।' },
+  { t: 'কারিকুলামের সঙ্গে মেলানো', d: 'কোন ভুবনের কোন বিভাগ কোন শ্রেণির কোন অধ্যায়ে বসে, তার তালিকা।' },
+  { t: 'ক্লাসের রিপোর্ট', d: 'কোন বিষয়গুলো ক্লাসে বেশি দেখা হয়েছে - নাম ছাড়া, শুধু সংখ্যা।' },
+];
+---
+<Base
+  title="স্কুলের জন্য"
+  description="পসরা স্কুল পাইলট - ১১টি ভুবনের থ্রিডি মডেল ক্লাসে ব্যবহার করুন। শিক্ষার্থীর জন্য সবসময় ফ্রি। পাইলটে আগ্রহ জানান।"
+>
+  <div class="wrap page">
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> স্কুলের জন্য</p>
+
+    <header class="hero">
+      <p class="eyebrow">স্কুল ও কোচিং</p>
+      <h1>ক্লাসের দেয়ালে পুরো সৌরজগৎ</h1>
+      <p class="lede">
+        পসরা শিক্ষার্থীদের জন্য ফ্রি, আর ফ্রিই থাকবে। স্কুলের জন্য আমরা একটা
+        ছোট পাইলট শুরু করছি - কয়েকটা স্কুলের সঙ্গে বসে ঠিক করব শিক্ষকদের আসলে
+        কী কী লাগে, তারপর সেটাই বানাবো।
+      </p>
+      <p class="warn">
+        <b>স্পষ্ট করে বলি:</b> এখনো কিছু বিক্রি হচ্ছে না, দামও ঠিক হয়নি। এই পাতা
+        শুধু আগ্রহ জানানোর জন্য। নিচের তালিকায় যা <em>আজ চালু</em> লেখা, সেটা
+        এখনই ব্যবহার করা যায়; যা <em>পাইলটে হবে</em> লেখা, সেটা এখনো বানানোই হয়নি।
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#interest">পাইলটে আগ্রহ জানাও</a>
+        <a class="btn" href="/space/">আগে নিজে দেখে নাও →</a>
+      </div>
+    </header>
+
+    <section class="sec">
+      <div class="sec-h">
+        <h2>আজ চালু</h2>
+        <span class="tagpill ok">এখনই ব্যবহার করা যায়</span>
+      </div>
+      <p class="sec-note">এর জন্য কিছু লাগে না - না অ্যাকাউন্ট, না টাকা, না অনুমতি। লিংক খুলে ক্লাসে চালিয়ে দিন।</p>
+      <div class="grid">
+        {now.map((f) => (
+          <div class="f card">
+            <span class="tick" aria-hidden="true">✓</span>
+            <h3>{f.t}</h3>
+            <p>{f.d}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h">
+        <h2>পাইলটে হবে</h2>
+        <span class="tagpill soon">এখনো বানানো হয়নি</span>
+      </div>
+      <p class="sec-note">এগুলোর একটাও এখন নেই। পাইলটের স্কুলগুলো যেটাকে আগে দরকার বলবে, সেটাই আগে বানানো হবে।</p>
+      <div class="grid">
+        {pilot.map((f) => (
+          <div class="f card dashed">
+            <span class="tick soon" aria-hidden="true">○</span>
+            <h3>{f.t}</h3>
+            <p>{f.d}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="promise card">
+      <h2>শিক্ষার্থীর তথ্য নিয়ে আমাদের অবস্থান</h2>
+      <div class="pgrid">
+        <p><b>কোনো শিক্ষার্থীর অ্যাকাউন্ট থাকবে না।</b> পাইলটেও না, পরেও না। অ্যাকাউন্ট থাকবে শুধু শিক্ষকের, যাতে ওয়ার্কশিট আর রিপোর্ট পাওয়া যায়।</p>
+        <p><b>শিশুর নাম, ছবি, ইমেইল বা ফোন কিছুই চাওয়া হয় না।</b> কে কী পড়ল সেই হিসাব শিক্ষার্থীর নিজের ব্রাউজারেই থাকে, আমাদের সার্ভারে আসে না।</p>
+        <p><b>বিজ্ঞাপন নেই, থাকবেও না।</b> শিশুদের পাতায় বিজ্ঞাপন বসানোর কোনো পরিকল্পনা আমাদের নেই।</p>
+      </div>
+    </section>
+
+    <section class="sec" id="interest">
+      <div class="sec-h"><h2>পাইলটে আগ্রহ জানাও</h2></div>
+      <p class="sec-note">
+        ফর্মটা শিক্ষক, প্রধান শিক্ষক বা পরিচালকের জন্য - বড়দের জন্য। শিক্ষার্থীদের
+        কিছু পাঠাতে হবে না। আমরা সাধারণত এক দিনের মধ্যে উত্তর দিই।
+      </p>
+      <form class="card form" id="sform" novalidate>
+        <div class="two">
+          <label>প্রতিষ্ঠানের নাম <input name="school" required minlength="2" maxlength="100" autocomplete="organization" /></label>
+          <label>আপনার নাম <input name="person" required minlength="2" maxlength="80" autocomplete="name" /></label>
+        </div>
+        <div class="two">
+          <label>ইমেইল বা ফোন <input name="contact" required minlength="5" maxlength="120" autocomplete="email" inputmode="email" /></label>
+          <label>কত শিক্ষার্থী <input name="size" maxlength="40" inputmode="numeric" placeholder="আনুমানিক" /></label>
+        </div>
+        <label>কোন ক্লাস, কোন বিষয়ে সবচেয়ে কাজে লাগবে
+          <textarea name="message" required minlength="5" maxlength="2000" rows="5" placeholder="যেমন: ষষ্ঠ-অষ্টম শ্রেণির বিজ্ঞান, সপ্তাহে দুই দিন প্রজেক্টরে"></textarea>
+        </label>
+        <label class="hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off" /></label>
+        <button class="btn btn-primary" type="submit">পাঠাও</button>
+        <p class="msg" id="smsg" role="status" aria-live="polite"></p>
+      </form>
+      <p class="alt">
+        ফর্ম ভালো না লাগলে সরাসরি লিখুন:
+        <a href="mailto:support@posora.com">support@posora.com</a> ·
+        <a href="https://wa.me/8801771553141" rel="noopener">হোয়াটসঅ্যাপ ০১৭৭১-৫৫৩১৪১</a>
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 2.75rem; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 0.35rem; }
+
+  .hero { display: flex; flex-direction: column; gap: 0.9rem; max-width: 62ch; }
+  h1 { font-size: clamp(2.1rem, 5vw, 3.3rem); font-weight: 800; line-height: 1.14; letter-spacing: -0.01em; }
+  .lede { font-size: clamp(1.05rem, 2vw, 1.22rem); color: var(--ink-2); line-height: 1.7; }
+  .warn { font-size: 14.5px; line-height: 1.7; color: var(--ink-2); background: color-mix(in oklab, var(--sun) 13%, var(--panel));
+    border: 1px solid color-mix(in oklab, var(--sun) 40%, var(--line)); border-radius: var(--r-sm); padding: 0.85rem 1rem; }
+  .warn b { color: var(--ink); }
+  .warn em { font-style: normal; font-weight: 700; color: var(--ink); }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.3rem; }
+
+  .sec { display: flex; flex-direction: column; gap: 0.75rem; }
+  .sec-h { display: flex; align-items: baseline; gap: 0.8rem; flex-wrap: wrap; }
+  h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; }
+  .tagpill { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.25rem 0.65rem; border-radius: 999px; }
+  .tagpill.ok { background: color-mix(in oklab, var(--ok) 15%, var(--panel)); color: var(--ok); border: 1px solid color-mix(in oklab, var(--ok) 35%, var(--line)); }
+  .tagpill.soon { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+  .sec-note { font-size: 14.5px; color: var(--muted); max-width: 62ch; line-height: 1.65; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(265px, 1fr)); gap: 0.85rem; margin-top: 0.3rem; }
+  .f { padding: 1.1rem 1.2rem 1.2rem; display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.65rem; align-content: start; }
+  .f.dashed { border-style: dashed; background: transparent; box-shadow: none; }
+  .tick { grid-row: 1 / 3; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; font-size: 12px; font-weight: 700;
+    background: color-mix(in oklab, var(--ok) 16%, var(--panel)); color: var(--ok); margin-top: 2px; }
+  .tick.soon { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+  .f h3 { font-size: 16px; font-weight: 700; line-height: 1.35; }
+  .f p { font-size: 14px; color: var(--ink-2); line-height: 1.65; margin-top: 0.25rem; }
+
+  .promise { padding: 1.4rem 1.5rem 1.5rem; background: var(--brand-soft); border-color: transparent; display: flex; flex-direction: column; gap: 0.9rem; }
+  .promise h2 { color: var(--brand-ink); font-size: clamp(1.25rem, 2.5vw, 1.55rem); }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem 1.6rem; }
+  .pgrid p { font-size: 14.5px; line-height: 1.7; color: var(--brand-ink); }
+  .pgrid b { display: block; color: var(--ink); }
+
+  .form { padding: 1.4rem; display: flex; flex-direction: column; gap: 0.95rem; max-width: 760px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.95rem; }
+  label { display: flex; flex-direction: column; gap: 0.35rem; font-weight: 600; font-size: 14px; }
+  input, textarea { font: inherit; font-size: 15px; padding: 0.6rem 0.8rem; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
+  .hp { position: absolute; left: -9999px; }
+  .msg { font-size: 14px; color: var(--muted); min-height: 1.5em; }
+  .msg.ok { color: var(--ok); font-weight: 600; }
+  .msg.err { color: var(--danger); }
+  .alt { font-size: 14px; color: var(--muted); }
+  .alt a { color: var(--brand-ink); font-weight: 600; }
+  .alt a:hover { text-decoration: underline; }
+
+  @media (max-width: 620px) { .two { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { track } from '../lib/track';
+
+  const form = document.getElementById('sform') as HTMLFormElement;
+  const msg = document.getElementById('smsg')!;
+  const btn = form.querySelector('button')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const get = (k: string) => String(fd.get(k) ?? '').trim();
+    const school = get('school'), person = get('person'), contact = get('contact');
+    const size = get('size'), message = get('message');
+
+    if (school.length < 2 || person.length < 2 || contact.length < 5 || message.length < 5) {
+      msg.className = 'msg err';
+      msg.textContent = 'প্রতিষ্ঠানের নাম, আপনার নাম, যোগাযোগ আর বিষয় - চারটিই লাগবে।';
+      return;
+    }
+
+    btn.disabled = true;
+    msg.className = 'msg';
+    msg.textContent = 'পাঠানো হচ্ছে...';
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          topic: 'school',
+          name: `${person} (${school})`,
+          contact,
+          message: `প্রতিষ্ঠান: ${school}\nআনুমানিক শিক্ষার্থী: ${size || 'বলা হয়নি'}\n\n${message}`,
+          website: get('website'),
+        }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (data.ok) {
+        form.reset();
+        msg.className = 'msg ok';
+        msg.textContent = 'পৌঁছে গেছে। সাধারণত এক দিনের মধ্যে উত্তর দিই।';
+        track('school_interest');
+        return;
+      }
+      msg.className = 'msg err';
+      msg.textContent = data.error === 'email-unavailable'
+        ? 'ফর্মটা এই মুহূর্তে কাজ করছে না। সরাসরি support@posora.com-এ লিখুন।'
+        : 'পাঠানো গেল না। আরেকবার চেষ্টা করুন, বা support@posora.com-এ লিখুন।';
+    } catch {
+      msg.className = 'msg err';
+      msg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না। আরেকবার চেষ্টা করুন, বা support@posora.com-এ লিখুন।';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
