@@ -2,6 +2,7 @@
 import Admin from '../../layouts/Admin.astro';
 import { isLoggedIn } from '../../lib/auth';
 import { db, recentAudit } from '../../lib/db';
+import { bn } from '../../lib/bn';
 
 export const prerender = false;
 
@@ -28,7 +29,7 @@ const labels: Record<string, string> = {
 <Admin title="কার্যক্রম" section="activity">
   <div class="a-wrap">
     <h1 class="a-h">কার্যক্রম</h1>
-    <p class="a-sub">সাম্প্রতিক {rows.length}টি ঘটনা। ব্যর্থ লগইনও এখানে থাকে।</p>
+    <p class="a-sub">সাম্প্রতিক {bn(rows.length)}টি ঘটনা। ব্যর্থ লগইনও এখানে থাকে।</p>
 
     <div class="card">
       {

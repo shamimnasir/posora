@@ -24,6 +24,14 @@ const thisWeek = weekKey();
 const sentThisWeek = letters.filter((l) => l.week === thisWeek).length;
 
 const when = (ms: number) => new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }).format(ms);
+/**
+ * `weekKey()` is an ISO date because it is a database key. Printing it raw
+ * put "2026-09-07" in front of a reader for whom every other date on this
+ * panel reads ১২ সেপ, ২০২৬. Formatted in UTC so the day shown is the day the
+ * key means, wherever the page is rendered.
+ */
+const weekWhen = (iso: string) =>
+  new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`));
 const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
 ---
 
@@ -99,7 +107,7 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
         চাপলেও আগের পাঠানো চিঠি আবার যাবে না।
       </p>
       <p class="note">
-        এই সপ্তাহে ({thisWeek} থেকে) পাঠানো হয়েছে <b>{bn(sentThisWeek)}টি</b>।
+        এই সপ্তাহে ({weekWhen(thisWeek)} থেকে) পাঠানো হয়েছে <b>{bn(sentThisWeek)}টি</b>।
         হাতে চালাতে হলে আগে "দেখে নাও" চেপে লেখাটা পড়ুন, তারপর পাঠান।
       </p>
       <div class="wrow">
