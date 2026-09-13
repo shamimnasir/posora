@@ -361,48 +361,135 @@ const bird = (body: string, wing?: string, beak = '#f0b429'): Figure => (g) => {
 };
 /** A long low body with a ridged back and a wide snout. */
 const croc: Figure = (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.22, 24, 16), std('#4b5c3a')), 0, 0.16);
+  const skin = '#4b5c3a', dark = '#3b4a2d';
+  const b = put(g, new Mesh(new SphereGeometry(0.22, 24, 16), std(skin)), 0, 0.16);
   b.scale.set(2.1, 0.55, 0.8);
-  const s = put(g, new Mesh(new BoxGeometry(0.3, 0.1, 0.16), std('#4b5c3a')), 0.5, 0.15, 0);
-  void s;
-  for (let i = 0; i < 6; i++) put(g, new Mesh(new ConeGeometry(0.04, 0.09, 4), std('#3b4a2d')), 0.22 - i * 0.13, 0.27, 0);
-  for (const [dx, dz] of [[0.2, 0.18], [0.2, -0.18], [-0.24, 0.18], [-0.24, -0.18]] as const)
-    rod(g, '#4b5c3a', 0.035, 0.14, dx, 0.07, dz);
-  put(g, new Mesh(new ConeGeometry(0.08, 0.4, 5), std('#4b5c3a')), -0.6, 0.15, 0, 0, 0, Math.PI / 2);
+  // The snout was a rectangular slab. A crocodile is its jaw: long, tapering,
+  // and split into an upper and a lower that meet in a visible line.
+  const upper = put(g, new Mesh(new CylinderGeometry(0.055, 0.085, 0.34, 4), std(skin)), 0.52, 0.175, 0, 0, 0, -Math.PI / 2);
+  upper.scale.set(1, 1, 1.5); upper.rotation.y = Math.PI / 4;
+  const lower = put(g, new Mesh(new CylinderGeometry(0.042, 0.07, 0.32, 4), std(dark)), 0.51, 0.115, 0, 0, 0, -Math.PI / 2);
+  lower.scale.set(1, 1, 1.45); lower.rotation.y = Math.PI / 4;
+  // eyes up on top of the skull, where a crocodile's are so it can watch the
+  // bank with the rest of itself under water
+  for (const s of [1, -1]) {
+    ball(g, dark, 0.045, 0.3, 0.25, s * 0.07);
+    ball(g, '#e8dfa8', 0.026, 0.315, 0.275, s * 0.07).scale.set(1, 0.7, 1);
+  }
+  for (let i = 0; i < 6; i++) put(g, new Mesh(new ConeGeometry(0.04, 0.09, 4), std(dark)), 0.22 - i * 0.13, 0.27, 0);
+  // legs splayed out to the sides, the way a crocodile's are, not tucked under
+  for (const [dx, dz] of [[0.2, 0.18], [0.2, -0.18], [-0.24, 0.18], [-0.24, -0.18]] as const) {
+    const leg = rod(g, skin, 0.033, 0.15, dx, 0.075, dz * 1.12, dz > 0 ? -0.45 : 0.45);
+    void leg;
+    ball(g, dark, 0.035, dx, 0.02, dz * 1.32).scale.set(1.2, 0.5, 1);
+  }
+  put(g, new Mesh(new ConeGeometry(0.08, 0.4, 5), std(skin)), -0.6, 0.15, 0, 0, 0, Math.PI / 2);
 };
 /** A shell with a head and four stumps. */
 const turtle: Figure = (g) => {
-  const sh = put(g, new Mesh(new SphereGeometry(0.28, 26, 16), std('#5d6b3e')), 0, 0.2);
-  sh.scale.set(1, 0.55, 0.85);
-  ball(g, '#7d8a55', 0.1, 0.3, 0.2, 0);
-  for (const [dx, dz] of [[0.18, 0.2], [0.18, -0.2], [-0.2, 0.2], [-0.2, -0.2]] as const)
-    ball(g, '#7d8a55', 0.07, dx, 0.12, dz);
+  const shell = '#5d6b3e', skin = '#7d8a55';
+  // a dome over a flat plastron, rather than a whole squashed sphere: the
+  // underside of a turtle is flat, and that is half of its silhouette
+  const sh = put(g, new Mesh(new SphereGeometry(0.28, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.55), std(shell)), 0, 0.12);
+  sh.scale.set(1, 0.62, 0.85);
+  const plate = put(g, new Mesh(new CylinderGeometry(0.278, 0.26, 0.06, 30), std('#cbbf94')), 0, 0.11);
+  plate.scale.set(1, 1, 0.85);
+  // scutes: a ring of low plates on the dome, which is what a shell is
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const s = ball(g, new Color(shell).multiplyScalar(1.16), 0.072, Math.cos(a) * 0.165, 0.2, Math.sin(a) * 0.14);
+    s.scale.set(1, 0.45, 1);
+  }
+  ball(g, new Color(shell).multiplyScalar(1.16), 0.08, 0, 0.255, 0).scale.set(1, 0.4, 1);
+  const head = ball(g, skin, 0.095, 0.3, 0.16, 0); head.scale.set(1.2, 1, 0.95);
+  for (const s of [1, -1]) ball(g, '#1a1712', 0.018, 0.36, 0.185, s * 0.055);
+  for (const [dx, dz] of [[0.18, 0.2], [0.18, -0.2], [-0.2, 0.2], [-0.2, -0.2]] as const) {
+    const f = ball(g, skin, 0.075, dx, 0.085, dz); f.scale.set(1.1, 0.6, 0.85);
+  }
+  cone(g, skin, 0.04, 0.11, -0.3, 0.13, 0, Math.PI / 2);
 };
 /** A striped abdomen with wings: the honeybee. */
 const bee: Figure = (g) => {
-  for (let i = 0; i < 3; i++) ball(g, i % 2 ? '#2b2b2b' : '#f0b429', 0.1 - i * 0.012, -i * 0.12, 0.4);
-  for (const s of [1, -1]) {
-    const w = put(g, new Mesh(new CircleGeometry(0.13, 20), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.55, side: DoubleSide })), -0.02, 0.52, s * 0.1);
-    w.rotation.set(-0.5, 0, s * 0.4);
+  const gold = '#f0b429', black = '#2b2b2b';
+  // head, thorax, abdomen: three parts, which is what an insect is, instead of
+  // three balls of the same size in a row
+  const head = ball(g, black, 0.075, 0.15, 0.42); head.scale.set(0.9, 1, 1);
+  for (const s of [1, -1]) ball(g, '#5d5346', 0.028, 0.19, 0.44, s * 0.045);
+  for (const s of [1, -1]) { const a = rod(g, black, 0.008, 0.09, 0.2, 0.5, s * 0.03, -0.5); void a; }
+  const thorax = ball(g, gold, 0.085, 0.03, 0.42); thorax.scale.set(1.1, 1, 1);
+  const abd = ball(g, gold, 0.105, -0.13, 0.41); abd.scale.set(1.35, 1, 0.95);
+  for (let i = 0; i < 3; i++) {
+    const band = put(g, new Mesh(new TorusGeometry(0.098 - i * 0.012, 0.016, 8, 18), std(black)), -0.09 - i * 0.055, 0.41, 0, 0, Math.PI / 2, 0);
+    band.scale.set(1, 0.98, 1);
   }
+  cone(g, '#3b3228', 0.016, 0.05, -0.28, 0.41, 0, -Math.PI / 2);
+  for (const s of [1, -1]) {
+    const w = put(g, new Mesh(new CircleGeometry(0.13, 20), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.5, side: DoubleSide, roughness: 0.2 })), -0.02, 0.52, s * 0.1);
+    w.rotation.set(-0.5, 0, s * 0.4);
+    const w2 = put(g, new Mesh(new CircleGeometry(0.085, 16), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.45, side: DoubleSide, roughness: 0.2 })), -0.11, 0.49, s * 0.1);
+    w2.rotation.set(-0.4, 0, s * 0.55);
+  }
+  for (const s of [1, -1]) for (const dx of [0.09, 0.01, -0.07]) rod(g, black, 0.009, 0.1, dx, 0.35, s * 0.06, s * 0.5);
 };
-/** A dolphin-like body for the river dolphin: no dorsal fin worth speaking of. */
+/**
+ * The Ganges river dolphin. A mammal, so the tail fluke is **horizontal**.
+ *
+ * It used to be flattened on the wrong axis, giving it the upright blade of a
+ * fish, on a page whose whole job is teaching a child what a শুশুক is. It also
+ * had no flippers, no eye and no blowhole, which are the other things that
+ * separate it from the ইলিশ two shelves along.
+ */
 const dolphin: Figure = (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.26, 26, 18), std('#8e9bab')), 0, 0.34);
+  const skin = '#8e9bab', pale = '#b9c4d0';
+  const b = put(g, new Mesh(new SphereGeometry(0.26, 26, 18), std(skin)), 0, 0.34);
   b.scale.set(1.9, 0.7, 0.66);
-  cone(g, '#8e9bab', 0.07, 0.26, 0.52, 0.34, 0, -Math.PI / 2);
-  const t = put(g, new Mesh(new ConeGeometry(0.16, 0.2, 3), std('#8e9bab')), -0.5, 0.34, 0, 0, 0, Math.PI / 2);
-  t.scale.set(1, 1, 0.25);
+  const belly = put(g, new Mesh(new SphereGeometry(0.25, 22, 14), std(pale)), 0, 0.3, 0);
+  belly.scale.set(1.82, 0.48, 0.6);
+  // the long rostrum this species is known for
+  cone(g, skin, 0.055, 0.3, 0.56, 0.335, 0, -Math.PI / 2);
+  const t = put(g, new Mesh(new ConeGeometry(0.17, 0.22, 3), std(skin)), -0.52, 0.34, 0, 0, 0, Math.PI / 2);
+  t.scale.set(0.24, 1, 1);          // thin in the vertical, wide across: a fluke
+  // the low ridge that stands in for a dorsal on a river dolphin
+  const ridge = put(g, new Mesh(new ConeGeometry(0.06, 0.1, 3), std(skin)), -0.06, 0.5, 0);
+  ridge.scale.set(1.6, 1, 0.3);
+  for (const s of [1, -1]) {
+    const fl = put(g, new Mesh(new ConeGeometry(0.07, 0.2, 3), std(skin)), 0.14, 0.26, s * 0.14, 0, 0, Math.PI / 2 + 0.7);
+    fl.scale.set(1, 1, 0.22); fl.rotation.y = s * 0.6;
+  }
+  ball(g, '#1b2029', 0.02, 0.33, 0.38, 0.1);
+  ball(g, '#1b2029', 0.02, 0.33, 0.38, -0.1);
+  ball(g, '#5d6874', 0.022, 0.1, 0.5, 0).scale.set(1.3, 0.5, 1);
 };
 /** A sitting primate: rounded body, long tail, pale face. */
 const monkey: Figure = (g) => {
-  ball(g, '#8a6a48', 0.2, 0, 0.3);
-  ball(g, '#8a6a48', 0.14, 0, 0.55);
-  ball(g, '#d8bb93', 0.09, 0.06, 0.55, 0).scale.set(0.7, 1, 1);
-  for (const s of [1, -1]) ball(g, '#8a6a48', 0.05, -0.02, 0.62, s * 0.13);
-  const t = rod(g, '#8a6a48', 0.022, 0.5, -0.24, 0.3, 0, 0.5);
-  void t;
-  for (const s of [1, -1]) rod(g, '#8a6a48', 0.04, 0.22, 0.06, 0.12, s * 0.12);
+  const fur = '#8a6a48', face = '#d8bb93';
+  const body = ball(g, fur, 0.2, 0, 0.3); body.scale.set(1, 1.05, 0.92);
+  const head = ball(g, fur, 0.14, 0.01, 0.56); head.scale.set(1, 1.02, 0.96);
+  // the pale mask a macaque has, sunk into the fur rather than stuck on top
+  const mask = ball(g, face, 0.105, 0.055, 0.545, 0.02); mask.scale.set(0.62, 0.95, 1);
+  const muzzle = ball(g, face, 0.055, 0.11, 0.5, 0.03); muzzle.scale.set(0.8, 0.75, 1);
+  for (const s of [1, -1]) ball(g, '#1a1410', 0.012, 0.115, 0.505, s * 0.028);
+  for (const s of [1, -1]) {
+    ball(g, '#f4f6f8', 0.026, 0.095, 0.585, s * 0.048).scale.set(0.8, 1, 0.6);
+    disc(g, '#20170f', 0.014, 0.108, 0.585, s * 0.06, 0).rotation.y = 1.2;
+  }
+  for (const s of [1, -1]) { const e = ball(g, fur, 0.048, -0.02, 0.6, s * 0.135); e.scale.set(0.45, 1, 1); }
+  /**
+   * A curled tail: eight short segments following an arc, each turned to the
+   * tangent and thinning toward the tip. One straight stick is not a monkey's
+   * tail, and the curl is most of what the silhouette is recognised by.
+   *
+   * `rod` turns a cylinder about z, so its axis ends up along (-sin rz, cos rz);
+   * the tangent to this arc at angle `a` is parallel to that when rz = a, and a
+   * cylinder is symmetric so the direction along it does not matter.
+   */
+  const N = 8, CX = -0.3, CY = 0.42, R = 0.2;
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1);
+    const a = 0.5 + t * 2.5;
+    rod(g, fur, 0.021 - t * 0.009, 0.085, CX - Math.cos(a) * R, CY - Math.sin(a) * R * 0.85, 0, a);
+  }
+  for (const s of [1, -1]) rod(g, fur, 0.04, 0.22, 0.06, 0.12, s * 0.12);
 };
 
 /* ---------- things, tools, objects ---------- */
