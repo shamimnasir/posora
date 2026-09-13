@@ -23,16 +23,24 @@ import { createInterface } from 'node:readline';
 const ITERATIONS = 210_000;
 const MIN = 12;
 
-/** Ask on the terminal with the echo turned off, so it never reaches the screen. */
+/**
+ * Ask on the terminal with the echo turned off, so it never reaches the screen.
+ *
+ * The prompt goes to stderr and only the hash to stdout, so the whole thing
+ * can be piped straight into `wrangler secret put` with no copy and paste in
+ * between. Copying was the weak point: a hash is eighty characters of base64
+ * and a password pasted in its place, or a stray leading space, both fail the
+ * same way the real password failing does, with "পাসওয়ার্ড মেলেনি"।
+ */
 function askHidden(question) {
   return new Promise((resolve) => {
-    const out = process.stdout;
-    const write = out.write.bind(out);
+    const err = process.stderr;
+    const write = err.write.bind(err);
     let muted = false;
-    out.write = (chunk, ...rest) => (muted ? true : write(chunk, ...rest));
-    const rl = createInterface({ input: process.stdin, output: out, terminal: true });
+    err.write = (chunk, ...rest) => (muted ? true : write(chunk, ...rest));
+    const rl = createInterface({ input: process.stdin, output: err, terminal: true });
     rl.question(question, (answer) => {
-      out.write = write;
+      err.write = write;
       write('\n');
       rl.close();
       resolve(answer);
