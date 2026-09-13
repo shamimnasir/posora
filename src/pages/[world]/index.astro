@@ -20,6 +20,7 @@ import { emojiFor } from '../../data/item-emoji';
 import { catEmoji } from '../../data/cat-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
 import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
+import { sheets } from '../../data/printables';
 
 export const prerender = false;
 
@@ -126,6 +127,10 @@ const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).le
 // Sideways links between worlds, so every world is two clicks from every
 // other one rather than only reachable back through the home page.
 const otherWorlds = (await getWorlds()).filter((o) => o.slug !== w.slug);
+// The hands-on tools this world owns. They are reachable today only by landing
+// on the one category that carries them, which means a child who never opens
+// সরল যন্ত্র never learns the lever tool exists.
+const labCats = w.cats.filter((c) => c.lab);
 
 /**
  * What this world actually is, said in schema.org so a search or answer engine
@@ -355,6 +360,61 @@ const schema = [
             <button type="button" class="mini nextnew" id="next-new">পরের নতুনটা পড়ো →</button>
           </div>
         </section>
+
+        {/* এরপর কোথায় - the pocket of empty column under the model.
+
+            The right rail runs two to four hundred pixels taller than the
+            middle one on every world, so এক নজরে ended on a hole. Meanwhile the
+            only route to সংগ্রহশালা, পড়ার সিঁড়ি, the ছাপার প্যাক, this world's
+            own hands-on tools or the other ten worlds was the footer, three
+            screens down past everything. These are those destinations moved
+            into the space that was already there, each saying what is actually
+            behind it instead of only its name. */}
+        <section class="card onward" id="onward">
+          <div class="card-h"><span class="lbl">এরপর কোথায়</span><span class="lbl num">এই পাতার বাইরে</span></div>
+          <div class="ow-grid">
+            {labCats.map((c) => (
+              <a class="ow ow-lab" href={c.lab}>
+                <span class="ow-e" aria-hidden="true">🛠️</span>
+                <span class="ow-t"><b>{c.n} - হাতে-কলমে</b><small>{bn(c.items.length)}টি জিনিস নিজে টেনে চালিয়ে দেখো</small></span>
+              </a>
+            ))}
+            <a class="ow" href="/today/">
+              <span class="ow-e" aria-hidden="true">🌅</span>
+              <span class="ow-t"><b>আজকের পসরা</b><small>রোজ নতুন - দিনের একটা জিনিস, তিনটা কাজ</small></span>
+            </a>
+            <a class="ow" href="/collection/">
+              <span class="ow-e" aria-hidden="true">🗄️</span>
+              <span class="ow-t"><b>সংগ্রহশালা</b><small id="ow-coll">তুমি যা যা খুলেছ, সব এক তাকে সাজানো</small></span>
+            </a>
+            <a class="ow" href="/ladder/">
+              <span class="ow-e" aria-hidden="true">🪜</span>
+              <span class="ow-t"><b>পড়ার সিঁড়ি</b><small>সহজ থেকে কঠিন - মেপে সাজানো পথ</small></span>
+            </a>
+            <a class="ow" href="/printables/">
+              <span class="ow-e" aria-hidden="true">🖨️</span>
+              <span class="ow-t"><b>ছাপার প্যাক</b><small>{bn(sheets.length)}টি শিট, ফ্রি - অ্যাকাউন্ট লাগে না</small></span>
+            </a>
+          </div>
+
+          {/* The footer says "সব ১১টি ভুবন" and stops. Here each one can say how
+              big it is and how far this browser has already got into it, which
+              is the part a list of names can never do. */}
+          <p class="ow-h lbl">বাকি {bn(otherWorlds.length)}টি ভুবন</p>
+          <div class="ow-worlds">
+            {otherWorlds.map((o) => (
+              <a class="oww" href={o.slug === 'space' ? '/space/' : `/${o.slug}/`} style={`--o:${o.hue}`}
+                 data-w={o.slug} data-n={itemCount(o)}>
+                <span class="oww-n">{o.bn}</span>
+                <b class="oww-m">{bn(itemCount(o))}টি</b>
+              </a>
+            ))}
+          </div>
+
+          <p class="ow-foot">
+            বড়দের জন্য: <a href="/family/">পসরা পরিবার</a> · <a href="/schools/">স্কুলের জন্য</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ</a>
+          </p>
+        </section>
       </div>
 
       <aside class="info">
@@ -510,13 +570,10 @@ const schema = [
           </p>
         </div>
       </div>
-      <p class="index-worlds">
-        অন্য ভুবন:
-        {otherWorlds.map((o, i) => (
-          <>{i > 0 && <span aria-hidden="true"> · </span>}
-          <a href={o.slug === 'space' ? '/space/' : `/${o.slug}/`}>{o.bn}</a></>
-        ))}
-      </p>
+      {/* The sideways links to the other ten worlds used to be a plain row of
+          names here. এরপর কোথায় now carries the same ten as real links a few
+          hundred pixels up, each with its size and how far this browser has
+          got, so this line was the same list said worse, twice on one page. */}
       {payload.map((c, ci) => (
         <div class="index-cat">
           <h3><span class="lbl">বিভাগ {pad2(ci + 1)}</span>{c.n}</h3>
@@ -794,6 +851,42 @@ const schema = [
   .nextnew { align-self: flex-start; }
   @media (prefers-reduced-motion: reduce) { .gtrack i { transition: none; } }
 
+  /* এরপর কোথায় - destinations, not another card each */
+  .onward { overflow: hidden; }
+  .ow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 5px; padding: 0.7rem 0.8rem 0.2rem; }
+  .ow { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0.7rem;
+    padding: 0.5rem 0.6rem; border-radius: 12px; border: 1px solid transparent; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
+  .ow:hover { background: var(--panel-2); border-color: var(--line-soft); transform: translateY(-1px); }
+  .ow-e { width: 34px; height: 34px; flex: none; display: grid; place-items: center; font-size: 17px; line-height: 1; border-radius: 11px;
+    background: var(--panel-2); border: 1px solid var(--line-soft); }
+  .ow:hover .ow-e { background: var(--panel); }
+  .ow-lab .ow-e { background: color-mix(in oklab, var(--w) 16%, var(--panel)); border-color: color-mix(in oklab, var(--w) 34%, var(--line)); }
+  .ow-t { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+  .ow-t b { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
+  .ow-lab .ow-t b { color: var(--w); }
+  .ow-t small { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .ow-h { padding: 0.75rem 1.1rem 0.35rem; }
+  /* A cloud, not a grid. Ten names of very different lengths in a fixed grid
+     leave a half-empty last row at most widths; letting them wrap to their own
+     size does not, and it matches the pill cloud already on this page. Each
+     one fills from the left with how far this browser has got into it, so the
+     progress needs no second element to live in. */
+  .ow-worlds { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 1.1rem; }
+  .oww { --p: 0%; display: inline-flex; align-items: baseline; gap: 0.4rem; padding: 0.36rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--line-soft); font-size: 13px;
+    background: linear-gradient(90deg, color-mix(in oklab, var(--o) 24%, var(--panel)) var(--p), var(--panel) var(--p));
+    transition: border-color 0.15s ease, transform 0.15s ease, background 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+  .oww:hover { border-color: color-mix(in oklab, var(--o) 60%, var(--line)); transform: translateY(-1px); }
+  .oww-n { font-family: var(--font-display); font-weight: 700; display: inline-flex; align-items: baseline; gap: 0.35rem; }
+  .oww-n::before { content: ''; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--o); align-self: center; }
+  .oww-m { font-size: 11.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { .oww { transition: border-color 0.15s ease; } }
+
+  .ow-foot { padding: 0.85rem 1.1rem 1rem; font-size: 12px; color: var(--muted); }
+  .ow-foot a { color: var(--ink-2); font-weight: 600; }
+  .ow-foot a:hover { color: var(--w); }
+
   /* info rail */
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
   .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 2px; }
@@ -879,9 +972,6 @@ const schema = [
   .index { margin-top: 2.5rem; padding-top: 1.6rem; border-top: 1px solid var(--line-soft); }
   .index-h h2 { font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 800; margin: 0.2rem 0 0.5rem; }
   .index-s { font-size: 14px; color: var(--muted); line-height: 1.75; max-width: 70ch; }
-  .index-worlds { margin-top: 0.9rem; font-size: 13.5px; line-height: 2; color: var(--muted); }
-  .index-worlds :global(a) { color: var(--brand-ink); font-weight: 600; }
-  .index-worlds :global(a:hover) { text-decoration: underline; }
   /* Eighty-odd blocks of text that nobody sees until they scroll. Skipping
      their layout and paint until then costs nothing and saves the browser
      real work on a slow phone; the placeholder height keeps the scrollbar
@@ -1539,6 +1629,29 @@ const schema = [
     $('#cat-prog-n').textContent = bn(readCount(curCat, seen));
     $('#cat-prog').lastChild!.textContent = ` / ${bn(cats[curCat].items.length)} দেখা`;
     $('#cat-prog').hidden = !readable(cats[curCat]);
+    renderOnward();
+  }
+
+  /**
+   * এরপর কোথায়: how far this browser has got in the other worlds.
+   *
+   * Counted against every item a world has, not only the written ones, because
+   * a marked key can come from reading, from starring a picture or from
+   * finishing a hands-on tool - all of them are "you have been here", and all
+   * of them are one of that world's own items. The number is therefore exact
+   * and needs no clamp.
+   */
+  function renderOnward(p = getProgress()) {
+    let all = 0;
+    for (const a of root.querySelectorAll<HTMLAnchorElement>('.oww')) {
+      const seen = p.seen[a.dataset.w!]?.length ?? 0;
+      const n = +a.dataset.n!;
+      all += seen;
+      a.style.setProperty('--p', `${n ? Math.min(100, (seen / n) * 100) : 0}%`);
+      if (seen) a.querySelector('.oww-m')!.textContent = `${bn(seen)} / ${bn(n)}`;
+    }
+    all += p.seen[slug]?.length ?? 0;
+    if (all) $('#ow-coll').textContent = `এখন পর্যন্ত ${bn(all)}টি জিনিস তোমার তাকে`;
   }
 
   /* ---- selection ---- */
