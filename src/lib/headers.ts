@@ -16,7 +16,19 @@ export const CSP = [
   "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  /**
+   * Google's sign-in page has to be reachable by the admin login form.
+   *
+   * `form-action` is enforced across redirects in Chrome, so a POST to our own
+   * `/api/admin/oauth/start` that answers 303 to accounts.google.com is
+   * blocked at the second hop: the request reaches the Worker, the Worker
+   * returns the right Location, and the browser refuses to follow it without
+   * saying so. The button simply did nothing.
+   *
+   * This is the whole widening. The callback returns as a GET navigation, not
+   * a form submission, so nothing else needs listing.
+   */
+  "form-action 'self' https://accounts.google.com",
   "object-src 'none'",
   'upgrade-insecure-requests',
 ].join('; ');
