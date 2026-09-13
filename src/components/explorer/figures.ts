@@ -45,18 +45,18 @@ const put = (g: Group, m: Mesh, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) => 
 };
 /** 24x16 rather than 16x12: these are the hero of the screen now, and a
  *  faceted silhouette is the first thing that gives cheap 3D away. */
-const ball = (g: Group, c: string, r: number, x = 0, y = 0, z = 0) =>
+const ball = (g: Group, c: string | Color, r: number, x = 0, y = 0, z = 0) =>
   put(g, new Mesh(new SphereGeometry(r, 24, 16), std(c)), x, y, z);
-const box = (g: Group, c: string, w: number, h: number, d: number, x = 0, y = 0, z = 0, rz = 0) =>
+const box = (g: Group, c: string | Color, w: number, h: number, d: number, x = 0, y = 0, z = 0, rz = 0) =>
   put(g, new Mesh(new BoxGeometry(w, h, d), std(c)), x, y, z, 0, 0, rz);
-const rod = (g: Group, c: string, r: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
+const rod = (g: Group, c: string | Color, r: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
   put(g, new Mesh(new CylinderGeometry(r, r, h, 20), std(c)), x, y, z, rx, 0, rz);
 /** A tapered rod: a trunk, a branch, a stalk. Nothing in nature is a cylinder. */
-const taper = (g: Group, c: string, rTop: number, rBot: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
+const taper = (g: Group, c: string | Color, rTop: number, rBot: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
   put(g, new Mesh(new CylinderGeometry(rTop, rBot, h, 20), std(c)), x, y, z, rx, 0, rz);
-const cone = (g: Group, c: string, r: number, h: number, x = 0, y = 0, z = 0, rz = 0) =>
+const cone = (g: Group, c: string | Color, r: number, h: number, x = 0, y = 0, z = 0, rz = 0) =>
   put(g, new Mesh(new ConeGeometry(r, h, 20), std(c)), x, y, z, 0, 0, rz);
-const disc = (g: Group, c: string, r: number, x = 0, y = 0, z = 0, rx = -Math.PI / 2) =>
+const disc = (g: Group, c: string | Color, r: number, x = 0, y = 0, z = 0, rx = -Math.PI / 2) =>
   put(g, new Mesh(new CircleGeometry(r, 32), std(c, { side: DoubleSide })), x, y, z, rx);
 
 /* ---------- trees and plants ---------- */
@@ -235,20 +235,73 @@ const herb = (leaf: string, pot = '#a8643c'): Figure => (g) => {
 
 /* ---------- animals ---------- */
 /** A four-legged body with a head and tail; stripes or spots are optional. */
+/**
+ * A four-legged animal: the cow, the goat, the tiger, the deer, the elephant.
+ *
+ * All of them used to be the same shape in different colours - an ellipsoid, a
+ * ball dropped where the head goes, and four identical cylinders - so a tiger
+ * was a cow with stripes. Three things carry nearly all of the difference and
+ * none of them is a model file: a **neck** joining the head to the shoulder, a
+ * **muzzle** on the front of the head, and legs that **taper into a hoof**
+ * rather than ending in a flat disc in the grass.
+ */
 const quadruped = (body: string, opts: { stripe?: string; big?: boolean; trunk?: boolean; tail?: number } = {}): Figure => (g) => {
   const s = opts.big ? 1.25 : 1;
+  const dark = new Color(body).multiplyScalar(0.72);
   const b = put(g, new Mesh(new SphereGeometry(0.26 * s, 26, 18), std(body)), 0, 0.34 * s);
   b.scale.set(1.55, 0.82, 0.86);
-  ball(g, body, 0.17 * s, 0.38 * s, 0.44 * s);
-  for (const [dx, dz] of [[0.24, 0.13], [0.24, -0.13], [-0.24, 0.13], [-0.24, -0.13]] as const)
-    rod(g, body, 0.05 * s, 0.34 * s, dx * s, 0.17 * s, dz * s);
-  if (opts.tail) rod(g, body, 0.028, opts.tail, -0.44 * s, 0.36 * s, 0, 0.9);
-  if (opts.trunk) rod(g, body, 0.045, 0.3, 0.5 * s, 0.24 * s, 0.44 * s, 0.25);
-  if (opts.stripe) for (let i = 0; i < 5; i++)
-    put(g, new Mesh(new BoxGeometry(0.035, 0.2 * s, 0.42 * s), std(opts.stripe)), (i - 2) * 0.11 * s, 0.4 * s, 0);
-  // ears
-  ball(g, body, 0.06 * s, 0.32 * s, 0.52 * s, 0.11 * s);
-  ball(g, body, 0.06 * s, 0.32 * s, 0.52 * s, -0.11 * s);
+  // shoulder and haunch: an animal is thicker at both ends than in the middle
+  ball(g, body, 0.17 * s, 0.2 * s, 0.38 * s).scale.set(1, 0.95, 1.02);
+  ball(g, body, 0.16 * s, -0.22 * s, 0.37 * s).scale.set(1, 1, 1.04);
+  // neck, from the shoulder up to the head
+  const neck = taper(g, body, 0.085 * s, 0.13 * s, 0.22 * s, 0.32 * s, 0.42 * s, 0, -0.55);
+  void neck;
+  const head = ball(g, body, 0.15 * s, 0.42 * s, 0.5 * s); head.scale.set(1.05, 1, 0.92);
+  // muzzle: the single feature that turns a ball into an animal's face
+  const snout = put(g, new Mesh(new CylinderGeometry(0.07 * s, 0.095 * s, 0.15 * s, 16), std(body)), 0.55 * s, 0.46 * s, 0, 0, 0, -Math.PI / 2);
+  void snout;
+  ball(g, dark, 0.055 * s, 0.62 * s, 0.46 * s).scale.set(0.7, 1, 1);
+  for (const z of [1, -1]) ball(g, '#17120e', 0.024 * s, 0.5 * s, 0.545 * s, z * 0.085 * s);
+  // legs: tapered, with a darker hoof
+  for (const [dx, dz] of [[0.24, 0.13], [0.24, -0.13], [-0.24, 0.13], [-0.24, -0.13]] as const) {
+    taper(g, body, 0.042 * s, 0.062 * s, 0.3 * s, dx * s, 0.19 * s, dz * s);
+    put(g, new Mesh(new CylinderGeometry(0.05 * s, 0.045 * s, 0.06 * s, 14), std(dark)), dx * s, 0.03 * s, dz * s);
+  }
+  if (opts.tail) {
+    /**
+     * Rooted at the haunch and sweeping back and down, with a tuft at the tip.
+     * `rod` places a cylinder by its centre and turns it about z, so the axis
+     * is (-sin rz, cos rz): the root and the tip are the centre plus and minus
+     * half a length along that, and rz has to land in the second quadrant for
+     * the tip to end up behind the animal and below the root rather than
+     * sticking up over its back.
+     */
+    const L = opts.tail, rz = 2.4, ax = -Math.sin(rz), ay = Math.cos(rz);
+    const cx = -0.3 * s + ax * L / 2, cy = 0.46 * s + ay * L / 2;
+    rod(g, body, 0.022 * s, L, cx, cy, 0, rz);
+    ball(g, dark, 0.035 * s, cx + ax * L / 2, cy + ay * L / 2, 0);
+  }
+  if (opts.trunk) { taper(g, body, 0.03, 0.05, 0.32, 0.62 * s, 0.36 * s, 0, 0.35); }
+  /**
+   * Stripes that wrap the animal instead of standing off it.
+   *
+   * These were flat slabs 0.42 deep dropped at y = 0.4, so on a torso whose
+   * top curves away from the middle they stuck out of the back and the flanks
+   * as separate black tabs - a tiger wearing five plates. A half-torus sized
+   * to the body's own radius at that point arcs over the back and down both
+   * sides and stops at the belly, which is where a tiger's stripes stop too.
+   */
+  if (opts.stripe) {
+    const halfLen = 0.26 * 1.55 * s;                 // the torso ellipsoid's x semi-axis
+    for (let i = 0; i < 5; i++) {
+      const dx = (i - 2) * 0.11 * s;
+      const k = Math.sqrt(Math.max(0.15, 1 - (dx / halfLen) ** 2));
+      const band = new Mesh(new TorusGeometry(0.216 * s * k, 0.016 * s, 8, 20, Math.PI), std(opts.stripe));
+      put(g, band, dx, 0.34 * s, 0, 0, Math.PI / 2, 0);
+    }
+  }
+  // ears, set on the head rather than floating behind it
+  for (const z of [1, -1]) { const e = ball(g, body, 0.055 * s, 0.37 * s, 0.6 * s, z * 0.1 * s); e.scale.set(0.7, 1.1, 0.9); }
 };
 /** A streamlined body with fins and a forked tail. */
 const fish = (body: string, fin?: string): Figure => (g) => {
@@ -424,12 +477,39 @@ const lock = (body = '#f0b429'): Figure => (g) => {
   ball(g, '#5b452a', 0.04, 0, 0.2, 0.12);
 };
 /** An upright person: a rounded head and a simple torso. */
+/**
+ * A standing person in a long garment.
+ *
+ * The head was a bare ball with a black cap *wider* than it, the arms were two
+ * cylinders stuck to the sides of a cone, and there was no neck and no face at
+ * all, so six different people were one silhouette in six coat colours. The
+ * garment stays - it is the right stylisation at this size, and it saves
+ * modelling legs that would be four pixels wide - but a person needs a neck
+ * holding the head up, hands at the ends of the arms, and eyes.
+ */
 const person = (coat: string, skin = '#c98f5f'): Figure => (g) => {
-  ball(g, skin, 0.16, 0, 0.72);
-  const t = put(g, new Mesh(new CylinderGeometry(0.2, 0.26, 0.5, 20), std(coat)), 0, 0.32);
-  void t;
-  for (const s of [1, -1]) rod(g, coat, 0.05, 0.36, s * 0.24, 0.36, 0, s * 0.25);
-  ball(g, '#2a2a2a', 0.17, 0, 0.78).scale.set(1, 0.6, 1);
+  const trim = new Color(coat).multiplyScalar(0.78);
+  put(g, new Mesh(new CylinderGeometry(0.2, 0.3, 0.52, 28), std(coat)), 0, 0.3);
+  // a hem, so the garment ends in something rather than just stopping
+  put(g, new Mesh(new CylinderGeometry(0.305, 0.305, 0.05, 28), std(trim)), 0, 0.05);
+  const sh = ball(g, coat, 0.2, 0, 0.55); sh.scale.set(1, 0.55, 0.85);
+  rod(g, skin, 0.052, 0.1, 0, 0.62);
+  const head = ball(g, skin, 0.155, 0, 0.75); head.scale.set(0.97, 1.05, 0.95);
+  const jaw = ball(g, skin, 0.115, 0, 0.68, 0.015); jaw.scale.set(0.92, 0.8, 0.9);
+  // hair that clears the brow, not a cap pulled down over the whole head
+  const crown = put(g, new Mesh(new SphereGeometry(0.168, 22, 12, 0, Math.PI * 2, 0, Math.PI * 0.34), std('#2f261d', { roughness: 0.95 })), 0, 0.75, -0.005);
+  crown.scale.set(1, 1.04, 1);
+  const back = put(g, new Mesh(new SphereGeometry(0.162, 18, 14, Math.PI, Math.PI, 0, Math.PI * 0.6), std('#2f261d', { roughness: 0.95 })), 0, 0.75, -0.005);
+  back.scale.set(1, 1.04, 0.99);
+  for (const s of [1, -1]) {
+    rod(g, coat, 0.046, 0.34, s * 0.23, 0.36, 0, s * 0.22);
+    ball(g, skin, 0.048, s * 0.3, 0.2, 0);
+    // seated on the face: a flat iris past the eyeball's front cannot be
+    // swallowed by it, which a small sphere on a sphere always is
+    ball(g, '#f8fbff', 0.032, s * 0.058, 0.775, 0.131).scale.set(1.1, 0.9, 0.34);
+    disc(g, '#241a12', 0.016, s * 0.058, 0.775, 0.146, 0);
+  }
+  ball(g, skin, 0.026, 0, 0.745, 0.148).scale.set(0.85, 1, 1);
 };
 /** A thermometer: a tube with a bulb. */
 const thermometer: Figure = (g) => {
@@ -648,33 +728,75 @@ const house = (wall = '#e2d6bf', roof = '#a8563c'): Figure => (g) => {
 
 /* ---------- faces, one per feeling ---------- */
 /** A head with brows, eyes and a mouth built from primitives. */
+/**
+ * A face, one per feeling: the most-used figure on the site.
+ *
+ * It was a bare ball with two spheres for eyes pushed to z = 0.3 on a head of
+ * radius 0.36, which put them a third out of the surface and made every
+ * feeling read as googly-eyed surprise, over a mouth whose torus sat mostly
+ * *inside* the head and surfaced as a red gash. A sphere placed on a sphere is
+ * either swallowed or bulging, never seated, which is why the iris and the
+ * catchlight here are flat discs past the eyeball's frontmost point: a disc
+ * cannot intersect the ball behind it at any radius.
+ */
 const faceFig = (opts: { brow?: 'flat' | 'angry' | 'sad' | 'up'; eye?: 'open' | 'wide' | 'squint' | 'droop'; mouth?: 'smile' | 'frown' | 'o' | 'flat' | 'small'; cheek?: string }): Figure => (g) => {
-  const skin = '#e8b98e';
-  ball(g, skin, 0.36, 0, 0.5);
-  if (opts.cheek) for (const s of [1, -1]) ball(g, opts.cheek, 0.08, s * 0.22, 0.46, 0.27).scale.set(1, 0.7, 0.4);
+  const skin = '#e8b98e', hair = '#3a2c20';
+  const CY = 0.5, R = 0.36;
+  const head = ball(g, skin, R, 0, CY); head.scale.set(0.97, 1.04, 0.95);
+  // a jaw, so the head has a chin rather than being a perfect sphere
+  const jaw = ball(g, skin, 0.27, 0, CY - 0.16, 0.03); jaw.scale.set(0.92, 0.8, 0.9);
+  // hair in two pieces, the way the hero face does it: a crown that stops above
+  // the brow and a back that comes down past the ear
+  const crown = put(g, new Mesh(new SphereGeometry(R + 0.015, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.3), std(hair, { roughness: 0.95 })), 0, CY, -0.01);
+  crown.scale.set(0.99, 1.06, 0.99);
+  const back = put(g, new Mesh(new SphereGeometry(R + 0.008, 22, 16, Math.PI, Math.PI, 0, Math.PI * 0.62), std(hair, { roughness: 0.95 })), 0, CY, -0.01);
+  back.scale.set(1, 1.05, 0.99);
+  for (const s of [1, -1]) { const ear = ball(g, skin, 0.062, s * 0.34, CY - 0.03, 0); ear.scale.set(0.45, 1, 0.7); }
+  const nose = ball(g, skin, 0.055, 0, CY - 0.05, 0.33); nose.scale.set(0.85, 1.05, 1);
+  if (opts.cheek) for (const s of [1, -1]) ball(g, opts.cheek, 0.075, s * 0.2, CY - 0.06, 0.27).scale.set(1, 0.7, 0.35);
+
   const eye = opts.eye ?? 'open';
   for (const s of [1, -1]) {
-    if (eye === 'squint') { const b = box(g, '#2a2118', 0.12, 0.025, 0.02, s * 0.14, 0.56, 0.32); b.rotation.z = s * 0.35; }
-    else {
-      const r = eye === 'wide' ? 0.06 : 0.045;
-      ball(g, '#f8fbff', r, s * 0.14, 0.56, 0.3);
-      ball(g, '#2a2118', r * 0.55, s * 0.14, 0.56 - (eye === 'droop' ? 0.015 : 0), 0.33);
+    if (eye === 'squint') {
+      const b = box(g, '#2a2118', 0.115, 0.024, 0.02, s * 0.14, CY + 0.06, 0.336); b.rotation.z = s * 0.35;
+      continue;
+    }
+    const r = eye === 'wide' ? 0.062 : 0.05;
+    /**
+     * A flattened lens seated *at* the head's surface, not a ball in front of
+     * it. The head is scaled 0.95 in z, so its surface at the eye is only
+     * z = 0.309 - put a round eyeball at 0.336 and the whole thing clears the
+     * face and reads as a googly eye glued on. Flat front to back and centred
+     * on the surface, it reads as an eye-shaped patch instead, and the iris
+     * disc still has somewhere to sit that the lens cannot swallow.
+     */
+    const ey = CY + 0.06 - (eye === 'droop' ? 0.012 : 0);
+    const white = ball(g, '#f8fbff', r, s * 0.14, ey, 0.305);
+    white.scale.set(1.15, 0.85, 0.32);
+    const front = 0.305 + r * 0.32;
+    disc(g, '#2f2218', r * 0.5, s * 0.14, ey, front + 0.004, 0);
+    disc(g, '#100c07', r * 0.25, s * 0.14, ey, front + 0.008, 0);
+    disc(g, '#ffffff', r * 0.12, s * 0.14 - r * 0.22, ey + r * 0.3, front + 0.012, 0);
+    // a lid cap, which is what makes a droop read as a droop
+    if (eye === 'droop') {
+      const lid = put(g, new Mesh(new SphereGeometry(r * 1.14, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.44), std(skin)), s * 0.14, ey + 0.012, 0.302);
+      lid.scale.set(1.05, 0.8, 0.36); lid.rotation.x = -0.4;
     }
   }
   const brow = opts.brow ?? 'flat';
   for (const s of [1, -1]) {
-    const b = box(g, '#3b2d22', 0.14, 0.028, 0.025, s * 0.14, 0.67, 0.3);
+    const b = box(g, '#3b2d22', 0.135, 0.026, 0.024, s * 0.14, brow === 'up' ? 0.7 : 0.665, 0.3);
     b.rotation.z = brow === 'angry' ? -s * 0.45 : brow === 'sad' ? s * 0.4 : brow === 'up' ? s * 0.15 : 0;
-    if (brow === 'up') b.position.y = 0.71;
   }
   const mouth = opts.mouth ?? 'smile';
-  if (mouth === 'o') { put(g, new Mesh(new TorusGeometry(0.07, 0.025, 12, 22), std('#8a3b3b')), 0, 0.35, 0.32); }
-  else if (mouth === 'flat') box(g, '#8a3b3b', 0.18, 0.028, 0.02, 0, 0.35, 0.33);
+  // seated at z 0.345: the head's own surface at mouth height is about 0.336,
+  // so the old 0.31 buried it and only the fattest part of the tube showed
+  if (mouth === 'o') { const o = put(g, new Mesh(new TorusGeometry(0.062, 0.022, 12, 22), std('#8a3b3b')), 0, CY - 0.15, 0.335); o.scale.set(1, 1.15, 1); }
+  else if (mouth === 'flat') box(g, '#8a3b3b', 0.17, 0.024, 0.022, 0, CY - 0.15, 0.34);
   else {
-    const w = mouth === 'small' ? 0.1 : 0.15;
-    const m = put(g, new Mesh(new TorusGeometry(w, 0.028, 12, 22, Math.PI), std('#8a3b3b')), 0, 0.37, 0.31);
+    const w = mouth === 'small' ? 0.09 : 0.14;
+    const m = put(g, new Mesh(new TorusGeometry(w, 0.022, 12, 22, Math.PI), std('#8a3b3b')), 0, CY - (mouth === 'frown' ? 0.19 : 0.13), 0.345);
     m.rotation.z = mouth === 'frown' ? 0 : Math.PI;
-    if (mouth === 'frown') m.position.y = 0.31;
   }
 };
 
