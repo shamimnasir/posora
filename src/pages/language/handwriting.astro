@@ -206,6 +206,11 @@ const payload = { letters: [...vowels, ...consonants], kars };
     /* the sheet header is a print header; on a phone preview it needs to stack */
     .sheet :global(.sh-h) { flex-direction: column; gap: 0.3rem; }
   }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .tool svg { max-height: 74vh; }
+    .board canvas { max-height: 62vh; width: auto; margin-inline: auto; }
+  }
 </style>
 
 <script>

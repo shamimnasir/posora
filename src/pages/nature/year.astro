@@ -138,6 +138,14 @@ const payload = { seasons: SEASONS, months: MONTHS };
   @media (pointer: coarse) {
     .jump { min-height: 44px; padding-inline: 0.95rem; font-size: 13.5px; }
   }
+
+  /* A phone on its side has about three hundred usable pixels of height, and
+     a scene laid out for width can easily be taller than that. Capping the
+     height lets the drawing meet-fit inside its box: it scales down and
+     centres rather than running off the bottom of the screen. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .tool svg { max-height: 74vh; }
+  }
 </style>
 
 <script>
