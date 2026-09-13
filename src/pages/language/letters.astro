@@ -203,7 +203,13 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
   const KAR_ITEM = 'া ি ী ু ূ ৃ ে ৈ ো ৌ';
   const FOLA_ITEMS = new Set(['র-ফলা', 'য-ফলা', 'ব-ফলা', 'ম-ফলা']);
   const CONJ_ITEMS = new Set(['ক্ষ', 'জ্ঞ', 'ঙ্গ', 'ন্ত', 'স্থ', 'ষ্ট', 'হ্ম', 'ন্ধ', 'শ্র']);
-  const credit = (item: string) => { useItem(WORLD, CAT, item); };
+  /**
+    * Credit follows use, not arrival. Every widget renders itself once while
+    * the page is being set up, and that first pass must not tick anything off:
+    * opening a page is not the same as having done what is on it.
+    */
+  let live = false;
+  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
 
   const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', W = 'var(--w)';
   const glyph = (parent: SVGElement, x: number, y: number, size: number, fill = INK) => {
@@ -461,4 +467,7 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
     $('#q-next').addEventListener('click', ask);
     ask();
   })();
+
+  // Everything above has drawn its first frame; from here a change is a choice.
+  live = true;
 </script>

@@ -1,0 +1,443 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#6E8C2F';
+---
+<Base
+  title="সঞ্চয় ও লক্ষ্য"
+  description="লক্ষ্য ঠিক করো, দিনে কত জমাবে টেনে বদলাও, আর দেখো কবে পৌঁছাবে। মাটির ব্যাংক আর সঞ্চয়ী হিসাবের তফাত, জরুরি তহবিল, আর অপেক্ষার দাম - সবই সত্যিকারের হিসাবে।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/money/">ব্যবসা ও টাকা ম্যানেজমেন্ট</a> <span>/</span> সঞ্চয় ও লক্ষ্য</p>
+
+    <header class="head">
+      <p class="eyebrow">ব্যবসা ও টাকা ভুবন · বিভাগ পরিচিতি</p>
+      <h1>সঞ্চয় ও লক্ষ্য</h1>
+      <p class="lede">
+        সঞ্চয় মানে কম খরচ করা নয়, পরে খরচ করা। আজকের অল্প টাকাটা সরিয়ে রাখলে পরে সেটা
+        বড় কিছু হয়ে ফিরে আসে। নিচের প্রতিটা হিসাব নিজে টেনে বদলাও - সংখ্যাগুলো সত্যি,
+        বানানো নয়।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#keno" class="pill pill-w">কেন জমাবো</a>
+        <a href="#lokkho" class="pill pill-w">লক্ষ্য</a>
+        <a href="#matir" class="pill pill-w">কোথায় রাখবো</a>
+        <a href="#jruri" class="pill pill-w">জরুরি তহবিল</a>
+        <a href="#bilombito" class="pill pill-w">অপেক্ষার দাম</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- ১. কেন জমাতে হয় -->
+      <section class="tool card" id="keno">
+        <h2><span class="no">০১</span> কেন জমাতে হয়</h2>
+        <p class="how">
+          ধরো প্রতিদিন হাতখরচ পাও কিছু টাকা। তার কতটুকু সরিয়ে রাখবে, সেটা টেনে ঠিক করো।
+          এক বছর পরে কী দাঁড়ায় দেখো - অল্পটাও জমতে জমতে বড় হয়।
+        </p>
+        <div class="wide">
+          <svg id="keno-svg" viewBox="0 0 620 220" role="img" aria-label="সারা বছরের জমা, মাসে মাসে"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>দিনে হাতখরচ <input type="range" id="k-daily" min="5" max="100" step="5" value="20" aria-label="দিনে হাতখরচ, টাকা" /> <b id="k-daily-v" class="num">২০</b> টাকা</label>
+          <label>তার কতটুকু রাখবো <input type="range" id="k-keep" min="0" max="60" step="5" value="20" aria-label="কত ভাগ জমাবো" /> <b id="k-keep-v" class="num">২০</b>%</label>
+        </div>
+        <p class="readout" id="keno-out"></p>
+      </section>
+
+      <!-- ২. লক্ষ্য -->
+      <section class="tool card" id="lokkho">
+        <h2><span class="no">০২</span> লক্ষ্য ঠিক করো</h2>
+        <p class="how">
+          একটা জিনিস মনে করো যেটা তুমি কিনতে চাও। দাম কত, আর দিনে কত করে জমাতে পারবে -
+          দুটো টেনে বসাও। বয়ামটা ভরতে কতদিন লাগবে, নিচে লেখা থাকবে।
+        </p>
+        <div class="two">
+          <svg id="jar-svg" viewBox="0 0 260 300" role="img" aria-label="সঞ্চয়ের বয়াম"></svg>
+          <div class="side">
+            <label>লক্ষ্যের দাম
+              <input type="range" id="goal" min="200" max="20000" step="100" value="800" aria-label="লক্ষ্যের দাম, টাকা" />
+              <b id="goal-v" class="num">৮০০</b> টাকা
+            </label>
+            <label id="protidin">দিনে জমাবো
+              <input type="range" id="daily" min="2" max="200" step="2" value="10" aria-label="দিনে কত জমাবো, টাকা" />
+              <b id="daily-v" class="num">১০</b> টাকা
+            </label>
+            <div class="jumps" role="group" aria-label="নমুনা লক্ষ্য">
+              <button type="button" class="jump" id="chhoto" data-g="500">ছোট লক্ষ্য · একটা বই</button>
+              <button type="button" class="jump" id="boro" data-g="9000">বড় লক্ষ্য · সাইকেল</button>
+            </div>
+            <p class="readout" id="goal-out"></p>
+          </div>
+        </div>
+        <p class="readout split" id="bhag"></p>
+      </section>
+
+      <!-- ৩. কোথায় রাখবো -->
+      <section class="tool card" id="matir">
+        <h2><span class="no">০৩</span> মাটির ব্যাংক না <span id="hisab">সঞ্চয়ী হিসাব</span></h2>
+        <p class="how">
+          মাটির ব্যাংকে টাকা যতটা রাখো ঠিক ততটাই থাকে। ব্যাংকের সঞ্চয়ী হিসাবে ব্যাংক তোমাকে
+          সুদ দেয়, আর পরের বছর সেই সুদের উপরেও সুদ জমে। হাতলটা টেনে বছর এগিয়ে দাও।
+        </p>
+        <div class="wide">
+          <svg id="bank-svg" viewBox="0 0 620 270" role="img" aria-label="দুই জায়গায় জমা, বছর ধরে"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>মাসে জমা <input type="range" id="b-month" min="50" max="2000" step="50" value="300" aria-label="মাসে কত জমাবো, টাকা" /> <b id="b-month-v" class="num">৩০০</b> টাকা</label>
+          <label>বছরে সুদ <input type="range" id="b-rate" min="0" max="10" step="0.5" value="5" aria-label="বছরে সুদের হার" /> <b id="b-rate-v" class="num">৫</b>%</label>
+        </div>
+        <p class="readout" id="bank-out"></p>
+      </section>
+
+      <!-- ৪. জরুরি তহবিল -->
+      <section class="tool card" id="jruri">
+        <h2><span class="no">০৪</span> জরুরি তহবিল</h2>
+        <p class="how">
+          হঠাৎ কিছু হলে - একটা ভাঙা জিনিস, একটা ওষুধ - তখন ধার করতে না হলেই ভালো। তাই
+          আলাদা করে কিছু টাকা তুলে রাখতে হয়। মাসে কত খরচ হয় বসাও, তারপর নিচের বোতামে চাপো।
+        </p>
+        <div class="wide">
+          <svg id="fund-svg" viewBox="0 0 620 190" role="img" aria-label="জরুরি তহবিল"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>মাসের খরচ <input type="range" id="f-spend" min="500" max="20000" step="500" value="3000" aria-label="মাসে খরচ, টাকা" /> <b id="f-spend-v" class="num">৩,০০০</b> টাকা</label>
+          <label>জমা আছে <input type="range" id="f-have" min="0" max="60000" step="500" value="4000" aria-label="তহবিলে জমা আছে, টাকা" /> <b id="f-have-v" class="num">৪,০০০</b> টাকা</label>
+        </div>
+        <button type="button" class="btn" id="f-hit">হঠাৎ একটা খরচ আসুক</button>
+        <p class="readout" id="fund-out"></p>
+      </section>
+
+      <!-- ৫. বিলম্বিত তৃপ্তি -->
+      <section class="tool card" id="bilombito">
+        <h2><span class="no">০৫</span> বিলম্বিত তৃপ্তি</h2>
+        <p class="how">
+          এখনই একশো টাকা, নাকি কিছুদিন অপেক্ষা করে আরও বেশি? হাতলটা টেনে দেখো অপেক্ষার
+          দাম কত। কোনো উত্তরই ভুল নয় - দেখার বিষয়, অপেক্ষাটা তোমার কাছে কতটা দামি।
+        </p>
+        <div class="wide">
+          <svg id="wait-svg" viewBox="0 0 620 210" role="img" aria-label="এখন নাকি পরে, হাতল টানো"></svg>
+        </div>
+        <p class="readout" id="wait-out"></p>
+      </section>
+    </div>
+
+    <p class="back"><a href="/money/">← ব্যবসা ও টাকা ভুবনে ফিরে যাও</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); line-height: 1.8; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(.cost) { color: var(--muted); font-size: 13.5px; display: block; margin-top: 0.15rem; }
+  .split { border-top: 1px solid var(--line-soft); padding-top: 0.9rem; }
+
+  .wide { overflow-x: auto; padding-bottom: 4px; }
+  .wide svg { width: 100%; min-width: 440px; height: auto; display: block; touch-action: none; }
+  .two { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 1.6rem; align-items: center; }
+  .two svg { width: 100%; height: auto; display: block; }
+  .side { display: flex; flex-direction: column; gap: 0.8rem; }
+
+  .ctl-row { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 1rem; }
+  label { font-size: 13.5px; color: var(--ink-2); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .side label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.35rem 0.5rem; }
+  .side label input[type="range"] { grid-column: 1 / -1; }
+  input[type="range"] { accent-color: var(--w); min-width: 8rem; flex: 1; }
+
+  .jumps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .jump {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 0.35rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-2);
+  }
+  .jump:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); color: var(--ink); }
+  .jump[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .tool :global([role="slider"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+  #f-hit { margin-top: 1rem; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { bn, bnNum } from '../../lib/bn';
+  import { svgEl as el, clamp, fillGauge, dragTrack, alongX, useItem } from '../../lib/handson';
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const WORLD = 'money', CAT = 'সঞ্চয় ও লক্ষ্য';
+  /** Credit follows use, not arrival. See the flag flipped at the end. */
+  let live = false;
+  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const taka = (n: number) => bnNum(Math.round(n));
+
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
+    const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
+    t.textContent = s; p.appendChild(t); return t;
+  };
+  const grip = () => {
+    const g = el('g');
+    g.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    return g;
+  };
+
+  /* ---------- ১. কেন জমাতে হয় ---------- */
+  (function why() {
+    const svg = $<SVGSVGElement>('#keno-svg');
+    const X0 = 50, X1 = 590, BASE = 170, TOP = 24;
+    svg.appendChild(el('line', { x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: LINE, 'stroke-width': 2 }));
+    const bars = el('g'); svg.appendChild(bars);
+    text(svg, (X0 + X1) / 2, 200, 'বারো মাস');
+    const dailyIn = $<HTMLInputElement>('#k-daily'), dailyV = $('#k-daily-v');
+    const keepIn = $<HTMLInputElement>('#k-keep'), keepV = $('#k-keep-v'), out = $('#keno-out');
+
+    function render() {
+      const d = +dailyIn.value, pct = +keepIn.value;
+      dailyV.textContent = bn(d); keepV.textContent = bn(pct);
+      const perMonth = d * 30 * (pct / 100);
+      const year = perMonth * 12;
+      bars.replaceChildren();
+      const w = (X1 - X0) / 12 - 8;
+      for (let m = 1; m <= 12; m++) {
+        const h = year ? ((perMonth * m) / year) * (BASE - TOP) : 0;
+        bars.appendChild(el('rect', {
+          x: X0 + (m - 1) * ((X1 - X0) / 12) + 4, y: BASE - h, width: w, height: h,
+          rx: 3, fill: W, 'fill-opacity': 0.35 + (m / 12) * 0.55,
+        }));
+      }
+      out.innerHTML = pct === 0
+        ? `কিছুই রাখছো না, তাই বছর শেষে জমা <b>০ টাকা</b>। হাতলটা একটু ডানে সরাও।`
+        : `দিনে ${bn(d)} টাকার <b>${bn(pct)}%</b> মানে দিনে মাত্র <b>${taka(d * pct / 100)} টাকা</b>। এক বছরে সেটা দাঁড়ায় <b>${taka(year)} টাকা</b>।`
+          + `<span class="cost">দিনে যা সরিয়ে রাখছো তা প্রায় টেরই পাওয়া যায় না, অথচ বছর শেষে এটাই একটা সাইকেল বা এক বছরের বইয়ের দাম।</span>`;
+      credit('কেন জমাতে হয়');
+    }
+    dailyIn.addEventListener('input', render);
+    keepIn.addEventListener('input', render);
+    render();
+  })();
+
+  /* ---------- ২. লক্ষ্য ---------- */
+  (function goal() {
+    const svg = $<SVGSVGElement>('#jar-svg');
+    const X = 60, TOP = 40, BOT = 250, WID = 140;
+    svg.appendChild(el('path', { d: `M ${X} ${TOP} L ${X} ${BOT - 22} Q ${X} ${BOT} ${X + 22} ${BOT} L ${X + WID - 22} ${BOT} Q ${X + WID} ${BOT} ${X + WID} ${BOT - 22} L ${X + WID} ${TOP}`, fill: 'none', stroke: LINE, 'stroke-width': 3 }));
+    svg.appendChild(el('rect', { x: X - 8, y: TOP - 16, width: WID + 16, height: 16, rx: 4, fill: SOFT, stroke: LINE }));
+    const coins = el('rect', { x: X + 4, y: BOT, width: WID - 8, height: 0, rx: 4, fill: W, 'fill-opacity': 0.75 });
+    svg.appendChild(coins);
+    const fill = fillGauge(coins as SVGRectElement, { min: 0, max: 100, top: TOP + 8, bottom: BOT - 4 });
+    const pctTxt = text(svg, X + WID / 2, 150, '', { 'font-size': 22, fill: INK, 'font-weight': 700 });
+    text(svg, X + WID / 2, 278, 'সঞ্চয়ের বয়াম');
+
+    const goalIn = $<HTMLInputElement>('#goal'), goalV = $('#goal-v');
+    const dailyIn = $<HTMLInputElement>('#daily'), dailyV = $('#daily-v');
+    const out = $('#goal-out'), split = $('#bhag');
+    const jumps = [...root.querySelectorAll<HTMLButtonElement>('#lokkho .jump')];
+    // A day's saving is shown as progress after one month, so the jar always
+    // says something true rather than sitting empty until the very last day.
+    function render() {
+      const g = +goalIn.value, d = +dailyIn.value;
+      goalV.textContent = taka(g); dailyV.textContent = bn(d);
+      const days = Math.ceil(g / d);
+      const after30 = Math.min(100, (d * 30 / g) * 100);
+      fill(after30);
+      pctTxt.textContent = `${bn(Math.round(after30))}%`;
+      jumps.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.g! === g)));
+
+      const months = Math.floor(days / 30), rest = days % 30;
+      const when = days <= 30 ? `${bn(days)} দিনে` : `${bn(months)} মাস ${rest ? bn(rest) + ' দিনে' : 'এ'}`;
+      out.innerHTML = `${taka(g)} টাকার লক্ষ্যে দিনে ${bn(d)} টাকা করে রাখলে পৌঁছাবে <b>${when}</b>।`
+        + `<span class="cost">এক মাস পরে বয়ামের <b>${bn(Math.round(after30))}%</b> ভরবে।</span>`;
+      split.innerHTML = `<b>লক্ষ্যটা ভাগ করে নাও।</b> ${taka(g)} টাকা একসাথে ভাবলে বিরাট লাগে। ভাগ করলে দাঁড়ায় সপ্তাহে <b>${taka(d * 7)} টাকা</b>, মাসে <b>${taka(d * 30)} টাকা</b>।`
+        + `<span class="cost">বড় লক্ষ্য ছোট ছোট ভাগে ভাগ করলে প্রতিটা ভাগ সহজ হয়ে যায়, আর প্রতিটা ভাগ শেষ হলে বোঝা যায় এগোচ্ছো।</span>`;
+      credit(g <= 2000 ? 'ছোট লক্ষ্য' : 'বড় লক্ষ্য');
+      credit('প্রতিদিন অল্প');
+      credit('লক্ষ্য ভাগ করা');
+    }
+    goalIn.addEventListener('input', render);
+    dailyIn.addEventListener('input', render);
+    jumps.forEach((b) => b.addEventListener('click', () => { goalIn.value = b.dataset.g!; render(); }));
+    render();
+  })();
+
+  /* ---------- ৩. মাটির ব্যাংক না সঞ্চয়ী হিসাব ---------- */
+  (function bank() {
+    const svg = $<SVGSVGElement>('#bank-svg');
+    const X0 = 60, X1 = 560, BASE = 200, TOP = 26;
+    svg.appendChild(el('line', { x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: LINE, 'stroke-width': 2 }));
+    const potLine = el('polyline', { fill: 'none', stroke: MUTED, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const bankLine = el('polyline', { fill: 'none', stroke: W, 'stroke-width': 3.5, 'stroke-linecap': 'round' });
+    svg.append(potLine, bankLine);
+    const potTxt = text(svg, X1 + 6, 0, '', { 'text-anchor': 'start', 'font-size': 11, fill: MUTED });
+    const bankTxt = text(svg, X1 + 6, 0, '', { 'text-anchor': 'start', 'font-size': 11, fill: INK, 'font-weight': 700 });
+    svg.appendChild(el('line', { x1: 120, y1: 238, x2: 500, y2: 238, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    const yearTxt = text(svg, 310, 262, '');
+
+    const monthIn = $<HTMLInputElement>('#b-month'), monthV = $('#b-month-v');
+    const rateIn = $<HTMLInputElement>('#b-rate'), rateV = $('#b-rate-v'), out = $('#bank-out');
+    let years = 5;
+
+    function render() {
+      const m = +monthIn.value, r = +rateIn.value / 100;
+      monthV.textContent = taka(m); rateV.textContent = bn(r * 100);
+      handle.setAttribute('transform', `translate(${120 + (years / 20) * 380},238)`);
+      yearTxt.textContent = `${bn(years)} বছর`;
+
+      // month by month, so the interest lands on what is already there
+      const pot: number[] = [], acc: number[] = [];
+      let a = 0;
+      for (let y = 0; y <= years; y++) {
+        pot.push(m * 12 * y);
+        acc.push(a);
+        for (let k = 0; k < 12; k++) a = (a + m) * (1 + r / 12);
+      }
+      const top = Math.max(1, acc[acc.length - 1]!, pot[pot.length - 1]!);
+      const pt = (v: number, i: number) => `${X0 + (i / Math.max(1, years)) * (X1 - X0)},${BASE - (v / top) * (BASE - TOP)}`;
+      potLine.setAttribute('points', pot.map(pt).join(' '));
+      bankLine.setAttribute('points', acc.map(pt).join(' '));
+      const potEnd = pot[pot.length - 1]!, accEnd = acc[acc.length - 1]!;
+      potTxt.setAttribute('y', String(BASE - (potEnd / top) * (BASE - TOP) + 4));
+      potTxt.textContent = 'মাটির ব্যাংক';
+      bankTxt.setAttribute('y', String(BASE - (accEnd / top) * (BASE - TOP) - 6));
+      bankTxt.textContent = 'সঞ্চয়ী হিসাব';
+
+      const gain = accEnd - potEnd;
+      out.innerHTML = `মাসে ${taka(m)} টাকা করে ${bn(years)} বছর রাখলে মাটির ব্যাংকে জমবে <b>${taka(potEnd)} টাকা</b> - যা রেখেছো ঠিক ততটাই।`
+        + ` সঞ্চয়ী হিসাবে ${bn(r * 100)}% সুদে দাঁড়াবে <b>${taka(accEnd)} টাকা</b>, অর্থাৎ <b>${taka(gain)} টাকা</b> বেশি।`
+        + `<span class="cost">সুদ জমে সুদের উপরেও, তাই লাইনটা সোজা না হয়ে উপরে বেঁকে ওঠে। সুদের হার ব্যাংকভেদে আলাদা - এখানে ${bn(r * 100)}% ধরা হয়েছে উদাহরণ হিসেবে।</span>`;
+      credit('মাটির ব্যাংক');
+      credit('সঞ্চয়ী হিসাব');
+    }
+    monthIn.addEventListener('input', render);
+    rateIn.addEventListener('input', render);
+    const toYears = alongX(svg, 620, 120, 19);
+    dragTrack({
+      surface: svg, handle, min: 1, max: 20, step: 1, value: years,
+      toValue: (x) => toYears(x),
+      onChange: (v) => { years = v; render(); },
+      label: 'কত বছর', text: (v) => `${bn(v)} বছর`,
+    });
+    render();
+  })();
+
+  /* ---------- ৪. জরুরি তহবিল ---------- */
+  (function fund() {
+    const svg = $<SVGSVGElement>('#fund-svg');
+    const X0 = 60, WID = 500, Y = 60, H = 40;
+    svg.appendChild(el('rect', { x: X0, y: Y, width: WID, height: H, rx: 8, fill: SOFT, stroke: LINE }));
+    const have = el('rect', { x: X0, y: Y, width: 0, height: H, rx: 8, fill: W, 'fill-opacity': 0.8 });
+    svg.appendChild(have);
+    const marks = el('g'); svg.appendChild(marks);
+    text(svg, X0 + WID / 2, 140, 'তিন মাসের খরচ = নিরাপদ জায়গা');
+    const spendIn = $<HTMLInputElement>('#f-spend'), spendV = $('#f-spend-v');
+    const haveIn = $<HTMLInputElement>('#f-have'), haveV = $('#f-have-v'), out = $('#fund-out');
+
+    function render(hit?: { name: string; cost: number }) {
+      const s = +spendIn.value, h = +haveIn.value;
+      spendV.textContent = taka(s); haveV.textContent = taka(h);
+      const target = s * 3;
+      have.setAttribute('width', String(clamp(h / target, 0, 1) * WID));
+      marks.replaceChildren();
+      for (let i = 1; i <= 3; i++) {
+        const x = X0 + (i / 3) * WID;
+        marks.appendChild(el('line', { x1: x, y1: Y - 6, x2: x, y2: Y + H + 6, stroke: LINE, 'stroke-width': 2 }));
+        text(marks, x, Y + H + 22, `${bn(i)} মাস`);
+      }
+      const months = h / s;
+      const base = `তোমার তহবিলে <b>${taka(h)} টাকা</b> আছে, যা <b>${bn(Math.floor(months))} মাস</b> চলার মতো। লক্ষ্য অন্তত তিন মাস, মানে <b>${taka(target)} টাকা</b>।`;
+      out.innerHTML = hit
+        ? `${hit.name} - খরচ <b>${taka(hit.cost)} টাকা</b>। `
+          + (h >= hit.cost
+            ? `তহবিল থেকে দিয়ে দিলে থাকবে <b>${taka(h - hit.cost)} টাকা</b>। কারও কাছে হাত পাততে হলো না।`
+            : `তহবিলে আছে মাত্র ${taka(h)} টাকা, <b>${taka(hit.cost - h)} টাকা</b> কম পড়ল। এবার হয় ধার, নয় জিনিসটা বাদ।`)
+          + `<span class="cost">${base}</span>`
+        : `${base}<span class="cost">জরুরি তহবিল আলাদা রাখতে হয়, লক্ষ্যের টাকার সঙ্গে মিশিয়ে নয় - নইলে জরুরি দরকারে লক্ষ্যটাই ভেঙে যায়।</span>`;
+      credit('জরুরি তহবিল');
+    }
+    const EVENTS = [
+      { name: 'সাইকেলের চাকা পাংচার আর চেইন ছিঁড়েছে', mul: 0.12 },
+      { name: 'হঠাৎ জ্বর, ডাক্তার আর ওষুধ', mul: 0.4 },
+      { name: 'স্কুলের বই আর খাতা একসাথে কিনতে হলো', mul: 0.25 },
+      { name: 'ঘরের ফ্যানটা পুড়ে গেছে', mul: 0.6 },
+    ];
+    $('#f-hit').addEventListener('click', () => {
+      const e = EVENTS[Math.floor(Math.random() * EVENTS.length)]!;
+      render({ name: e.name, cost: Math.round(+spendIn.value * e.mul / 100) * 100 });
+    });
+    spendIn.addEventListener('input', () => render());
+    haveIn.addEventListener('input', () => render());
+    render();
+  })();
+
+  /* ---------- ৫. বিলম্বিত তৃপ্তি ---------- */
+  (function waiting() {
+    const svg = $<SVGSVGElement>('#wait-svg');
+    const X0 = 70, X1 = 550, BASE = 130;
+    const nowBar = el('rect', { x: X0, width: 90, rx: 6, fill: MUTED, 'fill-opacity': 0.5 });
+    const laterBar = el('rect', { width: 90, rx: 6, fill: W, 'fill-opacity': 0.85 });
+    svg.append(nowBar, laterBar);
+    const nowTxt = text(svg, X0 + 45, 0, '', { 'font-size': 15, fill: INK, 'font-weight': 700 });
+    const laterTxt = text(svg, 0, 0, '', { 'font-size': 15, fill: INK, 'font-weight': 700 });
+    text(svg, X0 + 45, BASE + 22, 'এখনই নিলে');
+    const laterLbl = text(svg, 0, BASE + 22, 'অপেক্ষা করলে');
+    svg.appendChild(el('line', { x1: 120, y1: 172, x2: 500, y2: 172, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    const out = $('#wait-out');
+    let days = 30;
+
+    function render() {
+      const now = 100;
+      // waiting is paid for at about two percent a week, which is roughly what
+      // a savings account gives, not a fantasy
+      const later = Math.round(now * (1 + (days / 7) * 0.02));
+      const top = Math.max(now, later);
+      const h = (v: number) => (v / top) * 90;
+      nowBar.setAttribute('y', String(BASE - h(now))); nowBar.setAttribute('height', String(h(now)));
+      nowTxt.setAttribute('y', String(BASE - h(now) - 8)); nowTxt.textContent = `${taka(now)} টাকা`;
+      const lx = X0 + 60 + (days / 90) * 320;
+      laterBar.setAttribute('x', String(lx)); laterBar.setAttribute('y', String(BASE - h(later))); laterBar.setAttribute('height', String(h(later)));
+      laterTxt.setAttribute('x', String(lx + 45)); laterTxt.setAttribute('y', String(BASE - h(later) - 8));
+      laterTxt.textContent = `${taka(later)} টাকা`;
+      laterLbl.setAttribute('x', String(lx + 45));
+      handle.setAttribute('transform', `translate(${120 + (days / 90) * 380},172)`);
+      out.innerHTML = `${bn(days)} দিন অপেক্ষা করলে ১০০ টাকা হয় <b>${taka(later)} টাকা</b> - বাড়তি <b>${taka(later - now)} টাকা</b>।`
+        + `<span class="cost">অপেক্ষার একটা দাম আছে, আর সেটাই সুদ। কিন্তু উল্টোটাও সত্যি: এখনই দরকার হলে অপেক্ষা করার কোনো মানে নেই। দুটোই ভেবে ঠিক করতে হয়।</span>`;
+      credit('বিলম্বিত তৃপ্তি');
+    }
+    const toDays = alongX(svg, 620, 120, 4.22);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 90, step: 5, value: days,
+      toValue: (x) => toDays(x),
+      onChange: (v) => { days = v; render(); },
+      label: 'কতদিন অপেক্ষা', text: (v) => `${bn(v)} দিন`,
+    });
+    render();
+  })();
+
+  // Everything above has drawn its first frame; from here a change is a choice.
+  live = true;
+</script>
