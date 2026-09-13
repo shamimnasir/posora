@@ -9,7 +9,7 @@ import {
   IcosahedronGeometry, OctahedronGeometry, TetrahedronGeometry, DodecahedronGeometry, TubeGeometry, ExtrudeGeometry,
   Shape, CatmullRomCurve3, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, Line, LineBasicMaterial, Box3, Sphere,
   MeshStandardMaterial, MeshBasicMaterial, PointLight, CanvasTexture, Sprite, SpriteMaterial,
-  DoubleSide, InstancedMesh, Matrix4,
+  DoubleSide, BackSide, InstancedMesh, Matrix4,
 } from 'three';
 import { FIGURES, arc } from './figures';
 import { dressScene, castShadows } from './render';
@@ -51,9 +51,79 @@ type Builder = (c: Ctx) => SceneObj;
 const WHITE = new Color('#ffffff'), BLACK = new Color('#000000'), GOLD = new Color('#f0b429');
 const lighten = (c: Color, k: number) => c.clone().lerp(WHITE, k);
 const darken = (c: Color, k: number) => c.clone().lerp(BLACK, k);
-const std = (color: Color | string, o: Record<string, unknown> = {}) => new MeshStandardMaterial({ color: color as Color, roughness: 0.55, metalness: 0.05, ...o });
+/**
+ * The default surface. Roughness 0.78 and no metalness, matching figures.ts.
+ *
+ * This used to be 0.55/0.05, which was invisible while there was no environment
+ * map: a faint specular sheen with nothing to reflect is just a slightly
+ * lighter colour. The moment render.ts gave every material a sky to reflect,
+ * that sheen turned into a hard plastic highlight, and thirty scenes started
+ * looking like toys mis-moulded from the same shiny polymer - a wooden plank, a
+ * cloth shirt and a clay pot all catching the same glint.
+ */
+const std = (color: Color | string, o: Record<string, unknown> = {}) => new MeshStandardMaterial({ color: color as Color, roughness: 0.78, metalness: 0, ...o });
+/** Things that genuinely are metal now have to say so, which is the point. */
+const metal = (color: Color | string, o: Record<string, unknown> = {}) => new MeshStandardMaterial({ color: color as Color, roughness: 0.28, metalness: 0.85, ...o });
+/**
+ * Glass: smooth enough to catch the sky, thin enough to see the contents.
+ *
+ * The first cut used opacity 0.28 and envMapIntensity 1.8, which looked right
+ * on a single pane and turned a jar into a frosted white tube: a vessel is
+ * several double-sided layers deep, so front wall, back wall, base and rim all
+ * composite together and a bright sky reflection lands on every one of them.
+ * What is inside has to stay the point of a jar.
+ */
+const glassy = (color: Color | string = '#d8ecf6', opacity = 0.16) => new MeshStandardMaterial({ color: color as Color, roughness: 0.06, metalness: 0.1, transparent: true, opacity, side: DoubleSide, depthWrite: false, envMapIntensity: 1.1 });
 const glow = (color: Color | string, opacity = 0.35) => new MeshBasicMaterial({ color: color as Color, transparent: true, opacity, depthWrite: false });
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+/**
+ * A seeded random, for scenes that were using Math.random() at build time.
+ * A tree that grew a different shape on every reload is not a tree the child
+ * can come back to, and it made every screenshot un-reproducible.
+ */
+function srand(seed: number) {
+  let s = seed >>> 0 || 1;
+  return (a = 0, b = 1) => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return a + ((s >>> 0) / 4294967296) * (b - a); };
+}
+/**
+ * A box with its edges taken off.
+ *
+ * Nothing in the real world has a geometrically perfect edge, and a raw
+ * BoxGeometry reads as a debug cube for exactly that reason: the edge is a
+ * single hard line with no highlight running along it. A 2-segment bevel costs
+ * almost nothing and gives every edge a catch-light, which is most of the
+ * difference between "programmer art" and "stylised on purpose". Geometries are
+ * cached because the block and bar scenes build dozens at the same size.
+ */
+const boxCache = new Map<string, ExtrudeGeometry>();
+function roundedBox(w: number, h: number, d: number, r = 0.05): ExtrudeGeometry {
+  const key = `${w}|${h}|${d}|${r}`;
+  const hit = boxCache.get(key);
+  if (hit) return hit;
+  // Quarter, not half: the shape is inset by `b` and then given corners of
+  // radius `b`, so at w/2 the corner radius exceeds the half-width left over
+  // and the curves cross into a folded, degenerate outline. A clock tick at
+  // 0.1 x 0.06 hits this immediately.
+  const b = Math.max(0.004, Math.min(r, w / 4, h / 4, d / 2 - 1e-3));
+  const W = w / 2 - b, H = h / 2 - b;
+  const s = new Shape();
+  s.moveTo(-W + b, -H);
+  s.lineTo(W - b, -H); s.quadraticCurveTo(W, -H, W, -H + b);
+  s.lineTo(W, H - b); s.quadraticCurveTo(W, H, W - b, H);
+  s.lineTo(-W + b, H); s.quadraticCurveTo(-W, H, -W, H - b);
+  s.lineTo(-W, -H + b); s.quadraticCurveTo(-W, -H, -W + b, -H);
+  const g = new ExtrudeGeometry(s, { depth: d - b * 2, bevelEnabled: true, bevelSize: b, bevelThickness: b, bevelSegments: 2, curveSegments: 2 });
+  g.translate(0, 0, -(d - b * 2) / 2);
+  g.computeVertexNormals();
+  // Shared between scenes, so the teardown in `build()` must leave it alone:
+  // disposing it when one category unmounts would pull the buffers out from
+  // under the next category that asks for the same size.
+  g.userData.shared = true;
+  boxCache.set(key, g);
+  return g;
+}
+/** A bevelled box as a mesh, positioned. The workhorse of the box-heavy scenes. */
+const rbox = (c: Color | string, w: number, h: number, d: number, r = 0.05, o: Record<string, unknown> = {}) => new Mesh(roundedBox(w, h, d, r), std(c, o));
 const hash = (x: number, y: number) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
 function noise2(x: number, y: number) {
   const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
@@ -110,9 +180,13 @@ const SCENES: Record<string, Builder> = {
     const part = (base: Vector3, dir: Vector3) => { const g = new Group(); g.position.copy(base); root.add(g); parts.push({ g, base: base.clone(), dir: dir.clone().normalize() }); return g; };
     const mark = (name: string, parent: Object3D, x: number, y: number, z: number) => { const m = new Object3D(); m.position.set(x, y, z); parent.add(m); anchors[name] = m; };
 
-    // ground
+    // The soil the tree is rooted in. It is a low mound rather than the flat
+    // dark disc it was: that disc sat at a different height from the shared
+    // ground added later, so the tree stood on two floors at once and the
+    // second one read as a sticker under the first.
     root.position.y = -0.35;   // the tree stands a little low so the exploded canopy stays in frame
-    const ground = new Mesh(new CylinderGeometry(2.6, 2.6, 0.12, 48), std('#3b5a3a', { roughness: 1 })); ground.position.y = -1.7; root.add(ground);
+    const ground = new Mesh(new SphereGeometry(2.65, 40, 20, 0, Math.PI * 2, 0, Math.PI * 0.5), std('#4a6b45', { roughness: 1, flatShading: true }));
+    ground.scale.y = 0.13; ground.position.y = -1.76; root.add(ground);
     // roots
     const roots = part(new Vector3(0, -1.75, 0), new Vector3(0, -1, 0));
     for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; const r = new Mesh(new CylinderGeometry(0.05, 0.13, 1.3, 8), std(brown)); r.position.set(Math.cos(a) * 0.55, -0.45, Math.sin(a) * 0.55); r.rotation.z = Math.cos(a) * 0.9; r.rotation.x = -Math.sin(a) * 0.9; roots.add(r); }
@@ -156,8 +230,10 @@ const SCENES: Record<string, Builder> = {
     for (let i = 0; i < 6; i++) { const sd = new Mesh(new SphereGeometry(0.07, 8, 6), std('#8b5a2b')); sd.position.set(1.1 + Math.cos(i * 1.1) * 0.35, 0.06, 1.0 + Math.sin(i * 1.1) * 0.35); sd.scale.y = 0.7; seeds.add(sd); }
     mark('বীজ', seeds, 1.1, 0.1, 1.0);
 
-    // the slider grows the tree; the engine's খুলে দেখো control pulls it apart
-    return { label: 'বড় হও', anchors, update(t, _dt, p) {
+    // the slider grows the tree; the engine's খুলে দেখো control pulls it apart.
+    // No shared ground: this scene brought its own mound, and two floors a hair
+    // apart is the z-fighting stripe that spoiled the collection scene.
+    return { label: 'বড় হও', anchors, aim: { y: 0.3, eye: 1.25 }, update(t, _dt, p) {
       const g = 0.3 + p * 0.7;
       canopy.scale.setScalar(g); flowers.scale.setScalar(Math.max(0.001, (p - 0.35) / 0.65));
       fruit.scale.setScalar(Math.max(0.001, (p - 0.6) / 0.4)); leafG.scale.setScalar(0.4 + p * 0.6);
@@ -296,8 +372,9 @@ const SCENES: Record<string, Builder> = {
     for (const s of [-1, 1]) ell(kid, std('#8b3a3a'), s * 0.19, 0, 0, 0.085, 0.13, 0.065);
     mark('কিডনি', kid, -0.36, 0.0, -0.1);
 
-    // the slider sets the pulse: resting on the left, hard exercise on the right
-    return { label: 'হৃৎস্পন্দন', anchors, update(t, _dt, p) {
+    // the slider sets the pulse: resting on the left, hard exercise on the
+    // right. `groundY` puts the floor under the soles, so the figure stands.
+    return { label: 'হৃৎস্পন্দন', anchors, groundY: -2.02, aim: { y: 0.15, eye: 1.3 }, update(t, _dt, p) {
       void parts;
       const rate = 3 + p * 7;                                   // roughly 60 to 200 beats a minute
       const beat = 1 + Math.max(0, Math.sin(t * rate)) * (0.1 + p * 0.08);
@@ -376,14 +453,25 @@ const SCENES: Record<string, Builder> = {
   },
 
   atom({ root, hue }) {
+    // Seeded, so the same element is the same atom every time the page loads.
+    const r = srand(0x4a70);
     const nuc = new Group(); root.add(nuc);
-    for (let i = 0; i < 10; i++) { const m = new Mesh(new SphereGeometry(0.22, 16, 16), std(i % 2 ? hue : lighten(hue, 0.5))); m.position.set(rnd(-0.22, 0.22), rnd(-0.22, 0.22), rnd(-0.22, 0.22)); nuc.add(m); }
+    // Nucleons packed on a small sphere rather than scattered in a cube: a
+    // nucleus is a cluster held together, and a loose cloud of balls read as
+    // neither a cluster nor a lattice.
+    for (let i = 0; i < 12; i++) {
+      const proton = i % 2 === 0;
+      const m = new Mesh(new SphereGeometry(0.21, 20, 16), std(proton ? hue : lighten(hue, 0.55)));
+      const y = 1 - (i / 11) * 2, rad = Math.sqrt(Math.max(0, 1 - y * y)), th = i * 2.399963;
+      m.position.set(Math.cos(th) * rad, y, Math.sin(th) * rad).multiplyScalar(0.19 + r(0, 0.04));
+      nuc.add(m);
+    }
     const shells: { g: Group; es: Mesh[]; r: number }[] = [];
-    [1.1, 1.7, 2.3].forEach((r, i) => {
-      const g = new Group(); g.rotation.set(rnd(0, 3), rnd(0, 3), i * 1.1); root.add(g);
-      g.add(ring(r + 0.02, r - 0.02, darken(hue, 0.2), { transparent: true, opacity: 0.55 }));
-      const es: Mesh[] = []; for (let k = 0; k < 4; k++) { const e = new Mesh(new SphereGeometry(0.11, 12, 12), std(GOLD, { emissive: GOLD, emissiveIntensity: 0.6 })); g.add(e); es.push(e); }
-      shells.push({ g, es, r });
+    [1.1, 1.7, 2.3].forEach((rad, i) => {
+      const g = new Group(); g.rotation.set(r(0, 3), r(0, 3), i * 1.1); root.add(g);
+      g.add(ring(rad + 0.015, rad - 0.015, darken(hue, 0.2), { transparent: true, opacity: 0.5 }));
+      const es: Mesh[] = []; for (let k = 0; k < 4; k++) { const e = new Mesh(new SphereGeometry(0.11, 16, 12), std(GOLD, { emissive: GOLD, emissiveIntensity: 0.8 })); g.add(e); es.push(e); }
+      shells.push({ g, es, r: rad });
     });
     return { label: 'ইলেকট্রন', update(t, _dt, p) {
       nuc.rotation.y = t * 0.3; const n = 2 + Math.round(p * 10);
@@ -392,9 +480,49 @@ const SCENES: Record<string, Builder> = {
   },
 
   particles({ root, hue, v }) {
-    const N = 140, half = 2.2; const box = new Mesh(new BoxGeometry(half * 2, half * 2, half * 2), new MeshBasicMaterial({ color: hue, wireframe: true, transparent: true, opacity: 0.25 })); root.add(box);
-    const geo = new SphereGeometry(0.13, 10, 10); const im = new InstancedMesh(geo, std(hue), N); root.add(im);
+    const N = 140, half = 2.2;
+    /**
+     * A glass case with real edges, rather than a wireframe box.
+     *
+     * `wireframe: true` is a debug view. It reads as one instantly: no
+     * thickness, no highlight, and the diagonals of every triangle showing
+     * through. Twelve bevelled bars and a faint pane cost twelve meshes and
+     * turn the same volume into a sealed vessel you could pick up.
+     */
+    const shell = new Mesh(new BoxGeometry(half * 2, half * 2, half * 2), glassy('#cfe4f2', 0.09)); root.add(shell);
+    const edgeMat = metal(lighten(hue, 0.2), { roughness: 0.36, metalness: 0.5 });
+    const span = half * 2, th = 0.075;
+    for (const axis of [0, 1, 2] as const) {
+      for (const s1 of [-1, 1]) for (const s2 of [-1, 1]) {
+        const bar = new Mesh(roundedBox(axis === 0 ? span : th, axis === 1 ? span : th, axis === 2 ? span : th, 0.03), edgeMat);
+        const q = [0, 0, 0]; const other = [0, 1, 2].filter((k) => k !== axis);
+        q[other[0]!] = s1 * half; q[other[1]!] = s2 * half;
+        bar.position.set(q[0]!, q[1]!, q[2]!);
+        root.add(bar);
+      }
+    }
+    const geo = new SphereGeometry(0.13, 12, 10);
+    // the particle colour carries the temperature too, so the slider reads as
+    // heat and not only as speed
+    const pm = std(hue, { emissive: new Color('#ff5722'), emissiveIntensity: 0 });
+    const im = new InstancedMesh(geo, pm, N); root.add(im);
     const colorB = v === 'mix' ? GOLD : hue; const im2 = v === 'mix' ? new InstancedMesh(geo, std(colorB), N) : null; if (im2) root.add(im2);
+    const cold = hue.clone(), hot = new Color('#ff8a4c');
+    /**
+     * Where the liquid state settles.
+     *
+     * The old one kept x and z on the gas lattice and randomised only y, so
+     * "liquid" came out as a coarse grid of vertical strings filling most of
+     * the box - the one state of matter the scene exists to contrast, and it
+     * did not read as a liquid at all. This is a dense pack in the bottom of
+     * the vessel with a level surface, which is what a liquid looks like.
+     */
+    const liq: Vector3[] = [];
+    const per = 7, sp = 3.9 / per;
+    for (let i = 0; i < N; i++) {
+      const layer = Math.floor(i / (per * per)), k = i % (per * per);
+      liq.push(new Vector3(((k % per) - (per - 1) / 2) * sp, -half + 0.25 + layer * 0.34, (Math.floor(k / per) - (per - 1) / 2) * sp));
+    }
     const home: Vector3[] = [], pos: Vector3[] = [], vel: Vector3[] = []; const side = Math.ceil(Math.cbrt(N));
     for (let i = 0; i < N; i++) { const x = (i % side) - side / 2 + 0.5, y = Math.floor(i / side) % side - side / 2 + 0.5, z = Math.floor(i / side / side) - side / 2 + 0.5; home.push(new Vector3(x, y, z).multiplyScalar(0.62)); pos.push(home[i].clone()); vel.push(new Vector3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1))); }
     const m4 = new Matrix4();
@@ -403,93 +531,334 @@ const SCENES: Record<string, Builder> = {
         const P = pos[i];
         if (v === 'mix') { const target = home[i].clone(); if (p < 0.5) target.x += i % 2 ? 1.2 : -1.2; P.lerp(target, 0.05); P.x += Math.sin(t * 3 + i) * 0.004 * (1 + p); }
         else if (p < 0.35) { P.lerp(home[i], 0.1); P.x += (Math.random() - 0.5) * 0.02 * (p + 0.1); P.y += (Math.random() - 0.5) * 0.02 * (p + 0.1); }
-        else if (p < 0.7) { const liq = home[i].clone(); liq.y = -half + 0.3 + ((i * 7) % 20) * 0.1; P.lerp(liq, 0.04); P.add(new Vector3(Math.sin(t * 2 + i), Math.cos(t * 1.7 + i * 2), Math.sin(t * 2.3 + i * 3)).multiplyScalar(0.012)); }
+        else if (p < 0.7) { P.lerp(liq[i]!, 0.045); P.add(new Vector3(Math.sin(t * 2 + i), Math.cos(t * 1.7 + i * 2), Math.sin(t * 2.3 + i * 3)).multiplyScalar(0.014)); }
         else { P.addScaledVector(vel[i], dt * (p * 3)); for (const k of ['x', 'y', 'z'] as const) { if (P[k] > half - 0.2 || P[k] < -half + 0.2) { vel[i][k] *= -1; P[k] = MathUtils.clamp(P[k], -half + 0.2, half - 0.2); } } }
         const target = (im2 && i % 2) ? im2 : im; m4.makeTranslation(P.x, P.y, P.z); target.setMatrixAt(i, m4);
         if (im2) (i % 2 ? im : im2).setMatrixAt(i, m4.makeScale(0, 0, 0));
       }
       im.instanceMatrix.needsUpdate = true; if (im2) im2.instanceMatrix.needsUpdate = true;
+      // cold stays the category's own colour; the warming only starts once the
+      // solid has begun to give, so the tint reads as heat and not as a filter
+      if (v !== 'mix') { pm.color.copy(cold).lerp(hot, Math.max(0, p - 0.3) / 0.7 * 0.75); pm.emissiveIntensity = Math.max(0, p - 0.65) * 0.8; }
     } };
   },
 
   wave({ root, hue }) {
-    const geo = new PlaneGeometry(7, 1.4, 140, 8); const m = new Mesh(geo, std(hue, { side: DoubleSide })); m.rotation.x = -0.35; root.add(m);
+    const geo = new PlaneGeometry(7, 1.4, 160, 8);
+    const m = new Mesh(geo, std(hue, { side: DoubleSide, roughness: 0.42, metalness: 0.12 }));
+    m.rotation.x = -0.35; root.add(m);
+    /**
+     * A rest line and a rule behind the ribbon.
+     *
+     * The slider changes the wavelength, and with nothing fixed to measure it
+     * against the change was almost invisible: the ribbon just looked busier.
+     * The marks do not move, so the wave visibly packs more crests between
+     * them as the pitch rises.
+     */
+    const guide = std('#ffffff', { transparent: true, opacity: 0.22, roughness: 0.9 });
+    const rest = new Mesh(new BoxGeometry(7.4, 0.015, 0.015), guide); rest.position.y = -0.02; root.add(rest);
+    for (let i = -3; i <= 3; i++) {
+      const tick = new Mesh(new BoxGeometry(0.02, 1.0, 0.02), guide);
+      tick.position.set(i * 1.1, 0, -0.5); root.add(tick);
+    }
     const pos = geo.attributes.position as Float32BufferAttribute; const base = Float32Array.from(pos.array as Float32Array);
-    return { label: 'সুর', update(t, _dt, p) {
-      const k = 1 + p * 4; for (let i = 0; i < pos.count; i++) { const x = base[i * 3]; pos.setZ(i, Math.sin(x * k - t * 3) * 0.45); } pos.needsUpdate = true; geo.computeVertexNormals();
+    return { label: 'সুর', aim: { y: 0, eye: 1.15 }, update(t, _dt, p) {
+      const k = 1 + p * 4;
+      // the crest is taller at the middle of the ribbon and fades to the edges,
+      // so it reads as a travelling wave rather than a corrugated sheet
+      for (let i = 0; i < pos.count; i++) {
+        const x = base[i * 3]!, y = base[i * 3 + 1]!;
+        pos.setZ(i, Math.sin(x * k - t * 3) * 0.45 * Math.cos((y / 0.7) * 0.9));
+      }
+      pos.needsUpdate = true; geo.computeVertexNormals();
     } };
   },
 
+  /** A geared train, mounted on a back plate so it reads as a mechanism rather than three coins floating in a row. */
   gears({ root, hue }) {
-    const mk = (r: number, teeth: number, color: Color) => { const g = new Group(); g.add(new Mesh(new CylinderGeometry(r, r, 0.3, 32), std(color))); for (let i = 0; i < teeth; i++) { const b = new Mesh(new BoxGeometry(0.28, 0.3, 0.22), std(color)); const a = (i / teeth) * Math.PI * 2; b.position.set(Math.cos(a) * (r + 0.1), 0, Math.sin(a) * (r + 0.1)); b.rotation.y = -a; g.add(b); } g.add(new Mesh(new CylinderGeometry(0.15, 0.15, 0.4, 16), std(darken(color, 0.4)))); g.rotation.x = Math.PI / 2; return g; };
-    const a = mk(1.2, 12, hue), b = mk(0.8, 8, lighten(hue, 0.3)), c = mk(0.55, 6, GOLD); a.position.x = -0.9; b.position.set(1.25, 0, 0); c.position.set(1.25, 1.5, 0); root.add(a, b, c);
-    return { label: 'গতি', update(_t, dt, p) { const s = dt * (0.4 + p * 2.5); a.rotation.y += s; b.rotation.y -= s * 12 / 8; c.rotation.y += s * 12 / 6; } };
+    const mk = (r: number, teeth: number, color: Color) => {
+      const g = new Group();
+      g.add(new Mesh(new CylinderGeometry(r, r, 0.3, 44), metal(color, { roughness: 0.42, metalness: 0.55 })));
+      // A recessed face and a raised hub. A gear is a machined part: it has a
+      // web, a boss and lightening holes, and the flat disc it used to be read
+      // as a token.
+      const dish = new Mesh(new CylinderGeometry(r * 0.68, r * 0.68, 0.36, 32), metal(darken(color, 0.24), { roughness: 0.5, metalness: 0.5 }));
+      g.add(dish);
+      const holes = Math.max(3, Math.round(teeth / 2));
+      for (let i = 0; i < holes; i++) {
+        const h = new Mesh(new CylinderGeometry(r * 0.15, r * 0.15, 0.4, 14), std(darken(color, 0.55)));
+        const a = (i / holes) * Math.PI * 2;
+        h.position.set(Math.cos(a) * r * 0.44, 0, Math.sin(a) * r * 0.44);
+        g.add(h);
+      }
+      for (let i = 0; i < teeth; i++) {
+        const b = new Mesh(roundedBox(0.26, 0.3, 0.22, 0.045), metal(color, { roughness: 0.42, metalness: 0.55 }));
+        const a = (i / teeth) * Math.PI * 2;
+        // roundedBox lays out w on x, h on y and d on z, exactly like the
+        // BoxGeometry it replaces, so the tooth needs the same single turn
+        b.position.set(Math.cos(a) * (r + 0.09), 0, Math.sin(a) * (r + 0.09));
+        b.rotation.y = -a;
+        g.add(b);
+      }
+      g.add(new Mesh(new CylinderGeometry(0.17, 0.17, 0.46, 20), metal('#aab2bb')));
+      g.rotation.x = Math.PI / 2;
+      return g;
+    };
+    const a = mk(1.2, 12, hue), b = mk(0.8, 8, lighten(hue, 0.3)), c = mk(0.55, 6, GOLD);
+    a.position.set(-0.9, 0, 0); b.position.set(1.25, 0, 0); c.position.set(1.25, 1.5, 0);
+    // the plate the shafts run through, set back so the gears stand proud of it
+    const plate = rbox('#79838f', 5.2, 4.4, 0.22, 0.14); plate.position.set(0.1, 0.2, -0.42); root.add(plate);
+    for (const g of [a, b, c]) {
+      const shaft = new Mesh(new CylinderGeometry(0.1, 0.1, 0.7, 14), metal('#8d959e'));
+      shaft.rotation.x = Math.PI / 2; shaft.position.copy(g.position).setZ(-0.25);
+      root.add(shaft);
+    }
+    root.add(a, b, c);
+    return { label: 'গতি', aim: { y: 0.2, eye: 1.2 }, update(_t, dt, p) { const s = dt * (0.4 + p * 2.5); a.rotation.y += s; b.rotation.y -= s * 12 / 8; c.rotation.y += s * 12 / 6; } };
   },
 
+  /** A pendulum on a stand that stands on the floor, which the old floating crossbar did not. */
   pendulum({ root, hue }) {
-    root.add(new Mesh(new BoxGeometry(3, 0.15, 0.3), std(darken(hue, 0.3))).translateY(2.2));
+    const GY = -2.0;
+    const wood = darken(hue, 0.22), woodDark = darken(hue, 0.44);
+    const beam = rbox(wood, 3.1, 0.2, 0.34, 0.06); beam.position.y = 2.2; root.add(beam);
+    for (const s of [-1, 1]) {
+      const legLen = 2.2 - GY;
+      const leg = rbox(woodDark, 0.17, legLen, 0.17, 0.05);
+      leg.position.set(s * 1.3, GY + legLen / 2, 0); leg.rotation.z = -s * 0.08;
+      const brace = rbox(woodDark, 0.13, 0.95, 0.13, 0.04);
+      brace.position.set(s * 1.02, 1.68, 0); brace.rotation.z = s * 0.76;
+      const foot = rbox(woodDark, 0.54, 0.14, 1.05, 0.05);
+      foot.position.set(s * 1.45, GY + 0.07, 0);
+      root.add(leg, brace, foot);
+    }
+    const pivot = new Mesh(new CylinderGeometry(0.09, 0.09, 0.44, 18), metal('#b9c0c8'));
+    pivot.rotation.x = Math.PI / 2; pivot.position.y = 2.2; root.add(pivot);
+
     const arm = new Group(); arm.position.y = 2.2; root.add(arm);
-    const rod = new Mesh(new CylinderGeometry(0.03, 0.03, 1, 8), std('#888')); const bob = new Mesh(new SphereGeometry(0.4, 24, 24), std(hue)); arm.add(rod, bob);
-    return { label: 'দৈর্ঘ্য', update(t, _dt, p) { const L = 1.4 + p * 2.2; rod.scale.y = L; rod.position.y = -L / 2; bob.position.y = -L; arm.rotation.z = 0.6 * Math.cos(t * Math.sqrt(9.8 / L)); } };
+    const rod = new Mesh(new CylinderGeometry(0.028, 0.028, 1, 12), metal('#aeb6bf'));
+    // A brass bob, lens-shaped with a collar where the rod enters it, rather
+    // than a ball: the shape is what tells you it is a weight and not a balloon.
+    const bob = new Group();
+    const body = new Mesh(new SphereGeometry(0.4, 30, 20), metal(GOLD, { roughness: 0.32 }));
+    body.scale.set(1, 1.15, 0.62); bob.add(body);
+    const collar = new Mesh(new CylinderGeometry(0.075, 0.11, 0.18, 16), metal('#c9a227'));
+    collar.position.y = 0.4; bob.add(collar);
+    arm.add(rod, bob);
+    return { label: 'দৈর্ঘ্য', groundY: GY, aim: { y: 0.3, eye: 1.1 }, update(t, _dt, p) {
+      const L = 1.4 + p * 2.2;
+      rod.scale.y = L; rod.position.y = -L / 2; bob.position.y = -L;
+      // the period really does go with the square root of the length, which is
+      // the whole point of the slider
+      arm.rotation.z = 0.6 * Math.cos(t * Math.sqrt(9.8 / L));
+    } };
   },
 
   ramp({ root, hue }) {
-    const g = new Group(); root.add(g); const len = 5; const plank = new Mesh(new BoxGeometry(len, 0.2, 1.6), std(darken(hue, 0.25))); g.add(plank);
-    const ball = new Mesh(new SphereGeometry(0.35, 24, 24), std(GOLD)); g.add(ball); let s = 0;
-    return { label: 'ঢাল', update(_t, dt, p) { const ang = 0.15 + p * 0.55; g.rotation.z = ang; const acc = 9.8 * Math.sin(ang) * 0.25; s += acc * dt * 1.6; ball.position.x = -len / 2 + 0.3 + s; ball.position.y = 0.45; ball.rotation.z -= dt * 3 * (1 + p); if (ball.position.x > len / 2 - 0.3) s = 0; } };
+    const GY = -1.75, len = 5;
+    const g = new Group(); g.position.y = -0.35; root.add(g);
+    const plank = rbox(darken(hue, 0.3), len, 0.2, 1.5, 0.06); g.add(plank);
+    // a lip down each edge, so the ball is running in a channel and not
+    // balancing on a slab, and battens across it so the plank has a length
+    for (const s of [-1, 1]) { const rail = rbox(darken(hue, 0.46), len, 0.17, 0.12, 0.04); rail.position.set(0, 0.13, s * 0.69); g.add(rail); }
+    for (let i = -2; i <= 2; i++) { const b = rbox(darken(hue, 0.52), 0.1, 0.07, 1.36, 0.02); b.position.set(i * 0.95, 0.12, 0); g.add(b); }
+    const ball = new Mesh(new SphereGeometry(0.35, 32, 24), metal(GOLD, { roughness: 0.3 })); g.add(ball);
+    const pivot = new Mesh(new CylinderGeometry(0.17, 0.24, 1.3, 20), std('#8a8f96')); pivot.position.y = -1.1; root.add(pivot);
+    let s = 0;
+    return { label: 'ঢাল', groundY: GY, aim: { y: 0.1, eye: 1.15 }, update(_t, dt, p) {
+      const ang = 0.15 + p * 0.55;
+      // Downhill is +x. It used to be the other way round, so for every value
+      // of the slider the ball rolled steadily up the slope and gravity read
+      // backwards - the one thing this scene exists to show.
+      g.rotation.z = -ang;
+      const acc = 9.8 * Math.sin(ang) * 0.25; s += acc * dt * 1.6;
+      ball.position.x = -len / 2 + 0.3 + s; ball.position.y = 0.45;
+      ball.rotation.z -= dt * 3 * (1 + p);
+      if (ball.position.x > len / 2 - 0.3) s = 0;
+    } };
   },
 
   prism({ root, hue }) {
-    const prism = new Mesh(new CylinderGeometry(1.2, 1.2, 1.6, 3), std(lighten(hue, 0.6), { transparent: true, opacity: 0.55, roughness: 0.1 })); prism.rotation.x = Math.PI / 2; prism.rotation.z = Math.PI; root.add(prism);
-    const beam = new Mesh(new BoxGeometry(3, 0.08, 0.08), glow('#ffffff', 0.9)); beam.position.set(-2.3, 0.2, 0); root.add(beam);
-    const cols = ['#ff3b30', '#ff9500', '#ffd60a', '#34c759', '#0a84ff', '#5e5ce6', '#bf5af2'].map((c, i) => { const r = new Mesh(new BoxGeometry(3.2, 0.07, 0.07), glow(c, 0.95)); r.position.x = 1.6; const p = new Group(); p.position.set(0.7, -0.05, 0); p.add(r); root.add(p); return p; });
+    // Real glass: smooth, and with the environment turned up so the sky bends
+    // across its faces. At roughness 0.1 with nothing to reflect it was a
+    // translucent grey wedge.
+    const prism = new Mesh(new CylinderGeometry(1.2, 1.2, 1.6, 3), glassy(lighten(hue, 0.72), 0.42));
+    prism.rotation.x = Math.PI / 2; prism.rotation.z = Math.PI; root.add(prism);
+    // the edges, which is where a real prism catches the light
+    const edge = new Mesh(new CylinderGeometry(1.21, 1.21, 1.62, 3, 1, true), std(lighten(hue, 0.5), { transparent: true, opacity: 0.35, side: DoubleSide, roughness: 0.15, metalness: 0.2 }));
+    edge.rotation.copy(prism.rotation); root.add(edge);
+    const beam = new Mesh(new BoxGeometry(3, 0.09, 0.09), glow('#ffffff', 0.9)); beam.position.set(-2.3, 0.2, 0); root.add(beam);
+    const cols = ['#ff3b30', '#ff9500', '#ffd60a', '#34c759', '#0a84ff', '#5e5ce6', '#bf5af2'].map((c) => { const r = new Mesh(new BoxGeometry(3.2, 0.08, 0.08), glow(c, 0.95)); r.position.x = 1.6; const p = new Group(); p.position.set(0.7, -0.05, 0); p.add(r); root.add(p); return p; });
     return { label: 'রং ছড়াও', update(t, _dt, p) { cols.forEach((c, i) => { c.rotation.z = -(i - 3) * (0.04 + p * 0.09); }); (beam.material as MeshBasicMaterial).opacity = 0.75 + Math.sin(t * 6) * 0.15; } };
   },
 
   circuit({ root, hue, v }) {
     const pts = [new Vector3(-2.5, -1.2, 0), new Vector3(2.5, -1.2, 0), new Vector3(2.5, 1.2, 0), new Vector3(-2.5, 1.2, 0)];
-    const curve = new CatmullRomCurve3(pts, true, 'catmullrom', 0.05); root.add(new Mesh(new TubeGeometry(curve, 120, 0.05, 8, true), std('#556')));
-    const batt = new Mesh(new BoxGeometry(0.9, 0.45, 0.45), std(hue)); batt.position.set(0, -1.2, 0); root.add(batt);
-    const bulb = new Mesh(new SphereGeometry(0.42, 24, 24), std(GOLD, { emissive: GOLD, emissiveIntensity: 0.2, transparent: true, opacity: 0.9 })); bulb.position.set(0, 1.2, 0); root.add(bulb);
-    const light = new PointLight(GOLD, 0, 6); light.position.copy(bulb.position); root.add(light);
-    const N = v === 'network' ? 24 : 14; const es: Mesh[] = []; for (let i = 0; i < N; i++) { const e = new Mesh(new SphereGeometry(0.09, 10, 10), std('#7cf', { emissive: '#7cf', emissiveIntensity: 0.8 })); root.add(e); es.push(e); }
-    return { label: 'বিদ্যুৎ প্রবাহ', update(t, _dt, p) { es.forEach((e, i) => e.position.copy(curve.getPointAt(((t * (0.05 + p * 0.25)) + i / N) % 1))); (bulb.material as MeshStandardMaterial).emissiveIntensity = 0.1 + p * 1.6; light.intensity = p * 4; } };
+    const curve = new CatmullRomCurve3(pts, true, 'catmullrom', 0.05);
+    root.add(new Mesh(new TubeGeometry(curve, 120, 0.055, 10, true), metal('#8e979f', { roughness: 0.4 })));
+    /**
+     * A battery that looks like a battery and a bulb that looks like a bulb.
+     *
+     * A coloured box and a tinted ball told a child nothing: the parts of a
+     * circuit are the one thing this scene is teaching, and they have to be
+     * recognisable as themselves before the moving dots mean anything.
+     */
+    const batt = new Group(); batt.position.set(0, -1.2, 0); root.add(batt);
+    const cell = new Mesh(new CylinderGeometry(0.3, 0.3, 1.05, 26), std(hue));
+    cell.rotation.z = Math.PI / 2; batt.add(cell);
+    batt.add(new Mesh(new CylinderGeometry(0.305, 0.305, 0.26, 26), std(darken(hue, 0.45))).rotateZ(Math.PI / 2));
+    const nub = new Mesh(new CylinderGeometry(0.1, 0.1, 0.16, 16), metal('#c8ced4'));
+    nub.rotation.z = Math.PI / 2; nub.position.x = 0.6; batt.add(nub);
+    const flat = new Mesh(new CylinderGeometry(0.3, 0.3, 0.06, 26), metal('#c8ced4'));
+    flat.rotation.z = Math.PI / 2; flat.position.x = -0.55; batt.add(flat);
+
+    const lamp = new Group(); lamp.position.set(0, 1.2, 0); root.add(lamp);
+    const envelope = new Mesh(new SphereGeometry(0.42, 28, 22), glassy('#fff8e0', 0.34));
+    envelope.position.y = 0.16; lamp.add(envelope);
+    const filament = new Mesh(new TorusGeometry(0.11, 0.022, 8, 20, Math.PI * 1.3), std(GOLD, { emissive: GOLD, emissiveIntensity: 0.2 }));
+    filament.position.y = 0.16; filament.rotation.x = Math.PI / 2; lamp.add(filament);
+    const screw = new Mesh(new CylinderGeometry(0.19, 0.22, 0.3, 20), metal('#b0a36a', { roughness: 0.45 }));
+    screw.position.y = -0.24; lamp.add(screw);
+    for (let i = 0; i < 3; i++) { const t = new Mesh(new TorusGeometry(0.2 - i * 0.006, 0.022, 6, 20), metal('#9c9060', { roughness: 0.5 })); t.position.y = -0.15 - i * 0.08; t.rotation.x = Math.PI / 2; lamp.add(t); }
+
+    const light = new PointLight(GOLD, 0, 6); light.position.set(0, 1.36, 0); root.add(light);
+    const N = v === 'network' ? 24 : 14; const es: Mesh[] = []; for (let i = 0; i < N; i++) { const e = new Mesh(new SphereGeometry(0.085, 12, 10), std('#7cf', { emissive: '#7cf', emissiveIntensity: 0.9 })); root.add(e); es.push(e); }
+    return { label: 'বিদ্যুৎ প্রবাহ', update(t, _dt, p) {
+      es.forEach((e, i) => e.position.copy(curve.getPointAt(((t * (0.05 + p * 0.25)) + i / N) % 1)));
+      (filament.material as MeshStandardMaterial).emissiveIntensity = 0.15 + p * 5;
+      (envelope.material as MeshStandardMaterial).emissive.copy(GOLD);
+      (envelope.material as MeshStandardMaterial).emissiveIntensity = p * 0.5;
+      light.intensity = p * 4;
+    } };
   },
 
   beaker({ root, hue, v }) {
-    const glass = new Mesh(new CylinderGeometry(1.1, 1, 2.6, 32, 1, true), std('#cfe6f2', { transparent: true, opacity: 0.35, side: DoubleSide, roughness: 0.1 })); root.add(glass);
-    const liquid = new Mesh(new CylinderGeometry(1.02, 0.94, 1.6, 32), std(hue, { transparent: true, opacity: 0.85 })); liquid.position.y = -0.45; root.add(liquid);
-    const bubbles: Mesh[] = []; for (let i = 0; i < 26; i++) { const b = new Mesh(new SphereGeometry(rnd(0.05, 0.13), 8, 8), std('#fff', { transparent: true, opacity: 0.8 })); b.position.set(rnd(-0.7, 0.7), rnd(-1.2, 0.3), rnd(-0.7, 0.7)); root.add(b); bubbles.push(b); }
-    const acid = new Color('#e5484d'), base = new Color('#3b82f6');
-    return { label: v === 'ph' ? 'pH' : 'বিক্রিয়ার হার', update(t, dt, p) {
-      if (v === 'ph') (liquid.material as MeshStandardMaterial).color.copy(acid).lerp(base, p);
-      const rate = v === 'ph' ? 0.5 : p; bubbles.forEach((b, i) => { b.position.y += dt * (0.4 + rate * 1.6) * (0.6 + (i % 3) * 0.3); b.position.x += Math.sin(t * 3 + i) * 0.003; if (b.position.y > 0.35) b.position.y = -1.2; b.visible = i < 6 + rate * 20; });
+    const GY = -1.32;
+    // real glass, plus the two things that say "laboratory": a rolled rim and
+    // a thicker base the vessel actually stands on
+    const glass = new Mesh(new CylinderGeometry(1.1, 1, 2.6, 40, 1, true), glassy('#d8ecf6', 0.24)); root.add(glass);
+    const rim = new Mesh(new TorusGeometry(1.1, 0.05, 8, 44), glassy('#e6f4fb', 0.5)); rim.position.y = 1.3; rim.rotation.x = Math.PI / 2; root.add(rim);
+    const base = new Mesh(new CylinderGeometry(1.02, 1.02, 0.09, 40), glassy('#d8ecf6', 0.4)); base.position.y = -1.27; root.add(base);
+    // graduation marks, so the level means something
+    for (let i = 1; i <= 4; i++) {
+      const mark = new Mesh(new BoxGeometry(0.02, 0.03, 0.26), std('#ffffff', { transparent: true, opacity: 0.55 }));
+      mark.position.set(0, -1.15 + i * 0.46, 1.02); root.add(mark);
+    }
+    const liquid = new Mesh(new CylinderGeometry(1.02, 0.94, 1.6, 40), std(hue, { transparent: true, opacity: 0.8, roughness: 0.18, metalness: 0.05 }));
+    liquid.position.y = -0.45; root.add(liquid);
+    // the surface: slightly brighter and flatter than the body, which is what
+    // makes a liquid read as having a top rather than being a coloured solid
+    const surf = new Mesh(new CircleGeometry(1.015, 40), std(lighten(hue, 0.22), { transparent: true, opacity: 0.92, roughness: 0.1, metalness: 0.2, side: DoubleSide }));
+    surf.rotation.x = -Math.PI / 2; surf.position.y = 0.35; root.add(surf);
+    const rb = srand(0x51ac);
+    const bubbles: Mesh[] = []; for (let i = 0; i < 26; i++) { const b = new Mesh(new SphereGeometry(rb(0.05, 0.13), 10, 8), glassy('#ffffff', 0.7)); b.position.set(rb(-0.7, 0.7), rb(-1.2, 0.3), rb(-0.7, 0.7)); root.add(b); bubbles.push(b); }
+    const acid = new Color('#e5484d'), base2 = new Color('#3b82f6');
+    return { label: v === 'ph' ? 'pH' : 'বিক্রিয়ার হার', groundY: GY, aim: { y: 0.05, eye: 1.1 }, update(t, dt, p) {
+      if (v === 'ph') {
+        (liquid.material as MeshStandardMaterial).color.copy(acid).lerp(base2, p);
+        (surf.material as MeshStandardMaterial).color.copy(acid).lerp(base2, p).lerp(WHITE, 0.22);
+      }
+      const rate = v === 'ph' ? 0.5 : p;
+      bubbles.forEach((b, i) => { b.position.y += dt * (0.4 + rate * 1.6) * (0.6 + (i % 3) * 0.3); b.position.x += Math.sin(t * 3 + i) * 0.003; if (b.position.y > 0.35) b.position.y = -1.2; b.visible = i < 6 + rate * 20; });
+      surf.position.y = 0.35 + Math.sin(t * 1.6) * 0.012 * (0.3 + rate);
     } };
   },
 
   molecule({ root, hue }) {
-    const g = new Group(); root.add(g); const c = new Mesh(new SphereGeometry(0.55, 24, 24), std(hue)); g.add(c);
+    const g = new Group(); root.add(g);
+    const c = new Mesh(new SphereGeometry(0.55, 32, 24), std(hue)); g.add(c);
     const dirs = [new Vector3(1, 1, 1), new Vector3(-1, -1, 1), new Vector3(-1, 1, -1), new Vector3(1, -1, -1)];
-    dirs.forEach((d, i) => { d.normalize().multiplyScalar(1.5); const a = new Mesh(new SphereGeometry(0.36, 20, 20), std(i % 2 ? GOLD : lighten(hue, 0.5))); a.position.copy(d); g.add(a); const bond = new Mesh(new CylinderGeometry(0.08, 0.08, 1.5, 8), std('#9aa')); bond.position.copy(d.clone().multiplyScalar(0.5)); bond.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), d.clone().normalize()); g.add(bond); });
-    return { label: 'ঘূর্ণন', update(_t, dt, p) { g.rotation.y += dt * (0.2 + p); g.rotation.x += dt * 0.15; } };
+    const outer: Mesh[] = [];
+    dirs.forEach((d, i) => {
+      d.normalize().multiplyScalar(1.5);
+      const a = new Mesh(new SphereGeometry(0.36, 26, 20), std(i % 2 ? GOLD : lighten(hue, 0.5)));
+      a.position.copy(d); g.add(a); outer.push(a);
+      // a bond with a collar at each end, so the stick joins the balls instead
+      // of disappearing into them
+      const bond = new Mesh(new CylinderGeometry(0.075, 0.075, 1.5, 12), metal('#9aa3ab', { roughness: 0.5 }));
+      bond.position.copy(d.clone().multiplyScalar(0.5));
+      bond.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), d.clone().normalize());
+      g.add(bond);
+    });
+    return { label: 'ঘূর্ণন', update(t, dt, p) {
+      g.rotation.y += dt * (0.2 + p); g.rotation.x += dt * 0.15;
+      // the bonds are springs: a molecule at rest still vibrates
+      outer.forEach((a, i) => a.scale.setScalar(1 + Math.sin(t * 3 + i * 1.6) * 0.035 * (0.4 + p)));
+    } };
   },
 
-  tree({ root, hue, v }) {
-    const trunkMat = std('#6b4a2b'); const leafCols = { green: new Color('#3e8e5a'), autumn: new Color('#d9822b'), bare: new Color('#3e8e5a'), spring: new Color('#e88fb0') };
-    const leafMat = std(leafCols.green); const tips: Vector3[] = []; const tree = new Group(); root.add(tree); tree.position.y = -1.6;
+  /**
+   * The growing tree.
+   *
+   * It was seeded with Math.random(), so it grew into a different tree on every
+   * reload: a child could not come back to the same tree twice, and no two
+   * screenshots of the page ever matched. It is now seeded, has a root flare
+   * where it meets the ground, and carries a crown of varied leaf clumps
+   * rather than forty identical balls at eight segments each.
+   */
+  tree({ root, v }) {
+    const GY = -1.6;
+    const rr = srand(0x7ee5);
+    const trunkMat = std('#6b4a2b', { roughness: 0.92 });
+    const leafCols = { green: new Color('#3e8e5a'), autumn: new Color('#d9822b'), spring: new Color('#e88fb0') };
+    const leafMat = std(leafCols.green, { roughness: 0.86, flatShading: true });
+    const tips: Vector3[] = []; const tree = new Group(); root.add(tree); tree.position.y = GY;
     const grow = (from: Vector3, dir: Vector3, len: number, r: number, depth: number) => {
-      const b = new Mesh(new CylinderGeometry(r * 0.65, r, len, 7), trunkMat); b.position.copy(from.clone().addScaledVector(dir, len / 2)); b.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), dir); tree.add(b);
-      const end = from.clone().addScaledVector(dir, len); if (depth === 0) { tips.push(end); return; }
-      for (let i = 0; i < 3; i++) { const nd = dir.clone().add(new Vector3(rnd(-0.7, 0.7), rnd(0.2, 0.6), rnd(-0.7, 0.7))).normalize(); grow(end, nd, len * 0.68, r * 0.62, depth - 1); }
+      const b = new Mesh(new CylinderGeometry(r * 0.62, r, len, depth > 1 ? 10 : 6), trunkMat);
+      b.position.copy(from.clone().addScaledVector(dir, len / 2));
+      b.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), dir); tree.add(b);
+      const end = from.clone().addScaledVector(dir, len);
+      if (depth === 0) { tips.push(end); return; }
+      // a knuckle where the branch forks, so the joins are not open tube ends
+      const joint = new Mesh(new SphereGeometry(r * 0.72, 8, 6), trunkMat);
+      joint.position.copy(end); tree.add(joint);
+      for (let i = 0; i < 3; i++) {
+        const nd = dir.clone().add(new Vector3(rr(-0.7, 0.7), rr(0.2, 0.6), rr(-0.7, 0.7))).normalize();
+        grow(end, nd, len * 0.68, r * 0.62, depth - 1);
+      }
     };
     grow(new Vector3(0, 0, 0), new Vector3(0, 1, 0), 1.3, 0.22, 3);
-    const leaves = new InstancedMesh(new SphereGeometry(0.28, 8, 8), leafMat, tips.length); tree.add(leaves); const m4 = new Matrix4(); tips.forEach((t, i) => leaves.setMatrixAt(i, m4.makeTranslation(t.x, t.y, t.z)));
-    let sun: Mesh | null = null, o2: Mesh[] = [];
-    if (v === 'photo') { sun = new Mesh(new SphereGeometry(0.5, 20, 20), std(GOLD, { emissive: GOLD, emissiveIntensity: 1 })); sun.position.set(2.6, 3.6, -1); root.add(sun); for (let i = 0; i < 10; i++) { const b = new Mesh(new SphereGeometry(0.08, 8, 8), std('#bfe9ff', { transparent: true, opacity: 0.9 })); root.add(b); o2.push(b); } }
-    return { label: v === 'season' ? 'ঋতু' : v === 'photo' ? 'সূর্যের আলো' : 'বড় হওয়া', update(t, dt, p) {
-      if (v === 'season') { const c = p < 0.33 ? leafCols.green.clone().lerp(leafCols.autumn, p * 3) : p < 0.66 ? leafCols.autumn : leafCols.spring; leafMat.color.copy(c); leaves.visible = !(p >= 0.33 && p < 0.66 && ((t * 2) | 0) % 1 === 1) ; leaves.scale.setScalar(p >= 0.33 && p < 0.66 ? 0.35 : 1); tree.rotation.z = Math.sin(t) * 0.03; }
-      else if (v === 'photo') { const s = 0.3 + p; sun!.scale.setScalar(s); (sun!.material as MeshStandardMaterial).emissiveIntensity = 0.3 + p * 1.5; leafMat.color.copy(darken(leafCols.green, 0.4)).lerp(leafCols.green, p); o2.forEach((b, i) => { b.visible = i < p * 10; b.position.y += dt * 0.8; if (b.position.y > 3.2) { const tip = tips[i % tips.length]; b.position.set(tip.x, tip.y - 1.6, tip.z); } }); tree.rotation.z = Math.sin(t * 0.8) * 0.02; }
-      else { const s = 0.08 + p * 0.92; tree.scale.setScalar(s); leaves.visible = p > 0.35; tree.rotation.z = Math.sin(t * 0.8) * 0.02 * s; }
+    // the flare where trunk meets soil: without it a tree is a pole pushed into
+    // the ground, and that reads wrong even to someone who cannot say why
+    const flare = new Mesh(new CylinderGeometry(0.23, 0.44, 0.34, 12), trunkMat);
+    flare.position.y = 0.14; tree.add(flare);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + rr(0, 0.5);
+      const rt = new Mesh(new CylinderGeometry(0.04, 0.1, 0.5, 6), trunkMat);
+      rt.position.set(Math.cos(a) * 0.26, 0.06, Math.sin(a) * 0.26);
+      rt.rotation.z = Math.cos(a) * 1.1; rt.rotation.x = -Math.sin(a) * 1.1; tree.add(rt);
+    }
+    // Leaf clumps, each a different size, tilt and green. Flat-shaded
+    // icosahedra rather than 8-segment spheres: the facets are the style, and
+    // they cost fewer triangles than the smooth balls they replace.
+    const leaves = new InstancedMesh(new IcosahedronGeometry(0.3, 0), leafMat, tips.length);
+    tree.add(leaves);
+    const m4 = new Matrix4(), sv = new Vector3();
+    tips.forEach((tp, i) => {
+      const s = rr(0.82, 1.35);
+      m4.makeRotationY(rr(0, 6.28)); m4.scale(sv.set(s * 1.15, s * 0.86, s * 1.15));
+      m4.setPosition(tp.x, tp.y, tp.z);
+      leaves.setMatrixAt(i, m4);
+      leaves.setColorAt(i, leafCols.green.clone().offsetHSL(rr(-0.035, 0.035), rr(-0.06, 0.06), rr(-0.07, 0.07)));
+    });
+    if (leaves.instanceColor) leaves.instanceColor.needsUpdate = true;
+    let sun: Mesh | null = null; const o2: Mesh[] = [];
+    if (v === 'photo') {
+      sun = new Mesh(new SphereGeometry(0.5, 24, 18), std(GOLD, { emissive: GOLD, emissiveIntensity: 1 }));
+      sun.position.set(2.6, 3.6, -1); root.add(sun);
+      for (let i = 0; i < 10; i++) { const b = new Mesh(new SphereGeometry(0.08, 10, 8), glassy('#bfe9ff', 0.85)); root.add(b); o2.push(b); }
+    }
+    return { label: v === 'photo' ? 'সূর্যের আলো' : 'বড় হওয়া', groundY: GY, aim: { y: 0.35, eye: 1.2 }, update(t, dt, p) {
+      if (v === 'photo') {
+        const s = 0.3 + p; sun!.scale.setScalar(s);
+        (sun!.material as MeshStandardMaterial).emissiveIntensity = 0.3 + p * 1.5;
+        leafMat.color.copy(darken(leafCols.green, 0.4)).lerp(leafCols.green, p);
+        o2.forEach((b, i) => { b.visible = i < p * 10; b.position.y += dt * 0.8; if (b.position.y > 3.2) { const tip = tips[i % tips.length]!; b.position.set(tip.x, tip.y + GY, tip.z); } });
+        tree.rotation.z = Math.sin(t * 0.8) * 0.02;
+      } else {
+        const s = 0.08 + p * 0.92; tree.scale.setScalar(s);
+        leaves.visible = p > 0.35; tree.rotation.z = Math.sin(t * 0.8) * 0.02 * s;
+      }
     } };
   },
 
@@ -509,13 +878,24 @@ const SCENES: Record<string, Builder> = {
   },
 
   weather({ root, hue, v }) {
-    const cloud = new Group(); cloud.position.y = 1.8; root.add(cloud); const cm = std('#e8eef4');
-    for (let i = 0; i < 9; i++) { const s = new Mesh(new SphereGeometry(rnd(0.45, 0.8), 16, 16), cm); s.position.set(rnd(-1.6, 1.6), rnd(-0.2, 0.35), rnd(-0.5, 0.5)); cloud.add(s); }
+    const cloud = new Group(); cloud.position.y = 1.8; root.add(cloud); const cm = std('#e8eef4', { roughness: 1, flatShading: true });
+    // Seeded, and two tiers: a flat grey base and puffier tops. A cloud read
+    // from below is mostly a flat underside, and nine equal balls did not.
+    const rw = srand(0x3c10);
+    for (let i = 0; i < 11; i++) {
+      const top = i > 5;
+      const s = new Mesh(new SphereGeometry(rw(top ? 0.42 : 0.55, top ? 0.72 : 0.92), 16, 12), cm);
+      s.position.set(rw(-1.65, 1.65), top ? rw(0.18, 0.5) : rw(-0.18, 0.06), rw(-0.5, 0.5));
+      s.scale.y = top ? 0.85 : 0.55;
+      cloud.add(s);
+    }
     const N = 260; const arr = new Float32Array(N * 3); for (let i = 0; i < N; i++) { arr[i * 3] = rnd(-2, 2); arr[i * 3 + 1] = rnd(-2.5, 1.5); arr[i * 3 + 2] = rnd(-0.8, 0.8); }
     const rg = new BufferGeometry(); rg.setAttribute('position', new Float32BufferAttribute(arr, 3)); const rain = new Points(rg, new PointsMaterial({ color: lighten(hue, 0.3), size: 0.07, transparent: true, opacity: 0.9 })); root.add(rain);
     const bolt = new Line(new BufferGeometry().setFromPoints([new Vector3(0.2, 1.4, 0), new Vector3(-0.2, 0.6, 0), new Vector3(0.25, 0.2, 0), new Vector3(-0.15, -0.9, 0)]), new LineBasicMaterial({ color: '#fff3a0' })); bolt.visible = false; root.add(bolt);
     const flash = new PointLight('#fff3a0', 0, 8); flash.position.set(0, 1, 1); root.add(flash); let next = 2;
-    return { label: 'ঝড়ের তীব্রতা', update(t, dt, p) {
+    // the rain resets at y = -2.5, so the ground sits just under that and the
+    // drops land on something instead of vanishing in mid air
+    return { label: 'ঝড়ের তীব্রতা', groundY: -2.55, aim: { y: 0.25, eye: 1.3 }, update(t, dt, p) {
       const pa = rg.attributes.position as Float32BufferAttribute; const n = Math.floor(N * (0.15 + p * 0.85)); for (let i = 0; i < N; i++) { let y = pa.getY(i) - dt * (2 + p * 6); if (y < -2.5) y = 1.5; pa.setY(i, i < n ? y : 99); } pa.needsUpdate = true;
       cloud.position.x = Math.sin(t * 0.3) * 0.3; cm.color.copy(new Color('#e8eef4')).lerp(new Color('#5b6675'), p * (v === 'storm' ? 1 : 0.7));
       if (t > next) { bolt.visible = true; flash.intensity = 6 * p; next = t + rnd(1.5, 5) / (0.2 + p); } else { flash.intensity *= 0.85; if (flash.intensity < 0.2) bolt.visible = false; }
@@ -526,122 +906,507 @@ const SCENES: Record<string, Builder> = {
     const S = 8, seg = 70; const geo = new PlaneGeometry(S, S, seg, seg); geo.rotateX(-Math.PI / 2); const pos = geo.attributes.position as Float32BufferAttribute; const colors = new Float32Array(pos.count * 3); const c = new Color();
     const water = new Color('#2b7bd6'), sand = new Color('#d9c08a'), grass = new Color('#3e8e5a'), rock = new Color('#7a6a58'), snow = new Color('#f3f6f8');
     const paint = (p: number) => { for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i); let h = fbm2(x * 0.35 + 3, z * 0.35 + 7) * 2.6 - 1.1; if (v === 'farm') h = Math.sin(x * 3) * 0.08 + 0.1; if (v === 'delta') h = h * 0.4 - 0.15 + Math.max(0, Math.abs(Math.sin(x * 0.6 + z * 0.3)) - 0.7) * -1; h *= 0.4 + p * 1.2; pos.setY(i, h); c.copy(h < 0 ? water : h < 0.15 ? sand : h < 0.9 ? grass : h < 1.5 ? rock : snow); if (v === 'farm') c.copy(grass).lerp(new Color('#7bb661'), (Math.sin(x * 3) + 1) / 2); colors.set([c.r, c.g, c.b], i * 3); } pos.needsUpdate = true; geo.setAttribute('color', new Float32BufferAttribute(colors, 3)); geo.computeVertexNormals(); };
-    paint(0.5); const m = new Mesh(geo, std('#fff', { vertexColors: true, flatShading: true })); m.position.y = -1; root.add(m);
-    const sea = new Mesh(new PlaneGeometry(S, S), std(water, { transparent: true, opacity: 0.6 })); sea.rotation.x = -Math.PI / 2; sea.position.y = -1 + 0.01; root.add(sea);
+    paint(0.5); const m = new Mesh(geo, std('#fff', { vertexColors: true, flatShading: true, roughness: 0.95 })); m.position.y = -1; root.add(m);
+    // Water that reflects. At roughness 0.78 the sea was the same matte
+    // material as the hillside next to it, in a different colour; smooth and
+    // faintly metallic, it picks up the sky and reads as water.
+    const sea = new Mesh(new PlaneGeometry(S, S), std(water, { transparent: true, opacity: 0.72, roughness: 0.08, metalness: 0.3, envMapIntensity: 1.5 }));
+    sea.rotation.x = -Math.PI / 2; sea.position.y = -1 + 0.01; root.add(sea);
     let last = 0.5;
-    return { label: v === 'farm' ? 'ফসল' : 'উচ্চতা', update(t, _dt, p) { if (Math.abs(p - last) > 0.01) { paint(p); last = p; } root.rotation.y += 0.0015; sea.position.y = -1 + 0.01 + Math.sin(t) * 0.02; } };
+    // The terrain is its own ground, so the shared shadow disc stays away:
+    // two grounds a hair apart is exactly the z-fighting stripe that ruined
+    // the collection scene before it got one ground instead of two.
+    return { label: v === 'farm' ? 'ফসল' : 'উচ্চতা', aim: { y: -0.15, eye: 1.55 }, update(t, _dt, p) { if (Math.abs(p - last) > 0.01) { paint(p); last = p; } root.rotation.y += 0.0015; sea.position.y = -1 + 0.01 + Math.sin(t) * 0.02; } };
   },
 
   seasonwheel({ root, hue, v, font }) {
     const cols = ['#f0b429', '#3b82f6', '#9fd3e6', '#d9822b', '#cfd8e3', '#e88fb0']; const names = ['গ্রীষ্ম', 'বর্ষা', 'শরৎ', 'হেমন্ত', 'শীত', 'বসন্ত'];
     const fruits = ['🥭', '🍈', '🍌', '🥥', '🥕', '🍓'];
     const wheel = new Group(); wheel.rotation.x = 0.5; root.add(wheel);
-    cols.forEach((c, i) => { const s = sector(2.6, (i / 6) * Math.PI * 2, Math.PI / 3, c, 0.2); wheel.add(s); const a = (i + 0.5) / 6 * Math.PI * 2; const sp = v === 'fruit' ? emojiSprite(fruits[i], 0.9) : textSprite(names[i], font, '#eef4fb', 1.1); sp.position.set(Math.cos(a) * 2, 0.4, -Math.sin(a) * 2); wheel.add(sp); });
-    wheel.add(new Mesh(new CylinderGeometry(0.5, 0.5, 0.3, 32), std('#ffffff')));
-    return { label: 'ঋতু ঘোরাও', update(t, _dt, p) { wheel.rotation.y += (p * Math.PI * 2 - wheel.rotation.y) * 0.08; wheel.rotation.z = 0.5 + Math.sin(t * 0.4) * 0.025; } };
+    cols.forEach((c, i) => { const s = sector(2.6, (i / 6) * Math.PI * 2, Math.PI / 3, c, 0.2); wheel.add(s); const a = (i + 0.5) / 6 * Math.PI * 2; const sp = v === 'fruit' ? emojiSprite(fruits[i]!, 0.9) : textSprite(names[i]!, font, '#eef4fb', 1.1); sp.position.set(Math.cos(a) * 2, 0.4, -Math.sin(a) * 2); wheel.add(sp); });
+    // a rim and a raised hub, so the wheel is a made object and not six flat
+    // pie slices sharing an edge
+    wheel.add(new Mesh(new TorusGeometry(2.61, 0.075, 8, 64), std('#f0f4f8', { roughness: 0.5 })).rotateX(Math.PI / 2));
+    wheel.add(new Mesh(new CylinderGeometry(0.52, 0.6, 0.34, 36), std('#ffffff', { roughness: 0.45 })));
+    wheel.add(new Mesh(new CylinderGeometry(0.2, 0.2, 0.42, 24), metal('#b6bec6')));
+    // the marker that says which season is at the front right now
+    const pointer = new Mesh(new ConeGeometry(0.22, 0.5, 4), std(GOLD, { roughness: 0.4, metalness: 0.4 }));
+    pointer.position.set(0, 0.42, 2.95); pointer.rotation.x = Math.PI; root.add(pointer);
+    return { label: 'ঋতু ঘোরাও', aim: { y: 0.05, eye: 1.45 }, update(t, _dt, p) { wheel.rotation.y += (p * Math.PI * 2 - wheel.rotation.y) * 0.08; wheel.rotation.z = 0.5 + Math.sin(t * 0.4) * 0.025; pointer.position.y = 0.42 + Math.sin(t * 2) * 0.04; } };
   },
 
   plate({ root, hue, v }) {
-    const plate = new Group(); plate.rotation.x = 0.55; root.add(plate); plate.add(new Mesh(new CylinderGeometry(2.7, 2.7, 0.15, 48), std('#f4f6f8')));
+    void hue; void v;
+    const plate = new Group(); plate.rotation.x = 0.55; root.add(plate);
+    // a real plate: a well, a raised rim and a foot, rather than one disc
+    plate.add(new Mesh(new CylinderGeometry(2.7, 2.45, 0.15, 56), std('#f4f6f8', { roughness: 0.42 })));
+    plate.add(new Mesh(new TorusGeometry(2.68, 0.1, 8, 60), std('#e8ecf1', { roughness: 0.4 })).translateY(0.06).rotateX(Math.PI / 2));
+    plate.add(new Mesh(new CylinderGeometry(1.6, 1.6, 0.06, 40), std('#eceff3', { roughness: 0.48 })).translateY(-0.12));
     const groups = [['#e6c87a', 'শর্করা', '🍚'], ['#d97b6c', 'আমিষ', '🐟'], ['#6fbf73', 'সবজি', '🥬'], ['#f0b429', 'ফল', '🍌'], ['#8fb9e8', 'দুধ', '🥛']];
-    const secs = groups.map(([c, , e], i) => { const s = sector(2.3, 0, 1, c, 0.1); s.position.y = 0.12; plate.add(s); const sp = emojiSprite(e, 0.8); sp.position.y = 0.6; plate.add(sp); return { s, sp }; });
-    return { label: 'সুষম করো', update(t, _dt, p) {
+    const secs = groups.map(([c, , e]) => { const s = sector(2.3, 0, 1, c!, 0.1); s.position.y = 0.12; plate.add(s); const sp = emojiSprite(e!, 0.8); sp.position.y = 0.6; plate.add(sp); return { s, sp }; });
+    return { label: 'সুষম করো', groundY: -0.55, aim: { y: 0.1, eye: 1.45 }, update(t, _dt, p) {
       const w = [0.35 - p * 0.15, 0.2, 0.15 + p * 0.15, 0.15, 0.15]; const tot = w.reduce((a, b) => a + b); let start = 0;
       secs.forEach(({ s, sp }, i) => { const len = (w[i] / tot) * Math.PI * 2; s.geometry.dispose(); s.geometry = new CylinderGeometry(2.3, 2.3, 0.1, 48, 1, false, start, len); const a = start + len / 2; sp.position.set(Math.sin(a) * 1.5, 0.6, Math.cos(a) * 1.5); start += len; }); plate.rotation.y = t * 0.15;
     } };
   },
 
   blocks({ root, hue, v }) {
-    const g = new Group(); root.add(g); const cubeG = new BoxGeometry(0.36, 0.36, 0.36); const m4 = new Matrix4();
-    if (v === 'wave') { const N = 12; const im = new InstancedMesh(cubeG, std(hue), N * N); g.add(im); return { label: 'ঢেউ', update(t, _dt, p) { for (let i = 0; i < N * N; i++) { const x = i % N - N / 2 + 0.5, z = Math.floor(i / N) - N / 2 + 0.5; const h = 0.5 + Math.sin(x * 0.6 + t * 2) * Math.cos(z * 0.6 * (0.5 + p) + t) * (0.5 + p); m4.makeScale(1, h * 3, 1); m4.setPosition(x * 0.4, h * 0.55 - 1, z * 0.4); im.setMatrixAt(i, m4); } im.instanceMatrix.needsUpdate = true; } }; }
-    const units = new InstancedMesh(cubeG, std(GOLD), 9), rods = new InstancedMesh(new BoxGeometry(0.36, 3.6, 0.36), std(hue), 9), flats = new InstancedMesh(new BoxGeometry(3.6, 0.36, 3.6), std(darken(hue, 0.3)), 9); g.add(units, rods, flats); g.position.set(-1.5, -1.6, 0);
-    return { label: 'সংখ্যা', update(t, _dt, p) {
+    const g = new Group(); root.add(g);
+    // Bevelled, so a hundred-flat reads as a moulded block and not a raw
+    // BoxGeometry. Every edge now carries a highlight, which is the whole
+    // difference at this size.
+    const cubeG = roundedBox(0.36, 0.36, 0.36, 0.045); const m4 = new Matrix4();
+    if (v === 'wave') { const N = 12; const im = new InstancedMesh(cubeG, std(hue), N * N); g.add(im); return { label: 'ঢেউ', groundY: -1.05, aim: { y: 0.1, eye: 1.2 }, update(t, _dt, p) { for (let i = 0; i < N * N; i++) { const x = i % N - N / 2 + 0.5, z = Math.floor(i / N) - N / 2 + 0.5; const h = 0.5 + Math.sin(x * 0.6 + t * 2) * Math.cos(z * 0.6 * (0.5 + p) + t) * (0.5 + p); m4.makeScale(1, h * 3, 1); m4.setPosition(x * 0.4, h * 0.55 - 1, z * 0.4); im.setMatrixAt(i, m4); } im.instanceMatrix.needsUpdate = true; } }; }
+    const GY = -1.715;   // the tray lip's underside, once the 0.85 scale below is applied
+    const units = new InstancedMesh(cubeG, std(GOLD), 9),
+      rods = new InstancedMesh(roundedBox(0.36, 3.6, 0.36, 0.045), std(hue), 9),
+      flats = new InstancedMesh(roundedBox(3.6, 0.36, 3.6, 0.045), std(darken(hue, 0.3)), 9);
+    /**
+     * Centred on x, because the frame is what was cutting this scene in half.
+     *
+     * Hundreds, tens and ones are laid out left to right across nearly seven
+     * units, and the stage only shows about five across: both ends were off
+     * the edge of the picture. The group is shifted so its middle is the
+     * middle of the shot, the tens are tucked closer to the hundreds, and
+     * `dolly` steps the camera back far enough to hold the whole row.
+     */
+    g.add(units, rods, flats); g.position.set(-1.73, -1.6, 0);
+    /**
+     * Sized to the footprint the turntable actually sweeps.
+     *
+     * Hundreds, tens and ones run about 6.3 units across and the hundreds tray
+     * is 4 units deep, so once the scene turns 45 degrees the diagonal is
+     * nearer 7.5 - wider than the stage shows at any sane camera distance, and
+     * both ends were off the edge of the picture for half of every rotation.
+     * Centring fixed the left; this is what fixes the sweep.
+     */
+    g.scale.setScalar(0.85);
+    /**
+     * A tray under each denomination.
+     *
+     * The three heaps sat on nothing in a row, so a child had to be told which
+     * pile was hundreds and which was ones. A sunk tray under each says
+     * "this is a place" without a word of text, and gives the shadows
+     * somewhere to land.
+     */
+    const tray = (x: number, z: number, w: number, d: number, c: Color | string) => {
+      const t = rbox(c, w, 0.1, d, 0.05); t.position.set(x, -0.05, z); g.add(t);
+      const lip = rbox(darken(new Color(c as string), 0.25), w + 0.1, 0.05, d + 0.1, 0.02); lip.position.set(x, -0.11, z); g.add(lip);
+    };
+    tray(0.5, 0, 4.1, 4.1, '#6d7680'); tray(3.3, 0, 2.0, 1.6, '#6d7680'); tray(3.3, 1.35, 1.6, 1.1, '#5d666f');
+    return { label: 'সংখ্যা', groundY: GY, aim: { y: 0.1, z: 0.2, eye: 1.3, dolly: 1.3 }, update(t, _dt, p) {
       const n = Math.round(p * 999); const h = Math.floor(n / 100), tn = Math.floor(n / 10) % 10, u = n % 10;
-      for (let i = 0; i < 9; i++) { flats.setMatrixAt(i, i < h ? m4.makeTranslation(0.5, i * 0.4 + 0.18, 0) : m4.makeScale(0, 0, 0)); rods.setMatrixAt(i, i < tn ? m4.makeTranslation(3 + i * 0.4, 1.8, 0) : m4.makeScale(0, 0, 0)); units.setMatrixAt(i, i < u ? m4.makeTranslation(3 + (i % 3) * 0.4, Math.floor(i / 3) * 0.4 + 0.18, 1.2) : m4.makeScale(0, 0, 0)); }
+      for (let i = 0; i < 9; i++) { flats.setMatrixAt(i, i < h ? m4.makeTranslation(0.5, i * 0.4 + 0.22, 0) : m4.makeScale(0, 0, 0)); rods.setMatrixAt(i, i < tn ? m4.makeTranslation(2.55 + i * 0.38, 1.84, 0) : m4.makeScale(0, 0, 0)); units.setMatrixAt(i, i < u ? m4.makeTranslation(2.85 + (i % 3) * 0.4, Math.floor(i / 3) * 0.4 + 0.22, 1.35) : m4.makeScale(0, 0, 0)); }
       flats.instanceMatrix.needsUpdate = rods.instanceMatrix.needsUpdate = units.instanceMatrix.needsUpdate = true;
-      g.rotation.y = Math.sin(t * 0.35) * 0.05; g.position.y = Math.sin(t * 0.9) * 0.015; // idle sway - the stack never sits dead still
+      g.rotation.y = Math.sin(t * 0.35) * 0.05; g.position.y = -1.6 + Math.sin(t * 0.9) * 0.015; // idle sway - the stack never sits dead still
     } };
   },
 
   pie({ root, hue }) {
     const g = new Group(); g.rotation.x = 0.6; root.add(g); const n = 8; const secs: Mesh[] = [];
+    // a dish under the pie, so the slices are lifted off something when they
+    // come out rather than drifting away from an invisible centre
+    const dish = new Mesh(new CylinderGeometry(2.65, 2.5, 0.12, 52), std('#e6e9ed', { roughness: 0.5 }));
+    dish.position.y = -0.24; g.add(dish);
+    g.add(new Mesh(new TorusGeometry(2.62, 0.07, 8, 52), std('#d2d7dd', { roughness: 0.45 })).translateY(-0.2).rotateX(Math.PI / 2));
     for (let i = 0; i < n; i++) { const s = sector(2.2, (i / n) * Math.PI * 2, Math.PI * 2 / n, i % 2 ? hue : lighten(hue, 0.3), 0.35); g.add(s); secs.push(s); }
     return { label: 'টুকরো নাও', update(t, _dt, p) { const k = Math.round(p * n); secs.forEach((s, i) => { const a = (i + 0.5) / n * Math.PI * 2; const out = i < k ? 0.45 : 0; s.position.set(Math.sin(a) * out, i < k ? 0.25 : 0, Math.cos(a) * out); }); g.rotation.y = t * 0.2; } };
   },
 
   shapes({ root, hue }) {
-    const geos = [new BoxGeometry(1.6, 1.6, 1.6), new SphereGeometry(1, 32, 32), new ConeGeometry(1, 1.8, 32), new CylinderGeometry(0.8, 0.8, 1.8, 32), new TetrahedronGeometry(1.3), new OctahedronGeometry(1.2), new DodecahedronGeometry(1.1), new IcosahedronGeometry(1.1)];
+    const geos = [new BoxGeometry(1.6, 1.6, 1.6), new SphereGeometry(1, 40, 28), new ConeGeometry(1, 1.8, 40), new CylinderGeometry(0.8, 0.8, 1.8, 40), new TetrahedronGeometry(1.3), new OctahedronGeometry(1.2), new DodecahedronGeometry(1.1), new IcosahedronGeometry(1.1)];
     const ms = geos.map((gm, i) => { const m = new Mesh(gm, std(i % 2 ? hue : GOLD, { flatShading: i > 3 })); root.add(m); return m; });
     return { label: 'আকৃতি', update(t, _dt, p) { const sel = Math.min(ms.length - 1, Math.floor(p * ms.length)); ms.forEach((m, i) => { if (i === sel) { m.position.set(0, 0, 0); m.scale.setScalar(1.3); m.rotation.set(t * 0.4, t * 0.6, 0); } else { const a = (i / ms.length) * Math.PI * 2 + t * 0.15; m.position.set(Math.cos(a) * 3.1, Math.sin(a * 2) * 0.3, Math.sin(a) * 1.6); m.scale.setScalar(0.32); m.rotation.y = t; } }); } };
   },
 
+  /** A balance that stands on the floor, with the pans hung on real cords. */
   scale({ root, hue }) {
-    root.add(new Mesh(new ConeGeometry(0.5, 1.6, 16), std(darken(hue, 0.3))).translateY(-1));
-    const beam = new Group(); beam.position.y = -0.2; root.add(beam); beam.add(new Mesh(new BoxGeometry(4.6, 0.12, 0.3), std('#8a8f96')));
-    const pan = (x: number) => { const g = new Group(); g.position.x = x; const p = new Mesh(new CylinderGeometry(0.8, 0.7, 0.1, 24), std(lighten(hue, 0.4))); p.position.y = -1.1; g.add(p); [-0.3, 0.3].forEach((dx) => { const s = new Mesh(new CylinderGeometry(0.02, 0.02, 1.1, 6), std('#999')); s.position.set(dx, -0.55, 0); g.add(s); }); beam.add(g); return { g, p }; };
-    const L = pan(-2), R = pan(2); const wL = new Mesh(new BoxGeometry(0.6, 0.6, 0.6), std(GOLD)); wL.position.y = -0.75; L.g.add(wL); const wR = new Mesh(new BoxGeometry(0.6, 0.6, 0.6), std(hue)); wR.position.y = -0.75; R.g.add(wR);
-    return { label: 'ওজন', update(t, _dt, p) { const diff = p - 0.5; wR.scale.setScalar(0.6 + p * 0.9); const target = -diff * 0.5 + Math.sin(t * 1.1) * 0.015; beam.rotation.z += (target - beam.rotation.z) * 0.08; L.g.rotation.z = -beam.rotation.z; R.g.rotation.z = -beam.rotation.z; } };
+    const GY = -2.2;
+    const post = new Mesh(new CylinderGeometry(0.12, 0.18, 2.2, 20), std(darken(hue, 0.3)));
+    post.position.y = -1.3; root.add(post);
+    const foot = new Mesh(new CylinderGeometry(0.95, 1.05, 0.16, 36), std(darken(hue, 0.45)));
+    foot.position.y = GY + 0.08; root.add(foot);
+    root.add(new Mesh(new TorusGeometry(0.95, 0.06, 8, 40), std(darken(hue, 0.55))).translateY(GY + 0.14).rotateX(Math.PI / 2));
+    // the knife edge the beam pivots on, which is what a balance actually has
+    const knife = new Mesh(new ConeGeometry(0.2, 0.3, 4), metal('#9aa3ab')); knife.position.y = -0.32; root.add(knife);
+
+    const beam = new Group(); beam.position.y = -0.2; root.add(beam);
+    beam.add(new Mesh(roundedBox(4.6, 0.14, 0.3, 0.06), metal('#9aa3ab', { roughness: 0.42 })));
+    const needle = new Mesh(roundedBox(0.07, 0.8, 0.07, 0.03), metal(GOLD, { roughness: 0.35 }));
+    needle.position.y = 0.44; beam.add(needle);
+    const pan = (x: number) => {
+      const g = new Group(); g.position.x = x;
+      const p = new Mesh(new CylinderGeometry(0.82, 0.72, 0.1, 32), metal(lighten(hue, 0.4), { roughness: 0.4, metalness: 0.5 }));
+      p.position.y = -1.1; g.add(p);
+      p.add(new Mesh(new TorusGeometry(0.8, 0.04, 8, 32), metal(lighten(hue, 0.25), { roughness: 0.4, metalness: 0.5 })).translateY(0.05).rotateX(Math.PI / 2));
+      // three cords, not two struts: a pan hangs, it is not bolted on
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2;
+        const cord = new Mesh(new CylinderGeometry(0.016, 0.016, 1.12, 6), std('#8f959c'));
+        cord.position.set(Math.cos(a) * 0.34, -0.55, Math.sin(a) * 0.34);
+        cord.rotation.z = -Math.cos(a) * 0.28; cord.rotation.x = Math.sin(a) * 0.28;
+        g.add(cord);
+      }
+      beam.add(g); return { g, p };
+    };
+    const L = pan(-2), R = pan(2);
+    const wL = rbox(GOLD, 0.6, 0.6, 0.6, 0.06); wL.position.y = -0.75; L.g.add(wL);
+    const wR = rbox(hue, 0.6, 0.6, 0.6, 0.06); wR.position.y = -0.75; R.g.add(wR);
+    return { label: 'ওজন', groundY: GY, aim: { y: -0.15, eye: 1.2 }, update(t, _dt, p) {
+      const diff = p - 0.5; wR.scale.setScalar(0.6 + p * 0.9);
+      const target = -diff * 0.5 + Math.sin(t * 1.1) * 0.015;
+      beam.rotation.z += (target - beam.rotation.z) * 0.08;
+      L.g.rotation.z = -beam.rotation.z; R.g.rotation.z = -beam.rotation.z;
+    } };
   },
 
   coins({ root, hue, v }) {
-    const jar = new Mesh(new CylinderGeometry(1.3, 1.1, 2.8, 32, 1, true), std('#cfe6f2', { transparent: true, opacity: 0.3, side: DoubleSide, roughness: 0.1 })); root.add(jar);
-    const N = 40; const im = new InstancedMesh(new CylinderGeometry(0.42, 0.42, 0.08, 24), std(GOLD, { metalness: 0.6, roughness: 0.3 }), N); root.add(im); const m4 = new Matrix4(); const slots = Array.from({ length: N }, (_, i) => ({ x: (i % 3 - 1) * 0.75, z: ((i * 7) % 3 - 1) * 0.55, y: -1.35 + Math.floor(i / 3) * 0.09, r: rnd(0, 6) }));
+    void v;
+    const GY = -1.45;
+    // thinner than the beaker's glass: a jar is wall, wall, base and rim deep,
+    // and at 0.22 each those layers composited into a frosted white tube with
+    // the coins barely showing through
+    const jar = new Mesh(new CylinderGeometry(1.3, 1.1, 2.8, 40, 1, true), glassy('#d8ecf6', 0.14)); root.add(jar);
+    const jarBase = new Mesh(new CylinderGeometry(1.11, 1.11, 0.1, 40), glassy('#d8ecf6', 0.3)); jarBase.position.y = -1.42; root.add(jarBase);
+    const neck = new Mesh(new CylinderGeometry(1.16, 1.3, 0.22, 40, 1, true), glassy('#e6f4fb', 0.26)); neck.position.y = 1.5; root.add(neck);
+    const lip = new Mesh(new TorusGeometry(1.17, 0.06, 8, 44), glassy('#eaf6fc', 0.42)); lip.position.y = 1.6; lip.rotation.x = Math.PI / 2; root.add(lip);
+    const N = 40;
+    const rc = srand(0x0c01);
+    const coinG = new CylinderGeometry(0.42, 0.42, 0.08, 30);
+    const im = new InstancedMesh(coinG, metal(GOLD, { roughness: 0.32 }), N); root.add(im);
+    // a raised face on each coin: the rim is what makes a disc read as coinage
+    const faceG = new CylinderGeometry(0.33, 0.33, 0.095, 26);
+    const im2 = new InstancedMesh(faceG, metal(darken(GOLD, 0.22), { roughness: 0.4 }), N); root.add(im2);
+    const m4 = new Matrix4(), tilt = new Matrix4();
+    /**
+     * Where each coin lands.
+     *
+     * The old slots were `x: (i % 3 - 1) * 0.75` and `z: ((i * 7) % 3 - 1) * 0.55`
+     * - and since 7 is 1 modulo 3, that second expression is just `i % 3`
+     * again. Both coordinates came from the same value, so all forty coins
+     * landed on three spots along a diagonal and stacked into three tidy
+     * columns: a coin sorter, not a piggy bank. These are scattered over the
+     * floor of the jar, four to a layer, each tipped a little.
+     */
+    const slots = Array.from({ length: N }, (_, i) => {
+      const a = rc(0, Math.PI * 2), r = Math.sqrt(rc(0, 1)) * 0.6;
+      return { x: Math.cos(a) * r, z: Math.sin(a) * r, y: -1.32 + Math.floor(i / 4) * 0.13, r: rc(0, 6), tip: rc(-0.17, 0.17) };
+    });
     const falling = new Map<number, number>();
-    return { label: 'জমাও', update(t, dt, p) { const n = Math.round(p * N); for (let i = 0; i < N; i++) { const s = slots[i]; if (i < n) { let y = falling.get(i); if (y === undefined) y = 2.5; y = Math.max(s.y, y - dt * 6); falling.set(i, y); m4.makeRotationY(s.r); m4.setPosition(s.x, y, s.z); } else { falling.delete(i); m4.makeScale(0, 0, 0); } im.setMatrixAt(i, m4); } im.instanceMatrix.needsUpdate = true; root.rotation.y = Math.sin(t * 0.3) * 0.25; } };
+    return { label: 'জমাও', groundY: GY, aim: { y: 0.05, eye: 1.1 }, update(t, dt, p) {
+      const n = Math.round(p * N);
+      for (let i = 0; i < N; i++) {
+        const s = slots[i]!;
+        if (i < n) { let y = falling.get(i); if (y === undefined) y = 2.5; y = Math.max(s.y, y - dt * 6); falling.set(i, y); m4.makeRotationY(s.r); m4.multiply(tilt.makeRotationX(s.tip)); m4.setPosition(s.x, y, s.z); }
+        else { falling.delete(i); m4.makeScale(0, 0, 0); }
+        im.setMatrixAt(i, m4); im2.setMatrixAt(i, m4);
+      }
+      im.instanceMatrix.needsUpdate = true; im2.instanceMatrix.needsUpdate = true;
+      root.rotation.y = Math.sin(t * 0.3) * 0.25;
+    } };
   },
 
   bars({ root, hue, v }) {
-    const N = 7; const bars: Mesh[] = []; for (let i = 0; i < N; i++) { const b = new Mesh(new BoxGeometry(0.55, 1, 0.55), std(i === N - 1 ? GOLD : hue)); b.position.x = (i - N / 2 + 0.5) * 0.8; root.add(b); bars.push(b); }
-    root.add(new Mesh(new BoxGeometry(6.2, 0.06, 1.2), std('#8a8f96')).translateY(-1.5));
-    return { label: v === 'compound' ? 'বছর' : 'বাড়ো', update(t, _dt, p) { bars.forEach((b, i) => { const h = v === 'compound' ? 0.3 + Math.pow(1 + p * 0.6, i) * 0.4 : 0.3 + (0.4 + Math.sin(i * 1.3) * 0.3) * p * 3.5; const hh = Math.min(h, 3.6) + Math.sin(t * 1.3 + i) * 0.025; b.scale.y += (hh - b.scale.y) * 0.1; b.position.y = -1.5 + b.scale.y / 2; }); } };
+    const GY = -1.62, N = 7;
+    const bars: Mesh[] = [];
+    for (let i = 0; i < N; i++) {
+      // a small bevel on purpose: these are scaled in y by up to 3.6, and a
+      // generous one would stretch into a visible dome at the top of a tall bar
+      const b = new Mesh(roundedBox(0.55, 1, 0.55, 0.032), std(i === N - 1 ? GOLD : hue));
+      b.position.x = (i - N / 2 + 0.5) * 0.8; root.add(b); bars.push(b);
+    }
+    const plinth = rbox('#79838f', 6.3, 0.14, 1.25, 0.06); plinth.position.y = -1.55; root.add(plinth);
+    /**
+     * Gridlines behind the bars.
+     *
+     * Without them a growing bar chart is just boxes getting taller and there
+     * is no way to see by how much. Four rules at a fixed height turn the same
+     * animation into a reading.
+     */
+    const rule = std('#ffffff', { transparent: true, opacity: 0.16, roughness: 0.9 });
+    for (let i = 1; i <= 4; i++) { const l = new Mesh(new BoxGeometry(6.1, 0.018, 0.018), rule); l.position.set(0, -1.48 + i * 0.85, -0.45); root.add(l); }
+    return { label: v === 'compound' ? 'বছর' : 'বাড়ো', groundY: GY, aim: { y: 0.35, eye: 1.3 }, update(t, _dt, p) {
+      bars.forEach((b, i) => {
+        const h = v === 'compound' ? 0.3 + Math.pow(1 + p * 0.6, i) * 0.4 : 0.3 + (0.4 + Math.sin(i * 1.3) * 0.3) * p * 3.5;
+        const hh = Math.min(h, 3.6) + Math.sin(t * 1.3 + i) * 0.025;
+        b.scale.y += (hh - b.scale.y) * 0.1; b.position.y = -1.48 + b.scale.y / 2;
+      });
+    } };
   },
 
   rocket({ root, hue }) {
-    const r = new Group(); root.add(r); r.add(new Mesh(new CylinderGeometry(0.4, 0.4, 2, 24), std('#f4f6f8'))); const nose = new Mesh(new ConeGeometry(0.4, 0.9, 24), std(hue)); nose.position.y = 1.45; r.add(nose);
+    const r = new Group(); root.add(r);
+    r.add(new Mesh(new CylinderGeometry(0.4, 0.4, 2, 32), std('#f4f6f8', { roughness: 0.5 })));
+    // the details that make a tube a rocket: a shoulder where the cone meets
+    // the body, a painted band, a porthole, and a flared engine bell
+    const nose = new Mesh(new ConeGeometry(0.4, 0.9, 32), std(hue)); nose.position.y = 1.45; r.add(nose);
+    r.add(new Mesh(new TorusGeometry(0.4, 0.05, 8, 32), metal('#c4ccd4', { roughness: 0.4 })).translateY(1));
+    r.add(new Mesh(new CylinderGeometry(0.415, 0.415, 0.28, 32), std(darken(hue, 0.2))).translateY(0.15));
+    const port = new Mesh(new CylinderGeometry(0.15, 0.15, 0.1, 20), glassy('#9fd8ff', 0.6));
+    port.rotation.x = Math.PI / 2; port.position.set(0, 0.62, 0.37); r.add(port);
+    // a torus already lies in the xy plane, so it faces the same way as the port
+    const portRing = new Mesh(new TorusGeometry(0.16, 0.035, 8, 22), metal('#c4ccd4', { roughness: 0.4 }));
+    portRing.position.set(0, 0.62, 0.37); r.add(portRing);
+    const bell = new Mesh(new CylinderGeometry(0.22, 0.36, 0.42, 26, 1, true), metal('#8d959e', { roughness: 0.45 }));
+    bell.position.y = -1.18; r.add(bell);
     [0, 1, 2].forEach((i) => { const f = new Mesh(new BoxGeometry(0.08, 0.7, 0.6), std(hue)); const a = (i / 3) * Math.PI * 2; f.position.set(Math.cos(a) * 0.5, -0.8, Math.sin(a) * 0.5); f.rotation.y = -a; r.add(f); });
-    const flame = new Mesh(new ConeGeometry(0.32, 1.2, 16), glow('#ff8c1a', 0.95)); flame.rotation.x = Math.PI; flame.position.y = -1.6; r.add(flame);
+    const flame = new Mesh(new ConeGeometry(0.32, 1.2, 20), glow('#ff8c1a', 0.95)); flame.rotation.x = Math.PI; flame.position.y = -1.6; r.add(flame);
+    const core = new Mesh(new ConeGeometry(0.17, 0.8, 16), glow('#ffe9a8', 0.95)); core.rotation.x = Math.PI; core.position.y = -1.45; r.add(core);
     const N = 120; const arr = new Float32Array(N * 3); const pg = new BufferGeometry(); pg.setAttribute('position', new Float32BufferAttribute(arr, 3)); const smoke = new Points(pg, new PointsMaterial({ color: '#c9ced4', size: 0.12, transparent: true, opacity: 0.7 })); root.add(smoke);
-    return { label: 'জোর', update(t, dt, p) { r.position.y = -1 + p * 3 + Math.sin(t * 8) * 0.02 * p; r.rotation.z = Math.sin(t * 2) * 0.02; flame.scale.set(1, 0.6 + p * 1.4 + Math.random() * 0.3, 1); flame.visible = p > 0.05; const pa = pg.attributes.position as Float32BufferAttribute; for (let i = 0; i < N; i++) { let y = pa.getY(i) - dt * 2; if (y < r.position.y - 4 || pa.getX(i) === 0) { y = r.position.y - 2; pa.setX(i, rnd(-0.3, 0.3)); pa.setZ(i, rnd(-0.3, 0.3)); } pa.setX(i, pa.getX(i) * 1.02); pa.setY(i, p > 0.05 ? y : 99); } pa.needsUpdate = true; } };
+    return { label: 'জোর', update(t, dt, p) { r.position.y = -1 + p * 3 + Math.sin(t * 8) * 0.02 * p; r.rotation.z = Math.sin(t * 2) * 0.02; flame.scale.set(1, 0.6 + p * 1.4 + Math.random() * 0.3, 1); flame.visible = p > 0.05; core.scale.set(1, 0.6 + p * 1.5 + Math.random() * 0.25, 1); core.visible = p > 0.05; const pa = pg.attributes.position as Float32BufferAttribute; for (let i = 0; i < N; i++) { let y = pa.getY(i) - dt * 2; if (y < r.position.y - 4 || pa.getX(i) === 0) { y = r.position.y - 2; pa.setX(i, rnd(-0.3, 0.3)); pa.setZ(i, rnd(-0.3, 0.3)); } pa.setX(i, pa.getX(i) * 1.02); pa.setY(i, p > 0.05 ? y : 99); } pa.needsUpdate = true; } };
   },
 
+  /**
+   * The letter scenes - six categories, more than any other builder here.
+   *
+   * The chosen letter was a flat sprite hanging in the middle: a picture of a
+   * letter, with no thickness, no shadow and nothing to turn. It is now a
+   * moulded tile that catches the key light and rotates, which is the object a
+   * child is actually being asked to look at. The ring stays as sprites,
+   * because those have to stay readable from every angle.
+   */
   letters({ root, hue, v, font }) {
     const set = v === 'en' ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') : v === 'words' ? ['মা', 'বাবা', 'বই', 'ফুল', 'পাখি', 'নদী', 'চাঁদ', 'ঘর', 'মাছ', 'গাছ'] : v === 'jukto' ? ['ক্ষ', 'জ্ঞ', 'ঙ্গ', 'ন্ত', 'স্থ', 'ষ্ট', 'ত্র', 'দ্ধ', 'ম্ব', 'শ্র'] : v === 'num' ? '০১২৩৪৫৬৭৮৯'.split('') : 'অআইঈউঊঋএঐওঔকখগঘঙচছজঝঞটঠডঢণতথদধনপফবভমযরলশষসহ'.split('');
-    const N = Math.min(set.length, 26); const sps = set.slice(0, N).map((ch, i) => { const s = textSprite(ch, font, '#' + (i % 2 ? lighten(hue, 0.3).getHexString() : lighten(hue, 0.6).getHexString()), 1.1); root.add(s); return s; });
-    const big = textSprite(set[0], font, '#' + lighten(hue, 0.35).getHexString(), 3); root.add(big); let cur = 0;
-    return { label: 'বর্ণ বাছো', update(t, _dt, p) { const sel = Math.min(N - 1, Math.floor(p * N)); if (sel !== cur) { cur = sel; big.material.map?.dispose(); big.material.dispose(); root.remove(big); const nb = textSprite(set[sel], font, '#' + lighten(hue, 0.35).getHexString(), 3); root.add(nb); Object.assign(big, { material: nb.material }); root.remove(nb); root.add(big); } sps.forEach((s, i) => { const a = (i / N) * Math.PI * 2 + t * 0.12; s.position.set(Math.cos(a) * 3.2, Math.sin(a * 3 + t) * 0.5, Math.sin(a) * 1.5); s.scale.setScalar(i === sel ? 0.2 : 1.1); }); big.position.y = Math.sin(t * 1.2) * 0.15; } };
+    const N = Math.min(set.length, 26);
+    const sps = set.slice(0, N).map((ch, i) => { const s = textSprite(ch, font, '#' + (i % 2 ? lighten(hue, 0.3).getHexString() : lighten(hue, 0.6).getHexString()), 1.1); root.add(s); return s; });
+
+    /** The face of the tile: the glyph painted onto a texture, on both sides. */
+    const faceTex = (ch: string) => {
+      const c = document.createElement('canvas'); c.width = c.height = 512;
+      const g = c.getContext('2d')!;
+      g.fillStyle = '#' + lighten(hue, 0.78).getHexString(); g.fillRect(0, 0, 512, 512);
+      g.font = `800 ${ch.length > 2 ? 190 : 330}px ${font}`;
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillStyle = '#' + darken(hue, 0.55).getHexString();
+      g.fillText(ch, 256, 280);
+      return new CanvasTexture(c);
+    };
+    const tile = new Group(); root.add(tile);
+    const body = new Mesh(roundedBox(2.5, 2.5, 0.42, 0.16), std(lighten(hue, 0.62), { roughness: 0.62 }));
+    tile.add(body);
+    let tex = faceTex(set[0]!);
+    const faceMat = new MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0 });
+    const front = new Mesh(new PlaneGeometry(2.16, 2.16), faceMat); front.position.z = 0.215; tile.add(front);
+    const backM = new Mesh(new PlaneGeometry(2.16, 2.16), faceMat); backM.position.z = -0.215; backM.rotation.y = Math.PI; tile.add(backM);
+    let cur = 0;
+    return { label: 'বর্ণ বাছো', groundY: -1.65, aim: { y: 0.15, eye: 1.25 }, update(t, _dt, p) {
+      const sel = Math.min(N - 1, Math.floor(p * N));
+      if (sel !== cur) { cur = sel; tex.dispose(); tex = faceTex(set[sel]!); faceMat.map = tex; faceMat.needsUpdate = true; }
+      sps.forEach((s, i) => { const a = (i / N) * Math.PI * 2 + t * 0.12; s.position.set(Math.cos(a) * 3.2, Math.sin(a * 3 + t) * 0.5, Math.sin(a) * 1.5); s.scale.setScalar(i === sel ? 0.2 : 1.1); });
+      tile.position.y = Math.sin(t * 1.2) * 0.12;
+      // a slow rock rather than a full turn, so the glyph is never edge-on
+      tile.rotation.y = Math.sin(t * 0.5) * 0.42;
+      tile.rotation.z = Math.sin(t * 0.7) * 0.03;
+    } };
   },
 
-  face({ root, hue, v }) {
-    const mk = (x: number) => { const g = new Group(); g.position.x = x; root.add(g); g.add(new Mesh(new SphereGeometry(1.2, 32, 32), std(GOLD))); const eye = (dx: number) => { const e = new Mesh(new SphereGeometry(0.16, 16, 16), std('#111')); e.position.set(dx, 0.3, 1.08); g.add(e); const brow = new Mesh(new BoxGeometry(0.4, 0.07, 0.07), std('#111')); brow.position.set(dx, 0.62, 1.08); g.add(brow); return { e, brow }; }; const L = eye(-0.42), R = eye(0.42); const mouth = new Mesh(new TorusGeometry(0.42, 0.06, 8, 24, Math.PI), std('#111')); mouth.position.set(0, -0.3, 1.1); mouth.rotation.z = Math.PI; g.add(mouth); return { g, L, R, mouth }; };
-    const faces = v === 'pair' ? [mk(-1.7), mk(1.7)] : [mk(0)]; if (v === 'pair') { faces[0].g.rotation.y = 0.5; faces[1].g.rotation.y = -0.5; }
-    return { label: 'মেজাজ', update(t, _dt, p) { faces.forEach((f, k) => { const mood = v === 'pair' && k === 1 ? 1 - p : p; f.mouth.rotation.z = Math.PI * (1 - mood) + (mood > 0.5 ? 0 : 0); f.mouth.scale.setScalar(0.6 + Math.abs(mood - 0.5) * 1.2); f.mouth.position.y = mood > 0.5 ? -0.3 : -0.55; f.L.brow.rotation.z = (mood - 0.5) * -0.6; f.R.brow.rotation.z = (mood - 0.5) * 0.6; const blink = ((t + k) % 3.5) < 0.12; f.L.e.scale.y = f.R.e.scale.y = blink ? 0.1 : 1; f.g.rotation.z = Math.sin(t * 1.3 + k) * 0.05; }); } };
+  /**
+   * Faces, for the four categories about feelings.
+   *
+   * This was a gold ball with two black balls, a black stick over each and half
+   * a torus for a mouth - the drawing a five-year-old makes, which is a strange
+   * thing to put in front of a five-year-old and call a face. Now it is a bust:
+   * head, jaw, hair, ears, nose, eyes with sclera, iris, pupil and a lid that
+   * blinks, and shoulders that stand it on the ground.
+   */
+  face({ root, v }) {
+    const GY = -2.3;
+    // not quite black: a true-black mass loses all its form under ACES and the
+    // head reads as a silhouette with a face stuck on it
+    const skin = new Color('#e0aa80'), hair = new Color('#3a2c20');
+    const skinMat = std(skin, { roughness: 0.74 }), hairMat = std(hair, { roughness: 0.95 });
+    const mk = (x: number, shirt: string) => {
+      const g = new Group(); g.position.set(x, 0.35, 0); root.add(g);
+      const head = new Mesh(new SphereGeometry(1.2, 40, 30), skinMat); head.scale.set(0.94, 1.05, 0.92); g.add(head);
+      // a jaw, narrower than the cranium: the single change that stops a head being a ball
+      const jaw = new Mesh(new SphereGeometry(0.95, 28, 22), skinMat); jaw.position.set(0, -0.5, 0.07); jaw.scale.set(0.9, 0.78, 0.9); g.add(jaw);
+      /**
+       * Hair in two pieces: a crown that stops above the brow, and a back half
+       * that comes down past the ear.
+       *
+       * A single cap covering 99 degrees from the crown came down over the
+       * brow and buried both eyes - in the one scene whose whole subject is
+       * the expression. A whole sphere a little larger than the skull was
+       * worse: the face only showed through the small lens where the head
+       * poked out of it. Splitting the two jobs is what makes both work, and
+       * the crown flares a little wider than the skull so the hair has volume.
+       *
+       * (three's sphere sweeps `phi` horizontally from the -x axis, so the
+       * rear half is phi in [PI, 2PI], and `theta` runs down from the crown.)
+       */
+      const crown = new Mesh(new SphereGeometry(1.27, 34, 18, 0, Math.PI * 2, 0, Math.PI * 0.27), hairMat);
+      crown.position.set(0, 0, -0.04); crown.scale.set(1, 1.03, 1); g.add(crown);
+      const back = new Mesh(new SphereGeometry(1.26, 26, 20, Math.PI, Math.PI, 0, Math.PI * 0.62), hairMat);
+      back.position.set(0, 0, -0.04); back.scale.set(1, 1.03, 0.99); g.add(back);
+      for (const s of [-1, 1]) { const ear = new Mesh(new SphereGeometry(0.21, 16, 12), skinMat); ear.position.set(s * 1.08, -0.1, 0.02); ear.scale.set(0.45, 1, 0.66); g.add(ear); }
+      const nose = new Mesh(new SphereGeometry(0.2, 18, 14), skinMat); nose.position.set(0, -0.12, 1.08); nose.scale.set(0.8, 1.1, 1.05); g.add(nose);
+      /**
+       * The eye sits on the face, not in it.
+       *
+       * A round eyeball centred at z 0.9 was almost entirely inside the skull:
+       * the cheek ellipsoid crosses z = 0.995 at that spot, so all that
+       * emerged was a white speck a few pixels across, and the face read as
+       * having no eyes at all. Flattened front-to-back and pushed out to
+       * z = 1.0, better than half of it clears the surface across its whole
+       * width, which is the usual way a stylised face is built.
+       */
+      const eye = (dx: number) => {
+        const e = new Group(); e.position.set(dx, 0.28, 1.0); g.add(e);
+        const ball = new Group(); e.add(ball);
+        const white = new Mesh(new SphereGeometry(0.24, 26, 18), std('#fbfdff', { roughness: 0.22 })); white.scale.set(1, 0.88, 0.45); ball.add(white);
+        /**
+         * Iris and pupil are flat discs in front of the eyeball, not small
+         * spheres inside it.
+         *
+         * A sphere placed on another sphere's surface only clears it at the
+         * very centre: the host surface curves away, so at the iris's own edge
+         * the eyeball had already come forward past it and swallowed it. What
+         * rendered was a dark pinprick, and the face read as having no eyes at
+         * all - which is why it took three passes to see. A flat disc past the
+         * eyeball's frontmost point cannot intersect it at any radius.
+         */
+        const iris = new Mesh(new CircleGeometry(0.115, 26), std('#4a3524', { roughness: 0.3 })); iris.position.z = 0.113; ball.add(iris);
+        const pupil = new Mesh(new CircleGeometry(0.055, 20), std('#130d07', { roughness: 0.2 })); pupil.position.z = 0.118; ball.add(pupil);
+        // the catchlight, which is most of what makes an eye look alive
+        const spark = new Mesh(new CircleGeometry(0.03, 12), new MeshBasicMaterial({ color: '#ffffff' }));
+        spark.position.set(-0.04, 0.045, 0.122); ball.add(spark);
+        // the top quarter only: a lid shades the eye, it does not cover it
+        const lid = new Mesh(new SphereGeometry(0.252, 22, 12, 0, Math.PI * 2, 0, Math.PI * 0.34), skinMat);
+        lid.scale.set(1, 0.92, 0.5); lid.position.y = 0.06; e.add(lid);
+        const brow = new Mesh(roundedBox(0.46, 0.1, 0.1, 0.04), hairMat); brow.position.set(0, 0.32, 0.06); e.add(brow);
+        return { ball, lid, brow };
+      };
+      const L = eye(-0.42), R = eye(0.42);
+      const mouth = new Mesh(new TorusGeometry(0.4, 0.075, 10, 26, Math.PI), std('#9b4a41', { roughness: 0.5 }));
+      mouth.position.set(0, -0.44, 0.98); mouth.rotation.z = Math.PI; g.add(mouth);
+      // a neck and the top of a shoulder line, cropped like a portrait: a full
+      // torso doubled the height of the scene for a subject that is the face
+      const neck = new Mesh(new CylinderGeometry(0.36, 0.44, 0.7, 22), skinMat); neck.position.y = -1.36; g.add(neck);
+      const body = new Mesh(new SphereGeometry(1, 28, 20), std(shirt, { roughness: 0.9 }));
+      body.position.y = -2.0; body.scale.set(1.45, 0.62, 1.05); g.add(body);
+      return { g, L, R, mouth };
+    };
+    const faces = v === 'pair' ? [mk(-1.6, '#4a7ba8'), mk(1.6, '#b5654a')] : [mk(0, '#4a7ba8')];
+    if (v === 'pair') { faces[0]!.g.rotation.y = 0.42; faces[1]!.g.rotation.y = -0.42; }
+    /**
+     * A low, almost level eye line.
+     *
+     * At eye 0.55 the camera sat above the head's centre and looked down on
+     * it, which foreshortens the forehead to nothing and hands most of the
+     * frame to the crown - the face was mostly hair before a single strand
+     * was drawn wrong. Standing at 0.1 and looking slightly up puts the
+     * viewer in front of the person instead of over them.
+     */
+    return { label: 'মেজাজ', groundY: GY, aim: { y: -0.3, eye: 0.1, dolly: v === 'pair' ? 1.1 : 0.95 }, update(t, _dt, p) {
+      faces.forEach((f, k) => {
+        const mood = v === 'pair' && k === 1 ? 1 - p : p;
+        /**
+         * One number drives the whole expression: −1 miserable, +1 delighted.
+         *
+         * The mouth used to be rotated by `PI * (1 - mood)`, which drew a frown
+         * at maximum happiness and a smile at zero - the slider ran backwards
+         * for the whole scene - and passed through a sideways bracket at the
+         * halfway point. Flipping it by the sign of a scale instead gives a
+         * real flat mouth in the middle and never a rotated one.
+         */
+        const kk = (mood - 0.5) * 2;
+        const bend = Math.max(0.13, Math.abs(kk));
+        f.mouth.scale.set(0.72 + Math.abs(kk) * 0.45, bend * (kk < 0 ? -1 : 1), 1);
+        f.mouth.position.y = -0.4 - (1 - mood) * 0.14;
+        f.L.brow.rotation.z = kk * 0.32; f.R.brow.rotation.z = -kk * 0.32;
+        f.L.brow.position.y = f.R.brow.position.y = 0.34 + kk * 0.05;
+        // the lids come down when the mood does, which is most of what reads as sad
+        const droop = Math.max(0, -kk) * 0.5;
+        f.L.lid.rotation.x = f.R.lid.rotation.x = -droop;
+        const blink = ((t + k * 1.7) % 4.2) < 0.13;
+        f.L.ball.scale.y = f.R.ball.scale.y = blink ? 0.08 : 1;
+        f.g.rotation.z = Math.sin(t * 1.3 + k) * 0.04;
+        f.g.position.y = 0.35 + Math.sin(t * 0.9 + k) * 0.02;
+      });
+    } };
   },
 
   shield({ root, hue }) {
-    const hex = new Mesh(new CylinderGeometry(1.9, 1.9, 0.3, 6), std(hue, { transparent: true, opacity: 0.55 })); hex.rotation.x = Math.PI / 2; root.add(hex);
-    const core = new Mesh(new SphereGeometry(0.8, 24, 24), std(GOLD, { emissive: GOLD, emissiveIntensity: 0.4 })); root.add(core); const rings = [1.2, 1.5].map((r) => { const m = ring(r + 0.03, r - 0.03, lighten(hue, 0.4)); root.add(m); return m; });
-    return { label: 'সুরক্ষা', update(t, _dt, p) { hex.rotation.z = t * 0.2; rings.forEach((r, i) => { r.rotation.x = t * (0.5 + i * 0.3); r.rotation.y = t * 0.4; r.visible = p > i * 0.4; }); (core.material as MeshStandardMaterial).emissiveIntensity = 0.2 + p; core.scale.setScalar(0.8 + p * 0.3); } };
+    const hex = new Mesh(new CylinderGeometry(1.9, 1.9, 0.3, 6), std(hue, { transparent: true, opacity: 0.5, roughness: 0.25, metalness: 0.35 }));
+    hex.rotation.x = Math.PI / 2; root.add(hex);
+    // a raised border on the plate, so it reads as a shield and not a tinted tile
+    const edge = new Mesh(new CylinderGeometry(1.95, 1.95, 0.36, 6, 1, true), metal(lighten(hue, 0.3), { roughness: 0.35 }));
+    edge.rotation.x = Math.PI / 2; root.add(edge);
+    const core = new Mesh(new SphereGeometry(0.8, 32, 24), std(GOLD, { emissive: GOLD, emissiveIntensity: 0.4 })); root.add(core);
+    const rings = [1.2, 1.5].map((r) => { const m = ring(r + 0.03, r - 0.03, lighten(hue, 0.4), { roughness: 0.3, metalness: 0.5 }); root.add(m); return m; });
+    return { label: 'সুরক্ষা', update(t, _dt, p) { hex.rotation.z = t * 0.2; edge.rotation.z = t * 0.2; rings.forEach((r, i) => { r.rotation.x = t * (0.5 + i * 0.3); r.rotation.y = t * 0.4; r.visible = p > i * 0.4; }); (core.material as MeshStandardMaterial).emissiveIntensity = 0.2 + p; core.scale.setScalar(0.8 + p * 0.3); } };
   },
 
   clock({ root, hue }) {
-    const g = new Group(); root.add(g); g.add(new Mesh(new CylinderGeometry(2.2, 2.2, 0.2, 48), std('#f4f6f8'))); g.rotation.x = Math.PI / 2;
-    for (let i = 0; i < 12; i++) { const t = new Mesh(new BoxGeometry(0.1, i % 3 ? 0.25 : 0.4, 0.06), std(i % 3 ? '#8a8f96' : hue)); const a = (i / 12) * Math.PI * 2; t.position.set(Math.sin(a) * 1.85, 0.13, -Math.cos(a) * 1.85); t.rotation.y = -a; g.add(t); }
-    const hand = (len: number, w: number, c: Color | string) => { const h = new Group(); const m = new Mesh(new BoxGeometry(w, 0.06, len), std(c)); m.position.z = -len / 2; h.add(m); h.position.y = 0.2; g.add(h); return h; };
-    const hr = hand(1.0, 0.14, hue), mn = hand(1.5, 0.1, darken(hue, 0.3)), sc = hand(1.7, 0.04, GOLD);
-    return { label: 'সময়', update(t, _dt, p) { const hours = p * 12; hr.rotation.y = -hours / 12 * Math.PI * 2; mn.rotation.y = -(hours % 1) * Math.PI * 2; sc.rotation.y = -t * 0.5; } };
+    const g = new Group(); root.add(g);
+    // a case with a bezel and a glass over the dial, rather than a bare disc
+    g.add(new Mesh(new CylinderGeometry(2.2, 2.2, 0.2, 56), std('#f4f6f8', { roughness: 0.5 })));
+    g.add(new Mesh(new CylinderGeometry(2.35, 2.3, 0.42, 56, 1, true), metal('#aab2bb', { roughness: 0.36 })));
+    g.add(new Mesh(new CylinderGeometry(2.22, 2.22, 0.03, 56), glassy('#e8f3fa', 0.16)).translateY(0.25));
+    g.rotation.x = Math.PI / 2;
+    for (let i = 0; i < 12; i++) { const t = new Mesh(roundedBox(0.1, 0.06, i % 3 ? 0.25 : 0.4, 0.025), std(i % 3 ? '#8a8f96' : hue)); const a = (i / 12) * Math.PI * 2; t.position.set(Math.sin(a) * 1.85, 0.13, -Math.cos(a) * 1.85); t.rotation.y = -a; g.add(t); }
+    const hand = (len: number, w: number, c: Color | string, thin = false) => {
+      const h = new Group();
+      const mat = () => (thin ? metal(c, { roughness: 0.35 }) : std(c));
+      const m = new Mesh(roundedBox(w, 0.06, len, 0.02), mat()); m.position.z = -len / 2; h.add(m);
+      // a counterweight past the pivot, which every real hand has and which is
+      // what stops the three of them reading as loose splinters
+      const tail = new Mesh(roundedBox(w * 0.85, 0.055, len * 0.22, 0.02), mat()); tail.position.z = len * 0.11; h.add(tail);
+      h.position.y = 0.2; g.add(h); return h;
+    };
+    const hr = hand(1.0, 0.14, hue), mn = hand(1.5, 0.1, darken(hue, 0.3)), sc = hand(1.7, 0.04, GOLD, true);
+    g.add(new Mesh(new CylinderGeometry(0.11, 0.11, 0.48, 20), metal('#8d959e')).translateY(0.2));
+    return { label: 'সময়', aim: { y: 0.05, eye: 1.25 }, update(t, _dt, p) { const hours = p * 12; hr.rotation.y = -hours / 12 * Math.PI * 2; mn.rotation.y = -(hours % 1) * Math.PI * 2; sc.rotation.y = -t * 0.5; } };
   },
 
+  /**
+   * The Shaheed Minar.
+   *
+   * The flanking columns used to bend *away* from the centre. Their inward
+   * lean toward the tallest column is the one thing about this monument's
+   * silhouette that everyone in the country can draw from memory, and getting
+   * it backwards is the sort of mistake that is invisible in code review and
+   * obvious to every single visitor. It now also stands on the stepped plinth
+   * it actually has, rather than one slab.
+   */
   minar({ root, hue }) {
-    const g = new Group(); root.add(g); const white = std('#f4f6f8'); const col = (x: number, h: number, tilt: number) => { const m = new Mesh(new BoxGeometry(0.45, h, 0.4), white); m.position.set(x, h / 2 - 1.3, 0); g.add(m); const top = new Mesh(new BoxGeometry(0.45, 0.9, 0.4), white); top.position.set(x + tilt * 0.35, h - 1.3 + 0.35, 0); top.rotation.z = tilt * 0.9; g.add(top); };
-    col(0, 3.4, 0); col(-1.1, 2.4, -1); col(1.1, 2.4, 1); col(-2.1, 1.8, -1); col(2.1, 1.8, 1); g.add(new Mesh(new BoxGeometry(5.6, 0.25, 2.2), std('#d9dee5')).translateY(-1.45));
-    const sun = new Mesh(new CircleGeometry(1.1, 48), glow('#d23b4b', 0.95)); sun.position.set(0, 1.4, -0.9); g.add(sun);
-    return { label: 'ঘোরাও', update(t, _dt, p) { g.rotation.y = (p - 0.5) * 1.2 + Math.sin(t * 0.4) * 0.05; sun.position.y = 1.2 + p * 0.6; } };
+    void hue;
+    const GY = -1.86;
+    const g = new Group(); root.add(g);
+    const white = std('#f2f5f8', { roughness: 0.7 });
+    // `lean` is +1 for a column standing left of centre, which bends right
+    const col = (x: number, h: number, lean: number) => {
+      const m = new Mesh(roundedBox(0.45, h, 0.4, 0.035), white);
+      m.position.set(x, h / 2 - 1.3, 0); g.add(m);
+      const top = new Mesh(roundedBox(0.45, 0.95, 0.4, 0.035), white);
+      const a = -lean * 0.42;
+      top.position.set(x + Math.sin(-a) * 0.47, h - 1.3 + Math.cos(a) * 0.45, 0);
+      top.rotation.z = a; g.add(top);
+    };
+    col(0, 3.4, 0); col(-1.12, 2.5, 1); col(1.12, 2.5, -1); col(-2.12, 1.85, 1); col(2.12, 1.85, -1);
+    const step = (w: number, d: number, y: number, c: string) => { const s = rbox(c, w, 0.22, d, 0.03); s.position.set(0, y, 0); g.add(s); };
+    step(5.9, 2.5, -1.41, '#dfe4ea'); step(6.5, 3.0, -1.63, '#d3d9e0'); step(7.1, 3.5, -1.85, '#c7cdd5');
+    const sun = new Mesh(new CircleGeometry(1.1, 56), glow('#d23b4b', 0.95)); sun.position.set(0, 1.4, -0.95); g.add(sun);
+    return { label: 'ঘোরাও', groundY: GY, aim: { y: 0.35, eye: 1.2 }, update(t, _dt, p) { g.rotation.y = (p - 0.5) * 1.2 + Math.sin(t * 0.4) * 0.05; sun.position.y = 1.2 + p * 0.6; } };
   },
 
   earth({ root, hue }) {
-    const geo = new SphereGeometry(1.9, 48, 48); const pos = geo.attributes.position; const colors = new Float32Array(pos.count * 3); const sea = new Color('#1c5fb8'), land = new Color('#3f9a4a'), c = new Color();
-    for (let i = 0; i < pos.count; i++) { const n = fbm2(pos.getX(i) * 1.3 + 9, pos.getY(i) * 1.3 + pos.getZ(i) * 0.9); c.copy(n > 0.52 ? land : sea); colors.set([c.r, c.g, c.b], i * 3); } geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
-    const globe = new Mesh(geo, std('#fff', { vertexColors: true })); root.add(globe); const haze = new Mesh(new SphereGeometry(2.05, 32, 32), glow('#6b6b6b', 0)); root.add(haze);
+    void hue;
+    const geo = new SphereGeometry(1.9, 64, 48); const pos = geo.attributes.position; const colors = new Float32Array(pos.count * 3);
+    const sea = new Color('#1c5fb8'), shelf = new Color('#2f7fc9'), land = new Color('#3f9a4a'), arid = new Color('#9c8a52'), c = new Color();
+    for (let i = 0; i < pos.count; i++) {
+      const n = fbm2(pos.getX(i) * 1.3 + 9, pos.getY(i) * 1.3 + pos.getZ(i) * 0.9);
+      // four bands rather than two: coasts get a shelf and the land gets dry
+      // ground, where a two-colour globe reads as a beach ball
+      c.copy(n > 0.62 ? arid : n > 0.52 ? land : n > 0.48 ? shelf : sea);
+      colors.set([c.r, c.g, c.b], i * 3);
+    }
+    geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
+    const globe = new Mesh(geo, std('#fff', { vertexColors: true, roughness: 0.86 })); root.add(globe);
+    // the atmosphere: a shell lit from the inside, so it only shows at the rim
+    const air = new Mesh(new SphereGeometry(2.02, 40, 28), new MeshBasicMaterial({ color: '#8fc4f0', transparent: true, opacity: 0.16, side: BackSide, depthWrite: false }));
+    root.add(air);
+    const haze = new Mesh(new SphereGeometry(2.06, 32, 24), glow('#6b6b6b', 0)); root.add(haze);
     return { label: 'দূষণ', update(t, _dt, p) { globe.rotation.y = t * 0.15; haze.rotation.y = t * 0.1; (haze.material as MeshBasicMaterial).opacity = p * 0.6; (globe.material as MeshStandardMaterial).color.copy(WHITE).lerp(new Color('#9a8f80'), p * 0.5); } };
   },
 };
@@ -868,7 +1633,7 @@ export function mountHero(
   }
 
   function build(s: HeroSpec) {
-    root.traverse((o) => { const m = o as Mesh; m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
+    root.traverse((o) => { const m = o as Mesh; if (!m.geometry?.userData?.shared) m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
     user.remove(root); root = new Group(); user.add(root); parts = [];
     hueNow = new Color(s.hue);
     const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font, figures: s.figures ?? [] }); param = s.p ?? 0.5; popStart = performance.now();
