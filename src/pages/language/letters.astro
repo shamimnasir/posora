@@ -1,0 +1,464 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getLanguage } from '../../lib/content';
+
+export const prerender = false;
+
+const HUE = '#B4574A';
+const { consonants, kars, folas, conjuncts } = await getLanguage();
+
+/**
+ * The nine conjuncts the category names. The dataset holds thirty and all
+ * thirty are on the page, but these nine are the ones a visitor can arrive at
+ * by name from the world page, so each needs an anchor of its own.
+ */
+const SLUG: Record<string, string> = {
+  'ক্ষ': 'ksho', 'জ্ঞ': 'gyo', 'ঙ্গ': 'ngo', 'ন্ত': 'nto', 'স্থ': 'stho',
+  'ষ্ট': 'shto', 'হ্ম': 'hmo', 'ন্ধ': 'ndho', 'শ্র': 'shro',
+};
+const FOLA_SLUG: Record<string, string> = { 'র-ফলা': 'r', 'য-ফলা': 'j', 'ব-ফলা': 'b', 'ম-ফলা': 'm', 'ল-ফলা': 'l', 'ন-ফলা': 'n' };
+
+const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA_SLUG };
+---
+<Base
+  title="কার, ফলা ও যুক্তবর্ণ"
+  description="কার টেনে ব্যঞ্জনে বসাও, ফলা জুড়ে দেখো, যুক্তবর্ণ টেনে ভেঙে দেখো কোন দুটো অক্ষর মিলে সেটা হয়েছে। সবটা নিজের হাতে।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/language/">ভাষা</a> <span>/</span> কার, ফলা ও যুক্তবর্ণ</p>
+
+    <header class="head">
+      <p class="eyebrow">ভাষা ভুবন · বিভাগ পরিচিতি</p>
+      <h1>কার, ফলা ও যুক্তবর্ণ</h1>
+      <p class="lede">
+        বাংলা অক্ষর জোড়া লাগে। স্বরবর্ণ ব্যঞ্জনের গায়ে বসে কার হয়, ব্যঞ্জন ব্যঞ্জনের নিচে বসে ফলা হয়,
+        আর দুটো ব্যঞ্জন মিলে একটা নতুন চেহারা নেয় - যুক্তবর্ণ। নিচের তিনটেই টেনে দেখা যায়,
+        জোড়াও যায়, ভাঙাও যায়।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#kar" class="pill pill-w">কার</a>
+        <a href="#fola" class="pill pill-w">ফলা</a>
+        <a href="#jukto" class="pill pill-w">যুক্তবর্ণ</a>
+        <a href="#khela" class="pill pill-w">খেলা</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- ১. কার -->
+      <section class="tool card" id="kar">
+        <h2><span class="no">০১</span> কার বসাও</h2>
+        <p class="how">
+          একটা ব্যঞ্জন বাছো, তারপর নিচের কাঁটাটা টেনে সরাও। কারটা অক্ষরের গায়ে গিয়ে বসবে -
+          কোনোটা আগে, কোনোটা পরে, কোনোটা উপরে, কোনোটা নিচে। অক্ষরটা কীভাবে বদলে যাচ্ছে দেখো।
+        </p>
+        <div class="picker" id="kar-base" role="group" aria-label="ব্যঞ্জন বাছো"></div>
+        <div class="stage">
+          <div class="build">
+            <span class="glyph big" id="kar-out">ক</span>
+          </div>
+          <svg id="kar-svg" viewBox="0 0 620 90" role="img" aria-label="কারের সারি, কাঁটা টেনে বাছো"></svg>
+        </div>
+        <p class="readout" id="kar-out-t"></p>
+      </section>
+
+      <!-- ২. ফলা -->
+      <section class="tool card" id="fola">
+        <h2><span class="no">০২</span> ফলা জোড়ো</h2>
+        <p class="how">
+          ফলা মানে একটা ব্যঞ্জন আরেকটার সঙ্গে লেগে যাওয়া। নিচের যেকোনো ফলা বাছো, তারপর হাতলটা
+          ডানে টানো - দুটো অক্ষর কাছে এসে একটা নতুন চেহারা নেবে।
+        </p>
+        <div class="picker" id="fola-pick" role="group" aria-label="ফলা বাছো">
+          {folas.map((f) => (
+            <button type="button" class="tile" id={`fola-${FOLA_SLUG[f.name] ?? ''}`} data-sign={f.sign} data-name={f.name}>
+              <span class="glyph">{f.base}{f.sign}</span>
+              <small>{f.name}</small>
+            </button>
+          ))}
+        </div>
+        <div class="stage">
+          <svg id="fola-svg" viewBox="0 0 620 160" role="img" aria-label="ফলা জোড়া লাগানো, হাতল টানো"></svg>
+        </div>
+        <p class="readout" id="fola-out"></p>
+      </section>
+
+      <!-- ৩. যুক্তবর্ণ -->
+      <section class="tool card" id="jukto">
+        <h2><span class="no">০৩</span> যুক্তবর্ণ ভাঙো</h2>
+        <p class="how">
+          যুক্তবর্ণ দেখতে নতুন একটা অক্ষরের মতো, কিন্তু ভেতরে দুটো চেনা ব্যঞ্জন লুকিয়ে আছে।
+          একটা বাছো, তারপর হাতলটা টেনে ভেঙে দেখো ভেতরে কারা ছিল।
+        </p>
+        <div class="picker wrapy" id="jukto-pick" role="group" aria-label="যুক্তবর্ণ বাছো">
+          {conjuncts.map((c) => (
+            <button type="button" class="tile" id={SLUG[c.ch] ? `j-${SLUG[c.ch]}` : undefined} data-ch={c.ch}>
+              <span class="glyph">{c.ch}</span>
+            </button>
+          ))}
+        </div>
+        <div class="stage">
+          <svg id="jukto-svg" viewBox="0 0 620 170" role="img" aria-label="যুক্তবর্ণ ভাঙা, হাতল টানো"></svg>
+        </div>
+        <p class="readout" id="jukto-out"></p>
+      </section>
+
+      <!-- ৪. খেলা -->
+      <section class="tool card" id="khela">
+        <h2><span class="no">০৪</span> কোন দুটো মিলে?</h2>
+        <p class="how">উপরের যুক্তবর্ণগুলো ভাঙা হয়ে গেলে এটা সহজ। একটা যুক্তবর্ণ দেখাবো, তুমি বলো ভেতরে কোন দুটো আছে।</p>
+        <p class="ask"><span class="glyph big" id="q-ch"></span></p>
+        <div class="opts" id="q-opts" role="group" aria-label="উত্তর বাছো"></div>
+        <p class="readout" id="q-out"></p>
+        <button type="button" class="btn" id="q-next">নতুন প্রশ্ন</button>
+      </section>
+    </div>
+
+    <p class="back"><a href="/language/">← ভাষা ভুবনে ফিরে যাও</a></p>
+  </div>
+  <script is:inline type="application/json" id="lang-data" set:html={JSON.stringify(payload)}></script>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); line-height: 1.8; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(.cost) { color: var(--muted); font-size: 13.5px; display: block; margin-top: 0.15rem; }
+
+  /* a letter is the subject here, so it gets the display face and real size */
+  .glyph { font-family: var(--font-display); font-weight: 700; line-height: 1; }
+  .glyph.big { font-size: clamp(3.4rem, 11vw, 5.5rem); color: var(--ink); }
+
+  .picker { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 1rem; scrollbar-width: thin; }
+  .picker.wrapy { flex-wrap: wrap; overflow: visible; }
+  .tile {
+    flex: 0 0 auto; min-width: 52px; padding: 0.45rem 0.6rem; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
+  }
+  .tile .glyph { font-size: 22px; }
+  .tile small { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+  .tile:hover { background: color-mix(in oklab, var(--w) 12%, var(--panel-2)); transform: translateY(-1px); }
+  .tile[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .tile[aria-pressed="true"] small { color: var(--on-brand); opacity: 0.85; }
+  .tile:focus-visible { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+  .build { min-height: clamp(4rem, 12vw, 6rem); display: grid; place-items: center; }
+  .stage svg { width: 100%; max-width: 620px; height: auto; display: block; touch-action: none; }
+  .tool :global([role="slider"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .ask { text-align: center; margin: 0.4rem 0 1rem; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  /* the option buttons are built by the script, so they need :global() */
+  .opts :global(button) {
+    font: inherit; font-family: var(--font-display); font-size: 20px; font-weight: 700;
+    padding: 0.5rem 0.9rem; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--ink); cursor: pointer;
+  }
+  .opts :global(button:hover) { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); }
+  .opts :global(button.right) { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .opts :global(button.wrong) { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .opts :global(button:disabled) { cursor: default; }
+  .won { color: var(--ok); }
+  #q-next { margin-top: 1rem; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+</style>
+
+<script>
+  import { svgEl as el, dragTrack, alongX, useItem, rewardCorrect } from '../../lib/handson';
+
+  type Kar = { sign: string; name: string; roman: string; word: string; emoji: string };
+  type Fola = { sign: string; name: string; base: string; word: string; emoji: string };
+  type Conj = { ch: string; parts: string[]; word: string; emoji: string };
+  type Letter = { ch: string; name: string; roman: string; word: string; emoji: string };
+  type Data = { consonants: Letter[]; kars: Kar[]; folas: Fola[]; conjuncts: Conj[]; slug: Record<string, string>; folaSlug: Record<string, string> };
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const data: Data = JSON.parse(document.getElementById('lang-data')!.textContent!);
+
+  /**
+   * The category's own item names, because credit has to land on the exact
+   * string the world page uses. The first is the row of kar signs; then the
+   * four folas; then the nine conjuncts.
+   */
+  const WORLD = 'language', CAT = 'কার, ফলা ও যুক্তবর্ণ';
+  const KAR_ITEM = 'া ি ী ু ূ ৃ ে ৈ ো ৌ';
+  const FOLA_ITEMS = new Set(['র-ফলা', 'য-ফলা', 'ব-ফলা', 'ম-ফলা']);
+  const CONJ_ITEMS = new Set(['ক্ষ', 'জ্ঞ', 'ঙ্গ', 'ন্ত', 'স্থ', 'ষ্ট', 'হ্ম', 'ন্ধ', 'শ্র']);
+  const credit = (item: string) => { useItem(WORLD, CAT, item); };
+
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', W = 'var(--w)';
+  const glyph = (parent: SVGElement, x: number, y: number, size: number, fill = INK) => {
+    const t = el('text', { x, y, 'font-size': size, 'text-anchor': 'middle', fill, 'font-weight': 700 });
+    t.style.fontFamily = 'var(--font-display)';
+    parent.appendChild(t); return t;
+  };
+  const label = (parent: SVGElement, x: number, y: number, size = 12) => {
+    const t = el('text', { x, y, 'font-size': size, 'text-anchor': 'middle', fill: MUTED });
+    parent.appendChild(t); return t;
+  };
+
+  /** One picker row: buttons that behave like radio buttons. */
+  function picker(host: HTMLElement, onPick: (btn: HTMLButtonElement) => void, startAt = 0) {
+    const tiles = [...host.querySelectorAll<HTMLButtonElement>('.tile')];
+    const select = (b: HTMLButtonElement, scroll = false) => {
+      tiles.forEach((t) => t.setAttribute('aria-pressed', String(t === b)));
+      if (scroll) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+      onPick(b);
+    };
+    host.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.tile');
+      if (b) select(b);
+    });
+    if (tiles[startAt]) select(tiles[startAt]!);
+    return { tiles, select };
+  }
+
+  /* ---------- ১. কার ---------- */
+  (function kar() {
+    const host = $<HTMLElement>('#kar-base');
+    // Every consonant, so a child can try the letter their own name starts with.
+    host.replaceChildren(...data.consonants.map((c) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tile'; b.dataset.ch = c.ch;
+      b.setAttribute('aria-pressed', 'false');
+      const g = document.createElement('span'); g.className = 'glyph'; g.textContent = c.ch;
+      b.append(g);
+      return b;
+    }));
+
+    const out = $('#kar-out'), outT = $('#kar-out-t');
+    const svg = $<SVGSVGElement>('#kar-svg');
+    const PAD = 30, SPAN = 560, n = data.kars.length;
+    const step = SPAN / Math.max(1, n - 1);
+    svg.appendChild(el('line', { x1: PAD, y1: 34, x2: PAD + SPAN, y2: 34, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    data.kars.forEach((k, i) => {
+      const x = PAD + i * step;
+      svg.appendChild(el('circle', { cx: x, cy: 34, r: 3, fill: LINE }));
+      // the bare sign does not render on its own, so it is shown on a dotted circle
+      glyph(svg, x, 22, 20, MUTED).textContent = k.sign ? `ক${k.sign}` : 'ক';
+    });
+    const handle = el('g');
+    handle.append(
+      el('rect', { x: -24, y: 10, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { cy: 34, r: 13, fill: W }),
+      el('circle', { cy: 34, r: 5, fill: 'var(--panel)' }),
+    );
+    svg.appendChild(handle);
+    label(svg, PAD + SPAN / 2, 80).textContent = 'কাঁটা টেনে কার বদলাও';
+
+    let base = data.consonants[0]!;
+    let ki = 1;
+    /**
+     * The consonant's roman already carries the inherent অ, so that vowel is
+     * dropped before the kar's own vowel is put in its place: ক is "kô", and
+     * কা is "ka", not "kôa".
+     */
+    const roman = (k: Kar) => base.roman.replace(/ô$/, '') + k.roman;
+    function render() {
+      const k = data.kars[ki]!;
+      handle.setAttribute('transform', `translate(${PAD + ki * step},0)`);
+      out.textContent = base.ch + k.sign;
+      outT.innerHTML = `<b>${base.ch}${k.sign}</b> - ${k.name}, রোমানে <b>${roman(k)}</b>। এই কারের একটা শব্দ: ${k.emoji} <b>${k.word}</b>।`
+        + `<span class="cost">${k.sign ? `কারটা অক্ষরের ${['ি'].includes(k.sign) ? 'আগে' : ['ে', 'ৈ'].includes(k.sign) ? 'আগে' : ['ো', 'ৌ'].includes(k.sign) ? 'দুই পাশে' : ['ু', 'ূ', 'ৃ'].includes(k.sign) ? 'নিচে' : 'পরে'} বসে।` : 'কোনো চিহ্ন নেই - ব্যঞ্জনের নিজের ভেতরেই অ ধরা থাকে।'}</span>`;
+    }
+
+    picker(host, (b) => { base = data.consonants.find((c) => c.ch === b.dataset.ch) ?? base; render(); credit(KAR_ITEM); });
+    const toIndex = alongX(svg, 620, PAD, step);
+    dragTrack({
+      surface: svg, min: 0, max: n - 1, step: 1, value: ki,
+      toValue: (x) => toIndex(x),
+      onChange: (v) => { ki = v; render(); credit(KAR_ITEM); },
+      label: 'কার বাছো', text: (v) => data.kars[v]?.name ?? '',
+    });
+    render();
+  })();
+
+  /* ---------- ২. ফলা ---------- */
+  (function fola() {
+    const svg = $<SVGSVGElement>('#fola-svg');
+    const LEFT = 200, RIGHT = 420, Y = 86;
+    const a = glyph(svg, LEFT, Y, 62), b = glyph(svg, RIGHT, Y, 62);
+    const joined = glyph(svg, 310, Y, 74);
+    const plus = label(svg, 310, Y - 12, 26);
+    plus.textContent = '+';
+    const handle = el('g');
+    handle.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    svg.appendChild(handle);
+    svg.appendChild(el('line', { x1: 150, y1: 136, x2: 470, y2: 136, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.insertBefore(svg.lastChild!, handle);
+    label(svg, 310, 158).textContent = 'হাতল ডানে টানলে জোড়া লাগবে';
+
+    const out = $('#fola-out');
+    let cur = data.folas[0]!;
+    let join = 0;   // 0 apart, 100 joined
+
+    function render() {
+      const t = join / 100;
+      const done = t > 0.92;
+      handle.setAttribute('transform', `translate(${150 + t * 320},136)`);
+      joined.style.display = done ? '' : 'none';
+      a.style.display = b.style.display = plus.style.display = done ? 'none' : '';
+      if (done) {
+        joined.textContent = cur.base + cur.sign;
+      } else {
+        a.textContent = cur.base;
+        b.textContent = cur.sign.replace('্', '') ;
+        a.setAttribute('x', String(LEFT + t * 100));
+        b.setAttribute('x', String(RIGHT - t * 100));
+        plus.setAttribute('opacity', String(1 - t));
+      }
+      out.innerHTML = done
+        ? `<b>${cur.base}</b> আর <b>${cur.sign.replace('্', '')}</b> মিলে হলো <b>${cur.base}${cur.sign}</b> - এটাই ${cur.name}। যেমন: ${cur.emoji} <b>${cur.word}</b>।`
+          + `<span class="cost">নিচের ছোট চিহ্নটা আসলে দ্বিতীয় ব্যঞ্জনটাই, ছোট হয়ে লেগে গেছে।</span>`
+        : `<b>${cur.name}</b> - হাতলটা ডানে টেনে দুটো অক্ষর জুড়ে দাও।`;
+    }
+
+    picker($<HTMLElement>('#fola-pick'), (btn) => {
+      cur = data.folas.find((f) => f.name === btn.dataset.name) ?? data.folas[0]!;
+      render();
+      if (FOLA_ITEMS.has(cur.name)) credit(cur.name);
+    });
+    const toJoin = alongX(svg, 620, 150, 3.2);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 100, step: 4, value: 0,
+      toValue: (x) => toJoin(x),
+      onChange: (v) => { join = v; render(); if (v > 92 && FOLA_ITEMS.has(cur.name)) credit(cur.name); },
+      label: 'জোড়া লাগাও', text: (v) => (v > 92 ? `${cur.base}${cur.sign} জোড়া লেগেছে` : `${Math.round(v)} ভাগ কাছে`),
+    });
+    render();
+  })();
+
+  /* ---------- ৩. যুক্তবর্ণ ---------- */
+  (function jukto() {
+    const svg = $<SVGSVGElement>('#jukto-svg');
+    const MID = 310, Y = 92;
+    const whole = glyph(svg, MID, Y, 78);
+    const p1 = glyph(svg, MID, Y, 64), p2 = glyph(svg, MID, Y, 64);
+    const plus = label(svg, MID, Y - 14, 26); plus.textContent = '+';
+    const handle = el('g');
+    handle.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    svg.appendChild(el('line', { x1: 150, y1: 142, x2: 470, y2: 142, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.appendChild(handle);
+    label(svg, MID, 164).textContent = 'হাতল ডানে টানলে ভেঙে যাবে';
+
+    const out = $('#jukto-out');
+    let cur = data.conjuncts[0]!;
+    let split = 0;
+
+    function render() {
+      const t = split / 100;
+      const apart = t > 0.08;
+      handle.setAttribute('transform', `translate(${150 + t * 320},142)`);
+      whole.style.display = apart ? 'none' : '';
+      p1.style.display = p2.style.display = apart ? '' : 'none';
+      plus.setAttribute('opacity', String(Math.min(1, t * 2)));
+      whole.textContent = cur.ch;
+      p1.textContent = cur.parts[0] ?? '';
+      p2.textContent = cur.parts[1] ?? '';
+      p1.setAttribute('x', String(MID - 20 - t * 90));
+      p2.setAttribute('x', String(MID + 20 + t * 90));
+      out.innerHTML = apart
+        ? `<b>${cur.ch}</b> = <b>${cur.parts.join('</b> + <b>')}</b>। যেমন: ${cur.emoji} <b>${cur.word}</b>।`
+          + `<span class="cost">দুটো ব্যঞ্জন পাশাপাশি এলে হসন্ত (্) দিয়ে জোড়া লাগে, আর তখন চেহারাটাই বদলে যায়।</span>`
+        : `<b>${cur.ch}</b> - হাতলটা টেনে ভেঙে দেখো ভেতরে কারা আছে।`;
+    }
+
+    const pick = picker($<HTMLElement>('#jukto-pick'), (btn) => {
+      cur = data.conjuncts.find((c) => c.ch === btn.dataset.ch) ?? data.conjuncts[0]!;
+      render();
+      if (CONJ_ITEMS.has(cur.ch)) credit(cur.ch);
+    });
+    const toSplit = alongX(svg, 620, 150, 3.2);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 100, step: 4, value: 0,
+      toValue: (x) => toSplit(x),
+      onChange: (v) => { split = v; render(); if (v > 40 && CONJ_ITEMS.has(cur.ch)) credit(cur.ch); },
+      label: 'ভেঙে দেখো', text: (v) => (v > 8 ? `${cur.parts.join(' আর ')}` : cur.ch),
+    });
+    render();
+
+    /**
+     * Arriving by name from the world page. The nine named conjuncts each have
+     * an anchor on their tile, so the browser scrolls there on its own; this
+     * also selects it, because landing next to the right tile without it being
+     * chosen is a half-arrival.
+     */
+    const fromHash = () => {
+      const id = location.hash.slice(1);
+      if (!id) return;
+      const tile = pick.tiles.find((t) => t.id === id);
+      if (tile) pick.select(tile, true);
+    };
+    addEventListener('hashchange', fromHash);
+    fromHash();
+  })();
+
+  /* ---------- ৪. খেলা ---------- */
+  (function game() {
+    const chEl = $('#q-ch'), opts = $<HTMLElement>('#q-opts'), out = $('#q-out');
+    const pool = data.conjuncts;
+    let answer: Conj = pool[0]!;
+    const paid = new Set<string>();
+
+    const shuffle = <T,>(a: T[]): T[] => { const c = a.slice(); for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [c[i], c[j]] = [c[j]!, c[i]!]; } return c; };
+
+    function ask() {
+      answer = pool[Math.floor(Math.random() * pool.length)]!;
+      chEl.textContent = answer.ch;
+      out.textContent = '';
+      const wrong = shuffle(pool.filter((c) => c.ch !== answer.ch)).slice(0, 3);
+      opts.replaceChildren(...shuffle([answer, ...wrong]).map((c) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = c.parts.join(' + ');
+        b.addEventListener('click', () => choose(b, c));
+        return b;
+      }));
+    }
+
+    function choose(btn: HTMLButtonElement, picked: Conj) {
+      const right = picked.ch === answer.ch;
+      btn.classList.add(right ? 'right' : 'wrong');
+      opts.querySelectorAll('button').forEach((b) => { (b as HTMLButtonElement).disabled = true; });
+      if (!right) {
+        opts.querySelectorAll('button').forEach((b) => { if (b.textContent === answer.parts.join(' + ')) b.classList.add('right'); });
+      }
+      const first = !paid.has(answer.ch);
+      if (first) paid.add(answer.ch);
+      out.innerHTML = right
+        ? `ঠিক! <b>${answer.ch}</b> = <b>${answer.parts.join('</b> + <b>')}</b>।${first ? ' <b class="won">+৫ জ্ঞানবিন্দু</b>' : ''}`
+        : `না, <b>${answer.ch}</b> = <b>${answer.parts.join('</b> + <b>')}</b>। আরেকটা দেখি?`;
+      if (right && first) rewardCorrect(5);
+      if (CONJ_ITEMS.has(answer.ch)) credit(answer.ch);
+    }
+
+    $('#q-next').addEventListener('click', ask);
+    ask();
+  })();
+</script>

@@ -1452,7 +1452,24 @@ export const worlds: World[] = [
      "ন্ধ",
      "শ্র"
     ],
-    "play": "স্লাইডার টানলে একেকটা যুক্তবর্ণ (ক্ষ, জ্ঞ, ন্ত...) বড় হয়ে সামনে আসে।"
+    "play": "স্লাইডার টানলে একেকটা যুক্তবর্ণ (ক্ষ, জ্ঞ, ন্ত...) বড় হয়ে সামনে আসে।",
+    "lab": "/language/letters/",
+    "labAnchors": [
+     "kar",
+     "fola-r",
+     "fola-j",
+     "fola-b",
+     "fola-m",
+     "j-ksho",
+     "j-gyo",
+     "j-ngo",
+     "j-nto",
+     "j-stho",
+     "j-shto",
+     "j-hmo",
+     "j-ndho",
+     "j-shro"
+    ]
    },
    {
     "n": "হাতের লেখা",
