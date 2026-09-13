@@ -182,11 +182,18 @@ const HUE = '#6E8C2F';
   @media (pointer: coarse) {
     .jump { min-height: 44px; padding-inline: 0.9rem; }
   }
+
+  /* The scenes lay themselves out portrait below this width (the same
+     breakpoint fitScene uses), so nothing has to be swiped sideways. */
+  @media (max-width: 640px) {
+    .wide { overflow-x: visible; }
+    .wide svg { min-width: 0; }
+  }
 </style>
 
 <script>
   import { bn, bnNum } from '../../lib/bn';
-  import { svgEl as el, clamp, fillGauge, dragTrack, alongX, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, fillGauge, dragTrack, alongX, fitScene, useItem } from '../../lib/handson';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
@@ -196,7 +203,7 @@ const HUE = '#6E8C2F';
   const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
   const taka = (n: number) => bnNum(Math.round(n));
 
-  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)';
   const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
     const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
     t.textContent = s; p.appendChild(t); return t;
@@ -205,7 +212,7 @@ const HUE = '#6E8C2F';
     const g = el('g');
     g.append(
       el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
-      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 12, fill: HUE }),
       el('circle', { r: 4, fill: 'var(--panel)' }),
     );
     return g;
@@ -214,10 +221,11 @@ const HUE = '#6E8C2F';
   /* ---------- ১. কেন জমাতে হয় ---------- */
   (function why() {
     const svg = $<SVGSVGElement>('#keno-svg');
-    const X0 = 50, X1 = 590, BASE = 170, TOP = 24;
+    const { w: W, h: H } = fitScene(svg, [620, 220], [340, 250]);
+    const X0 = W * 0.07, X1 = W * 0.95, BASE = H * 0.78, TOP = 24;
     svg.appendChild(el('line', { x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: LINE, 'stroke-width': 2 }));
     const bars = el('g'); svg.appendChild(bars);
-    text(svg, (X0 + X1) / 2, 200, 'বারো মাস');
+    text(svg, (X0 + X1) / 2, H - 14, 'বারো মাস', { 'font-size': 11 });
     const dailyIn = $<HTMLInputElement>('#k-daily'), dailyV = $('#k-daily-v');
     const keepIn = $<HTMLInputElement>('#k-keep'), keepV = $('#k-keep-v'), out = $('#keno-out');
 
@@ -227,12 +235,12 @@ const HUE = '#6E8C2F';
       const perMonth = d * 30 * (pct / 100);
       const year = perMonth * 12;
       bars.replaceChildren();
-      const w = (X1 - X0) / 12 - 8;
+      const w = Math.max(6, (X1 - X0) / 12 - (W > 400 ? 8 : 4));
       for (let m = 1; m <= 12; m++) {
         const h = year ? ((perMonth * m) / year) * (BASE - TOP) : 0;
         bars.appendChild(el('rect', {
-          x: X0 + (m - 1) * ((X1 - X0) / 12) + 4, y: BASE - h, width: w, height: h,
-          rx: 3, fill: W, 'fill-opacity': 0.35 + (m / 12) * 0.55,
+          x: X0 + (m - 1) * ((X1 - X0) / 12) + (W > 400 ? 4 : 2), y: BASE - h, width: w, height: h,
+          rx: 3, fill: HUE, 'fill-opacity': 0.35 + (m / 12) * 0.55,
         }));
       }
       out.innerHTML = pct === 0
@@ -252,7 +260,7 @@ const HUE = '#6E8C2F';
     const X = 60, TOP = 40, BOT = 250, WID = 140;
     svg.appendChild(el('path', { d: `M ${X} ${TOP} L ${X} ${BOT - 22} Q ${X} ${BOT} ${X + 22} ${BOT} L ${X + WID - 22} ${BOT} Q ${X + WID} ${BOT} ${X + WID} ${BOT - 22} L ${X + WID} ${TOP}`, fill: 'none', stroke: LINE, 'stroke-width': 3 }));
     svg.appendChild(el('rect', { x: X - 8, y: TOP - 16, width: WID + 16, height: 16, rx: 4, fill: SOFT, stroke: LINE }));
-    const coins = el('rect', { x: X + 4, y: BOT, width: WID - 8, height: 0, rx: 4, fill: W, 'fill-opacity': 0.75 });
+    const coins = el('rect', { x: X + 4, y: BOT, width: WID - 8, height: 0, rx: 4, fill: HUE, 'fill-opacity': 0.75 });
     svg.appendChild(coins);
     const fill = fillGauge(coins as SVGRectElement, { min: 0, max: 100, top: TOP + 8, bottom: BOT - 4 });
     const pctTxt = text(svg, X + WID / 2, 150, '', { 'font-size': 22, fill: INK, 'font-weight': 700 });
@@ -292,16 +300,20 @@ const HUE = '#6E8C2F';
   /* ---------- ৩. মাটির ব্যাংক না সঞ্চয়ী হিসাব ---------- */
   (function bank() {
     const svg = $<SVGSVGElement>('#bank-svg');
-    const X0 = 60, X1 = 560, BASE = 200, TOP = 26;
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 270], [340, 330]);
+    // In portrait the two line names sit above the chart instead of off its
+    // right edge, where they had nowhere to go.
+    const X0 = W * 0.1, X1 = narrow ? W * 0.92 : W * 0.9, BASE = H * 0.72, TOP = narrow ? 54 : 26;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 32 };
     svg.appendChild(el('line', { x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: LINE, 'stroke-width': 2 }));
     const potLine = el('polyline', { fill: 'none', stroke: MUTED, 'stroke-width': 3, 'stroke-linecap': 'round' });
-    const bankLine = el('polyline', { fill: 'none', stroke: W, 'stroke-width': 3.5, 'stroke-linecap': 'round' });
+    const bankLine = el('polyline', { fill: 'none', stroke: HUE, 'stroke-width': 3.5, 'stroke-linecap': 'round' });
     svg.append(potLine, bankLine);
-    const potTxt = text(svg, X1 + 6, 0, '', { 'text-anchor': 'start', 'font-size': 11, fill: MUTED });
-    const bankTxt = text(svg, X1 + 6, 0, '', { 'text-anchor': 'start', 'font-size': 11, fill: INK, 'font-weight': 700 });
-    svg.appendChild(el('line', { x1: 120, y1: 238, x2: 500, y2: 238, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const potTxt = text(svg, narrow ? W * 0.72 : X1 + 6, 0, '', { 'text-anchor': narrow ? 'end' : 'start', 'font-size': 11, fill: MUTED });
+    const bankTxt = text(svg, narrow ? W * 0.28 : X1 + 6, 0, '', { 'text-anchor': narrow ? 'start' : 'start', 'font-size': 11, fill: INK, 'font-weight': 700 });
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
-    const yearTxt = text(svg, 310, 262, '');
+    const yearTxt = text(svg, W / 2, H - 8, '', { 'font-size': 11 });
 
     const monthIn = $<HTMLInputElement>('#b-month'), monthV = $('#b-month-v');
     const rateIn = $<HTMLInputElement>('#b-rate'), rateV = $('#b-rate-v'), out = $('#bank-out');
@@ -310,7 +322,7 @@ const HUE = '#6E8C2F';
     function render() {
       const m = +monthIn.value, r = +rateIn.value / 100;
       monthV.textContent = taka(m); rateV.textContent = bn(r * 100);
-      handle.setAttribute('transform', `translate(${120 + (years / 20) * 380},238)`);
+      handle.setAttribute('transform', `translate(${TRACK.x0 + (years / 20) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       yearTxt.textContent = `${bn(years)} বছর`;
 
       // month by month, so the interest lands on what is already there
@@ -326,9 +338,9 @@ const HUE = '#6E8C2F';
       potLine.setAttribute('points', pot.map(pt).join(' '));
       bankLine.setAttribute('points', acc.map(pt).join(' '));
       const potEnd = pot[pot.length - 1]!, accEnd = acc[acc.length - 1]!;
-      potTxt.setAttribute('y', String(BASE - (potEnd / top) * (BASE - TOP) + 4));
+      potTxt.setAttribute('y', String(narrow ? 22 : BASE - (potEnd / top) * (BASE - TOP) + 4));
       potTxt.textContent = 'মাটির ব্যাংক';
-      bankTxt.setAttribute('y', String(BASE - (accEnd / top) * (BASE - TOP) - 6));
+      bankTxt.setAttribute('y', String(narrow ? 22 : BASE - (accEnd / top) * (BASE - TOP) - 6));
       bankTxt.textContent = 'সঞ্চয়ী হিসাব';
 
       const gain = accEnd - potEnd;
@@ -340,7 +352,7 @@ const HUE = '#6E8C2F';
     }
     monthIn.addEventListener('input', render);
     rateIn.addEventListener('input', render);
-    const toYears = alongX(svg, 620, 120, 19);
+    const toYears = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 20);
     dragTrack({
       surface: svg, handle, min: 1, max: 20, step: 1, value: years,
       toValue: (x) => toYears(x),
@@ -353,12 +365,13 @@ const HUE = '#6E8C2F';
   /* ---------- ৪. জরুরি তহবিল ---------- */
   (function fund() {
     const svg = $<SVGSVGElement>('#fund-svg');
-    const X0 = 60, WID = 500, Y = 60, H = 40;
+    const { w: VW, h: VH } = fitScene(svg, [620, 190], [340, 220]);
+    const X0 = VW * 0.08, WID = VW * 0.84, Y = VH * 0.3, H = 40;
     svg.appendChild(el('rect', { x: X0, y: Y, width: WID, height: H, rx: 8, fill: SOFT, stroke: LINE }));
-    const have = el('rect', { x: X0, y: Y, width: 0, height: H, rx: 8, fill: W, 'fill-opacity': 0.8 });
+    const have = el('rect', { x: X0, y: Y, width: 0, height: H, rx: 8, fill: HUE, 'fill-opacity': 0.8 });
     svg.appendChild(have);
     const marks = el('g'); svg.appendChild(marks);
-    text(svg, X0 + WID / 2, 140, 'তিন মাসের খরচ = নিরাপদ জায়গা');
+    text(svg, VW / 2, VH - 18, 'তিন মাসের খরচ = নিরাপদ জায়গা', { 'font-size': 11 });
     const spendIn = $<HTMLInputElement>('#f-spend'), spendV = $('#f-spend-v');
     const haveIn = $<HTMLInputElement>('#f-have'), haveV = $('#f-have-v'), out = $('#fund-out');
 
@@ -371,7 +384,7 @@ const HUE = '#6E8C2F';
       for (let i = 1; i <= 3; i++) {
         const x = X0 + (i / 3) * WID;
         marks.appendChild(el('line', { x1: x, y1: Y - 6, x2: x, y2: Y + H + 6, stroke: LINE, 'stroke-width': 2 }));
-        text(marks, x, Y + H + 22, `${bn(i)} মাস`);
+        text(marks, x, Y + H + 22, `${bn(i)} মাস`, { 'font-size': 11 });
       }
       const months = h / s;
       const base = `তোমার তহবিলে <b>${taka(h)} টাকা</b> আছে, যা <b>${bn(Math.floor(months))} মাস</b> চলার মতো। লক্ষ্য অন্তত তিন মাস, মানে <b>${taka(target)} টাকা</b>।`;
@@ -402,15 +415,17 @@ const HUE = '#6E8C2F';
   /* ---------- ৫. বিলম্বিত তৃপ্তি ---------- */
   (function waiting() {
     const svg = $<SVGSVGElement>('#wait-svg');
-    const X0 = 70, X1 = 550, BASE = 130;
-    const nowBar = el('rect', { x: X0, width: 90, rx: 6, fill: MUTED, 'fill-opacity': 0.5 });
-    const laterBar = el('rect', { width: 90, rx: 6, fill: W, 'fill-opacity': 0.85 });
+    const { w: W, h: H } = fitScene(svg, [620, 210], [340, 250]);
+    const X0 = W * 0.11, BASE = H * 0.62, BARW = Math.min(90, W * 0.2), TALL = H * 0.43;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 38 };
+    const nowBar = el('rect', { x: X0, width: BARW, rx: 6, fill: MUTED, 'fill-opacity': 0.5 });
+    const laterBar = el('rect', { width: BARW, rx: 6, fill: HUE, 'fill-opacity': 0.85 });
     svg.append(nowBar, laterBar);
-    const nowTxt = text(svg, X0 + 45, 0, '', { 'font-size': 15, fill: INK, 'font-weight': 700 });
-    const laterTxt = text(svg, 0, 0, '', { 'font-size': 15, fill: INK, 'font-weight': 700 });
-    text(svg, X0 + 45, BASE + 22, 'এখনই নিলে');
-    const laterLbl = text(svg, 0, BASE + 22, 'অপেক্ষা করলে');
-    svg.appendChild(el('line', { x1: 120, y1: 172, x2: 500, y2: 172, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const nowTxt = text(svg, X0 + BARW / 2, 0, '', { 'font-size': 13, fill: INK, 'font-weight': 700 });
+    const laterTxt = text(svg, 0, 0, '', { 'font-size': 13, fill: INK, 'font-weight': 700 });
+    text(svg, X0 + BARW / 2, BASE + 20, 'এখনই নিলে', { 'font-size': 11 });
+    const laterLbl = text(svg, 0, BASE + 20, 'অপেক্ষা করলে', { 'font-size': 11 });
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
     const out = $('#wait-out');
     let days = 30;
@@ -421,20 +436,20 @@ const HUE = '#6E8C2F';
       // a savings account gives, not a fantasy
       const later = Math.round(now * (1 + (days / 7) * 0.02));
       const top = Math.max(now, later);
-      const h = (v: number) => (v / top) * 90;
+      const h = (v: number) => (v / top) * TALL;
       nowBar.setAttribute('y', String(BASE - h(now))); nowBar.setAttribute('height', String(h(now)));
       nowTxt.setAttribute('y', String(BASE - h(now) - 8)); nowTxt.textContent = `${taka(now)} টাকা`;
-      const lx = X0 + 60 + (days / 90) * 320;
+      const lx = X0 + BARW * 0.7 + (days / 90) * (W - X0 * 2 - BARW * 1.7);
       laterBar.setAttribute('x', String(lx)); laterBar.setAttribute('y', String(BASE - h(later))); laterBar.setAttribute('height', String(h(later)));
-      laterTxt.setAttribute('x', String(lx + 45)); laterTxt.setAttribute('y', String(BASE - h(later) - 8));
+      laterTxt.setAttribute('x', String(lx + BARW / 2)); laterTxt.setAttribute('y', String(BASE - h(later) - 8));
       laterTxt.textContent = `${taka(later)} টাকা`;
-      laterLbl.setAttribute('x', String(lx + 45));
-      handle.setAttribute('transform', `translate(${120 + (days / 90) * 380},172)`);
+      laterLbl.setAttribute('x', String(lx + BARW / 2));
+      handle.setAttribute('transform', `translate(${TRACK.x0 + (days / 90) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       out.innerHTML = `${bn(days)} দিন অপেক্ষা করলে ১০০ টাকা হয় <b>${taka(later)} টাকা</b> - বাড়তি <b>${taka(later - now)} টাকা</b>।`
         + `<span class="cost">অপেক্ষার একটা দাম আছে, আর সেটাই সুদ। কিন্তু উল্টোটাও সত্যি: এখনই দরকার হলে অপেক্ষা করার কোনো মানে নেই। দুটোই ভেবে ঠিক করতে হয়।</span>`;
       credit('বিলম্বিত তৃপ্তি');
     }
-    const toDays = alongX(svg, 620, 120, 4.22);
+    const toDays = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 90);
     dragTrack({
       surface: svg, handle, min: 0, max: 90, step: 5, value: days,
       toValue: (x) => toDays(x),

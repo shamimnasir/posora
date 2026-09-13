@@ -154,11 +154,18 @@ const HUE = '#C0473E';
   @media (pointer: coarse) {
     .jump { min-height: 44px; padding-inline: 0.9rem; }
   }
+
+  /* The scenes lay themselves out portrait below this width (the same
+     breakpoint fitScene uses), so nothing has to be swiped sideways. */
+  @media (max-width: 640px) {
+    .wide { overflow-x: visible; }
+    .wide svg { min-width: 0; }
+  }
 </style>
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, fitScene, useItem } from '../../lib/handson';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
@@ -197,6 +204,7 @@ const HUE = '#C0473E';
   /* ---------- ১. বিন্দু, রেখা, কোণ ---------- */
   (function angle() {
     const svg = $<SVGSVGElement>('#angle-svg');
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 330], [340, 380]);
     const arm1 = el('line', { stroke: W, 'stroke-width': 3, 'stroke-linecap': 'round' });
     const arm2 = el('line', { stroke: W, 'stroke-width': 3, 'stroke-linecap': 'round' });
     const wedge = el('path', { fill: W, 'fill-opacity': 0.16 });
@@ -206,7 +214,10 @@ const HUE = '#C0473E';
     const A = dot('ক'), B = dot('খ'), C = dot('গ');
     svg.append(A, B, C);
     const out = $('#angle-out');
-    const P = { a: { x: 150, y: 90 }, b: { x: 250, y: 250 }, c: { x: 480, y: 150 } };
+    const P = narrow
+      ? { a: { x: 80, y: 90 }, b: { x: 130, y: 260 }, c: { x: 280, y: 160 } }
+      : { a: { x: 150, y: 90 }, b: { x: 250, y: 250 }, c: { x: 480, y: 150 } };
+    const R_ARC = narrow ? 34 : 46;
 
     function render() {
       A.setAttribute('transform', `translate(${P.a.x},${P.a.y})`);
@@ -222,17 +233,17 @@ const HUE = '#C0473E';
       let d = ((a2 - a1) * 180) / Math.PI;
       while (d < 0) d += 360;
       if (d > 180) d = 360 - d;
-      const r = 46;
+      const r = R_ARC;
       const sweep = ((a2 - a1 + Math.PI * 2) % (Math.PI * 2)) > Math.PI ? 0 : 1;
       const px = (ang: number, rr: number) => `${P.b.x + Math.cos(ang) * rr} ${P.b.y + Math.sin(ang) * rr}`;
       wedge.setAttribute('d', `M ${P.b.x} ${P.b.y} L ${px(a1, r)} A ${r} ${r} 0 0 ${sweep} ${px(a2, r)} Z`);
       mark.setAttribute('d', `M ${px(a1, r)} A ${r} ${r} 0 0 ${sweep} ${px(a2, r)}`);
       const mid = a1 + ((sweep ? 1 : -1) * (d * Math.PI) / 180) / 2;
-      deg.setAttribute('x', String(P.b.x + Math.cos(mid) * (r + 22)));
-      deg.setAttribute('y', String(P.b.y + Math.sin(mid) * (r + 22) + 5));
+      deg.setAttribute('x', String(clamp(P.b.x + Math.cos(mid) * (r + 22), 24, W - 24)));
+      deg.setAttribute('y', String(clamp(P.b.y + Math.sin(mid) * (r + 22) + 5, 20, H - 12)));
       deg.textContent = `${bn(Math.round(d))}°`;
 
-      const len = (p: { x: number; y: number }, q: { x: number; y: number }) => Math.hypot(p.x - q.x, p.y - q.y) / 20;
+      const len = (p: { x: number; y: number }, q: { x: number; y: number }) => Math.hypot(p.x - q.x, p.y - q.y) / (narrow ? 12 : 20);
       const kind = d < 89.5 ? 'সূক্ষ্মকোণ - ৯০°-র কম'
         : d < 90.5 ? 'সমকোণ - ঠিক ৯০°'
         : d < 179.5 ? 'স্থূলকোণ - ৯০°-র বেশি'
@@ -242,8 +253,8 @@ const HUE = '#C0473E';
         + `<span class="cost">বিন্দুর নিজের কোনো মাপ নেই, শুধু জায়গা। দুই বিন্দু মেলালে রেখাংশ, আর দুই রেখাংশ এক বিন্দুতে মিললে কোণ।</span>`;
       credit('বিন্দু'); credit('রেখা'); credit('কোণ');
     }
-    const bounds = { x0: 40, y0: 40, x1: 580, y1: 290 };
-    const view = { w: 620, h: 330 };
+    const bounds = { x0: 34, y0: 40, x1: W - 34, y1: H - 44 };
+    const view = { w: W, h: H };
     dragPoint({ surface: svg, handle: A, view, bounds, x: P.a.x, y: P.a.y, label: 'বিন্দু ক', onChange: (x, y) => { P.a = { x, y }; render(); } });
     dragPoint({ surface: svg, handle: B, view, bounds, x: P.b.x, y: P.b.y, label: 'বিন্দু খ', onChange: (x, y) => { P.b = { x, y }; render(); } });
     dragPoint({ surface: svg, handle: C, view, bounds, x: P.c.x, y: P.c.y, label: 'বিন্দু গ', onChange: (x, y) => { P.c = { x, y }; render(); } });
@@ -253,21 +264,23 @@ const HUE = '#C0473E';
   /* ---------- ২. ত্রিভুজ থেকে বৃত্ত ---------- */
   (function polygon() {
     const svg = $<SVGSVGElement>('#poly-svg');
-    const CX = 310, CY = 120, R = 92;
+    const { w: W, h: H } = fitScene(svg, [620, 300], [340, 330]);
+    const CX = W / 2, CY = H * 0.42, R = Math.min(W, H) * 0.3;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 50 };
     const ring = el('circle', { cx: CX, cy: CY, r: R, fill: 'none', stroke: LINE, 'stroke-width': 1.5, 'stroke-dasharray': '4 5' });
     const shape = el('polygon', { fill: W, 'fill-opacity': 0.2, stroke: W, 'stroke-width': 3, 'stroke-linejoin': 'round' });
     const verts = el('g');
     svg.append(ring, shape, verts);
-    svg.appendChild(el('line', { x1: 120, y1: 250, x2: 500, y2: 250, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
-    text(svg, CX, 282, 'বাহুর সংখ্যা টানো');
+    text(svg, CX, H - 16, 'বাহুর সংখ্যা টানো');
     const out = $('#poly-out');
     let n = 3;
 
     const NAMES: Record<number, string> = { 3: 'ত্রিভুজ', 4: 'চতুর্ভুজ', 5: 'পঞ্চভুজ', 6: 'ষড়ভুজ', 7: 'সপ্তভুজ', 8: 'অষ্টভুজ' };
 
     function render() {
-      handle.setAttribute('transform', `translate(${120 + ((n - 3) / 21) * 380},250)`);
+      handle.setAttribute('transform', `translate(${TRACK.x0 + ((n - 3) / 21) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       const pts: string[] = [];
       verts.replaceChildren();
       for (let i = 0; i < n; i++) {
@@ -279,9 +292,9 @@ const HUE = '#C0473E';
       shape.setAttribute('points', pts.join(' '));
 
       const inner = ((n - 2) * 180) / n;
-      const side = 2 * R * Math.sin(Math.PI / n) / 20;
+      const side = 2 * R * Math.sin(Math.PI / n) / (R / 4.6);
       const peri = n * side;
-      const circle = (2 * Math.PI * R) / 20;
+      const circle = (2 * Math.PI * R) / (R / 4.6);
       const name = NAMES[n] ?? `${bn(n)} বাহুর বহুভুজ`;
       out.innerHTML = `<b>${name}</b> - ${bn(n)}টা বাহু, ${bn(n)}টা কোণ, প্রতিটা কোণ <b>${num(inner)}°</b>। ভেতরের কোণগুলোর যোগফল <b>${bn((n - 2) * 180)}°</b>।`
         + `<span class="cost">${n >= 18
@@ -290,7 +303,7 @@ const HUE = '#C0473E';
       credit(n === 3 ? 'ত্রিভুজ' : n === 4 ? 'চতুর্ভুজ' : 'বহুভুজ');
       if (n >= 18) credit('বৃত্ত');
     }
-    const toN = alongX(svg, 620, 120, 380 / 21);
+    const toN = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 21);
     dragTrack({
       surface: svg, handle, min: 3, max: 24, step: 1, value: n,
       toValue: (x) => toN(x) + 3,
@@ -306,14 +319,16 @@ const HUE = '#C0473E';
   /* ---------- ৩. প্রতিসাম্য ---------- */
   (function symmetry() {
     const svg = $<SVGSVGElement>('#sym-svg');
-    const CX = 310, CY = 120, R = 86;
+    const { w: W, h: H } = fitScene(svg, [620, 300], [340, 330]);
+    const CX = W / 2, CY = H * 0.4, R = Math.min(W, H) * 0.28;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 50 };
     const shape = el('path', { fill: W, 'fill-opacity': 0.22, stroke: W, 'stroke-width': 2.5, 'stroke-linejoin': 'round' });
     const mirrored = el('path', { fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-dasharray': '5 4', 'stroke-opacity': 0.75 });
     const axis = el('line', { stroke: INK, 'stroke-width': 2.5, 'stroke-dasharray': '9 6' });
     svg.append(shape, mirrored, axis);
-    svg.appendChild(el('line', { x1: 120, y1: 250, x2: 500, y2: 250, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
-    text(svg, CX, 282, 'আয়নাটা ঘোরাও');
+    text(svg, CX, H - 16, 'আয়নাটা ঘোরাও');
     const out = $('#sym-out');
     const jumps = [...root.querySelectorAll<HTMLButtonElement>('#protisammo .jump')];
     let sides = 4, ang = 20;
@@ -338,13 +353,14 @@ const HUE = '#C0473E';
     const path = (p: { x: number; y: number }[]) => `M ${p.map((q) => `${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' L ')} Z`;
 
     function render() {
-      handle.setAttribute('transform', `translate(${120 + (ang / 180) * 380},250)`);
+      handle.setAttribute('transform', `translate(${TRACK.x0 + (ang / 180) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       const p = points();
       shape.setAttribute('d', path(p));
       const rad = (ang * Math.PI) / 180;
       const ux = Math.cos(rad), uy = Math.sin(rad);
-      axis.setAttribute('x1', String(CX - ux * 130)); axis.setAttribute('y1', String(CY - uy * 130));
-      axis.setAttribute('x2', String(CX + ux * 130)); axis.setAttribute('y2', String(CY + uy * 130));
+      const reach = R * 1.5;
+      axis.setAttribute('x1', String(CX - ux * reach)); axis.setAttribute('y1', String(CY - uy * reach));
+      axis.setAttribute('x2', String(CX + ux * reach)); axis.setAttribute('y2', String(CY + uy * reach));
       // reflect every point across the line, then see how far the reflection
       // sits from the shape it is supposed to land on
       const flip = (q: { x: number; y: number }) => {
@@ -371,7 +387,7 @@ const HUE = '#C0473E';
       render();
     }));
     jumps[1]!.setAttribute('aria-pressed', 'true');
-    const toAng = alongX(svg, 620, 120, 380 / 180);
+    const toAng = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 180);
     dragTrack({
       surface: svg, handle, min: 0, max: 180, step: 1, value: ang,
       toValue: (x) => toAng(x),
@@ -384,7 +400,12 @@ const HUE = '#C0473E';
   /* ---------- ৪. ক্ষেত্রফল ও পরিসীমা ---------- */
   (function area() {
     const svg = $<SVGSVGElement>('#area-svg');
-    const X0 = 70, Y0 = 40, CELL = 26;
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 320], [340, 360]);
+    // Fewer, bigger cells in portrait: eighteen across would be four pixels
+    // each, and the whole point is that they can be counted.
+    const MAXW = narrow ? 10 : 18, MAXH = narrow ? 9 : 9;
+    const X0 = narrow ? 46 : 70, Y0 = 40;
+    const CELL = Math.floor(Math.min((W - X0 - 24) / MAXW, (H - Y0 - 60) / MAXH));
     const grid = el('g'); const rect = el('rect', { x: X0, y: Y0, fill: W, 'fill-opacity': 0.13, stroke: W, 'stroke-width': 3 });
     svg.append(rect, grid);
     const corner = el('g');
@@ -394,7 +415,7 @@ const HUE = '#C0473E';
     );
     svg.appendChild(corner);
     const out = $('#area-out');
-    let w = 8, h = 5;   // in cells
+    let w = narrow ? 6 : 8, h = 5;   // in cells
 
     function render() {
       rect.setAttribute('width', String(w * CELL));
@@ -411,8 +432,8 @@ const HUE = '#C0473E';
       credit('ক্ষেত্রফল'); credit('পরিসীমা');
     }
     dragPoint({
-      surface: svg, handle: corner, view: { w: 620, h: 320 },
-      bounds: { x0: X0 + 2 * CELL, y0: Y0 + 2 * CELL, x1: X0 + 18 * CELL, y1: Y0 + 9 * CELL },
+      surface: svg, handle: corner, view: { w: W, h: H },
+      bounds: { x0: X0 + 2 * CELL, y0: Y0 + 2 * CELL, x1: X0 + MAXW * CELL, y1: Y0 + MAXH * CELL },
       x: X0 + w * CELL, y: Y0 + h * CELL, step: CELL, label: 'কোনা',
       onChange: (x, y) => {
         w = Math.max(2, Math.round((x - X0) / CELL));
@@ -426,18 +447,21 @@ const HUE = '#C0473E';
   /* ---------- ৫. ঘন বস্তু ---------- */
   (function solids() {
     const svg = $<SVGSVGElement>('#solid-svg');
-    const CX = 260, CY = 120;
+    const { w: W, h: H } = fitScene(svg, [620, 280], [340, 320]);
+    const CX = W / 2, CY = H * 0.4;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 62 };
+    const UNIT = Math.min(W, H) * 0.075;   // screen units per centimetre
     const body = el('g'); svg.appendChild(body);
-    svg.appendChild(el('line', { x1: 120, y1: 218, x2: 500, y2: 218, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
-    text(svg, 310, 250, 'মাপ টানো');
+    text(svg, CX, H - 22, 'মাপ টানো');
     const out = $('#solid-out');
     const jumps = [...root.querySelectorAll<HTMLButtonElement>('#ghonok .jump')];
     let kind = 'cube', size = 5;   // in cm
 
     function render() {
-      handle.setAttribute('transform', `translate(${120 + ((size - 2) / 10) * 380},218)`);
-      const s = size * 9;
+      handle.setAttribute('transform', `translate(${TRACK.x0 + ((size - 2) / 10) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
+      const s = size * UNIT;
       body.replaceChildren();
       let vol = 0, area = 0, formula = '', name = '', item = '';
       if (kind === 'cube') {
@@ -483,7 +507,7 @@ const HUE = '#C0473E';
       render();
     }));
     jumps[0]!.setAttribute('aria-pressed', 'true');
-    const toSize = alongX(svg, 620, 120, 38);
+    const toSize = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 10);
     dragTrack({
       surface: svg, handle, min: 2, max: 12, step: 1, value: size,
       toValue: (x) => toSize(x) + 2,

@@ -198,11 +198,18 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
     .jump { min-height: 44px; padding-inline: 0.9rem; }
     .pantry :global(button) { min-height: 44px; }
   }
+
+  /* The scenes lay themselves out portrait below this width (the same
+     breakpoint fitScene uses), so nothing has to be swiped sideways. */
+  @media (max-width: 640px) {
+    .wide { overflow-x: visible; }
+    .wide svg { min-width: 0; }
+  }
 </style>
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, alongX, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, alongX, fitScene, useItem } from '../../lib/handson';
 
   type Group = { k: string; n: string; hue: string };
   type Food = { n: string; e: string; g: string };
@@ -216,7 +223,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
   let live = false;
   const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
 
-  const MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)', INK = 'var(--ink)';
+  const MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)', INK = 'var(--ink)';
   const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
     const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
     t.textContent = s; p.appendChild(t); return t;
@@ -225,7 +232,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
     const g = el('g');
     g.append(
       el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
-      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 12, fill: HUE }),
       el('circle', { r: 4, fill: 'var(--panel)' }),
     );
     return g;
@@ -350,6 +357,8 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
       { e: '🙌', n: 'দুই হাতের কোষ', what: 'শাকসবজি', why: 'সবজির এক ভাগ' },
       { e: '👍', n: 'বুড়ো আঙুল', what: 'তেল বা ঘি', why: 'চর্বির এক ভাগ' },
     ];
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 210], [340, 420]);
+    const PER = narrow ? 2 : 4;
     const cols = el('g'); svg.appendChild(cols);
     const peopleIn = $<HTMLInputElement>('#people'), peopleV = $('#people-v'), out = $('#hand-out');
 
@@ -357,19 +366,21 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
       const p = +peopleIn.value;
       peopleV.textContent = bn(p);
       cols.replaceChildren();
+      const cellW = W / PER, cellH = narrow ? 172 : 0;
       RULES.forEach((r, i) => {
-        const x = 90 + i * 150;
-        const t = el('text', { x, y: 66, 'font-size': 42, 'text-anchor': 'middle' });
+        const col = i % PER, line = Math.floor(i / PER);
+        const x = cellW * (col + 0.5), y0 = 44 + line * cellH;
+        const t = el('text', { x, y: y0 + 22, 'font-size': 42, 'text-anchor': 'middle' });
         t.textContent = r.e; cols.appendChild(t);
-        text(cols, x, 96, r.n, { fill: INK, 'font-size': 13, 'font-weight': 700 });
-        text(cols, x, 116, r.what);
-        text(cols, x, 134, r.why, { 'font-size': 11 });
+        text(cols, x, y0 + 52, r.n, { fill: INK, 'font-size': 13, 'font-weight': 700 });
+        text(cols, x, y0 + 72, r.what, { 'font-size': 11 });
+        text(cols, x, y0 + 90, r.why, { 'font-size': 10.5 });
         // the same measure, once for each person eating
         for (let k = 0; k < p; k++) {
-          cols.appendChild(el('circle', { cx: x - (p - 1) * 7 + k * 14, cy: 158, r: 5, fill: W, 'fill-opacity': 0.8 }));
+          cols.appendChild(el('circle', { cx: x - (p - 1) * 7 + k * 14, cy: y0 + 114, r: 5, fill: HUE, 'fill-opacity': 0.8 }));
         }
       });
-      text(cols, 310, 190, 'প্রতিজনের জন্য একটা করে মাপ');
+      text(cols, W / 2, H - 12, 'প্রতিজনের জন্য একটা করে মাপ', { 'font-size': 11 });
       out.innerHTML = `${bn(p)} জনের জন্য রান্না মানে প্রতিটা মাপ <b>${bn(p)} গুণ</b> - ${bn(p)} মুঠি ভাত, ${bn(p)} তালু মাছ, ${bn(p)} কোষ সবজি।`
         + `<span class="cost">নিজের হাত দিয়ে মাপার সুবিধা হলো হাত বড় হলে মাপও বড় হয়, তাই বড়দের আর ছোটদের জন্য আলাদা হিসাব লাগে না।</span>`;
       credit('পরিমাণ');
@@ -381,21 +392,23 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
   /* ---------- ৩. দিনে কয়বার ---------- */
   (function howOften() {
     const svg = $<SVGSVGElement>('#day-svg');
-    const X0 = 50, X1 = 570, Y = 90;
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 200], [340, 250]);
+    const X0 = W * 0.08, X1 = W * 0.92, Y = H * 0.45;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 32 };
     svg.appendChild(el('line', { x1: X0, y1: Y, x2: X1, y2: Y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
-    for (let h = 6; h <= 22; h += 2) {
+    for (let h = 6; h <= 22; h += (narrow ? 4 : 2)) {
       const x = X0 + ((h - 6) / 16) * (X1 - X0);
       svg.appendChild(el('line', { x1: x, y1: Y - 6, x2: x, y2: Y + 6, stroke: LINE }));
       text(svg, x, Y + 24, `${bn(h)}টা`, { 'font-size': 10.5 });
     }
     const marks = el('g'); svg.appendChild(marks);
-    svg.appendChild(el('line', { x1: 120, y1: 168, x2: 500, y2: 168, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
     const out = $('#day-out');
     let n = 5;   // how many times the day is broken up
 
     function render() {
-      handle.setAttribute('transform', `translate(${120 + ((n - 2) / 4) * 380},168)`);
+      handle.setAttribute('transform', `translate(${TRACK.x0 + ((n - 2) / 4) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       // the waking day is spread evenly, which is what a rhythm actually means
       const times: number[] = [];
       for (let i = 0; i < n; i++) times.push(7 + (i / Math.max(1, n - 1)) * 14);
@@ -404,11 +417,11 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
       times.forEach((t, i) => {
         const x = X0 + ((t - 6) / 16) * (X1 - X0);
         const isBig = big.includes(i);
-        marks.appendChild(el('circle', { cx: x, cy: Y, r: isBig ? 13 : 8, fill: W, 'fill-opacity': isBig ? 0.9 : 0.45 }));
+        marks.appendChild(el('circle', { cx: x, cy: Y, r: isBig ? 13 : 8, fill: HUE, 'fill-opacity': isBig ? 0.9 : 0.45 }));
         const e = el('text', { x, y: Y + 5, 'font-size': isBig ? 14 : 10, 'text-anchor': 'middle' });
         e.textContent = isBig ? '🍽️' : '🍎';
         marks.appendChild(e);
-        text(marks, x, Y - 24, `${bn(Math.floor(t))}:${bn(String(Math.round((t % 1) * 60)).padStart(2, '0'))}`, { 'font-size': 10 });
+        if (!narrow || isBig) text(marks, x, Y - 24, `${bn(Math.floor(t))}:${bn(String(Math.round((t % 1) * 60)).padStart(2, '0'))}`, { 'font-size': 10 });
       });
       const gap = 14 / Math.max(1, n - 1);
       const h = Math.floor(gap), m = Math.round((gap - h) * 60);
@@ -420,7 +433,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
             : 'তিনবেলা বড় খাবার (🍽️) আর মাঝে ছোট কিছু (🍎) - এই ছন্দটাই বেশিরভাগের জন্য ভালো।'}</span>`;
       credit('দিনে কয়বার');
     }
-    const toN = alongX(svg, 620, 120, 95);
+    const toN = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 4);
     dragTrack({
       surface: svg, handle, min: 2, max: 6, step: 1, value: n,
       toValue: (x) => toN(x) + 2,
@@ -433,6 +446,8 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
   /* ---------- ৪. পানি ---------- */
   (function water() {
     const svg = $<SVGSVGElement>('#water-svg');
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 180], [340, 300]);
+    const PER = narrow ? 6 : 14, GW = narrow ? 46 : 40, GH = narrow ? 58 : 52;
     const glasses = el('g'); svg.appendChild(glasses);
     const kgIn = $<HTMLInputElement>('#kg'), kgV = $('#kg-v');
     const drunkIn = $<HTMLInputElement>('#drunk'), drunkV = $('#drunk-v'), out = $('#water-out');
@@ -446,10 +461,10 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
       glasses.replaceChildren();
       const show = Math.max(need, had);
       for (let i = 0; i < show; i++) {
-        const x = 40 + (i % 14) * 40, y = 40 + Math.floor(i / 14) * 78;
+        const x = (W - PER * GW) / 2 + (i % PER) * GW, y = 30 + Math.floor(i / PER) * (GH + 24);
         const full = i < had, over = i >= need;
         glasses.appendChild(el('path', {
-          d: `M ${x} ${y} L ${x + 26} ${y} L ${x + 22} ${y + 52} L ${x + 4} ${y + 52} Z`,
+          d: `M ${x} ${y} L ${x + GW * 0.65} ${y} L ${x + GW * 0.55} ${y + GH} L ${x + GW * 0.1} ${y + GH} Z`,
           fill: full ? (over ? MUTED : '#3f7fc4') : 'none', 'fill-opacity': full ? (over ? 0.35 : 0.7) : 0,
           stroke: over ? LINE : '#3f7fc4', 'stroke-width': 2,
         }));

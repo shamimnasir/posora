@@ -184,11 +184,18 @@ const HUE = '#2E7EA8';
   @media (pointer: coarse) {
     .jump { min-height: 44px; padding-inline: 0.9rem; }
   }
+
+  /* The scenes lay themselves out portrait below this width (the same
+     breakpoint fitScene uses), so nothing has to be swiped sideways. */
+  @media (max-width: 640px) {
+    .wide { overflow-x: visible; }
+    .wide svg { min-width: 0; }
+  }
 </style>
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, aroundCentre, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, aroundCentre, fitScene, useItem } from '../../lib/handson';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
@@ -197,7 +204,7 @@ const HUE = '#2E7EA8';
   const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
   const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 1 : 0));
 
-  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)';
   const RAY = '#e8a33d';
   const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
     const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
@@ -207,7 +214,7 @@ const HUE = '#2E7EA8';
     const g = el('g');
     g.append(
       el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
-      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 12, fill: HUE }),
       el('circle', { r: 4, fill: 'var(--panel)' }),
     );
     return g;
@@ -216,9 +223,10 @@ const HUE = '#2E7EA8';
   /* ---------- ১. ছায়া ---------- */
   (function shadow() {
     const svg = $<SVGSVGElement>('#shadow-svg');
-    const LAMP = 60, WALL = 540, CY = 140, OBJ_H = 44;
-    svg.appendChild(el('rect', { x: WALL, y: 20, width: 26, height: 250, fill: SOFT, stroke: LINE, 'stroke-width': 2 }));
-    text(svg, WALL + 13, 288, 'দেয়াল');
+    const { w: W, h: H } = fitScene(svg, [620, 300], [340, 320]);
+    const LAMP = W * 0.1, WALL = W * 0.87, CY = H * 0.47, OBJ_H = H * 0.15;
+    svg.appendChild(el('rect', { x: WALL, y: 20, width: W - WALL - 4, height: H - 50, fill: SOFT, stroke: LINE, 'stroke-width': 2 }));
+    text(svg, WALL + (W - WALL - 4) / 2, H - 12, 'দেয়াল', { 'font-size': 11 });
     const rays = el('g'); svg.appendChild(rays);
     const shade = el('rect', { x: WALL, fill: INK, 'fill-opacity': 0.55 });
     svg.appendChild(shade);
@@ -227,15 +235,15 @@ const HUE = '#2E7EA8';
       const a = (i / 8) * Math.PI * 2;
       svg.appendChild(el('line', { x1: LAMP + Math.cos(a) * 18, y1: CY + Math.sin(a) * 18, x2: LAMP + Math.cos(a) * 24, y2: CY + Math.sin(a) * 24, stroke: RAY, 'stroke-width': 2.5, 'stroke-linecap': 'round' }));
     }
-    text(svg, LAMP, 288, 'টর্চ');
+    text(svg, LAMP, H - 12, 'টর্চ', { 'font-size': 11 });
     const obj = el('g');
     obj.append(
       el('rect', { x: -26, y: -26, width: 52, height: 52, fill: 'transparent' }),
-      el('rect', { x: -9, y: -OBJ_H / 2, width: 18, height: OBJ_H, rx: 3, fill: W }),
+      el('rect', { x: -8, y: -OBJ_H / 2, width: 16, height: OBJ_H, rx: 3, fill: HUE }),
     );
     svg.appendChild(obj);
     const out = $('#shadow-out');
-    let ox = 250;
+    let ox = LAMP + (WALL - LAMP) * 0.42;
 
     function render() {
       obj.setAttribute('transform', `translate(${ox},${CY})`);
@@ -244,21 +252,22 @@ const HUE = '#2E7EA8';
       const sh = OBJ_H * scale;
       shade.setAttribute('y', String(CY - sh / 2));
       shade.setAttribute('height', String(sh));
-      shade.setAttribute('width', '26');
+      shade.setAttribute('width', String(W - WALL - 4));
       rays.replaceChildren();
       for (const s of [-1, 1]) {
         const y1 = CY + (s * OBJ_H) / 2, y2 = CY + (s * sh) / 2;
         rays.appendChild(el('line', { x1: LAMP, y1: CY, x2: WALL, y2, stroke: RAY, 'stroke-width': 2, 'stroke-opacity': 0.9 }));
         rays.appendChild(el('circle', { cx: ox, cy: y1, r: 2.5, fill: RAY }));
       }
-      const d1 = (ox - LAMP) / 40, d2 = (WALL - LAMP) / 40;
+      const per = (WALL - LAMP) / 12;   // the wall is twelve metres off
+      const d1 = (ox - LAMP) / per, d2 = 12;
       out.innerHTML = `টর্চ থেকে জিনিসটা <b>${num(d1)} মিটার</b>, দেয়াল <b>${num(d2)} মিটার</b>। জিনিসটা ${bn(Math.round(OBJ_H / 10))} সেমি লম্বা, ছায়া <b>${num(sh / 10)} সেমি</b> - ${num(scale)} গুণ বড়।`
         + `<span class="cost">আলো সোজা চলে বলেই দুই প্রান্তের রশ্মি দুটো ছড়িয়ে যায়, আর ছায়াটা দূরত্বের অনুপাতেই বড় হয়। টর্চের যত কাছে, তত বড়।</span>`;
       credit('সরলরেখায় চলা'); credit('ছায়া');
     }
     dragPoint({
-      surface: svg, handle: obj, view: { w: 620, h: 300 },
-      bounds: { x0: LAMP + 60, y0: CY, x1: WALL - 40, y1: CY },
+      surface: svg, handle: obj, view: { w: W, h: H },
+      bounds: { x0: LAMP + (WALL - LAMP) * 0.16, y0: CY, x1: WALL - (WALL - LAMP) * 0.1, y1: CY },
       x: ox, y: CY, step: 10, label: 'জিনিসটা',
       onChange: (x) => { ox = x; render(); },
     });
@@ -268,7 +277,10 @@ const HUE = '#2E7EA8';
   /* ---------- ২. আয়না ---------- */
   (function mirror() {
     const svg = $<SVGSVGElement>('#mirror-svg');
-    const CX = 310, MY = 200;
+    const { w: W, h: H } = fitScene(svg, [620, 300], [340, 340]);
+    const CX = W / 2, MY = H * 0.66;
+    const HALF = W * 0.36, ARM = H * 0.46;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 30 };
     const face = el('path', { fill: 'none', stroke: INK, 'stroke-width': 4 });
     const back = el('path', { fill: MUTED, 'fill-opacity': 0.25, stroke: 'none' });
     svg.append(back, face);
@@ -279,7 +291,7 @@ const HUE = '#2E7EA8';
     svg.append(para, normal, inRay, outRay);
     const inLbl = text(svg, 0, 0, '', { fill: INK, 'font-weight': 700 });
     const outLbl = text(svg, 0, 0, '', { fill: INK, 'font-weight': 700 });
-    svg.appendChild(el('line', { x1: 120, y1: 262, x2: 500, y2: 262, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
     const curveIn = $<HTMLInputElement>('#curve'), curveV = $('#curve-v'), out = $('#mirror-out');
     let ang = 35;   // from the normal, in degrees
@@ -287,29 +299,28 @@ const HUE = '#2E7EA8';
     function render() {
       const c = +curveIn.value;
       curveV.textContent = bn(c);
-      handle.setAttribute('transform', `translate(${120 + (ang / 80) * 380},262)`);
+      handle.setAttribute('transform', `translate(${TRACK.x0 + (ang / 80) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       // The light arrives from above, so a mirror that cups toward it - middle
       // lower on screen than the edges - is the concave one. Bowing the middle
       // upward makes a dome, which is convex. Getting that backwards drew a
       // dome and called it অবতল.
-      const HALF = 150;
-      const sag = c * 0.9;                      // positive dips the middle away from the light
+      const sag = c * 0.9 * (HALF / 150);                      // positive dips the middle away from the light
       const surfaceAt = (x: number) => MY + sag * (1 - ((x - CX) / HALF) ** 2);
       const vertex = MY + sag;
       const d = `M ${CX - HALF} ${MY} Q ${CX} ${MY + sag * 2} ${CX + HALF} ${MY}`;
       face.setAttribute('d', d);
       back.setAttribute('d', `${d} L ${CX + HALF} ${MY + 12} Q ${CX} ${MY + sag * 2 + 12} ${CX - HALF} ${MY + 12} Z`);
       normal.setAttribute('x1', String(CX)); normal.setAttribute('y1', String(vertex));
-      normal.setAttribute('x2', String(CX)); normal.setAttribute('y2', String(vertex - 130));
+      normal.setAttribute('x2', String(CX)); normal.setAttribute('y2', String(vertex - ARM * 0.9));
 
-      const rad = (ang * Math.PI) / 180, L = 150;
+      const rad = (ang * Math.PI) / 180, L = ARM;
       inRay.setAttribute('x1', String(CX - Math.sin(rad) * L)); inRay.setAttribute('y1', String(vertex - Math.cos(rad) * L));
       inRay.setAttribute('x2', String(CX)); inRay.setAttribute('y2', String(vertex));
       outRay.setAttribute('x1', String(CX)); outRay.setAttribute('y1', String(vertex));
       outRay.setAttribute('x2', String(CX + Math.sin(rad) * L)); outRay.setAttribute('y2', String(vertex - Math.cos(rad) * L));
-      inLbl.setAttribute('x', String(CX - Math.sin(rad) * 62 - 22)); inLbl.setAttribute('y', String(vertex - Math.cos(rad) * 62));
+      inLbl.setAttribute('x', String(CX - Math.sin(rad) * L * 0.42 - 20)); inLbl.setAttribute('y', String(vertex - Math.cos(rad) * L * 0.42));
       inLbl.textContent = `${bn(ang)}°`;
-      outLbl.setAttribute('x', String(CX + Math.sin(rad) * 62 + 22)); outLbl.setAttribute('y', String(vertex - Math.cos(rad) * 62));
+      outLbl.setAttribute('x', String(CX + Math.sin(rad) * L * 0.42 + 20)); outLbl.setAttribute('y', String(vertex - Math.cos(rad) * L * 0.42));
       outLbl.textContent = `${bn(ang)}°`;
 
       // Parallel rays, so the focus is something you see rather than read
@@ -322,20 +333,20 @@ const HUE = '#2E7EA8';
         const fy = concave ? vertex - f : vertex + f;
         for (let i = -2; i <= 2; i++) {
           if (i === 0) continue;                // the middle ray is the one already drawn
-          const x = CX + i * 56;
+          const x = CX + i * (HALF / 2.8);
           const surf = surfaceAt(x);
-          para.appendChild(el('line', { x1: x, y1: 42, x2: x, y2: surf, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.5 }));
+          para.appendChild(el('line', { x1: x, y1: 30, x2: x, y2: surf, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.5 }));
           if (concave) {
             para.appendChild(el('line', { x1: x, y1: surf, x2: CX, y2: fy, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.7 }));
           } else {
             // a convex mirror throws them apart; the dashed lines run back to
             // where they only appear to have come from
-            const k = (42 - surf) / (fy - surf);
-            para.appendChild(el('line', { x1: x, y1: surf, x2: x + (x - CX) * Math.abs(k) * 1.4, y2: 42, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.7 }));
+            const k = (30 - surf) / (fy - surf);
+            para.appendChild(el('line', { x1: x, y1: surf, x2: x + (x - CX) * Math.abs(k) * 1.4, y2: 30, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.7 }));
             para.appendChild(el('line', { x1: x, y1: surf, x2: CX, y2: fy, stroke: RAY, 'stroke-width': 1.2, 'stroke-dasharray': '4 4', 'stroke-opacity': 0.4 }));
           }
         }
-        if (fy > 20 && fy < 290) {
+        if (fy > 16 && fy < H - 46) {
           para.appendChild(el('circle', { cx: CX, cy: fy, r: 5, fill: INK }));
           const ft = el('text', { x: CX + 12, y: fy + 4, 'font-size': 11, fill: INK, 'text-anchor': 'start' });
           ft.textContent = concave ? 'ফোকাস' : 'কাল্পনিক ফোকাস';
@@ -355,7 +366,7 @@ const HUE = '#2E7EA8';
       if (c === 0) credit('সমতল আয়না'); else credit('গোলীয় আয়না');
     }
     curveIn.addEventListener('input', render);
-    const toAng = alongX(svg, 620, 120, 380 / 80);
+    const toAng = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 80);
     dragTrack({
       surface: svg, handle, min: 0, max: 80, step: 1, value: ang,
       toValue: (x) => toAng(x),
@@ -378,7 +389,7 @@ const HUE = '#2E7EA8';
     const ghost = el('line', { stroke: RAY, 'stroke-width': 1.5, 'stroke-dasharray': '4 4', 'stroke-opacity': 0.5 });
     svg.append(ghost, inRay, outRay);
     const handle = el('g');
-    handle.append(el('circle', { r: 20, fill: 'transparent' }), el('circle', { r: 9, fill: W }), el('circle', { r: 3, fill: 'var(--panel)' }));
+    handle.append(el('circle', { r: 20, fill: 'transparent' }), el('circle', { r: 9, fill: HUE }), el('circle', { r: 3, fill: 'var(--panel)' }));
     svg.appendChild(handle);
     const out = $('#refr-out');
     let inc = 45;   // from the normal
@@ -414,55 +425,56 @@ const HUE = '#2E7EA8';
   /* ---------- লেন্স ---------- */
   (function lens() {
     const svg = $<SVGSVGElement>('#lens-svg');
-    const CX = 250, CY = 100;
-    svg.appendChild(el('line', { x1: 20, y1: CY, x2: 600, y2: CY, stroke: MUTED, 'stroke-width': 1.2, 'stroke-dasharray': '5 4' }));
+    const { w: W, h: H } = fitScene(svg, [620, 250], [340, 300]);
+    const CX = W * 0.4, CY = H * 0.4, HH = H * 0.26;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 50 };
+    svg.appendChild(el('line', { x1: 12, y1: CY, x2: W - 12, y2: CY, stroke: MUTED, 'stroke-width': 1.2, 'stroke-dasharray': '5 4' }));
     const body = el('path', { fill: '#3f7fc4', 'fill-opacity': 0.3, stroke: '#3f7fc4', 'stroke-width': 2 });
     const rays = el('g');
     svg.append(rays, body);
     const focus = el('circle', { r: 5, fill: INK, cy: CY });
     svg.appendChild(focus);
-    svg.appendChild(el('line', { x1: 120, y1: 200, x2: 500, y2: 200, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
-    text(svg, 310, 230, 'লেন্সের মোটা-পাতলা টানো');
+    text(svg, W / 2, H - 16, 'লেন্সের মোটা-পাতলা টানো', { 'font-size': 11 });
     const out = $('#lens-out');
     let fat = 30;   // how thick the lens is
 
     function render() {
-      handle.setAttribute('transform', `translate(${120 + ((fat + 40) / 80) * 380},200)`);
+      handle.setAttribute('transform', `translate(${TRACK.x0 + ((fat + 40) / 80) * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       const t = Math.abs(fat), conv = fat >= 0;
-      const H = 66;
       body.setAttribute('d', conv
-        ? `M ${CX} ${CY - H} Q ${CX + t} ${CY} ${CX} ${CY + H} Q ${CX - t} ${CY} ${CX} ${CY - H} Z`
-        : `M ${CX - 16} ${CY - H} Q ${CX} ${CY} ${CX - 16} ${CY + H} L ${CX + 16} ${CY + H} Q ${CX} ${CY} ${CX + 16} ${CY - H} Z`);
+        ? `M ${CX} ${CY - HH} Q ${CX + t} ${CY} ${CX} ${CY + HH} Q ${CX - t} ${CY} ${CX} ${CY - HH} Z`
+        : `M ${CX - 16} ${CY - HH} Q ${CX} ${CY} ${CX - 16} ${CY + HH} L ${CX + 16} ${CY + HH} Q ${CX} ${CY} ${CX + 16} ${CY - HH} Z`);
       // a fatter lens bends more, so its focus sits closer
-      const f = t < 3 ? 9999 : 2400 / t;
+      const f = t < 3 ? 9999 : (W * 3.9) / t;
       const fx = CX + (conv ? f : -f);
-      focus.setAttribute('cx', String(clamp(fx, 20, 600)));
+      focus.setAttribute('cx', String(clamp(fx, 12, W - 12)));
       focus.setAttribute('opacity', t < 3 ? '0' : '1');
       rays.replaceChildren();
-      for (const dy of [-46, -23, 23, 46]) {
-        rays.appendChild(el('line', { x1: 40, y1: CY + dy, x2: CX, y2: CY + dy, stroke: RAY, 'stroke-width': 2 }));
-        if (t < 3) { rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: 600, y2: CY + dy, stroke: RAY, 'stroke-width': 2 })); continue; }
+      for (const dy of [-HH * 0.7, -HH * 0.35, HH * 0.35, HH * 0.7]) {
+        rays.appendChild(el('line', { x1: 16, y1: CY + dy, x2: CX, y2: CY + dy, stroke: RAY, 'stroke-width': 2 }));
+        if (t < 3) { rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: W - 12, y2: CY + dy, stroke: RAY, 'stroke-width': 2 })); continue; }
         if (conv) {
           rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: fx, y2: CY, stroke: RAY, 'stroke-width': 2 }));
-          const past = Math.min(600, fx + (fx - CX));
+          const past = Math.min(W - 12, fx + (fx - CX));
           rays.appendChild(el('line', { x1: fx, y1: CY, x2: past, y2: CY - dy * ((past - fx) / Math.max(1, fx - CX)), stroke: RAY, 'stroke-width': 2, 'stroke-opacity': 0.6 }));
         } else {
           const slope = dy / f;
-          rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: 600, y2: CY + dy + slope * (600 - CX), stroke: RAY, 'stroke-width': 2 }));
+          rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: W - 12, y2: CY + dy + slope * (W - 12 - CX), stroke: RAY, 'stroke-width': 2 }));
           rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: fx, y2: CY, stroke: RAY, 'stroke-width': 1.4, 'stroke-dasharray': '4 4', 'stroke-opacity': 0.5 }));
         }
       }
       out.innerHTML = t < 3
         ? `লেন্স প্রায় সমতল - রশ্মিগুলো সোজা বেরিয়ে যাচ্ছে, কিছুই ঘটছে না। হাতলটা দুই দিকের যেকোনো দিকে টানো।`
         : conv
-          ? `<b>উত্তল লেন্স</b> - মাঝখানটা মোটা। সমান্তরাল রশ্মিগুলো একটা বিন্দুতে মেশে, ফোকাস দূরত্ব <b>${num(f / 40)} সেমি</b>।`
+          ? `<b>উত্তল লেন্স</b> - মাঝখানটা মোটা। সমান্তরাল রশ্মিগুলো একটা বিন্দুতে মেশে, ফোকাস দূরত্ব <b>${num(f / (W / 15.5))} সেমি</b>।`
             + `<span class="cost">লেন্স যত মোটা, ফোকাস তত কাছে। চশমার দূরের কাচ, ম্যাগনিফাইং গ্লাস আর আমাদের চোখের লেন্স - সবই উত্তল।</span>`
           : `<b>অবতল লেন্স</b> - মাঝখানটা পাতলা। রশ্মিগুলো ছড়িয়ে যায়, আর পেছনের দিকে বাড়ালে একটা কাল্পনিক ফোকাসে মেলে।`
             + `<span class="cost">ক্ষীণদৃষ্টির চশমায় অবতল লেন্স লাগে, কারণ চোখ যেটা বেশি বাঁকিয়ে ফেলছে সেটাকে একটু ছড়িয়ে দিতে হয়।</span>`;
       credit('লেন্স');
     }
-    const toFat = alongX(svg, 620, 120, 380 / 80);
+    const toFat = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 80);
     dragTrack({
       surface: svg, handle, min: -40, max: 40, step: 2, value: fat,
       toValue: (x) => toFat(x) - 40,
@@ -475,31 +487,37 @@ const HUE = '#2E7EA8';
   /* ---------- ৪. রংধনু ও রঙের মিশ্রণ ---------- */
   (function prism() {
     const svg = $<SVGSVGElement>('#prism-svg');
-    const AX = 260, AY = 60, BX = 200, BY = 190, CXp = 330, CYp = 190;
-    svg.appendChild(el('line', { x1: 30, y1: 120, x2: 222, y2: 120, stroke: '#ffffff', 'stroke-width': 5 }));
-    svg.appendChild(el('line', { x1: 30, y1: 120, x2: 222, y2: 120, stroke: INK, 'stroke-width': 5, 'stroke-opacity': 0.12 }));
-    text(svg, 110, 108, 'সাদা আলো');
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 250], [340, 340]);
+    const PX = W * 0.42, PY = H * 0.42, PW = W * 0.21, PH = H * 0.5;
+    const AX = PX, AY = PY - PH / 2, BX = PX - PW / 2, BY = PY + PH / 2, CXp = PX + PW / 2, CYp = PY + PH / 2;
+    const BEAM_Y = PY;
+    svg.appendChild(el('line', { x1: 14, y1: BEAM_Y, x2: BX + PW * 0.2, y2: BEAM_Y, stroke: '#ffffff', 'stroke-width': 5 }));
+    svg.appendChild(el('line', { x1: 14, y1: BEAM_Y, x2: BX + PW * 0.2, y2: BEAM_Y, stroke: INK, 'stroke-width': 5, 'stroke-opacity': 0.12 }));
+    text(svg, (14 + BX) / 2, BEAM_Y - 12, 'সাদা আলো', { 'font-size': 11 });
     const SPECTRUM = [
       ['#e03b2f', 'লাল'], ['#e8762c', 'কমলা'], ['#e8c62c', 'হলুদ'],
       ['#4aa843', 'সবুজ'], ['#3f7fc4', 'নীল'], ['#4b4bb5', 'ঘন নীল'], ['#7d3fb5', 'বেগুনি'],
     ] as const;
     const fan = el('g'); svg.appendChild(fan);
+    // The rays leave the prism and spread; in portrait the fan is shorter and
+    // steeper so all seven still land inside the box with room for their names.
+    const FAN_X0 = CXp - PW * 0.1, FAN_X1 = W - (narrow ? 62 : 40);
+    const FAN_TOP = PY - (narrow ? 20 : 30), FAN_STEP = (narrow ? 26 : 20);
     SPECTRUM.forEach(([c], i) => {
-      const spread = 2 + i * 4.4;
-      fan.appendChild(el('line', { x1: 296, y1: 150, x2: 590, y2: 118 + spread * 2.1, stroke: c, 'stroke-width': 4, 'stroke-linecap': 'round' }));
+      fan.appendChild(el('line', { x1: FAN_X0, y1: PY + PH * 0.2, x2: FAN_X1, y2: FAN_TOP + i * FAN_STEP, stroke: c, 'stroke-width': 4, 'stroke-linecap': 'round' }));
     });
     SPECTRUM.forEach(([c, n], i) => {
-      const spread = 2 + i * 4.4;
-      text(svg, 604, 122 + spread * 2.1, n, { 'text-anchor': 'end', 'font-size': 10, fill: c });
+      text(svg, W - 4, FAN_TOP + i * FAN_STEP + 4, n, { 'text-anchor': 'end', 'font-size': 10, fill: c });
     });
     svg.appendChild(el('polygon', { points: `${AX},${AY} ${BX},${BY} ${CXp},${CYp}`, fill: '#9fb8d4', 'fill-opacity': 0.35, stroke: '#9fb8d4', 'stroke-width': 2 }));
-    text(svg, AX, 216, 'প্রিজম');
+    text(svg, AX, CYp + 20, 'প্রিজম', { 'font-size': 11 });
 
     const rIn = $<HTMLInputElement>('#r'), gIn = $<HTMLInputElement>('#g'), bIn = $<HTMLInputElement>('#b');
     const rV = $('#r-v'), gV = $('#g-v'), bV = $('#b-v'), out = $('#mix-out');
-    const swatch = el('circle', { cx: 90, cy: 196, r: 26, stroke: LINE, 'stroke-width': 2 });
+    const SWX = narrow ? 54 : 90, SWY = narrow ? H - 58 : 196;
+    const swatch = el('circle', { cx: SWX, cy: SWY, r: 26, stroke: LINE, 'stroke-width': 2 });
     svg.appendChild(swatch);
-    text(svg, 90, 238, 'মেশানো রং');
+    text(svg, SWX, SWY + 42, 'মেশানো রং', { 'font-size': 11 });
 
     function render() {
       const r = +rIn.value, g = +gIn.value, b = +bIn.value;
@@ -523,29 +541,30 @@ const HUE = '#2E7EA8';
   /* ---------- ৫. চোখ ---------- */
   (function eye() {
     const svg = $<SVGSVGElement>('#eye-svg');
-    const EX = 460, EY = 120, ER = 62;
+    const { w: W, h: H } = fitScene(svg, [620, 260], [340, 300]);
+    const ER = Math.min(62, H * 0.24), EX = W - ER - 26, EY = H * 0.46;
     svg.appendChild(el('circle', { cx: EX, cy: EY, r: ER, fill: SOFT, stroke: LINE, 'stroke-width': 2.5 }));
     svg.appendChild(el('path', { d: `M ${EX - ER} ${EY - 26} A 40 40 0 0 0 ${EX - ER} ${EY + 26}`, fill: '#bcd6ee', 'fill-opacity': 0.6, stroke: '#7fa8cc', 'stroke-width': 2 }));
     const lens = el('ellipse', { cx: EX - ER + 24, cy: EY, fill: '#3f7fc4', 'fill-opacity': 0.45, stroke: '#3f7fc4', 'stroke-width': 2 });
     svg.appendChild(lens);
     svg.appendChild(el('path', { d: `M ${EX + ER - 6} ${EY - 44} A ${ER} ${ER} 0 0 1 ${EX + ER - 6} ${EY + 44}`, fill: 'none', stroke: '#c4564f', 'stroke-width': 5 }));
-    text(svg, EX + 20, EY + ER + 24, 'রেটিনা');
+    text(svg, EX + ER * 0.3, EY + ER + 22, 'রেটিনা', { 'font-size': 11 });
     const rays = el('g'); svg.appendChild(rays);
     const arrow = el('g');
     arrow.append(
       el('rect', { x: -24, y: -40, width: 48, height: 80, fill: 'transparent' }),
-      el('line', { x1: 0, y1: 30, x2: 0, y2: -30, stroke: W, 'stroke-width': 4, 'stroke-linecap': 'round' }),
-      el('polygon', { points: '0,-38 7,-24 -7,-24', fill: W }),
+      el('line', { x1: 0, y1: 30, x2: 0, y2: -30, stroke: HUE, 'stroke-width': 4, 'stroke-linecap': 'round' }),
+      el('polygon', { points: '0,-38 7,-24 -7,-24', fill: HUE }),
     );
     svg.appendChild(arrow);
     const out = $('#eye-out');
-    let ox = 120;
+    let ox = 40;
 
     function render() {
       arrow.setAttribute('transform', `translate(${ox},${EY})`);
       const dist = EX - ER - ox;
       // the nearer the object, the fatter the lens has to be to keep focus
-      const fat = clamp(26 - dist / 16, 8, 24);
+      const fat = clamp(26 - dist / (W / 40), 8, 24);
       lens.setAttribute('rx', String(fat * 0.55));
       lens.setAttribute('ry', String(34));
       rays.replaceChildren();
@@ -555,15 +574,15 @@ const HUE = '#2E7EA8';
         rays.appendChild(el('line', { x1: LX, y1: EY + dy * 0.6, x2: EX + ER - 8, y2: EY + 22, stroke: RAY, 'stroke-width': 1.8, 'stroke-opacity': 0.8 }));
       }
       // the image lands upside down, which is the surprising part
-      rays.appendChild(el('line', { x1: EX + ER - 10, y1: EY + 6, x2: EX + ER - 10, y2: EY + 26, stroke: W, 'stroke-width': 4, 'stroke-linecap': 'round' }));
-      rays.appendChild(el('polygon', { points: `${EX + ER - 10},${EY + 32} ${EX + ER - 5},${EY + 20} ${EX + ER - 15},${EY + 20}`, fill: W }));
-      out.innerHTML = `জিনিসটা চোখ থেকে <b>${num(dist / 22)} মিটার</b> দূরে। লেন্স এখন <b>${dist < 140 ? 'মোটা' : 'পাতলা'}</b> হয়ে ছবিটা রেটিনার উপর ফেলছে।`
+      rays.appendChild(el('line', { x1: EX + ER - 10, y1: EY + 6, x2: EX + ER - 10, y2: EY + 26, stroke: HUE, 'stroke-width': 4, 'stroke-linecap': 'round' }));
+      rays.appendChild(el('polygon', { points: `${EX + ER - 10},${EY + 32} ${EX + ER - 5},${EY + 20} ${EX + ER - 15},${EY + 20}`, fill: HUE }));
+      out.innerHTML = `জিনিসটা চোখ থেকে <b>${num(dist / (W / 14))} মিটার</b> দূরে। লেন্স এখন <b>${dist < W * 0.32 ? 'মোটা' : 'পাতলা'}</b> হয়ে ছবিটা রেটিনার উপর ফেলছে।`
         + `<span class="cost">খেয়াল করো রেটিনার ছবিটা উল্টো। মস্তিষ্ক সেটা সোজা করে দেখায় - এতটাই অভ্যস্ত যে আমরা টেরও পাই না। কাছের জিনিস বেশিক্ষণ দেখলে চোখ ক্লান্ত লাগে, কারণ লেন্সের পেশিটা তখন টানটান থাকে।</span>`;
       credit('চোখ কীভাবে দেখে');
     }
     dragPoint({
-      surface: svg, handle: arrow, view: { w: 620, h: 260 },
-      bounds: { x0: 40, y0: EY, x1: EX - ER - 60, y1: EY },
+      surface: svg, handle: arrow, view: { w: W, h: H },
+      bounds: { x0: 28, y0: EY, x1: EX - ER - 34, y1: EY },
       x: ox, y: EY, step: 12, label: 'জিনিসটা',
       onChange: (x) => { ox = x; render(); },
     });
@@ -573,6 +592,8 @@ const HUE = '#2E7EA8';
   /* ---------- বর্ণান্ধতা ---------- */
   (function colourBlind() {
     const svg = $<SVGSVGElement>('#cb-svg');
+    const { w: W, narrow } = fitScene(svg, [620, 150], [340, 250]);
+    const PER = narrow ? 4 : 7, SIDE = narrow ? 68 : 64, GAP = narrow ? 14 : 18;
     const row = el('g'); svg.appendChild(row);
     const out = $('#cb-out');
     const jumps = [...root.querySelectorAll<HTMLButtonElement>('#chokh .jump')];
@@ -596,10 +617,13 @@ const HUE = '#2E7EA8';
 
     function render() {
       row.replaceChildren();
+      const rowW = PER * SIDE + (PER - 1) * GAP;
+      const x0 = (W - rowW) / 2;
       SAMPLE.forEach((s, i) => {
-        const x = 40 + i * 82;
-        row.appendChild(el('rect', { x, y: 24, width: 64, height: 64, rx: 10, fill: shift([s[0], s[1], s[2]]) }));
-        text(row, x + 32, 108, s[3], { 'font-size': 11 });
+        const col = i % PER, line = Math.floor(i / PER);
+        const x = x0 + col * (SIDE + GAP), y = 24 + line * (SIDE + 44);
+        row.appendChild(el('rect', { x, y, width: SIDE, height: SIDE, rx: 10, fill: shift([s[0], s[1], s[2]]) }));
+        text(row, x + SIDE / 2, y + SIDE + 20, s[3], { 'font-size': 11 });
       });
       out.innerHTML = mode === 'normal'
         ? `স্বাভাবিক দৃষ্টিতে সাতটা রংই আলাদা দেখাচ্ছে। উপরের বোতামগুলো চেপে দেখো একেক রকম বর্ণান্ধতায় কোনগুলো মিলে যায়।`

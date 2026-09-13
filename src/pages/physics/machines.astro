@@ -216,11 +216,18 @@ const items = [
   @media (max-width: 640px) {
     .two { grid-template-columns: 1fr; }
   }
+
+  /* The scenes lay themselves out portrait below this width (the same
+     breakpoint fitScene uses), so nothing has to be swiped sideways. */
+  @media (max-width: 640px) {
+    .wide { overflow-x: visible; }
+    .wide svg { min-width: 0; }
+  }
 </style>
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, alongX, alongY, aroundCentre, useItem, rewardCorrect } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, alongX, alongY, aroundCentre, fitScene, useItem, rewardCorrect } from '../../lib/handson';
 
   const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
 
@@ -246,7 +253,7 @@ const items = [
   const MA: Record<string, { ma: number; cost: string }> = {};
   let drawTable = () => {};
 
-  const INK = 'var(--ink)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)', MUTED = 'var(--muted)';
+  const INK = 'var(--ink)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)', MUTED = 'var(--muted)';
 
   /** An arrow, drawn as one line and one head, so force can be shown to scale. */
   function arrow(parent: SVGElement, colour: string): (x: number, y: number, dx: number, dy: number) => void {
@@ -275,32 +282,34 @@ const items = [
   /* ---------- 1. লিভার ---------- */
   (function lever() {
     const svg = $<SVGSVGElement>('#lever-svg');
-    const LEFT = 70, RIGHT = 570, BEAM_Y = 150, GROUND = 210;
-    svg.appendChild(el('line', { x1: 20, y1: GROUND, x2: 620, y2: GROUND, stroke: LINE, 'stroke-width': 2 }));
+    const { w: W, h: H } = fitScene(svg, [640, 250], [340, 300]);
+    const LEFT = W * 0.11, RIGHT = W * 0.89, BEAM_Y = H * 0.58, GROUND = H * 0.82;
+    const BOX = Math.min(52, W * 0.15), ARROW = H * 0.28;
+    svg.appendChild(el('line', { x1: 10, y1: GROUND, x2: W - 10, y2: GROUND, stroke: LINE, 'stroke-width': 2 }));
     const beam = el('rect', { x: LEFT, y: BEAM_Y - 7, width: RIGHT - LEFT, height: 14, rx: 7, fill: SOFT, stroke: LINE });
-    const load = el('rect', { x: LEFT - 26, y: BEAM_Y - 60, width: 52, height: 52, rx: 6, fill: W, 'fill-opacity': 0.85 });
-    const loadTxt = text(svg, LEFT, BEAM_Y - 30, '', { fill: '#fff', 'font-weight': 700, 'font-size': 13 });
+    const load = el('rect', { x: LEFT - BOX / 2, y: BEAM_Y - BOX - 8, width: BOX, height: BOX, rx: 6, fill: HUE, 'fill-opacity': 0.85 });
+    const loadTxt = text(svg, LEFT, BEAM_Y - BOX / 2 - 4, '', { fill: '#fff', 'font-weight': 700, 'font-size': 12 });
     svg.append(beam, load);
     svg.appendChild(loadTxt);
 
     const effort = arrow(svg, INK);
-    const effortTxt = text(svg, RIGHT, BEAM_Y - 96, '', { fill: INK, 'font-weight': 700, 'font-size': 13 });
+    const effortTxt = text(svg, RIGHT, BEAM_Y - ARROW - 26, '', { fill: INK, 'font-weight': 700, 'font-size': 12 });
 
     // The handle is deliberately bigger than the triangle it holds: a fulcrum
     // you cannot get a fingertip onto is not draggable on a phone.
     const grab = el('g');
     grab.append(
       el('rect', { x: -24, y: -4, width: 48, height: 68, fill: 'transparent' }),
-      el('polygon', { points: '0,0 26,60 -26,60', fill: INK, 'fill-opacity': 0.85 }),
+      el('polygon', { points: `0,0 ${(GROUND - BEAM_Y) * 0.45},${GROUND - BEAM_Y} ${-(GROUND - BEAM_Y) * 0.45},${GROUND - BEAM_Y}`, fill: INK, 'fill-opacity': 0.85 }),
     );
     svg.appendChild(grab);
-    const armL = text(svg, 0, GROUND + 26, '', {}), armR = text(svg, 0, GROUND + 26, '', {});
+    const armL = text(svg, 0, GROUND + 24, '', { 'font-size': 11 }), armR = text(svg, 0, GROUND + 24, '', { 'font-size': 11 });
 
     const loadIn = $<HTMLInputElement>('#lever-load'), loadV = $('#lever-load-v'), out = $('#lever-out');
     // Start with the fulcrum near the load, where the lever is helping. Parked
     // at the far end it opens on a machine that makes the job harder, which is
     // true but is not what the card is for.
-    let fx = 200;
+    let fx = LEFT + (RIGHT - LEFT) * 0.26;
 
     function render() {
       const kg = +loadIn.value;
@@ -313,13 +322,14 @@ const items = [
       const need = kg / ma;
       // Both arrows use one scale, so "shorter" means "less force" and not
       // "drawn smaller to fit".
-      const px = 70 / Math.max(kg, need);
-      effort(RIGHT, BEAM_Y - 14 - need * px, 0, need * px - 6);
+      const px = ARROW / Math.max(kg, need);
+      effort(RIGHT, BEAM_Y - 12 - need * px, 0, need * px - 6);
       effortTxt.textContent = `${num(need)} কেজি বল`;
-      effortTxt.setAttribute('y', String(BEAM_Y - 22 - need * px));
+      effortTxt.setAttribute('y', String(BEAM_Y - 20 - need * px));
 
-      armL.setAttribute('x', String((LEFT + fx) / 2)); armL.textContent = `বোঝার বাহু ${num(loadArm / 100)} মি`;
-      armR.setAttribute('x', String((fx + RIGHT) / 2)); armR.textContent = `তোমার বাহু ${num(effortArm / 100)} মি`;
+      const per = (RIGHT - LEFT) / 5;   // the beam is five metres long
+      armL.setAttribute('x', String((LEFT + fx) / 2)); armL.textContent = `বোঝার বাহু ${num(loadArm / per)} মি`;
+      armR.setAttribute('x', String((fx + RIGHT) / 2)); armR.textContent = `তোমার বাহু ${num(effortArm / per)} মি`;
 
       out.innerHTML = `${bn(kg)} কেজি তুলতে দরকার <b>${num(need)} কেজি</b> বল। যান্ত্রিক সুবিধা <b>${num(ma)} গুণ</b>।`
         + `<span class="cost">বিনিময়ে তোমার হাতটা নামাতে হবে বোঝা যত ওঠে তার ${num(ma)} গুণ বেশি।</span>`;
@@ -327,12 +337,12 @@ const items = [
       drawTable();
     }
 
-    const toX = alongX(svg, 640, 0, 1);
+    const toX = alongX(svg, W, 0, 1);
     dragTrack({
-      surface: svg, handle: grab, min: LEFT + 60, max: RIGHT - 60, step: 5, value: fx,
+      surface: svg, handle: grab, min: LEFT + (RIGHT - LEFT) * 0.12, max: RIGHT - (RIGHT - LEFT) * 0.12, step: 5, value: fx,
       toValue: (x) => toX(x),
       onChange: (v) => { fx = v; render(); used('lever'); },
-      label: 'আলম্বের জায়গা', text: (v) => `বোঝা থেকে ${num((v - LEFT) / 100)} মিটার দূরে`,
+      label: 'আলম্বের জায়গা', text: (v) => `বোঝা থেকে ${num((v - LEFT) / ((RIGHT - LEFT) / 5))} মিটার দূরে`,
     });
     loadIn.addEventListener('input', () => { render(); used('lever'); });
     render();
@@ -346,7 +356,7 @@ const items = [
     const ropes = el('g'); const block = el('g'); const pull = el('g');
     svg.append(ropes, block, pull);
     const bar = el('rect', { x: 70, y: 0, width: 130, height: 12, rx: 6, fill: INK, 'fill-opacity': 0.8 });
-    const box = el('rect', { x: 95, y: 12, width: 80, height: 62, rx: 6, fill: W, 'fill-opacity': 0.85 });
+    const box = el('rect', { x: 95, y: 12, width: 80, height: 62, rx: 6, fill: HUE, 'fill-opacity': 0.85 });
     const boxTxt = el('text', { x: 135, y: 50, 'font-size': 13, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle' });
     block.append(bar, box, boxTxt);
 
@@ -407,18 +417,21 @@ const items = [
   /* ---------- 3. ঢালু তল ---------- */
   (function ramp() {
     const svg = $<SVGSVGElement>('#ramp-svg');
-    const GROUND = 220, TOP_X = 560, RISE = 90, PX_PER_M = 60;   // 90px of rise is 1.5 m
+    const { w: W, h: H } = fitScene(svg, [620, 260], [340, 300]);
+    const GROUND = H * 0.85, TOP_X = W * 0.9, RISE = H * 0.35;
+    const PX_PER_M = RISE / 1.5;   // the platform is a metre and a half up
     const HEIGHT_M = RISE / PX_PER_M;
-    svg.appendChild(el('line', { x1: 20, y1: GROUND, x2: 600, y2: GROUND, stroke: LINE, 'stroke-width': 2 }));
-    svg.appendChild(el('rect', { x: TOP_X, y: GROUND - RISE, width: 40, height: RISE, fill: SOFT, stroke: LINE }));
-    const slope = el('polygon', { fill: W, 'fill-opacity': 0.16, stroke: W, 'stroke-width': 2 });
+    svg.appendChild(el('line', { x1: 10, y1: GROUND, x2: W - 10, y2: GROUND, stroke: LINE, 'stroke-width': 2 }));
+    svg.appendChild(el('rect', { x: TOP_X, y: GROUND - RISE, width: W - TOP_X - 6, height: RISE, fill: SOFT, stroke: LINE }));
+    const slope = el('polygon', { fill: HUE, 'fill-opacity': 0.16, stroke: HUE, 'stroke-width': 2 });
     svg.appendChild(slope);
-    const box = el('rect', { width: 44, height: 34, rx: 5, fill: W, 'fill-opacity': 0.9 });
+    const BOX = Math.min(44, W * 0.13), BOXH = BOX * 0.77;
+    const box = el('rect', { width: BOX, height: BOXH, rx: 5, fill: HUE, 'fill-opacity': 0.9 });
     svg.appendChild(box);
     const push = arrow(svg, INK);
     const lift = arrow(svg, MUTED);
-    const lenTxt = text(svg, 0, GROUND + 26, '');
-    const liftTxt = text(svg, 612, GROUND - RISE - 96, '', { 'font-size': 11, 'text-anchor': 'end' });
+    const lenTxt = text(svg, 0, GROUND + 24, '', { 'font-size': 11 });
+    const liftTxt = text(svg, W - 8, GROUND - RISE - H * 0.34, '', { 'font-size': 10.5, 'text-anchor': 'end' });
     const grab = el('g');
     grab.append(
       el('rect', { x: -22, y: -22, width: 44, height: 44, fill: 'transparent' }),
@@ -428,7 +441,7 @@ const items = [
     svg.appendChild(grab);
 
     const loadIn = $<HTMLInputElement>('#ramp-load'), loadV = $('#ramp-load-v'), out = $('#ramp-out');
-    let fx = 180;
+    let fx = W * 0.3;
 
     function render() {
       const kg = +loadIn.value;
@@ -443,17 +456,17 @@ const items = [
       // the box sits on the slope, a third of the way up
       const t = 0.34, bx = fx + run * t, by = GROUND - RISE * t;
       const ang = (Math.atan2(-RISE, run) * 180) / Math.PI;
-      box.setAttribute('transform', `translate(${bx},${by}) rotate(${ang}) translate(-22,-34)`);
+      box.setAttribute('transform', `translate(${bx},${by}) rotate(${ang}) translate(${-BOX / 2},${-BOXH})`);
 
       // one scale for both arrows: the ramp arrow is visibly the shorter one
-      const px = 72 / Math.max(kg, need);
+      const px = H * 0.27 / Math.max(kg, need);
       // (ux, uy) points up the slope; the arrow starts behind the box and
       // pushes it that way.
       const ux = run / lenPx, uy = -RISE / lenPx;
       const len = need * px;
-      push(bx - ux * (30 + len), by - uy * (30 + len), ux * len, uy * len);
-      lift(TOP_X + 20, GROUND - RISE - 12, 0, -kg * px);
-      liftTxt.setAttribute('y', String(GROUND - RISE - 22 - kg * px));
+      push(bx - ux * (24 + len), by - uy * (24 + len), ux * len, uy * len);
+      lift(TOP_X + (W - TOP_X) / 2, GROUND - RISE - 10, 0, -kg * px);
+      liftTxt.setAttribute('y', String(GROUND - RISE - 18 - kg * px));
       liftTxt.textContent = `সোজা তুললে ${bn(kg)} কেজি`;
       lenTxt.setAttribute('x', String((fx + TOP_X) / 2));
       lenTxt.textContent = `ঢাল ${num(lenM)} মিটার`;
@@ -464,9 +477,9 @@ const items = [
       drawTable();
     }
 
-    const toX = alongX(svg, 620, 0, 1);
+    const toX = alongX(svg, W, 0, 1);
     dragTrack({
-      surface: svg, handle: grab, min: 80, max: TOP_X - 70, step: 5, value: fx,
+      surface: svg, handle: grab, min: W * 0.12, max: TOP_X - W * 0.12, step: 5, value: fx,
       toValue: (x) => toX(x),
       onChange: (v) => { fx = v; render(); used('ramp'); },
       label: 'ঢালের গোড়া', text: () => `ঢাল ${num(Math.hypot(TOP_X - fx, RISE) / PX_PER_M)} মিটার`,
@@ -478,19 +491,25 @@ const items = [
   /* ---------- 4. স্ক্রু ---------- */
   (function screw() {
     const svg = $<SVGSVGElement>('#screw-svg');
-    const SHAFT_X = 90, SHAFT_W = 64, SHAFT_TOP = 40, SHAFT_BOT = 200;
+    // In portrait the screw sits above its unwrapped thread rather than beside
+    // it, which is the same comparison read top to bottom instead of left to
+    // right.
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 250], [340, 430]);
+    const SHAFT_W = 64, SHAFT_X = narrow ? W / 2 - SHAFT_W / 2 : 90;
+    const SHAFT_TOP = 40, SHAFT_BOT = narrow ? 190 : 200;
     const DIA_MM = 10, CIRC_MM = Math.PI * DIA_MM;
-    const TRI_X0 = 300, TRI_X1 = 570, TRI_Y = 200;   // the unwrapped thread
+    const TRI_X0 = narrow ? 34 : 300, TRI_X1 = narrow ? W - 40 : 570;
+    const TRI_Y = narrow ? H - 44 : 200;   // the unwrapped thread
     svg.appendChild(el('rect', { x: SHAFT_X, y: SHAFT_TOP - 16, width: SHAFT_W, height: 16, rx: 3, fill: INK, 'fill-opacity': 0.8 }));
     svg.appendChild(el('polygon', {
       points: `${SHAFT_X},${SHAFT_TOP} ${SHAFT_X + SHAFT_W},${SHAFT_TOP} ${SHAFT_X + SHAFT_W},${SHAFT_BOT - 26} ${SHAFT_X + SHAFT_W / 2},${SHAFT_BOT} ${SHAFT_X},${SHAFT_BOT - 26}`,
       fill: SOFT, stroke: LINE,
     }));
     const threads = el('g'); svg.appendChild(threads);
-    const tri = el('polygon', { fill: W, 'fill-opacity': 0.16, stroke: W, 'stroke-width': 2 });
+    const tri = el('polygon', { fill: HUE, 'fill-opacity': 0.16, stroke: HUE, 'stroke-width': 2 });
     svg.appendChild(tri);
-    text(svg, SHAFT_X + SHAFT_W / 2, 228, 'স্ক্রু');
-    text(svg, (TRI_X0 + TRI_X1) / 2, 228, 'একই প্যাঁচ, খুলে সোজা করা');
+    text(svg, SHAFT_X + SHAFT_W / 2, SHAFT_BOT + 40, 'স্ক্রু');
+    text(svg, (TRI_X0 + TRI_X1) / 2, TRI_Y + 28, 'একই প্যাঁচ, খুলে সোজা করা', { 'font-size': 11 });
     const riseTxt = text(svg, TRI_X1 - 18, 0, '', { 'text-anchor': 'end', 'font-size': 11 });
     const grab = el('g');
     grab.append(
@@ -504,7 +523,7 @@ const items = [
 
     // 1 mm of pitch is 6px on the shaft and 7px of rise on the unwrapped ramp,
     // so the two drawings stay comparable as the slider moves.
-    const PX_PER_MM = 6, RISE_PER_MM = 7;
+    const PX_PER_MM = 6, RISE_PER_MM = narrow ? 6 : 7;
 
     function render() {
       threads.replaceChildren();
@@ -512,7 +531,7 @@ const items = [
       for (let y = SHAFT_TOP + gap; y < SHAFT_BOT; y += gap) {
         threads.appendChild(el('line', {
           x1: SHAFT_X, y1: y, x2: SHAFT_X + SHAFT_W, y2: y - Math.min(gap * 0.8, 20),
-          stroke: W, 'stroke-width': 2.4, 'stroke-linecap': 'round',
+          stroke: HUE, 'stroke-width': 2.4, 'stroke-linecap': 'round',
         }));
       }
       const rise = pitch * RISE_PER_MM;
@@ -528,7 +547,7 @@ const items = [
       drawTable();
     }
 
-    const toY = alongY(svg, 250, TRI_Y, -RISE_PER_MM);
+    const toY = alongY(svg, H, TRI_Y, -RISE_PER_MM);
     dragTrack({
       surface: svg, handle: grab, min: 1, max: 20, step: 0.5, value: pitch,
       toValue: (_x, y) => toY(y),
@@ -541,8 +560,11 @@ const items = [
   /* ---------- 5. কীলক ---------- */
   (function wedge() {
     const svg = $<SVGSVGElement>('#wedge-svg');
-    const LOG_X = 210, LOG_X1 = 560, MID = 125, LEN_PX = 130, MM_PER_PX = 0.8;
-    const half = (o: number) => el('rect', { x: LOG_X, y: 0, width: LOG_X1 - LOG_X, height: 56, rx: 4, fill: '#8a6b4a', 'fill-opacity': o });
+    const { w: W, h: H } = fitScene(svg, [620, 250], [340, 280]);
+    const LEN_PX = W * 0.21, LOG_X = W * 0.34, LOG_X1 = W * 0.9, MID = H * 0.5;
+    const MM_PER_PX = 104 / LEN_PX;   // the wedge stays 104 mm long whatever the box
+    const LOGH = H * 0.22;
+    const half = (o: number) => el('rect', { x: LOG_X, y: 0, width: LOG_X1 - LOG_X, height: LOGH, rx: 4, fill: '#8a6b4a', 'fill-opacity': o });
     const top = half(0.85), bot = half(0.7);
     svg.append(top, bot);
     const wedgeShape = el('polygon', { fill: INK, 'fill-opacity': 0.85 });
@@ -552,11 +574,11 @@ const items = [
     // gives the library something to widen for a fingertip; the polygon itself
     // is only twenty-odd pixels tall on a phone when the head is thin.
     const wedgeGrab = el('g');
-    wedgeGrab.appendChild(el('rect', { x: -64, y: -26, width: 128, height: 52, fill: 'transparent' }));
+    wedgeGrab.appendChild(el('rect', { x: -LEN_PX / 2, y: -26, width: LEN_PX, height: 52, fill: 'transparent' }));
     svg.appendChild(wedgeGrab);
     const hit = arrow(svg, MUTED);
-    const splitA = arrow(svg, W), splitB = arrow(svg, W);
-    text(svg, (LOG_X + LOG_X1) / 2, 232, 'কাঠের গুঁড়ি');
+    const splitA = arrow(svg, HUE), splitB = arrow(svg, HUE);
+    text(svg, (LOG_X + LOG_X1) / 2, H - 14, 'কাঠের গুঁড়ি', { 'font-size': 11 });
 
     const wIn = $<HTMLInputElement>('#wedge-w'), wV = $('#wedge-w-v');
     const fIn = $<HTMLInputElement>('#wedge-f'), fV = $('#wedge-f-v'), out = $('#wedge-out');
@@ -567,21 +589,21 @@ const items = [
       wV.textContent = bn(headMm); fV.textContent = bn(hammer);
       const headPx = headMm / MM_PER_PX / 2;          // half the head, each way
       const gap = headPx * (depth / 100);
-      top.setAttribute('y', String(MID - 56 - gap));
+      top.setAttribute('y', String(MID - LOGH - gap));
       bot.setAttribute('y', String(MID + gap));
 
       // tip first, then the two back corners: the wedge drives in from the left
-      const tipX = LOG_X + 26 + (depth / 100) * 110, backX = tipX - LEN_PX;
+      const tipX = LOG_X + LEN_PX * 0.2 + (depth / 100) * LEN_PX * 0.85, backX = tipX - LEN_PX;
       wedgeShape.setAttribute('points', `${tipX},${MID} ${backX},${MID - headPx} ${backX},${MID + headPx}`);
       wedgeGrab.setAttribute('transform', `translate(${(tipX + backX) / 2},${MID})`);
 
       const lenMm = LEN_PX * MM_PER_PX;
       const ma = lenMm / headMm;
       const force = hammer * ma;
-      const px = 54 / Math.max(hammer, force);
-      hit(backX - 30 - hammer * px, MID, hammer * px, 0);
-      splitA(tipX - 40, MID - headPx - 6, 0, -force * px * 0.5);
-      splitB(tipX - 40, MID + headPx + 6, 0, force * px * 0.5);
+      const px = W * 0.1 / Math.max(hammer, force);
+      hit(backX - 18 - hammer * px, MID, hammer * px, 0);
+      splitA(tipX - LEN_PX * 0.3, MID - headPx - 6, 0, -force * px * 0.5);
+      splitB(tipX - LEN_PX * 0.3, MID + headPx + 6, 0, force * px * 0.5);
 
       out.innerHTML = `কীলকটা <b>${num(lenMm)} মিমি</b> লম্বা আর মাথা <b>${bn(headMm)} মিমি</b> চওড়া, তাই সুবিধা <b>${num(ma)} গুণ</b>। হাতুড়ির ${bn(hammer)} কেজি বল ভেতরে গিয়ে দাঁড়ায় <b>${num(force)} কেজিতে</b>।`
         + `<span class="cost">কীলক আসলে চলমান ঢালু তল - সরু মাথা মানে লম্বা ঢাল, তাই বেশি সুবিধা।</span>`;
@@ -589,7 +611,7 @@ const items = [
       drawTable();
     }
 
-    const toX = alongX(svg, 620, LOG_X + 26, 1.1);
+    const toX = alongX(svg, W, LOG_X + LEN_PX * 0.2, LEN_PX * 0.0085);
     dragTrack({
       surface: svg, handle: wedgeGrab, min: 0, max: 100, step: 2, value: depth,
       toValue: (x) => toX(x),
@@ -611,14 +633,14 @@ const items = [
     const rope = el('line', { stroke: MUTED, 'stroke-width': 2 });
     const bucket = el('g');
     bucket.append(
-      el('polygon', { points: '-24,0 24,0 18,34 -18,34', fill: W, 'fill-opacity': 0.85 }),
+      el('polygon', { points: '-24,0 24,0 18,34 -18,34', fill: HUE, 'fill-opacity': 0.85 }),
       el('rect', { x: -26, y: -4, width: 52, height: 6, rx: 3, fill: INK, 'fill-opacity': 0.7 }),
     );
     svg.append(rope, bucket);
     const wheel = el('g');
     const rim = el('circle', { cx: CX, cy: CY, fill: 'none', stroke: INK, 'stroke-width': 5, 'stroke-opacity': 0.8 });
-    const spoke = el('line', { x1: CX, y1: CY, stroke: W, 'stroke-width': 5, 'stroke-linecap': 'round' });
-    const knob = el('circle', { r: 9, fill: W });
+    const spoke = el('line', { x1: CX, y1: CY, stroke: HUE, 'stroke-width': 5, 'stroke-linecap': 'round' });
+    const knob = el('circle', { r: 9, fill: HUE });
     wheel.append(rim, spoke, knob);
     svg.appendChild(el('circle', { cx: CX, cy: CY, r: AXLE, fill: SOFT, stroke: LINE, 'stroke-width': 2 }));
     svg.appendChild(wheel);
@@ -675,11 +697,16 @@ const items = [
   /* ---------- 7. গিয়ার ---------- */
   (function gears() {
     const svg = $<SVGSVGElement>('#gears-svg');
-    const MODULE = 3.2, CY = 130;
+    const { w: W, h: H } = fitScene(svg, [480, 270], [340, 300]);
     const TEETH = [24, 12, 18];
+    // The three gears in a row span twice the sum of their radii, so the module
+    // is whatever makes that row fit the box it was given.
+    const MODULE = Math.min(3.2, (W - 28) / (2 * TEETH.reduce((a, b) => a + b, 0)));
+    const CY = H * 0.44;
     const R = TEETH.map((t) => t * MODULE);
-    const CXs = [110, 110 + R[0]! + R[1]!, 110 + R[0]! + 2 * R[1]! + R[2]!];
-    const COLOURS = [W, INK, W];
+    const LEFT = (W - 2 * (R[0]! + R[1]! + R[2]!)) / 2;
+    const CXs = [LEFT + R[0]!, LEFT + 2 * R[0]! + R[1]!, LEFT + 2 * R[0]! + 2 * R[1]! + R[2]!];
+    const COLOURS = [HUE, INK, HUE];
 
     /** A gear outline: alternating tips and roots round the circle. */
     const gearPoints = (r: number, teeth: number): string => {
@@ -700,7 +727,7 @@ const items = [
       // one tooth marked, so a turn is visible rather than inferred
       g.appendChild(el('circle', { cx: 0, cy: -R[i]! + MODULE * 3, r: 5, fill: i === 1 ? 'var(--panel)' : COLOURS[i]! }));
       svg.appendChild(g);
-      text(svg, CXs[i]!, 246, `${bn(teeth)} দাঁত`);
+      text(svg, CXs[i]!, H - 22, `${bn(teeth)} দাঁত`, { 'font-size': 11 });
       return g;
     });
     const grab = el('circle', { cx: CXs[0]!, cy: CY, r: R[0]!, fill: 'transparent' });
@@ -721,7 +748,7 @@ const items = [
       drawTable();
     }
 
-    const angleAt = aroundCentre(svg, 480, CXs[0]!, CY);
+    const angleAt = aroundCentre(svg, W, CXs[0]!, CY);
     dragTrack({
       surface: svg, handle: grab, min: -3600, max: 3600, step: 5, value: 0,
       toValue: (x, y) => {

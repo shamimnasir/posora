@@ -396,6 +396,34 @@ export const aroundCentre = (surface: SVGSVGElement, viewW: number, cx: number, 
     return a < 0 ? a + 360 : a;
   };
 
+/* ---------- laying a scene out ---------- */
+
+/** True when the screen is a phone held upright. */
+export const isNarrow = (): boolean => matchMedia('(max-width: 640px)').matches;
+
+/**
+ * Choose the shape of a scene, wide or portrait, and return its size.
+ *
+ * A landscape drawing does not become a portrait one by being scaled down. At
+ * 288 CSS pixels a 620-unit scene renders at 0.46, which turns every twelve
+ * unit label into six pixels of unreadable text, so the scenes used to sit in
+ * a sideways scroller instead. That works but hides half the drawing behind a
+ * swipe.
+ *
+ * Instead each scene declares two shapes and lays itself out from the one it
+ * gets. Everything inside must be written in terms of the returned width and
+ * height rather than hard numbers, which is the whole discipline here: a scene
+ * that measures itself can be given a different box.
+ */
+export function fitScene(
+  svg: SVGSVGElement, wide: readonly [number, number], portrait: readonly [number, number],
+): { w: number; h: number; narrow: boolean } {
+  const narrow = isNarrow();
+  const [w, h] = narrow ? portrait : wide;
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  return { w, h, narrow };
+}
+
 /* ---------- tracing ---------- */
 
 export type TraceOpts = {

@@ -100,7 +100,7 @@ const items = [
         <h2><span class="no">০৬</span> তাপমাত্রা</h2>
         <p class="how">স্লাইডার টানো - থার্মোমিটারের পারদ উঠবে-নামবে, সেলসিয়াস আর ফারেনহাইট দুটোই হিসাব হয়ে দেখাবে।</p>
         <div class="temp-wrap">
-          <svg id="temp-svg" viewBox="0 0 120 260" role="img" aria-label="থার্মোমিটার"></svg>
+          <svg id="temp-svg" viewBox="0 0 210 262" role="img" aria-label="থার্মোমিটার"></svg>
           <div class="temp-ctl">
             <input type="range" id="temp-slider" min="-20" max="120" value="25" aria-label="তাপমাত্রা" />
             <p class="readout"><b id="temp-c" class="num">২৫</b> °সে &nbsp;=&nbsp; <b id="temp-f" class="num">৭৭.০</b> °ফা</p>
@@ -168,6 +168,11 @@ const items = [
   /* ruler */
   .ruler-wrap { overflow-x: auto; padding-bottom: 4px; }
   #ruler-svg { width: 100%; min-width: 560px; max-width: 640px; height: auto; display: block; touch-action: none; cursor: grab; }
+  /* The ruler lays itself out as a fifteen centimetre one here, so it fits. */
+  @media (max-width: 640px) {
+    .ruler-wrap { overflow-x: visible; }
+    #ruler-svg { min-width: 0; }
+  }
 
   /* scale */
   .scale-wrap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.2rem; align-items: center; }
@@ -198,7 +203,7 @@ const items = [
   .cal-grid :global(.d.today) { background: var(--w); color: var(--on-brand); font-weight: 700; }
 
   /* temperature */
-  .temp-wrap { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 1.4rem; align-items: center; }
+  .temp-wrap { display: grid; grid-template-columns: 158px minmax(0, 1fr); gap: 1.4rem; align-items: center; }
   #temp-svg { width: 100%; height: auto; justify-self: center; }
   .temp-ctl input[type="range"] { width: 100%; accent-color: var(--w); }
 
@@ -230,7 +235,7 @@ const items = [
 
 <script>
   import { bn, bnNum } from '../../lib/bn';
-  import { svgEl as el, clamp, scaleTicks, dialTicks, fillGauge, dragTrack, alongX, aroundCentre, useItem, rewardCorrect } from '../../lib/handson';
+  import { svgEl as el, clamp, scaleTicks, dialTicks, fillGauge, dragTrack, alongX, aroundCentre, fitScene, useItem, rewardCorrect } from '../../lib/handson';
 
   const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
 
@@ -249,9 +254,14 @@ const items = [
   /* ---------- 1. ruler ---------- */
   (function ruler() {
     const svg = $<SVGSVGElement>('#ruler-svg');
-    const PAD = 20, W = 600, PXCM = W / 30;
+    // A thirty centimetre ruler on a phone would be a ruler you cannot read,
+    // so in portrait it is a fifteen centimetre one at the same tick spacing.
+    // That is still a real ruler; a squashed one would not be.
+    const { w: VW, narrow } = fitScene(svg, [640, 92], [340, 92]);
+    const CM = narrow ? 15 : 30;
+    const PAD = 20, W = VW - PAD * 2, PXCM = W / CM;
     svg.appendChild(el('rect', { x: PAD, y: 10, width: W, height: 40, rx: 4, fill: 'var(--panel-2)', stroke: 'var(--line)' }));
-    scaleTicks(svg, { x: PAD, y: 10, len: W, from: 0, to: 30, step: 1, big: 5, short: 14, long: 24, labelOffset: 28, label: (v) => bn(v) });
+    scaleTicks(svg, { x: PAD, y: 10, len: W, from: 0, to: CM, step: 1, big: 5, short: 14, long: 24, labelOffset: 28, label: (v) => bn(v) });
     const marker = el('g');
     marker.append(
       el('line', { x1: 0, y1: 10, x2: 0, y2: 72, stroke: 'var(--w)', 'stroke-width': 2 }),
@@ -260,9 +270,9 @@ const items = [
     svg.appendChild(marker);
     const out = $('#ruler-val');
     const place = (cm: number) => { marker.setAttribute('transform', `translate(${PAD + cm * PXCM},0)`); out.textContent = bn(cm.toFixed(1)); };
-    const toCm = alongX(svg, W, PAD, PXCM);
+    const toCm = alongX(svg, VW, PAD, PXCM);
     const track = dragTrack({
-      surface: svg, min: 0, max: 30, step: 0.1, value: 12.5,
+      surface: svg, min: 0, max: CM, step: 0.1, value: Math.min(12.5, CM / 2),
       toValue: (x) => toCm(x),
       onChange: (cm) => { place(cm); used('length'); },
       label: 'স্কেলের দাগ, সেন্টিমিটারে', text: (cm) => `${bn(cm.toFixed(1))} সেন্টিমিটার`,
@@ -405,7 +415,7 @@ const items = [
     for (const [c, label] of REF) {
       const y = BOTTOM - ((c - MINC) / (MAXC - MINC)) * (BOTTOM - TOP);
       svg.appendChild(el('line', { x1: 61, y1: y, x2: 72, y2: y, stroke: '#8a8f96', 'stroke-width': 1 }));
-      const t = el('text', { x: 76, y: y + 3, 'font-size': 8.5, fill: 'var(--muted)' }); t.textContent = `${bn(c)}° ${label}`; svg.appendChild(t);
+      const t = el('text', { x: 76, y: y + 3, 'font-size': 11, fill: 'var(--muted)' }); t.textContent = `${bn(c)}° ${label}`; svg.appendChild(t);
     }
     const mercury = el('rect', { x: 49, y: BOTTOM, width: 8, height: 0, fill: 'var(--w)' });
     const bulb = el('circle', { cx: 53, cy: 238, r: 13, fill: 'var(--w)' });

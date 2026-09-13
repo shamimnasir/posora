@@ -191,11 +191,18 @@ const HUE = '#7E56C2';
   @media (pointer: coarse) {
     .jump { min-height: 44px; padding-inline: 0.9rem; }
   }
+
+  /* The scenes lay themselves out portrait below this width (the same
+     breakpoint fitScene uses), so nothing has to be swiped sideways. */
+  @media (max-width: 640px) {
+    .wide { overflow-x: visible; }
+    .wide svg { min-width: 0; }
+  }
 </style>
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, alongX, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, alongX, fitScene, useItem } from '../../lib/handson';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
@@ -207,7 +214,7 @@ const HUE = '#7E56C2';
   const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
   const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 2 : 0));
 
-  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)';
   const text = (parent: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
     const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
     t.textContent = s; parent.appendChild(t); return t;
@@ -216,7 +223,7 @@ const HUE = '#7E56C2';
     const g = el('g');
     g.append(
       el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
-      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 12, fill: HUE }),
       el('circle', { r: 4, fill: 'var(--panel)' }),
     );
     return g;
@@ -381,29 +388,33 @@ const HUE = '#7E56C2';
   /* ---------- ৩. ঊর্ধ্বপাতন ---------- */
   (function sublimation() {
     const svg = $<SVGSVGElement>('#subl-svg');
-    const CX = 200, CY = 130;
-    svg.appendChild(el('line', { x1: 60, y1: 178, x2: 380, y2: 178, stroke: LINE, 'stroke-width': 2 }));
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 230], [340, 300]);
+    const CX = narrow ? W / 2 : W * 0.32, CY = H * 0.5, RMAX = Math.min(42, H * 0.2);
+    const SHELF = CY + RMAX + 6;
+    const TRACK = { x0: W * 0.19, x1: W * 0.81, y: H - 34 };
+    svg.appendChild(el('line', { x1: CX - W * 0.24, y1: SHELF, x2: CX + W * 0.24, y2: SHELF, stroke: LINE, 'stroke-width': 2 }));
     const ball = el('circle', { cx: CX, cy: CY, fill: '#dfe3ea', stroke: LINE, 'stroke-width': 2 });
     svg.appendChild(ball);
     const fumes = el('g'); svg.appendChild(fumes);
-    text(svg, CX, 202, 'ন্যাপথলিনের গুলি');
-    text(svg, 480, 202, 'নিচে এক ফোঁটা পানিও নেই');
-    svg.appendChild(el('line', { x1: 150, y1: 214, x2: 470, y2: 214, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    text(svg, CX, SHELF + 22, 'ন্যাপথলিনের গুলি', { 'font-size': 11 });
+    text(svg, narrow ? W / 2 : W * 0.78, SHELF + (narrow ? 40 : 22), 'নিচে এক ফোঁটা পানিও নেই', { 'font-size': 11 });
+    svg.appendChild(el('line', { x1: TRACK.x0, y1: TRACK.y, x2: TRACK.x1, y2: TRACK.y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
     const handle = grip(); svg.appendChild(handle);
     const out = $('#subl-out');
     let days = 0;
 
     function render() {
       const t = days / 100;
-      ball.setAttribute('r', String(42 * (1 - t * 0.92)));
-      ball.setAttribute('cy', String(CY + 42 * t * 0.92));
-      handle.setAttribute('transform', `translate(${150 + t * 320},214)`);
+      ball.setAttribute('r', String(RMAX * (1 - t * 0.92)));
+      ball.setAttribute('cy', String(CY + RMAX * t * 0.92));
+      handle.setAttribute('transform', `translate(${TRACK.x0 + t * (TRACK.x1 - TRACK.x0)},${TRACK.y})`);
       fumes.replaceChildren();
       const n = Math.round(t * 14);
       for (let i = 0; i < n; i++) {
         const a = (i / 14) * Math.PI * 2;
         fumes.appendChild(el('circle', {
-          cx: CX + Math.cos(a) * (60 + i * 4), cy: CY - 20 - Math.sin(a) * (30 + i * 3),
+          cx: clamp(CX + Math.cos(a) * (RMAX * 1.4 + i * 3), 8, W - 8),
+          cy: clamp(CY - RMAX * 0.5 - Math.sin(a) * (RMAX * 0.7 + i * 2.4), 8, SHELF - 4),
           r: 3.5, fill: MUTED, 'fill-opacity': 0.5,
         }));
       }
@@ -411,7 +422,7 @@ const HUE = '#7E56C2';
         + `<span class="cost">গলে যায়নি, তরল হয়নি - কঠিন থেকে সোজা গ্যাস। এটাই <b>ঊর্ধ্বপাতন</b>। শুকনো বরফ আর কর্পূরও তাই করে।</span>`;
       if (days > 10) credit('ঊর্ধ্বপাতন');
     }
-    const toDays = alongX(svg, 620, 150, 3.2);
+    const toDays = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 100);
     dragTrack({
       surface: svg, handle, min: 0, max: 100, step: 2, value: 0,
       toValue: (x) => toDays(x),
@@ -424,11 +435,15 @@ const HUE = '#7E56C2';
   /* ---------- ৪. প্লাজমা ---------- */
   (function plasma() {
     const svg = $<SVGSVGElement>('#plasma-svg');
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 210], [340, 280]);
     const dots = el('g'); svg.appendChild(dots);
     const heatIn = $<HTMLInputElement>('#heat'), heatV = $('#heat-v'), out = $('#plasma-out');
-    const N = 18;
+    // A tidy grid rather than a scatter, so the same eighteen atoms fit
+    // whichever shape the box is.
+    const COLS = narrow ? 4 : 6, N = 18;
     const seeds = Array.from({ length: N }, (_, i) => ({
-      x: 60 + ((i * 97) % 500), y: 40 + ((i * 53) % 110),
+      x: (W / COLS) * ((i % COLS) + 0.5),
+      y: 34 + Math.floor(i / COLS) * ((H - 60) / Math.ceil(N / COLS)),
     }));
 
     function render() {
@@ -458,16 +473,18 @@ const HUE = '#7E56C2';
   /* ---------- ৫. ঘনত্ব ---------- */
   (function density() {
     const svg = $<SVGSVGElement>('#dens-svg');
-    const TANK_X = 150, TANK_W = 320, TOP = 60, BOT = 250, LEVEL = 110;
+    const { w: W, h: H, narrow } = fitScene(svg, [620, 280], [340, 340]);
+    const TANK_W = W * 0.52, TANK_X = (W - TANK_W) / 2 + (narrow ? -14 : 0);
+    const TOP = H * 0.21, BOT = H * 0.89, LEVEL = H * 0.39;
     svg.appendChild(el('rect', { x: TANK_X, y: TOP, width: TANK_W, height: BOT - TOP, rx: 6, fill: 'none', stroke: LINE, 'stroke-width': 3 }));
     svg.appendChild(el('rect', { x: TANK_X + 3, y: LEVEL, width: TANK_W - 6, height: BOT - LEVEL - 3, fill: '#3f7fc4', 'fill-opacity': 0.45 }));
     svg.appendChild(el('line', { x1: TANK_X, y1: LEVEL, x2: TANK_X + TANK_W, y2: LEVEL, stroke: '#3f7fc4', 'stroke-width': 2 }));
-    text(svg, TANK_X + TANK_W + 46, LEVEL + 4, 'পানি', { 'text-anchor': 'start' });
+    text(svg, TANK_X + TANK_W + 8, LEVEL + 4, 'পানি', { 'text-anchor': 'start', 'font-size': 11 });
     const block = el('g'); svg.appendChild(block);
-    const box = el('rect', { rx: 4, fill: W, 'fill-opacity': 0.9 });
+    const box = el('rect', { rx: 4, fill: HUE, 'fill-opacity': 0.9 });
     const boxTxt = el('text', { 'font-size': 13, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle' });
     block.append(el('rect', { x: -40, y: -40, width: 80, height: 80, fill: 'transparent' }), box, boxTxt);
-    text(svg, TANK_X + TANK_W / 2, 272, 'ব্লকটা ধরে টেনে পানিতে ছাড়ো');
+    text(svg, W / 2, H - 8, 'ব্লকটা ধরে টেনে পানিতে ছাড়ো', { 'font-size': 11 });
 
     const massIn = $<HTMLInputElement>('#mass'), massV = $('#mass-v');
     const volIn = $<HTMLInputElement>('#vol'), volV = $('#vol-v'), out = $('#dens-out');
@@ -478,7 +495,7 @@ const HUE = '#7E56C2';
       const m = +massIn.value, v = +volIn.value;
       massV.textContent = bn(m); volV.textContent = bn(v);
       const d = m / v;
-      const side = 30 + Math.cbrt(v) * 5.4;
+      const side = Math.min(TANK_W * 0.62, 22 + Math.cbrt(v) * (W / 130));
       box.setAttribute('x', String(-side / 2)); box.setAttribute('y', String(-side / 2));
       box.setAttribute('width', String(side)); box.setAttribute('height', String(side));
       boxTxt.textContent = `${num(d)}`;
@@ -486,9 +503,9 @@ const HUE = '#7E56C2';
 
       // Off to the left it is in your hand; over the tank it settles where its
       // own density says it should.
-      const x = 60 + (held / 100) * 460;
+      const x = W * 0.1 + (held / 100) * W * 0.8;
       const overTank = x > TANK_X - 10 && x < TANK_X + TANK_W + 10;
-      let y = 150;
+      let y = TOP - 14;
       if (overTank) {
         // a floater sinks until the water it pushes aside weighs what it does
         y = d >= 1 ? BOT - 6 - side / 2 : LEVEL - side / 2 + side * Math.min(1, d);
@@ -512,7 +529,7 @@ const HUE = '#7E56C2';
       if (held < 30) held = 55;
       render();
     }));
-    const toHeld = alongX(svg, 620, 60, 4.6);
+    const toHeld = alongX(svg, W, W * 0.1, (W * 0.8) / 100);
     dragTrack({
       surface: svg, handle: block, min: 0, max: 100, step: 2, value: held,
       toValue: (x) => toHeld(x),
