@@ -862,13 +862,6 @@ const SCENES: Record<string, Builder> = {
     } };
   },
 
-  flock({ root, hue, v }) {
-    const N = 42; const bodies: { m: Mesh; ph: number; sp: number }[] = []; const cols = [hue, lighten(hue, 0.35), GOLD];
-    for (let i = 0; i < N; i++) { const m = new Mesh(new ConeGeometry(0.12, 0.42, 6), std(cols[i % 3])); m.geometry.rotateX(Math.PI / 2); root.add(m); bodies.push({ m, ph: rnd(0, 6.28), sp: rnd(0.7, 1.3) }); }
-    const dir = new Vector3(), prev = new Vector3();
-    return { label: 'গতি', update(t, _dt, p) { bodies.forEach((b, i) => { const s = t * (0.3 + p * 0.9) * b.sp + b.ph; const x = Math.sin(s) * 2.8 + Math.sin(s * 2.1 + i) * 0.4, y = Math.sin(s * 1.3 + i) * 1.1 + (v === 'fish' ? -0.4 : 0.4), z = Math.cos(s) * 1.8; prev.copy(b.m.position); b.m.position.set(x, y, z); dir.subVectors(b.m.position, prev); if (dir.lengthSq() > 1e-6) b.m.lookAt(b.m.position.clone().add(dir)); }); } };
-  },
-
   heart({ root, hue, v }) {
     let core: Mesh;
     if (v === 'breath') core = new Mesh(new SphereGeometry(1, 32, 32), std(hue, { transparent: true, opacity: 0.85 }));
