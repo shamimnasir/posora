@@ -239,6 +239,13 @@ export const alongX = (surface: SVGSVGElement, viewW: number, pad: number, per: 
     return (((clientX - r.left) / r.width) * viewW - pad) / per;
   };
 
+/** The same, down the other axis. Note that SVG y grows downward. */
+export const alongY = (surface: SVGSVGElement, viewH: number, pad: number, per: number) =>
+  (clientY: number): number => {
+    const r = surface.getBoundingClientRect();
+    return (((clientY - r.top) / r.height) * viewH - pad) / per;
+  };
+
 /** Turn a pointer position into an angle in degrees, clockwise from twelve. */
 export const aroundCentre = (surface: SVGSVGElement, viewW: number, cx: number, cy: number) =>
   (clientX: number, clientY: number): number => {

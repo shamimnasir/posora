@@ -1,0 +1,791 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#2E7EA8';
+const items = [
+  { id: 'lever', n: 'লিভার' },
+  { id: 'pulley', n: 'কপিকল' },
+  { id: 'ramp', n: 'ঢালু তল' },
+  { id: 'screw', n: 'স্ক্রু' },
+  { id: 'wedge', n: 'কীলক' },
+  { id: 'wheel', n: 'চাকা ও অক্ষ' },
+  { id: 'gears', n: 'গিয়ার' },
+  { id: 'advantage', n: 'যান্ত্রিক সুবিধা' },
+];
+---
+<Base
+  title="সরল যন্ত্র"
+  description="লিভার, কপিকল, ঢালু তল, স্ক্রু, কীলক, চাকা ও অক্ষ আর গিয়ার - সাতটা সরল যন্ত্র নিজের হাতে টেনে দেখো, প্রতিটার বল আর যান্ত্রিক সুবিধা সত্যিকারের হিসাবে বদলায়।"
+  hue={HUE}
+>
+  <div class="wrap page">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/physics/">পদার্থবিজ্ঞান</a> <span>/</span> সরল যন্ত্র</p>
+
+    <header class="head">
+      <p class="eyebrow">পদার্থবিজ্ঞান ভুবন · বিভাগ পরিচিতি</p>
+      <h1>সরল যন্ত্র</h1>
+      <p class="lede">
+        সরল যন্ত্র বল কমায় না, বলটাকে ছড়িয়ে দেয়। কম বল লাগে, বদলে বেশি পথ পাড়ি দিতে হয় -
+        গুণফলটা একই থাকে। নিচের আটটার প্রতিটাই টেনে দেখা যায়, আর প্রতিটা সংখ্যা সত্যিকারের হিসাব থেকে আসে।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        {items.map((it) => <a href={`#${it.id}`} class="pill pill-w">{it.n}</a>)}
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- 1. লিভার -->
+      <section class="tool card" id="lever">
+        <h2><span class="no">০১</span> লিভার</h2>
+        <p class="how">ত্রিভুজ আলম্বটা টেনে সরাও। বোঝার দিকে সরালে তোমার বল কমে যাবে, কিন্তু হাতটা তত বেশি নামাতে হবে।</p>
+        <div class="wide">
+          <svg id="lever-svg" viewBox="0 0 640 250" role="img" aria-label="লিভার, আলম্ব টেনে সরাও"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>বোঝা <input type="range" id="lever-load" min="5" max="100" step="5" value="40" aria-label="বোঝার ওজন, কেজি" /> <b id="lever-load-v" class="num">৪০</b> কেজি</label>
+        </div>
+        <p class="readout" id="lever-out"></p>
+      </section>
+
+      <!-- 2. কপিকল -->
+      <section class="tool card" id="pulley">
+        <h2><span class="no">০২</span> কপিকল</h2>
+        <p class="how">রশির মাথাটা নিচে টানো - বোঝা উঠবে। কয়টা রশি বোঝাটাকে ধরে আছে, বল ঠিক তত ভাগ হয়ে যায়।</p>
+        <div class="two">
+          <svg id="pulley-svg" viewBox="0 0 360 320" role="img" aria-label="কপিকল, রশি টেনে বোঝা তোলো"></svg>
+          <div class="side">
+            <label>কয়টা রশি ধরে আছে
+              <input type="range" id="pulley-n" min="1" max="4" step="1" value="2" aria-label="বোঝা ধরে রাখা রশির সংখ্যা" />
+              <b id="pulley-n-v" class="num">২</b>টা
+            </label>
+            <label>বোঝা <input type="range" id="pulley-load" min="10" max="120" step="10" value="60" aria-label="বোঝার ওজন, কেজি" /> <b id="pulley-load-v" class="num">৬০</b> কেজি</label>
+            <p class="readout" id="pulley-out"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. ঢালু তল -->
+      <section class="tool card" id="ramp">
+        <h2><span class="no">০৩</span> ঢালু তল</h2>
+        <p class="how">ঢালটার মাথা টেনে লম্বা করো। উচ্চতা একই থাকবে, কিন্তু ঢাল যত লম্বা, ঠেলতে তত কম বল লাগবে।</p>
+        <div class="wide">
+          <svg id="ramp-svg" viewBox="0 0 620 260" role="img" aria-label="ঢালু তল, ঢালের দৈর্ঘ্য টেনে বদলাও"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>বোঝা <input type="range" id="ramp-load" min="10" max="150" step="10" value="60" aria-label="বোঝার ওজন, কেজি" /> <b id="ramp-load-v" class="num">৬০</b> কেজি</label>
+        </div>
+        <p class="readout" id="ramp-out"></p>
+      </section>
+
+      <!-- 4. স্ক্রু -->
+      <section class="tool card" id="screw">
+        <h2><span class="no">০৪</span> স্ক্রু</h2>
+        <p class="how">প্যাঁচের ফাঁক টেনে বদলাও। ডানের ছবিটা দেখো - স্ক্রুর প্যাঁচ আসলে একটা ঢালু তল, কেবল গোল করে জড়ানো।</p>
+        <div class="wide">
+          <svg id="screw-svg" viewBox="0 0 620 250" role="img" aria-label="স্ক্রু আর তার খুলে দেওয়া ঢালু তল"></svg>
+        </div>
+        <p class="readout" id="screw-out"></p>
+      </section>
+
+      <!-- 5. কীলক -->
+      <section class="tool card" id="wedge">
+        <h2><span class="no">০৫</span> কীলক</h2>
+        <p class="how">কীলকটা কাঠের ভেতর ঠেলে দাও, আর মাথাটা সরু-মোটা করে দেখো। সরু কীলক কম বলে বেশি ফাঁক করে।</p>
+        <div class="wide">
+          <svg id="wedge-svg" viewBox="0 0 620 250" role="img" aria-label="কীলক, কাঠে ঠেলে ঢোকাও"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>মাথার চওড়া <input type="range" id="wedge-w" min="10" max="70" step="5" value="30" aria-label="কীলকের মাথার চওড়া, মিলিমিটার" /> <b id="wedge-w-v" class="num">৩০</b> মিমি</label>
+          <label>হাতুড়ির বল <input type="range" id="wedge-f" min="5" max="60" step="5" value="20" aria-label="হাতুড়ির বল, কেজি" /> <b id="wedge-f-v" class="num">২০</b> কেজি</label>
+        </div>
+        <p class="readout" id="wedge-out"></p>
+      </section>
+
+      <!-- 6. চাকা ও অক্ষ -->
+      <section class="tool card" id="wheel">
+        <h2><span class="no">০৬</span> চাকা ও অক্ষ</h2>
+        <p class="how">কুয়ার চাকাটা ধরে ঘোরাও - বালতি উঠবে। চাকা যত বড়, হাতে তত কম বল, কিন্তু হাত ঘোরে তত লম্বা পথ।</p>
+        <div class="two">
+          <svg id="wheel-svg" viewBox="0 0 360 330" role="img" aria-label="কুয়ার চাকা, ঘুরিয়ে বালতি তোলো"></svg>
+          <div class="side">
+            <label>চাকার ব্যাসার্ধ
+              <input type="range" id="wheel-r" min="30" max="90" step="5" value="70" aria-label="চাকার ব্যাসার্ধ, সেন্টিমিটার" />
+              <b id="wheel-r-v" class="num">৭০</b> সেমি
+            </label>
+            <label>বালতি <input type="range" id="wheel-load" min="5" max="60" step="5" value="30" aria-label="বালতির ওজন, কেজি" /> <b id="wheel-load-v" class="num">৩০</b> কেজি</label>
+            <p class="readout" id="wheel-out"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. গিয়ার -->
+      <section class="tool card" id="gears">
+        <h2><span class="no">০৭</span> গিয়ার</h2>
+        <p class="how">বড় গিয়ারটা ধরে ঘোরাও - পাশেরগুলোও ঘুরবে, উল্টো দিকে। দাঁত যত কম, গিয়ার তত দ্রুত ঘোরে।</p>
+        <div class="wide">
+          <svg id="gears-svg" viewBox="0 0 480 270" role="img" aria-label="তিনটে গিয়ার, বড়টা ধরে ঘোরাও"></svg>
+        </div>
+        <p class="readout" id="gears-out"></p>
+      </section>
+
+      <!-- 8. যান্ত্রিক সুবিধা -->
+      <section class="tool card" id="advantage">
+        <h2><span class="no">০৮</span> যান্ত্রিক সুবিধা</h2>
+        <p class="how">
+          যান্ত্রিক সুবিধা মানে একটাই সংখ্যা: বোঝা ভাগ তোমার বল। উপরের সাতটাই এই এক নিয়মে চলে -
+          যতগুণ বল বাঁচে, ততগুণ পথ বেশি পাড়ি দিতে হয়। নিচের হিসাবটা নিজে কষে দেখো।
+        </p>
+        <p class="est-q" id="ma-q"></p>
+        <div class="est-row">
+          <input type="number" id="ma-guess" inputmode="decimal" step="0.1" placeholder="তোমার উত্তর" aria-label="তোমার উত্তর" />
+          <span class="est-unit" id="ma-unit"></span>
+          <button type="button" class="btn btn-primary" id="ma-check">মিলিয়ে দেখো</button>
+          <button type="button" class="btn" id="ma-next">নতুন প্রশ্ন</button>
+        </div>
+        <p class="readout" id="ma-out"></p>
+        <table class="ma-table">
+          <caption>উপরে তুমি এখন যা যা সাজিয়েছ</caption>
+          <thead><tr><th>যন্ত্র</th><th>যান্ত্রিক সুবিধা</th><th>যে দাম দিতে হয়</th></tr></thead>
+          <tbody id="ma-body"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <p class="back"><a href="/physics/">← পদার্থবিজ্ঞান ভুবনে ফিরে যাও</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.7; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); line-height: 1.75; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(.cost) { color: var(--muted); font-size: 13.5px; display: block; margin-top: 0.15rem; }
+
+  /* every scene is an svg that fills its card and can be dragged */
+  .wide { overflow-x: auto; padding-bottom: 4px; }
+  .wide svg { width: 100%; min-width: 460px; height: auto; display: block; touch-action: none; }
+  .two { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 1.4rem; align-items: center; }
+  .two svg { width: 100%; height: auto; display: block; touch-action: none; }
+  .side { display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .ctl-row { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 1rem; }
+  label { font-size: 13.5px; color: var(--ink-2); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .side label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.35rem 0.5rem; }
+  .side label input[type="range"] { grid-column: 1 / -1; }
+  input[type="range"] { accent-color: var(--w); min-width: 8rem; flex: 1; }
+
+  /* the focus ring has to land on the handle inside the svg, not the svg */
+  .tool :global([role="slider"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .est-q { font-size: 15.5px; font-weight: 600; margin-bottom: 0.9rem; line-height: 1.7; }
+  .est-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .est-unit { color: var(--muted); font-size: 13.5px; }
+  input[type="number"] {
+    font: inherit; font-size: 14.5px; padding: 0.45rem 0.65rem; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); width: 8rem;
+  }
+  input[type="number"]:focus { outline: 2px solid var(--w); outline-offset: 1px; }
+  .won { color: var(--ok); }
+
+  .ma-table { width: 100%; border-collapse: collapse; margin-top: 1.4rem; font-size: 13.5px; }
+  .ma-table caption { text-align: left; color: var(--muted); font-size: 12.5px; padding-bottom: 0.5rem; }
+  .ma-table th, .ma-table td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line-soft); }
+  .ma-table th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  /* the rows are built by the script, so they never get Astro's scope stamp */
+  .ma-table :global(td.n) { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 700; }
+  .ma-table :global(td.why) { color: var(--muted); }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 640px) {
+    .two { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  import { bn } from '../../lib/bn';
+  import { svgEl as el, clamp, dragTrack, alongX, alongY, aroundCentre, useItem, rewardCorrect } from '../../lib/handson';
+
+  const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
+
+  /**
+   * This page is পদার্থবিজ্ঞান's সরল যন্ত্র category rather than a toy beside
+   * it, so moving a machine counts exactly as reading an item counts.
+   */
+  const WORLD = 'physics', CAT = 'সরল যন্ত্র';
+  const ITEM: Record<string, string> = {
+    lever: 'লিভার', pulley: 'কপিকল', ramp: 'ঢালু তল', screw: 'স্ক্রু',
+    wedge: 'কীলক', wheel: 'চাকা ও অক্ষ', gears: 'গিয়ার', advantage: 'যান্ত্রিক সুবিধা',
+  };
+  const used = (id: string) => { useItem(WORLD, CAT, ITEM[id]!); };
+
+  /** One decimal while the number is small, none once it is not. */
+  const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 1 : 0));
+
+  /**
+   * Every machine's current setting, so the last card can total them up.
+   * The whole category is one idea repeated seven ways, and the table is where
+   * a child gets to see that rather than be told it.
+   */
+  const MA: Record<string, { ma: number; cost: string }> = {};
+  let drawTable = () => {};
+
+  const INK = 'var(--ink)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)', MUTED = 'var(--muted)';
+
+  /** An arrow, drawn as one line and one head, so force can be shown to scale. */
+  function arrow(parent: SVGElement, colour: string): (x: number, y: number, dx: number, dy: number) => void {
+    const line = el('line', { stroke: colour, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const head = el('polygon', { fill: colour });
+    parent.append(line, head);
+    return (x, y, dx, dy) => {
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      const tipX = x + dx, tipY = y + dy;
+      line.setAttribute('x1', String(x)); line.setAttribute('y1', String(y));
+      line.setAttribute('x2', String(tipX - ux * 8)); line.setAttribute('y2', String(tipY - uy * 8));
+      head.setAttribute('points', [
+        `${tipX},${tipY}`,
+        `${tipX - ux * 11 - uy * 5},${tipY - uy * 11 + ux * 5}`,
+        `${tipX - ux * 11 + uy * 5},${tipY - uy * 11 - ux * 5}`,
+      ].join(' '));
+    };
+  }
+
+  const text = (parent: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
+    const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
+    t.textContent = s; parent.appendChild(t); return t;
+  };
+
+  /* ---------- 1. লিভার ---------- */
+  (function lever() {
+    const svg = $<SVGSVGElement>('#lever-svg');
+    const LEFT = 70, RIGHT = 570, BEAM_Y = 150, GROUND = 210;
+    svg.appendChild(el('line', { x1: 20, y1: GROUND, x2: 620, y2: GROUND, stroke: LINE, 'stroke-width': 2 }));
+    const beam = el('rect', { x: LEFT, y: BEAM_Y - 7, width: RIGHT - LEFT, height: 14, rx: 7, fill: SOFT, stroke: LINE });
+    const load = el('rect', { x: LEFT - 26, y: BEAM_Y - 60, width: 52, height: 52, rx: 6, fill: W, 'fill-opacity': 0.85 });
+    const loadTxt = text(svg, LEFT, BEAM_Y - 30, '', { fill: '#fff', 'font-weight': 700, 'font-size': 13 });
+    svg.append(beam, load);
+    svg.appendChild(loadTxt);
+
+    const effort = arrow(svg, INK);
+    const effortTxt = text(svg, RIGHT, BEAM_Y - 96, '', { fill: INK, 'font-weight': 700, 'font-size': 13 });
+
+    // The handle is deliberately bigger than the triangle it holds: a fulcrum
+    // you cannot get a fingertip onto is not draggable on a phone.
+    const grab = el('g');
+    grab.append(
+      el('rect', { x: -24, y: -4, width: 48, height: 68, fill: 'transparent' }),
+      el('polygon', { points: '0,0 26,60 -26,60', fill: INK, 'fill-opacity': 0.85 }),
+    );
+    svg.appendChild(grab);
+    const armL = text(svg, 0, GROUND + 26, '', {}), armR = text(svg, 0, GROUND + 26, '', {});
+
+    const loadIn = $<HTMLInputElement>('#lever-load'), loadV = $('#lever-load-v'), out = $('#lever-out');
+    // Start with the fulcrum near the load, where the lever is helping. Parked
+    // at the far end it opens on a machine that makes the job harder, which is
+    // true but is not what the card is for.
+    let fx = 200;
+
+    function render() {
+      const kg = +loadIn.value;
+      loadV.textContent = bn(kg);
+      grab.setAttribute('transform', `translate(${fx},${BEAM_Y})`);
+      loadTxt.textContent = `${bn(kg)} কেজি`;
+
+      const loadArm = fx - LEFT, effortArm = RIGHT - fx;
+      const ma = effortArm / loadArm;      // how many times lighter the job gets
+      const need = kg / ma;
+      // Both arrows use one scale, so "shorter" means "less force" and not
+      // "drawn smaller to fit".
+      const px = 70 / Math.max(kg, need);
+      effort(RIGHT, BEAM_Y - 14 - need * px, 0, need * px - 6);
+      effortTxt.textContent = `${num(need)} কেজি বল`;
+      effortTxt.setAttribute('y', String(BEAM_Y - 22 - need * px));
+
+      armL.setAttribute('x', String((LEFT + fx) / 2)); armL.textContent = `বোঝার বাহু ${num(loadArm / 100)} মি`;
+      armR.setAttribute('x', String((fx + RIGHT) / 2)); armR.textContent = `তোমার বাহু ${num(effortArm / 100)} মি`;
+
+      out.innerHTML = `${bn(kg)} কেজি তুলতে দরকার <b>${num(need)} কেজি</b> বল। যান্ত্রিক সুবিধা <b>${num(ma)} গুণ</b>।`
+        + `<span class="cost">বিনিময়ে তোমার হাতটা নামাতে হবে বোঝা যত ওঠে তার ${num(ma)} গুণ বেশি।</span>`;
+      MA.lever = { ma, cost: `হাত ${num(ma)} গুণ বেশি নামে` };
+      drawTable();
+    }
+
+    const toX = alongX(svg, 640, 0, 1);
+    dragTrack({
+      surface: svg, handle: grab, min: LEFT + 60, max: RIGHT - 60, step: 5, value: fx,
+      toValue: (x) => toX(x),
+      onChange: (v) => { fx = v; render(); used('lever'); },
+      label: 'আলম্বের জায়গা', text: (v) => `বোঝা থেকে ${num((v - LEFT) / 100)} মিটার দূরে`,
+    });
+    loadIn.addEventListener('input', () => { render(); used('lever'); });
+    render();
+  })();
+
+  /* ---------- 2. কপিকল ---------- */
+  (function pulley() {
+    const svg = $<SVGSVGElement>('#pulley-svg');
+    const TOP = 40, BEAM_X0 = 40, BEAM_X1 = 320, REST = 150, TRAVEL = 110;
+    svg.appendChild(el('rect', { x: BEAM_X0, y: TOP - 14, width: BEAM_X1 - BEAM_X0, height: 14, rx: 3, fill: SOFT, stroke: LINE }));
+    const ropes = el('g'); const block = el('g'); const pull = el('g');
+    svg.append(ropes, block, pull);
+    const bar = el('rect', { x: 70, y: 0, width: 130, height: 12, rx: 6, fill: INK, 'fill-opacity': 0.8 });
+    const box = el('rect', { x: 95, y: 12, width: 80, height: 62, rx: 6, fill: W, 'fill-opacity': 0.85 });
+    const boxTxt = el('text', { x: 135, y: 50, 'font-size': 13, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle' });
+    block.append(bar, box, boxTxt);
+
+    const handle = el('g');
+    handle.append(
+      el('rect', { x: -22, y: -22, width: 44, height: 44, fill: 'transparent' }),
+      el('circle', { r: 13, fill: INK, 'fill-opacity': 0.85 }),
+      el('circle', { r: 5, fill: 'var(--panel)' }),
+    );
+    pull.appendChild(handle);
+    const pullRope = el('line', { stroke: MUTED, 'stroke-width': 2 });
+    pull.insertBefore(pullRope, handle);
+
+    const nIn = $<HTMLInputElement>('#pulley-n'), nV = $('#pulley-n-v');
+    const loadIn = $<HTMLInputElement>('#pulley-load'), loadV = $('#pulley-load-v'), out = $('#pulley-out');
+    let pulled = 40;
+
+    function render() {
+      const n = +nIn.value, kg = +loadIn.value;
+      nV.textContent = bn(n); loadV.textContent = bn(kg);
+      // Pulling the rope n metres raises the load one: that trade is the whole
+      // point of the machine, so the drawing has to obey it too.
+      const rise = (pulled / 100) * TRAVEL / n;
+      const blockY = REST - rise;
+      block.setAttribute('transform', `translate(0,${blockY})`);
+      boxTxt.textContent = `${bn(kg)} কেজি`;
+
+      ropes.replaceChildren();
+      const span = 130, gap = n > 1 ? span / (n - 1) : 0;
+      for (let i = 0; i < n; i++) {
+        const x = n === 1 ? 135 : 70 + i * gap;
+        ropes.appendChild(el('line', { x1: x, y1: TOP, x2: x, y2: blockY + 6, stroke: MUTED, 'stroke-width': 2 }));
+        ropes.appendChild(el('circle', { cx: x, cy: TOP, r: 9, fill: SOFT, stroke: LINE, 'stroke-width': 2 }));
+      }
+      const hx = 285, hy = TOP + 40 + (pulled / 100) * TRAVEL;
+      pullRope.setAttribute('x1', String(hx)); pullRope.setAttribute('y1', String(TOP));
+      pullRope.setAttribute('x2', String(hx)); pullRope.setAttribute('y2', String(hy));
+      handle.setAttribute('transform', `translate(${hx},${hy})`);
+
+      const need = kg / n;
+      out.innerHTML = `${bn(n)}টা রশি ধরে আছে, তাই ${bn(kg)} কেজি তুলতে দরকার <b>${num(need)} কেজি</b> বল।`
+        + `<span class="cost">বদলে রশি টানতে হয় ${bn(n)} গুণ লম্বা - বোঝা এক হাত উঠলে তোমার হাত নামে ${bn(n)} হাত।</span>`;
+      MA.pulley = { ma: n, cost: `রশি ${bn(n)} গুণ লম্বা টানতে হয়` };
+      drawTable();
+    }
+
+    const toY = alongY(svg, 320, TOP + 40, TRAVEL / 100);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 100, step: 2, value: pulled,
+      toValue: (_x, y) => toY(y),
+      onChange: (v) => { pulled = v; render(); used('pulley'); },
+      label: 'রশির টান', text: (v) => `${bn(Math.round(v))} ভাগ টানা হয়েছে`,
+    });
+    nIn.addEventListener('input', () => { render(); used('pulley'); });
+    loadIn.addEventListener('input', () => { render(); used('pulley'); });
+    render();
+  })();
+  /* ---------- 3. ঢালু তল ---------- */
+  (function ramp() {
+    const svg = $<SVGSVGElement>('#ramp-svg');
+    const GROUND = 220, TOP_X = 560, RISE = 90, PX_PER_M = 60;   // 90px of rise is 1.5 m
+    const HEIGHT_M = RISE / PX_PER_M;
+    svg.appendChild(el('line', { x1: 20, y1: GROUND, x2: 600, y2: GROUND, stroke: LINE, 'stroke-width': 2 }));
+    svg.appendChild(el('rect', { x: TOP_X, y: GROUND - RISE, width: 40, height: RISE, fill: SOFT, stroke: LINE }));
+    const slope = el('polygon', { fill: W, 'fill-opacity': 0.16, stroke: W, 'stroke-width': 2 });
+    svg.appendChild(slope);
+    const box = el('rect', { width: 44, height: 34, rx: 5, fill: W, 'fill-opacity': 0.9 });
+    svg.appendChild(box);
+    const push = arrow(svg, INK);
+    const lift = arrow(svg, MUTED);
+    const lenTxt = text(svg, 0, GROUND + 26, '');
+    const liftTxt = text(svg, 612, GROUND - RISE - 96, '', { 'font-size': 11, 'text-anchor': 'end' });
+    const grab = el('g');
+    grab.append(
+      el('rect', { x: -22, y: -22, width: 44, height: 44, fill: 'transparent' }),
+      el('circle', { r: 11, fill: INK, 'fill-opacity': 0.85 }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    svg.appendChild(grab);
+
+    const loadIn = $<HTMLInputElement>('#ramp-load'), loadV = $('#ramp-load-v'), out = $('#ramp-out');
+    let fx = 180;
+
+    function render() {
+      const kg = +loadIn.value;
+      loadV.textContent = bn(kg);
+      slope.setAttribute('points', `${fx},${GROUND} ${TOP_X},${GROUND} ${TOP_X},${GROUND - RISE}`);
+      grab.setAttribute('transform', `translate(${fx},${GROUND})`);
+
+      const run = TOP_X - fx;
+      const lenPx = Math.hypot(run, RISE), lenM = lenPx / PX_PER_M;
+      const need = kg * HEIGHT_M / lenM;
+
+      // the box sits on the slope, a third of the way up
+      const t = 0.34, bx = fx + run * t, by = GROUND - RISE * t;
+      const ang = (Math.atan2(-RISE, run) * 180) / Math.PI;
+      box.setAttribute('transform', `translate(${bx},${by}) rotate(${ang}) translate(-22,-34)`);
+
+      // one scale for both arrows: the ramp arrow is visibly the shorter one
+      const px = 72 / Math.max(kg, need);
+      // (ux, uy) points up the slope; the arrow starts behind the box and
+      // pushes it that way.
+      const ux = run / lenPx, uy = -RISE / lenPx;
+      const len = need * px;
+      push(bx - ux * (30 + len), by - uy * (30 + len), ux * len, uy * len);
+      lift(TOP_X + 20, GROUND - RISE - 12, 0, -kg * px);
+      liftTxt.setAttribute('y', String(GROUND - RISE - 22 - kg * px));
+      liftTxt.textContent = `সোজা তুললে ${bn(kg)} কেজি`;
+      lenTxt.setAttribute('x', String((fx + TOP_X) / 2));
+      lenTxt.textContent = `ঢাল ${num(lenM)} মিটার`;
+
+      out.innerHTML = `${num(HEIGHT_M)} মিটার উঁচুতে ${bn(kg)} কেজি তুলতে এই ঢালে দরকার <b>${num(need)} কেজি</b> বল। যান্ত্রিক সুবিধা <b>${num(lenM / HEIGHT_M)} গুণ</b>।`
+        + `<span class="cost">বদলে ঠেলতে হয় ${num(lenM)} মিটার পথ, সোজা ${num(HEIGHT_M)} মিটারের বদলে।</span>`;
+      MA.ramp = { ma: lenM / HEIGHT_M, cost: `${num(lenM)} মিটার ঠেলতে হয়` };
+      drawTable();
+    }
+
+    const toX = alongX(svg, 620, 0, 1);
+    dragTrack({
+      surface: svg, handle: grab, min: 80, max: TOP_X - 70, step: 5, value: fx,
+      toValue: (x) => toX(x),
+      onChange: (v) => { fx = v; render(); used('ramp'); },
+      label: 'ঢালের গোড়া', text: () => `ঢাল ${num(Math.hypot(TOP_X - fx, RISE) / PX_PER_M)} মিটার`,
+    });
+    loadIn.addEventListener('input', () => { render(); used('ramp'); });
+    render();
+  })();
+
+  /* ---------- 4. স্ক্রু ---------- */
+  (function screw() {
+    const svg = $<SVGSVGElement>('#screw-svg');
+    const SHAFT_X = 90, SHAFT_W = 64, SHAFT_TOP = 40, SHAFT_BOT = 200;
+    const DIA_MM = 10, CIRC_MM = Math.PI * DIA_MM;
+    const TRI_X0 = 300, TRI_X1 = 570, TRI_Y = 200;   // the unwrapped thread
+    svg.appendChild(el('rect', { x: SHAFT_X, y: SHAFT_TOP - 16, width: SHAFT_W, height: 16, rx: 3, fill: INK, 'fill-opacity': 0.8 }));
+    svg.appendChild(el('polygon', {
+      points: `${SHAFT_X},${SHAFT_TOP} ${SHAFT_X + SHAFT_W},${SHAFT_TOP} ${SHAFT_X + SHAFT_W},${SHAFT_BOT - 26} ${SHAFT_X + SHAFT_W / 2},${SHAFT_BOT} ${SHAFT_X},${SHAFT_BOT - 26}`,
+      fill: SOFT, stroke: LINE,
+    }));
+    const threads = el('g'); svg.appendChild(threads);
+    const tri = el('polygon', { fill: W, 'fill-opacity': 0.16, stroke: W, 'stroke-width': 2 });
+    svg.appendChild(tri);
+    text(svg, SHAFT_X + SHAFT_W / 2, 228, 'স্ক্রু');
+    text(svg, (TRI_X0 + TRI_X1) / 2, 228, 'একই প্যাঁচ, খুলে সোজা করা');
+    const riseTxt = text(svg, TRI_X1 - 18, 0, '', { 'text-anchor': 'end', 'font-size': 11 });
+    const grab = el('g');
+    grab.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 11, fill: INK, 'fill-opacity': 0.85 }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    svg.appendChild(grab);
+    const out = $('#screw-out');
+    let pitch = 4;          // mm between threads
+
+    // 1 mm of pitch is 6px on the shaft and 7px of rise on the unwrapped ramp,
+    // so the two drawings stay comparable as the slider moves.
+    const PX_PER_MM = 6, RISE_PER_MM = 7;
+
+    function render() {
+      threads.replaceChildren();
+      const gap = pitch * PX_PER_MM;
+      for (let y = SHAFT_TOP + gap; y < SHAFT_BOT; y += gap) {
+        threads.appendChild(el('line', {
+          x1: SHAFT_X, y1: y, x2: SHAFT_X + SHAFT_W, y2: y - Math.min(gap * 0.8, 20),
+          stroke: W, 'stroke-width': 2.4, 'stroke-linecap': 'round',
+        }));
+      }
+      const rise = pitch * RISE_PER_MM;
+      tri.setAttribute('points', `${TRI_X0},${TRI_Y} ${TRI_X1},${TRI_Y} ${TRI_X1},${TRI_Y - rise}`);
+      grab.setAttribute('transform', `translate(${TRI_X1},${TRI_Y - rise})`);
+      riseTxt.setAttribute('y', String(TRI_Y - rise - 10));
+      riseTxt.textContent = `${num(pitch)} মিমি`;
+
+      const ma = CIRC_MM / pitch;
+      out.innerHTML = `প্যাঁচের ফাঁক <b>${num(pitch)} মিমি</b>। একবার ঘোরালে স্ক্রু ঢোকে ${num(pitch)} মিমি, কিন্তু তোমার আঙুল ঘোরে <b>${num(CIRC_MM)} মিমি</b> পথ। যান্ত্রিক সুবিধা <b>${num(ma)} গুণ</b>।`
+        + `<span class="cost">ডানের ত্রিভুজটাই স্ক্রুর প্যাঁচ, খুলে সোজা করা - ঢাল যত মোলায়েম, ঘোরাতে তত কম বল।</span>`;
+      MA.screw = { ma, cost: 'অনেকবার ঘোরাতে হয়' };
+      drawTable();
+    }
+
+    const toY = alongY(svg, 250, TRI_Y, -RISE_PER_MM);
+    dragTrack({
+      surface: svg, handle: grab, min: 1, max: 20, step: 0.5, value: pitch,
+      toValue: (_x, y) => toY(y),
+      onChange: (v) => { pitch = v; render(); used('screw'); },
+      label: 'প্যাঁচের ফাঁক', text: (v) => `${num(v)} মিলিমিটার`,
+    });
+    render();
+  })();
+
+  /* ---------- 5. কীলক ---------- */
+  (function wedge() {
+    const svg = $<SVGSVGElement>('#wedge-svg');
+    const LOG_X = 210, LOG_X1 = 560, MID = 125, LEN_PX = 130, MM_PER_PX = 0.8;
+    const half = (o: number) => el('rect', { x: LOG_X, y: 0, width: LOG_X1 - LOG_X, height: 56, rx: 4, fill: '#8a6b4a', 'fill-opacity': o });
+    const top = half(0.85), bot = half(0.7);
+    svg.append(top, bot);
+    const wedgeShape = el('polygon', { fill: INK, 'fill-opacity': 0.85 });
+    svg.appendChild(wedgeShape);
+    const hit = arrow(svg, MUTED);
+    const splitA = arrow(svg, W), splitB = arrow(svg, W);
+    text(svg, (LOG_X + LOG_X1) / 2, 232, 'কাঠের গুঁড়ি');
+
+    const wIn = $<HTMLInputElement>('#wedge-w'), wV = $('#wedge-w-v');
+    const fIn = $<HTMLInputElement>('#wedge-f'), fV = $('#wedge-f-v'), out = $('#wedge-out');
+    let depth = 45;   // how far in, 0 to 100
+
+    function render() {
+      const headMm = +wIn.value, hammer = +fIn.value;
+      wV.textContent = bn(headMm); fV.textContent = bn(hammer);
+      const headPx = headMm / MM_PER_PX / 2;          // half the head, each way
+      const gap = headPx * (depth / 100);
+      top.setAttribute('y', String(MID - 56 - gap));
+      bot.setAttribute('y', String(MID + gap));
+
+      // tip first, then the two back corners: the wedge drives in from the left
+      const tipX = LOG_X + 26 + (depth / 100) * 110, backX = tipX - LEN_PX;
+      wedgeShape.setAttribute('points', `${tipX},${MID} ${backX},${MID - headPx} ${backX},${MID + headPx}`);
+
+      const lenMm = LEN_PX * MM_PER_PX;
+      const ma = lenMm / headMm;
+      const force = hammer * ma;
+      const px = 54 / Math.max(hammer, force);
+      hit(backX - 30 - hammer * px, MID, hammer * px, 0);
+      splitA(tipX - 40, MID - headPx - 6, 0, -force * px * 0.5);
+      splitB(tipX - 40, MID + headPx + 6, 0, force * px * 0.5);
+
+      out.innerHTML = `কীলকটা <b>${num(lenMm)} মিমি</b> লম্বা আর মাথা <b>${bn(headMm)} মিমি</b> চওড়া, তাই সুবিধা <b>${num(ma)} গুণ</b>। হাতুড়ির ${bn(hammer)} কেজি বল ভেতরে গিয়ে দাঁড়ায় <b>${num(force)} কেজিতে</b>।`
+        + `<span class="cost">কীলক আসলে চলমান ঢালু তল - সরু মাথা মানে লম্বা ঢাল, তাই বেশি সুবিধা।</span>`;
+      MA.wedge = { ma, cost: 'পুরো লম্বা পথ ঠুকে ঢোকাতে হয়' };
+      drawTable();
+    }
+
+    const toX = alongX(svg, 620, LOG_X + 26, 1.1);
+    dragTrack({
+      surface: svg, handle: wedgeShape, min: 0, max: 100, step: 2, value: depth,
+      toValue: (x) => toX(x),
+      onChange: (v) => { depth = v; render(); used('wedge'); },
+      label: 'কীলক কতটা ঢুকেছে', text: (v) => `${bn(Math.round(v))} ভাগ ঢুকেছে`,
+    });
+    wIn.addEventListener('input', () => { render(); used('wedge'); });
+    fIn.addEventListener('input', () => { render(); used('wedge'); });
+    render();
+  })();
+
+  /* ---------- 6. চাকা ও অক্ষ ---------- */
+  (function wheelAxle() {
+    const svg = $<SVGSVGElement>('#wheel-svg');
+    const CX = 180, CY = 120, AXLE = 15, TOP = 34;   // 1px is 1cm
+    svg.appendChild(el('rect', { x: 40, y: 250, width: 280, height: 14, rx: 3, fill: SOFT, stroke: LINE }));
+    svg.appendChild(el('rect', { x: 52, y: TOP, width: 12, height: 216, fill: SOFT, stroke: LINE }));
+    svg.appendChild(el('rect', { x: 296, y: TOP, width: 12, height: 216, fill: SOFT, stroke: LINE }));
+    const rope = el('line', { stroke: MUTED, 'stroke-width': 2 });
+    const bucket = el('g');
+    bucket.append(
+      el('polygon', { points: '-24,0 24,0 18,34 -18,34', fill: W, 'fill-opacity': 0.85 }),
+      el('rect', { x: -26, y: -4, width: 52, height: 6, rx: 3, fill: INK, 'fill-opacity': 0.7 }),
+    );
+    svg.append(rope, bucket);
+    const wheel = el('g');
+    const rim = el('circle', { cx: CX, cy: CY, fill: 'none', stroke: INK, 'stroke-width': 5, 'stroke-opacity': 0.8 });
+    const spoke = el('line', { x1: CX, y1: CY, stroke: W, 'stroke-width': 5, 'stroke-linecap': 'round' });
+    const knob = el('circle', { r: 9, fill: W });
+    wheel.append(rim, spoke, knob);
+    svg.appendChild(el('circle', { cx: CX, cy: CY, r: AXLE, fill: SOFT, stroke: LINE, 'stroke-width': 2 }));
+    svg.appendChild(wheel);
+
+    const rIn = $<HTMLInputElement>('#wheel-r'), rV = $('#wheel-r-v');
+    const loadIn = $<HTMLInputElement>('#wheel-load'), loadV = $('#wheel-load-v'), out = $('#wheel-out');
+    let turn = 0;   // degrees the handle has been wound
+
+    function render() {
+      const R = +rIn.value, kg = +loadIn.value;
+      rV.textContent = bn(R); loadV.textContent = bn(kg);
+      rim.setAttribute('r', String(R));
+      const a = ((turn - 90) * Math.PI) / 180;
+      const kx = CX + Math.cos(a) * R, ky = CY + Math.sin(a) * R;
+      spoke.setAttribute('x2', String(kx)); spoke.setAttribute('y2', String(ky));
+      knob.setAttribute('cx', String(kx)); knob.setAttribute('cy', String(ky));
+
+      // winding the handle round once winds one axle circumference of rope
+      const wound = (turn / 360) * 2 * Math.PI * AXLE;
+      const by = clamp(240 - wound, CY + AXLE + 10, 240);
+      rope.setAttribute('x1', String(CX + AXLE)); rope.setAttribute('y1', String(CY));
+      rope.setAttribute('x2', String(CX + AXLE)); rope.setAttribute('y2', String(by));
+      bucket.setAttribute('transform', `translate(${CX + AXLE},${by})`);
+
+      const ma = R / AXLE, need = kg / ma;
+      out.innerHTML = `চাকার ব্যাসার্ধ <b>${bn(R)} সেমি</b>, অক্ষের <b>${bn(AXLE)} সেমি</b> - সুবিধা <b>${num(ma)} গুণ</b>। ${bn(kg)} কেজির বালতি তুলতে হাতে লাগে <b>${num(need)} কেজি</b>।`
+        + `<span class="cost">বদলে হাতটা ঘোরে বালতি যত ওঠে তার ${num(ma)} গুণ লম্বা পথ।</span>`;
+      MA.wheel = { ma, cost: `হাত ${num(ma)} গুণ পথ ঘোরে` };
+      drawTable();
+    }
+
+    const angleAt = aroundCentre(svg, 360, CX, CY);
+    let last = 0;
+    dragTrack({
+      surface: svg, handle: wheel, min: 0, max: 1080, step: 5, value: 0,
+      // A dial that must not wrap: the rope winds up, it does not teleport, so
+      // an angle that jumps past twelve carries the whole turn with it.
+      toValue: (x, y) => {
+        const a = angleAt(x, y);
+        let d = a - last;
+        if (d > 180) d -= 360; else if (d < -180) d += 360;
+        last = a;
+        return turn + d;
+      },
+      onChange: (v) => { turn = v; render(); used('wheel'); },
+      label: 'কুয়ার চাকা', text: () => `${num(turn / 360)} পাক ঘোরানো হয়েছে`,
+    });
+    wheel.addEventListener('pointerdown', (e) => { last = angleAt((e as PointerEvent).clientX, (e as PointerEvent).clientY); });
+    rIn.addEventListener('input', () => { render(); used('wheel'); });
+    loadIn.addEventListener('input', () => { render(); used('wheel'); });
+    render();
+  })();
+
+  /* ---------- 7. গিয়ার ---------- */
+  (function gears() {
+    const svg = $<SVGSVGElement>('#gears-svg');
+    const MODULE = 3.2, CY = 130;
+    const TEETH = [24, 12, 18];
+    const R = TEETH.map((t) => t * MODULE);
+    const CXs = [110, 110 + R[0]! + R[1]!, 110 + R[0]! + 2 * R[1]! + R[2]!];
+    const COLOURS = [W, INK, W];
+
+    /** A gear outline: alternating tips and roots round the circle. */
+    const gearPoints = (r: number, teeth: number): string => {
+      const pts: string[] = [];
+      const steps = teeth * 4, root = r - MODULE * 2.1;
+      for (let i = 0; i < steps; i++) {
+        const a = (i / steps) * Math.PI * 2;
+        const k = i % 4, rad = k === 1 || k === 2 ? r : root;
+        pts.push(`${(Math.cos(a) * rad).toFixed(1)},${(Math.sin(a) * rad).toFixed(1)}`);
+      }
+      return pts.join(' ');
+    };
+
+    const groups = TEETH.map((teeth, i) => {
+      const g = el('g');
+      g.appendChild(el('polygon', { points: gearPoints(R[i]!, teeth), fill: COLOURS[i]!, 'fill-opacity': i === 1 ? 0.75 : 0.3, stroke: COLOURS[i]!, 'stroke-width': 2 }));
+      g.appendChild(el('circle', { r: 9, fill: 'var(--panel)', stroke: LINE, 'stroke-width': 2 }));
+      // one tooth marked, so a turn is visible rather than inferred
+      g.appendChild(el('circle', { cx: 0, cy: -R[i]! + MODULE * 3, r: 5, fill: i === 1 ? 'var(--panel)' : COLOURS[i]! }));
+      svg.appendChild(g);
+      text(svg, CXs[i]!, 246, `${bn(teeth)} দাঁত`);
+      return g;
+    });
+    const grab = el('circle', { cx: CXs[0]!, cy: CY, r: R[0]!, fill: 'transparent' });
+    svg.appendChild(grab);
+
+    const out = $('#gears-out');
+    let a0 = 0, last = 0;
+
+    function render() {
+      // meshed gears turn opposite ways, at the ratio of their tooth counts
+      const a1 = -a0 * (TEETH[0]! / TEETH[1]!);
+      const a2 = a0 * (TEETH[0]! / TEETH[2]!);
+      const angles = [a0, a1, a2];
+      groups.forEach((g, i) => g.setAttribute('transform', `translate(${CXs[i]},${CY}) rotate(${angles[i]})`));
+      out.innerHTML = `বড় গিয়ার ঘুরেছে <b>${num(a0 / 360)} পাক</b>। ছোটটা ঘুরেছে <b>${num(Math.abs(a1) / 360)} পাক</b>, উল্টো দিকে। তৃতীয়টা <b>${num(Math.abs(a2) / 360)} পাক</b>।`
+        + `<span class="cost">${bn(TEETH[0]!)} দাঁতের গিয়ার একবার ঘুরলে ${bn(TEETH[1]!)} দাঁতেরটা ঘোরে ${num(TEETH[0]! / TEETH[1]!)} বার - দাঁত যত কম, ঘোরা তত দ্রুত, বল তত কম।</span>`;
+      MA.gears = { ma: TEETH[0]! / TEETH[1]!, cost: 'গতি বাড়ে, বল কমে' };
+      drawTable();
+    }
+
+    const angleAt = aroundCentre(svg, 480, CXs[0]!, CY);
+    dragTrack({
+      surface: svg, handle: grab, min: -3600, max: 3600, step: 5, value: 0,
+      toValue: (x, y) => {
+        const a = angleAt(x, y);
+        let d = a - last;
+        if (d > 180) d -= 360; else if (d < -180) d += 360;
+        last = a;
+        return a0 + d;
+      },
+      onChange: (v) => { a0 = v; render(); used('gears'); },
+      label: 'বড় গিয়ার', text: () => `${num(a0 / 360)} পাক`,
+    });
+    grab.addEventListener('pointerdown', (e) => { last = angleAt((e as PointerEvent).clientX, (e as PointerEvent).clientY); });
+    render();
+  })();
+
+  /* ---------- 8. যান্ত্রিক সুবিধা ---------- */
+  (function advantage() {
+    const NAMES: Record<string, string> = {
+      lever: 'লিভার', pulley: 'কপিকল', ramp: 'ঢালু তল', screw: 'স্ক্রু', wedge: 'কীলক', wheel: 'চাকা ও অক্ষ', gears: 'গিয়ার',
+    };
+    const body = $('#ma-body');
+    // Reading the seven cards above back as one table is the point of this
+    // card: the rule is the same every time, only the shape changes.
+    drawTable = () => {
+      body.replaceChildren();
+      for (const [key, name] of Object.entries(NAMES)) {
+        const m = MA[key];
+        if (!m) continue;
+        const tr = document.createElement('tr');
+        const td = (s: string, cls = '') => { const c = document.createElement('td'); c.textContent = s; if (cls) c.className = cls; return c; };
+        const first = document.createElement('td'); first.textContent = name;
+        tr.append(first, td(`${num(m.ma)} গুণ`, 'n'), td(m.cost, 'why'));
+        body.appendChild(tr);
+      }
+    };
+    drawTable();
+
+    type Q = { q: string; unit: string; answer: number };
+    const ASK: (() => Q)[] = [
+      () => { const load = 20 + Math.round(Math.random() * 8) * 10, ma = 2 + Math.round(Math.random() * 6);
+        return { q: `একটা লিভারের যান্ত্রিক সুবিধা ${bn(ma)} গুণ। ${bn(load)} কেজির একটা বস্তা তুলতে তোমার কত কেজি বল লাগবে?`, unit: 'কেজি', answer: load / ma }; },
+      () => { const load = 30 + Math.round(Math.random() * 9) * 10, n = 2 + Math.round(Math.random() * 3);
+        return { q: `একটা কপিকলে ${bn(n)}টা রশি বোঝাটা ধরে আছে। ${bn(load)} কেজি তুলতে কত কেজি বল লাগবে?`, unit: 'কেজি', answer: load / n }; },
+      () => { const h = 1 + Math.round(Math.random() * 4) * 0.5, len = h * (2 + Math.round(Math.random() * 4));
+        return { q: `একটা ঢালু তল ${num(len)} মিটার লম্বা আর ${num(h)} মিটার উঁচু। এর যান্ত্রিক সুবিধা কত গুণ?`, unit: 'গুণ', answer: len / h }; },
+      () => { const load = 40 + Math.round(Math.random() * 8) * 10, force = 5 + Math.round(Math.random() * 3) * 5;
+        return { q: `${bn(load)} কেজি বোঝা তুলতে তোমার বল লাগছে মাত্র ${bn(force)} কেজি। যন্ত্রটার যান্ত্রিক সুবিধা কত গুণ?`, unit: 'গুণ', answer: load / force }; },
+      () => { const R = 40 + Math.round(Math.random() * 5) * 10, r = 5 + Math.round(Math.random() * 3) * 5;
+        return { q: `কুয়ার চাকার ব্যাসার্ধ ${bn(R)} সেমি, অক্ষের ${bn(r)} সেমি। যান্ত্রিক সুবিধা কত গুণ?`, unit: 'গুণ', answer: R / r }; },
+    ];
+
+    const qEl = $('#ma-q'), unitEl = $('#ma-unit'), guess = $<HTMLInputElement>('#ma-guess'), out = $('#ma-out');
+    let cur: Q = ASK[0]!();
+    const paid = new Set<string>();
+    function pick() { cur = ASK[Math.floor(Math.random() * ASK.length)]!(); qEl.textContent = cur.q; unitEl.textContent = cur.unit; guess.value = ''; out.textContent = ''; }
+
+    $('#ma-check').addEventListener('click', () => {
+      if (!guess.value) { out.textContent = 'আগে একটা সংখ্যা লেখো।'; return; }
+      const g = +guess.value;
+      const off = Math.abs(g - cur.answer) / cur.answer;
+      const points = off < 0.02 ? 10 : off < 0.1 ? 6 : off < 0.25 ? 3 : 0;
+      const word = off < 0.02 ? 'একদম ঠিক' : off < 0.1 ? 'প্রায় ঠিক' : off < 0.25 ? 'কাছাকাছি' : 'হলো না, আরেকবার কষে দেখো';
+      const first = !paid.has(cur.q);
+      if (first) paid.add(cur.q);
+      out.innerHTML = `ঠিক উত্তর <b>${num(cur.answer)} ${cur.unit}</b>। ${word}।`
+        + (first && points ? ` <b class="won">+${bn(points)} জ্ঞানবিন্দু</b>` : '');
+      if (first && points) rewardCorrect(points);
+      used('advantage');
+    });
+    $('#ma-next').addEventListener('click', pick);
+    pick();
+  })();
+
+</script>

@@ -270,16 +270,22 @@ const schema = [
               <span class="cat-prog" id="cat-prog"><b id="cat-prog-n">০</b> / {bn(first.items.length)} দেখা</span>
             </div>
             <p class="items-h-s" id="items-h-s">নিচের যেকোনোটিতে ক্লিক করো - ডানে তার পুরো কথা খুলবে</p>
-            <div class="extras" id="extras">
-              <a class="xbtn" id="x-quiz" href={`/${w.slug}/quiz/0/`}>যাচাই দাও{plan ? '' : ' · পরিবার'}</a>
-              <a class="xbtn" id="x-ws" href={`/${w.slug}/worksheet/0/`}>অনুশীলনী ছাপাও{plan ? '' : ' · পরিবার'}</a>
+            <div class="extras" id="extras" hidden={!firstReadable && !first.lab}>
+              <a class="xbtn" id="x-quiz" href={`/${w.slug}/quiz/0/`} hidden={!firstReadable}>যাচাই দাও{plan ? '' : ' · পরিবার'}</a>
+              <a class="xbtn" id="x-ws" href={`/${w.slug}/worksheet/0/`} hidden={!firstReadable}>অনুশীলনী ছাপাও{plan ? '' : ' · পরিবার'}</a>
+              <a class="xbtn" id="x-lab" href={first.lab ?? '/'} hidden={!first.lab}>হাতে-কলমে টুল</a>
               {child && <span class="xwho">পড়ছে: <b>{child.nickname}</b> <a href="/account/">বদলাও</a></span>}
             </div>
+            {/* Reading comes first when there is writing. A category can have
+                both - সরল যন্ত্র is written *and* has a lab - and turning its
+                chips into tool links would hide the writing that exists. The
+                lab is offered beside the reading instead, as one more thing
+                to do, and per item from the reading panel. */}
             <div class="chips" id="chips">
-              {first.lab
-                ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
-                : firstReadable
-                  ? first.items.map((it, j) => <button type="button" class="chip" data-di={j} aria-pressed={j === 0 ? 'true' : 'false'}>{it}</button>)
+              {firstReadable
+                ? first.items.map((it, j) => <button type="button" class="chip" data-di={j} aria-pressed={j === 0 ? 'true' : 'false'}>{it}</button>)
+                : first.lab
+                  ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
                   : first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
             </div>
             <p class="toast" id="star-toast" role="status" aria-live="polite"></p>
@@ -1255,7 +1261,10 @@ const schema = [
       itemChips.replaceChildren(...d.chips.map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
       itemText.textContent = d[level];
       funWrap.hidden = false; itemFun.textContent = d.fun;
-      labNote.hidden = true;
+      // When the category also has a lab, the way in is per item: read about
+      // the lever, then go and move one.
+      labNote.hidden = !c.lab;
+      if (c.lab) labNote.innerHTML = `<a href="${c.lab}#${c.labAnchors?.[curItem] ?? ''}">"${c.items[curItem]}" নিজের হাতে নেড়ে দেখো →</a>`;
       sayBtn.hidden = !speaker;
       return;
     }
@@ -1283,17 +1292,6 @@ const schema = [
   /* ---- the item strip ---- */
   function renderChips() {
     const c = cats[curCat], seen = new Set(seenList());
-    if (c.lab) {
-      $('#items-h-s').textContent = 'নিচে যেকোনোটায় ক্লিক করো - সরাসরি সেই টুলে চলে যাবে';
-      chips.replaceChildren(...c.items.map((it, j) => {
-        const a = document.createElement('a');
-        a.className = 'chip chip-real'; a.href = `${c.lab}#${c.labAnchors![j]}`;
-        a.innerHTML = '<span class="check" aria-hidden="true">✓</span>';
-        a.append(it);
-        return a;
-      }));
-      return;
-    }
     if (readable(c)) {
       if (curItem >= c.items.length) curItem = 0;
       $('#items-h-s').textContent = 'নিচের যেকোনোটিতে ক্লিক করো - ডানে তার পুরো কথা খুলবে';
@@ -1304,6 +1302,17 @@ const schema = [
         b.append(it);
         b.setAttribute('aria-pressed', String(j === curItem));
         return b;
+      }));
+      return;
+    }
+    if (c.lab) {
+      $('#items-h-s').textContent = 'নিচে যেকোনোটায় ক্লিক করো - সরাসরি সেই টুলে চলে যাবে';
+      chips.replaceChildren(...c.items.map((it, j) => {
+        const a = document.createElement('a');
+        a.className = 'chip chip-real'; a.href = `${c.lab}#${c.labAnchors![j]}`;
+        a.innerHTML = '<span class="check" aria-hidden="true">✓</span>';
+        a.append(it);
+        return a;
       }));
       return;
     }
@@ -1492,9 +1501,13 @@ const schema = [
     if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); noteItem(slug); renderProgress(); renderGlance(); renderRecords(); renderChips(); checkGoal(); } }
     // the gated features follow the category
     const extras = $('#extras');
-    extras.hidden = !readable(c);
-    $<HTMLAnchorElement>('#x-quiz').href = `/${slug}/quiz/${i}/`;
-    $<HTMLAnchorElement>('#x-ws').href = `/${slug}/worksheet/${i}/`;
+    extras.hidden = !readable(c) && !c.lab;
+    const quiz = $<HTMLAnchorElement>('#x-quiz'), ws = $<HTMLAnchorElement>('#x-ws'), lab = $<HTMLAnchorElement>('#x-lab');
+    quiz.hidden = ws.hidden = !readable(c);
+    quiz.href = `/${slug}/quiz/${i}/`;
+    ws.href = `/${slug}/worksheet/${i}/`;
+    lab.hidden = !c.lab;
+    if (c.lab) lab.href = c.lab;
     renderQuestBtn();
     rail[i]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
     if (!reduced) $('.items-h').animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
