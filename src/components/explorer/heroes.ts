@@ -1133,7 +1133,9 @@ const SCENES: Record<string, Builder> = {
     // the details that make a tube a rocket: a shoulder where the cone meets
     // the body, a painted band, a porthole, and a flared engine bell
     const nose = new Mesh(new ConeGeometry(0.4, 0.9, 32), std(hue)); nose.position.y = 1.45; r.add(nose);
-    r.add(new Mesh(new TorusGeometry(0.4, 0.05, 8, 32), metal('#c4ccd4', { roughness: 0.4 })).translateY(1));
+    // a torus lies in the xy plane, so a band round an upright body needs the
+    // quarter turn; without it this was a hoop standing across the rocket
+    r.add(new Mesh(new TorusGeometry(0.4, 0.05, 8, 32), metal('#c4ccd4', { roughness: 0.4 })).translateY(1).rotateX(Math.PI / 2));
     r.add(new Mesh(new CylinderGeometry(0.415, 0.415, 0.28, 32), std(darken(hue, 0.2))).translateY(0.15));
     const port = new Mesh(new CylinderGeometry(0.15, 0.15, 0.1, 20), glassy('#9fd8ff', 0.6));
     port.rotation.x = Math.PI / 2; port.position.set(0, 0.62, 0.37); r.add(port);

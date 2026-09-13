@@ -86,6 +86,21 @@ function roundedCard(w: number, h: number, d: number, r = 0.05): ExtrudeGeometry
 }
 const disc = (g: Group, c: string | Color, r: number, x = 0, y = 0, z = 0, rx = -Math.PI / 2) =>
   put(g, new Mesh(new CircleGeometry(r, 32), std(c, { side: DoubleSide })), x, y, z, rx);
+/**
+ * A ring lying flat in the ground plane: a plate rim, a coin edge, a line of surf.
+ *
+ * `TorusGeometry` is built in the XY plane, so a torus added with no rotation
+ * stands upright like a wheel. Almost every ring on this page wants the other
+ * orientation, and the mistake is invisible in the code and unmistakable on
+ * screen: it had turned all three plate rims into basket handles standing over
+ * the food, the coin stack into a gold spring, the beach surf and the island's
+ * ripples into croquet hoops, and it was sitting in nine more figures besides.
+ * Ask for a rim by name and it cannot happen again. A torus that genuinely
+ * should stand up - a padlock shackle, a hanger hook, a mouth on a face - is
+ * still written out in full, which now reads as the deliberate choice it is.
+ */
+const ring = (g: Group, mat: MeshStandardMaterial, r: number, tube: number, x = 0, y = 0, z = 0, seg = 28, arc?: number) =>
+  put(g, new Mesh(new TorusGeometry(r, tube, 8, seg, arc), mat), x, y, z, -Math.PI / 2);
 
 /* ---------- trees and plants ---------- */
 /**
@@ -568,7 +583,7 @@ const glass = (liquid = '#79b6e8'): Figure => (g) => {
   put(g, new Mesh(new CylinderGeometry(0.19, 0.15, 0.44, 26, 1, true), gm()), 0, 0.24);
   // a base and a rolled rim, the two bits of a tumbler you can feel
   put(g, new Mesh(new CylinderGeometry(0.152, 0.16, 0.035, 26), gm()), 0, 0.03);
-  put(g, new Mesh(new TorusGeometry(0.19, 0.012, 8, 28), gm()), 0, 0.46);
+  ring(g, gm(), 0.19, 0.012, 0, 0.46);
   put(g, new Mesh(new CylinderGeometry(0.17, 0.15, 0.26, 26), std(liquid, { transparent: true, opacity: 0.82, roughness: 0.18 })), 0, 0.15);
   // the surface: a liquid needs a top or it is a coloured solid in a tube
   disc(g, new Color(liquid).lerp(new Color('#ffffff'), 0.22), 0.168, 0, 0.28);
@@ -578,7 +593,7 @@ const riceBowl: Figure = (g) => {
   // a foot ring, so the bowl stands rather than being a cone resting on its tip
   put(g, new Mesh(new CylinderGeometry(0.13, 0.15, 0.04, 24), std('#dde3ea')), 0, 0.02);
   put(g, new Mesh(new CylinderGeometry(0.3, 0.18, 0.22, 28), std('#e6ebf1')), 0, 0.15);
-  put(g, new Mesh(new TorusGeometry(0.3, 0.014, 8, 30), std('#d5dce4')), 0, 0.26);
+  ring(g, std('#d5dce4'), 0.3, 0.014, 0, 0.26, 0, 30);
   const h = put(g, new Mesh(new SphereGeometry(0.27, 26, 16), std('#fbfbf6')), 0, 0.28);
   h.scale.set(1, 0.5, 1);
   // a few loose grains on top, which is what stops the rice being one smooth dome
@@ -594,10 +609,13 @@ const fruit = (color: string, leaf = '#4b7a3a'): Figure => (g) => {
   const base = new Color(color);
   const f = ball(g, base, 0.26, 0, 0.28);
   f.scale.set(1, 1.12, 0.94);
-  // a dimple at the stalk and a blush on one cheek: two touches that stop a
-  // fruit being a coloured ball
+  // a dimple where the stalk goes in, and a second lobe in the same colour so
+  // the silhouette has a shoulder on it. The old highlight was a pale ellipsoid
+  // set *inside* the fruit: too big to stay buried, it broke the surface in a
+  // crescent round its own rim and read as a bite taken out of the side. Two
+  // shapes of one colour cannot do that - the seam between them is a crease.
   ball(g, base.clone().multiplyScalar(0.82), 0.07, 0, 0.55, 0).scale.set(1, 0.5, 1);
-  ball(g, base.clone().lerp(new Color('#ffffff'), 0.22), 0.12, -0.1, 0.32, 0.16).scale.set(1, 1.2, 0.35);
+  ball(g, base, 0.21, -0.09, 0.34, 0.04).scale.set(1, 1, 0.95);
   taper(g, '#6b4a2a', 0.013, 0.022, 0.11, 0, 0.58, 0, 0.12);
   const l = ball(g, leaf, 0.09, 0.09, 0.6);
   l.scale.set(1.5, 0.32, 0.8); l.rotation.set(0, 0.3, -0.3);
@@ -655,7 +673,7 @@ const coinStack = (color = '#d9b44a', n = 5): Figure => (g) => {
     // what stop this reading as one grooved cylinder
     const c = put(g, new Mesh(new CylinderGeometry(0.2, 0.2, 0.05, 28), std(color, { metalness: 0.55, roughness: 0.32 })), (r() - 0.5) * 0.018, 0.03 + i * 0.055, (r() - 0.5) * 0.018);
     c.rotation.y = r() * 3;
-    put(g, new Mesh(new TorusGeometry(0.193, 0.012, 8, 26), std(rim, { metalness: 0.5, roughness: 0.38 })), c.position.x, c.position.y, c.position.z);
+    ring(g, std(rim, { metalness: 0.5, roughness: 0.38 }), 0.193, 0.012, c.position.x, c.position.y, c.position.z, 26);
   }
   // the top coin gets a face, so the stack has a head on it
   put(g, new Mesh(new CylinderGeometry(0.13, 0.13, 0.056, 24), std(rim, { metalness: 0.5, roughness: 0.4 })), 0, 0.03 + (n - 1) * 0.055, 0);
@@ -793,7 +811,7 @@ const balance: Figure = (g) => {
     for (const d of [-1, 1]) rod(g, '#9aa5b1', 0.008, 0.2, s * 0.33 + d * 0.045, 0.56, 0, -d * 0.12);
     const pan = put(g, new Mesh(new CylinderGeometry(0.13, 0.1, 0.04, 26), std('#b9c3ce', { metalness: 0.35, roughness: 0.4 })), s * 0.33, 0.46);
     void pan;
-    put(g, new Mesh(new TorusGeometry(0.125, 0.012, 8, 26), std('#a4aeb9')), s * 0.33, 0.48);
+    ring(g, std('#a4aeb9'), 0.125, 0.012, s * 0.33, 0.48, 0, 26);
   }
 };
 /** A ruler laid flat with tick marks. */
@@ -843,7 +861,7 @@ const telescope: Figure = (g) => {
  */
 const compass: Figure = (g) => {
   put(g, new Mesh(new CylinderGeometry(0.28, 0.28, 0.07, 32), std('#c9a15e', { metalness: 0.45, roughness: 0.35 })), 0, 0.06);
-  put(g, new Mesh(new TorusGeometry(0.275, 0.022, 10, 34), std('#a8823f', { metalness: 0.5, roughness: 0.3 })), 0, 0.095);
+  ring(g, std('#a8823f', { metalness: 0.5, roughness: 0.3 }), 0.275, 0.022, 0, 0.095, 0, 34);
   disc(g, '#f4f8fc', 0.24, 0, 0.1);
   // the cardinal marks, longer at the four points
   for (let i = 0; i < 12; i++) {
@@ -894,18 +912,31 @@ const barometer: Figure = (g) => {
 };
 /** An envelope. */
 const envelope = (color = '#f4f8fc'): Figure => (g) => {
-  box(g, color, 0.6, 0.4, 0.03, 0, 0.3);
-  // the two lower flaps that meet in a V, which is the back of every envelope
-  for (const s of [1, -1]) {
-    const side = put(g, new Mesh(new ConeGeometry(0.235, 0.3, 3), std(new Color(color).multiplyScalar(0.95))), s * 0.15, 0.3, 0.017, 0, 0, s * Math.PI / 2);
-    side.scale.set(1, 1, 0.08);
+  /**
+   * The face of an envelope: the flap's V, a stamp, an address block.
+   *
+   * The old one was three `ConeGeometry(r, h, 3)` prisms squashed flat on Z. A
+   * three-sided cone puts its base vertices at 0, 120 and 240 degrees, so
+   * flattening one leaves an *asymmetric* triangle spanning -r/2 to +r rather
+   * than the isoceles wedge intended - and the big top flap was additionally
+   * scaled 1.36 times wider than the envelope it was supposed to fold onto. It
+   * read as a paper dart with a red tab, because that is what it was. A shape
+   * extruded from four explicit points cannot go crooked.
+   */
+  const body = new Color(color);
+  put(g, new Mesh(roundedCard(0.62, 0.42, 0.035, 0.02), std(body)), 0, 0.3);
+  const flap = new Shape();
+  flap.moveTo(-0.305, 0.205); flap.lineTo(0.305, 0.205); flap.lineTo(0, -0.035); flap.lineTo(-0.305, 0.205);
+  put(g, new Mesh(new ExtrudeGeometry(flap, { depth: 0.012, bevelEnabled: false }), std(body.clone().multiplyScalar(0.94))), 0, 0.3, 0.016);
+  // a stamp with a lighter panel inside it, in the corner it always sits in
+  put(g, new Mesh(roundedCard(0.12, 0.14, 0.014, 0.008), std('#f7f9fb')), 0.19, 0.44, 0.026);
+  put(g, new Mesh(roundedCard(0.09, 0.11, 0.016, 0.006), std('#c0392b')), 0.19, 0.44, 0.03);
+  // the address block, left aligned and getting shorter the way an address does
+  for (let i = 0; i < 3; i++) {
+    const w = 0.26 - i * 0.06;
+    box(g, '#b9c3ce', w, 0.018, 0.014, -0.24 + w / 2, 0.19 - i * 0.05, 0.024);
   }
-  const f = put(g, new Mesh(new ConeGeometry(0.31, 0.22, 4), std('#dbe3ec')), 0, 0.4, 0.02, Math.PI, Math.PI / 4);
-  f.scale.set(1.36, 1, 0.1);
-  // a stamp in the corner and a wax seal where the flap closes
-  box(g, '#c0392b', 0.1, 0.12, 0.035, 0.2, 0.42, 0.016);
-  for (let i = 0; i < 4; i++) box(g, '#f4f8fc', 0.012, 0.012, 0.04, 0.155 + i * 0.03, 0.36, 0.016);
-  ball(g, '#a8322c', 0.042, 0, 0.3, 0.03).scale.set(1, 1, 0.35);
+  ball(g, '#a8322c', 0.036, 0, 0.268, 0.03).scale.set(1, 1, 0.4);
 };
 /** A shopping stall: a counter under a striped awning. */
 const stall = (awning = '#c0392b'): Figure => (g) => {
@@ -991,12 +1022,21 @@ const bulb: Figure = (g) => {
   for (const s of [1, -1]) rod(g, '#c9a15e', 0.008, 0.12, s * 0.035, 0.42);
   // a screw cap with real threads rather than a smooth collar
   put(g, new Mesh(new CylinderGeometry(0.1, 0.115, 0.15, 20), std('#9aa5b1', { metalness: 0.55, roughness: 0.35 })), 0, 0.24);
-  for (let i = 0; i < 3; i++) put(g, new Mesh(new TorusGeometry(0.106 - i * 0.002, 0.014, 7, 20), std('#8d97a2', { metalness: 0.5, roughness: 0.4 })), 0, 0.2 + i * 0.045);
+  for (let i = 0; i < 3; i++) ring(g, std('#8d97a2', { metalness: 0.5, roughness: 0.4 }), 0.106 - i * 0.002, 0.014, 0, 0.2 + i * 0.045, 0, 20);
   put(g, new Mesh(new SphereGeometry(0.035, 14, 10), std('#4c5867')), 0, 0.15);
 };
 /** A wheel: the first machine. */
 const wheel: Figure = (g) => {
-  put(g, new Mesh(new TorusGeometry(0.3, 0.06, 12, 32), std('#7a5a3a')), 0, 0.36, 0, Math.PI / 2);
+  /**
+   * Upright, on its rim.
+   *
+   * The spokes were built in the XY plane and so stood up correctly, while the
+   * rim and the iron tyre were laid flat: a wheel lying on the ground like a
+   * dinner plate with a fan of spokes standing inside it. The hub and axle
+   * were always right - a cylinder points along Y, so an axle aimed at the
+   * viewer genuinely does need the quarter turn the rim did not.
+   */
+  put(g, new Mesh(new TorusGeometry(0.3, 0.06, 12, 32), std('#7a5a3a')), 0, 0.36);
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI;
     box(g, '#a8763f', 0.03, 0.58, 0.03, 0, 0.36, 0, a);
@@ -1006,7 +1046,7 @@ const wheel: Figure = (g) => {
   put(g, new Mesh(new CylinderGeometry(0.085, 0.085, 0.12, 20), std('#6b4a2a')), 0, 0.36, 0, Math.PI / 2);
   put(g, new Mesh(new CylinderGeometry(0.03, 0.03, 0.18, 14), std('#4c5867', { metalness: 0.5 })), 0, 0.36, 0, Math.PI / 2);
   // an iron tyre round the rim, the way a cart wheel is banded
-  put(g, new Mesh(new TorusGeometry(0.345, 0.022, 10, 34), std('#6b7583', { metalness: 0.45, roughness: 0.45 })), 0, 0.36, 0, Math.PI / 2);
+  put(g, new Mesh(new TorusGeometry(0.345, 0.022, 10, 34), std('#6b7583', { metalness: 0.45, roughness: 0.45 })), 0, 0.36);
 };
 /** A book. */
 const book = (cover = '#3d6b8f'): Figure => (g) => {
@@ -1067,7 +1107,7 @@ const flask = (liquid = '#7ac8a0'): Figure => (g) => {
   const glassMat = () => new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.28, side: DoubleSide, roughness: 0.12, depthWrite: false });
   put(g, new Mesh(new ConeGeometry(0.28, 0.44, 26, 1, true), glassMat()), 0, 0.24);
   put(g, new Mesh(new CylinderGeometry(0.07, 0.07, 0.2, 20, 1, true), glassMat()), 0, 0.55);
-  put(g, new Mesh(new TorusGeometry(0.072, 0.014, 8, 20), glassMat()), 0, 0.645);
+  ring(g, glassMat(), 0.072, 0.014, 0, 0.645, 0, 20);
   /**
    * The contents are a frustum, not a cone.
    *
@@ -1266,30 +1306,46 @@ const mangrove: Figure = (g) => {
 const beach: Figure = (g) => {
   const r = rng(0xbea60);
   put(g, new Mesh(new CylinderGeometry(0.6, 0.6, 0.08, 32), std('#e6d2a8', { roughness: 1 })), 0, 0.04);
-  disc(g, '#3f86b8', 0.62, 0, 0.09, -Math.PI / 2).scale.set(1, 0.45, 1);
-  // the wet line where the last wave reached, and a band of foam on it: a flat
-  // blue half-disc on sand is a colour change, not a shoreline
-  const wet = disc(g, '#cbb98e', 0.6, 0, 0.086, -Math.PI / 2); wet.scale.set(1, 0.52, 1);
+  /**
+   * Sea in the far half, dry sand in the near half, a wet band between them.
+   *
+   * The sea and the wet band were written as `disc(g, colour, r, x, y, -PI/2)`,
+   * one argument short: `disc` already defaults its rotation, so the quarter
+   * turn landed in the **z** parameter and parked the sea a unit and a half
+   * behind the beach, hanging in the air beside the palm. From the front it
+   * read as a blue saucer floating in the sky, and the beach itself had no
+   * water on it at all. A shoreline is water *overlapping* sand; the order the
+   * three discs stack in is the whole effect.
+   */
+  const sea = disc(g, '#3f86b8', 0.58, 0, 0.098, -0.3); sea.scale.set(1.04, 0.62, 1);
+  const wet = disc(g, '#cbb98e', 0.57, 0, 0.088, -0.14); wet.scale.set(1.04, 0.62, 1);
+  // wave lines that follow the water rather than circles laid over an ellipse
   for (let i = 0; i < 3; i++) {
-    const f = put(g, new Mesh(new TorusGeometry(0.3 + i * 0.1, 0.011, 8, 30, Math.PI), std('#eef6fb', { transparent: true, opacity: 0.7 })), 0, 0.092 + i * 0.003, 0.02);
-    f.rotation.y = Math.PI;
+    const f = ring(g, std('#eef6fb', { transparent: true, opacity: 0.72 }), 0.3 + i * 0.12, 0.012, 0, 0.103, -0.3, 30);
+    f.scale.set(1, 0.62, 1);
   }
-  // a palm that leans out over the water, the way they all do
-  for (let i = 0; i < 3; i++) taper(g, '#8a6a44', 0.03 - i * 0.005, 0.042 - i * 0.005, 0.2, -0.22 - i * 0.03, 0.18 + i * 0.18, 0.1, 0.2 + i * 0.06);
-  for (let i = 0; i < 3; i++) put(g, new Mesh(new TorusGeometry(0.033, 0.007, 6, 14), std('#7a5c3a')), -0.25 - i * 0.02, 0.3 + i * 0.14, 0.1, 0, 0, 0.25);
+  // a palm on the dry sand, leaning out over the water the way they all do
+  for (let i = 0; i < 3; i++) taper(g, '#8a6a44', 0.03 - i * 0.005, 0.042 - i * 0.005, 0.2, -0.2 - i * 0.035, 0.18 + i * 0.18, 0.24, 0.22 + i * 0.06);
+  for (let i = 0; i < 3; i++) {
+    // a band round a leaning trunk has to be laid flat *first* and tilted
+    // after, which is the reverse of the default XYZ order
+    const band = ring(g, std('#7a5c3a'), 0.033, 0.007, -0.24 - i * 0.025, 0.3 + i * 0.14, 0.24, 14);
+    band.rotation.order = 'ZYX';
+    band.rotation.set(-Math.PI / 2, 0, 0.28 + i * 0.06);
+  }
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
     const b = new Mesh(new ConeGeometry(0.045, 0.3, 5), std(new Color('#4b8f4f').offsetHSL(0, 0, r() * 0.1 - 0.05)));
-    b.position.set(-0.33 + Math.cos(a) * 0.12, 0.72, 0.1 + Math.sin(a) * 0.12);
+    b.position.set(-0.33 + Math.cos(a) * 0.12, 0.72, 0.24 + Math.sin(a) * 0.12);
     b.rotation.set(Math.cos(a) * 1.15, 0, -Math.sin(a) * 1.15);
     b.scale.set(1, 1, 0.4);
     g.add(b);
   }
-  ball(g, '#7a5c3a', 0.03, -0.3, 0.66, 0.14);
-  // shells on the dry sand
+  ball(g, '#7a5c3a', 0.03, -0.3, 0.66, 0.28);
+  // shells on the dry sand, which is now the near half
   for (let i = 0; i < 3; i++) {
     const a = r() * 6.28;
-    const sh = ball(g, '#f2e6d2', 0.026, Math.cos(a) * 0.3, 0.09, -0.25 + Math.sin(a) * 0.12);
+    const sh = ball(g, '#f2e6d2', 0.026, Math.cos(a) * 0.28, 0.09, 0.32 + Math.sin(a) * 0.08);
     sh.scale.set(1.3, 0.5, 1); sh.rotation.y = a;
   }
 };
@@ -1298,7 +1354,7 @@ const island: Figure = (g) => {
   const r = rng(0x151a1d);
   disc(g, '#3f86b8', 0.62, 0, 0.02);
   // rings of surf round the shore, which is what turns a disc of blue into sea
-  for (let i = 0; i < 2; i++) put(g, new Mesh(new TorusGeometry(0.36 + i * 0.1, 0.012, 8, 34), std('#cfe4f2', { transparent: true, opacity: 0.65 })), 0, 0.03 + i * 0.004);
+  for (let i = 0; i < 2; i++) ring(g, std('#cfe4f2', { transparent: true, opacity: 0.65 }), 0.36 + i * 0.1, 0.012, 0, 0.03 + i * 0.004, 0, 34);
   put(g, new Mesh(new SphereGeometry(0.3, 26, 16), std('#e6d2a8')), 0, 0.06).scale.set(1, 0.4, 1);
   // a palm rather than a green ball: a curved trunk and drooping fronds is the
   // one silhouette that says island rather than lump
@@ -1313,34 +1369,64 @@ const island: Figure = (g) => {
 };
 /** A wetland: open water with reeds. */
 const wetland: Figure = (g) => {
+  /**
+   * A haor: open water in the middle, reed beds round the rim.
+   *
+   * The reeds used to stand scattered evenly across the whole pond at up to
+   * half its radius in height - not a wetland but a pin cushion, eleven bare
+   * sticks in a puddle. The lily pads were lost underneath them, and the
+   * wading bird, a sixth of a reed tall, disappeared among the stems. Reeds
+   * grow where they can root, which is the margin, and leaving the middle
+   * open is what makes the water read as water.
+   */
   const rr = rng(0x3e71a);
   disc(g, '#3b7a8f', 0.6, 0, 0.02);
-  // lily pads: a haor is as much floating leaf as it is water
-  for (let i = 0; i < 5; i++) {
-    const a = rr() * 6.28, rad = 0.12 + rr() * 0.32;
-    const pad = disc(g, '#3f7a46', 0.055 + rr() * 0.035, Math.cos(a) * rad, 0.028, Math.sin(a) * rad);
-    pad.rotation.z = rr() * 0.2;
+  // paler shallows round the rim, so the water has a depth to it
+  ring(g, std('#4f93a6'), 0.5, 0.09, 0, 0.024, 0, 36).scale.set(1, 1, 0.1);
+  // lily pads, big enough to be leaves rather than confetti
+  for (let i = 0; i < 7; i++) {
+    const a = rr() * 6.28, rad = rr() * 0.28;
+    const pad = disc(g, i % 3 ? '#3f7a46' : '#4a8a4e', 0.085 + rr() * 0.05, Math.cos(a) * rad, 0.03 + i * 0.001, Math.sin(a) * rad);
+    pad.rotation.z = rr() * 0.3;
   }
-  ball(g, '#e8a0b4', 0.032, 0.2, 0.055, -0.22);
-  for (let i = 0; i < 11; i++) {
-    const a = i * 1.4 + rr() * 0.3, rad = 0.16 + (i % 3) * 0.15;
-    const h = 0.26 + rr() * 0.22;
-    const x = Math.cos(a) * rad, z = Math.sin(a) * rad;
-    rod(g, '#7f9e4a', 0.015, h, x, 0.02 + h / 2, z, (rr() - 0.5) * 0.2);
-    // a cattail head on some of them, which is what a reed bed looks like
-    if (i % 3 === 0) {
-      const head = put(g, new Mesh(new CylinderGeometry(0.026, 0.026, 0.1, 12), std('#7a5a35')), x, 0.04 + h, z);
-      head.scale.set(1, 1, 1);
-      cone(g, '#7f9e4a', 0.012, 0.05, x, 0.1 + h, z);
+  for (const [fx, fz] of [[0.14, 0.1], [-0.19, -0.06]] as const) {
+    ball(g, '#e8a0b4', 0.038, fx, 0.055, fz).scale.set(1, 0.8, 1);
+    ball(g, '#f4d0a8', 0.016, fx, 0.08, fz);
+  }
+  // three clumps at the margin rather than a wash of single stems
+  for (let c = 0; c < 3; c++) {
+    const ca = 0.7 + c * 2.1 + rr() * 0.4;
+    const cx = Math.cos(ca) * 0.42, cz = Math.sin(ca) * 0.42;
+    for (let i = 0; i < 5; i++) {
+      const x = cx + (rr() - 0.5) * 0.2, z = cz + (rr() - 0.5) * 0.17;
+      const h = 0.2 + rr() * 0.13, lean = (rr() - 0.5) * 0.24;
+      rod(g, '#7f9e4a', 0.013, h, x, 0.02 + h / 2, z, lean);
+      // the stem leans, so the head belongs over the *tip*, not over the root
+      const tx = x - Math.sin(lean) * h / 2, ty = 0.02 + h / 2 + Math.cos(lean) * h / 2;
+      if (i % 2 === 0) {
+        // the brown cattail, which is the one thing that names the plant
+        put(g, new Mesh(new CylinderGeometry(0.027, 0.023, 0.11, 12), std('#7a5a35')), tx, ty + 0.045, z, 0, 0, lean);
+        cone(g, '#8fae5a', 0.011, 0.05, tx, ty + 0.12, z, lean);
+      } else {
+        const bl = put(g, new Mesh(new ConeGeometry(0.024, 0.17, 3), std('#8fae5a')), x + 0.035, 0.02 + h * 0.72, z, 0, 0, -0.55);
+        bl.scale.set(1, 1, 0.3);
+      }
     }
   }
-  // a wading bird, rather than a white smudge on the water
-  const bx = 0.14, bz = -0.14;
-  for (const s of [1, -1]) rod(g, '#d9a24a', 0.008, 0.13, bx + s * 0.02, 0.075, bz);
-  const body = ball(g, '#f4f6f8', 0.055, bx, 0.17, bz); body.scale.set(1.5, 0.85, 0.85);
-  rod(g, '#f4f6f8', 0.016, 0.09, bx - 0.05, 0.23, bz, 0.3);
-  ball(g, '#f4f6f8', 0.032, bx - 0.07, 0.28, bz);
-  cone(g, '#d9a24a', 0.012, 0.06, bx - 0.11, 0.275, bz, Math.PI / 2);
+  // a wading bird standing in the open, at a size that can actually be seen
+  const bx = 0.04, bz = 0.29;
+  for (const s of [1, -1]) rod(g, '#d9a24a', 0.011, 0.18, bx + s * 0.032, 0.1, bz + s * 0.012);
+  const body = ball(g, '#f4f6f8', 0.082, bx, 0.24, bz); body.scale.set(1.45, 0.9, 0.85);
+  const wing = ball(g, '#e4e9ee', 0.062, bx + 0.022, 0.248, bz); wing.scale.set(1.3, 0.55, 1.15);
+  void wing;
+  // the neck and the lifted head are the whole silhouette of a waterbird
+  taper(g, '#f4f6f8', 0.021, 0.034, 0.14, bx - 0.08, 0.31, bz, 0.34);
+  const hd = ball(g, '#f4f6f8', 0.045, bx - 0.132, 0.383, bz); hd.scale.set(1.15, 1, 0.95);
+  void hd;
+  cone(g, '#d9a24a', 0.016, 0.095, bx - 0.212, 0.378, bz, Math.PI / 2 + 0.14);
+  for (const s of [1, -1]) disc(g, '#1b2129', 0.009, bx - 0.145, 0.396, bz + s * 0.044, 0).rotation.y = s > 0 ? 0 : Math.PI;
+  const tail = put(g, new Mesh(new ConeGeometry(0.045, 0.13, 6), std('#e4e9ee')), bx + 0.15, 0.255, bz, 0, 0, -1.9);
+  tail.scale.set(1, 1, 0.6);
 };
 /** Terraced rows on a slope: the tea garden. */
 const teaGarden: Figure = (g) => {
@@ -1415,7 +1501,7 @@ const dish = (main: string, side: string, extra?: string): Figure => (g) => {
   // balancing on a flat disc
   put(g, new Mesh(new CylinderGeometry(0.22, 0.26, 0.03, 28), std('#e2e7ec')), 0, 0.015);
   put(g, new Mesh(new CylinderGeometry(0.4, 0.34, 0.06, 32), std('#f4f7fa')), 0, 0.055);
-  put(g, new Mesh(new TorusGeometry(0.4, 0.016, 8, 34), std('#e6ebf0')), 0, 0.08);
+  ring(g, std('#e6ebf0'), 0.4, 0.016, 0, 0.08, 0, 34);
   const r = rng(hash(main + side));
   const m = put(g, new Mesh(new SphereGeometry(0.2, 24, 16), std(main)), -0.08, 0.13);
   m.scale.set(1, 0.55, 1);
@@ -1434,7 +1520,7 @@ const bowlDish = (color: string): Figure => (g) => {
   // a foot, a rim and a spoon: a bowl of dal is not a cylinder with a dome
   put(g, new Mesh(new CylinderGeometry(0.13, 0.15, 0.035, 24), std('#dde3ea')), 0, 0.018);
   put(g, new Mesh(new CylinderGeometry(0.3, 0.2, 0.22, 28), std('#eef2f6')), 0, 0.14);
-  put(g, new Mesh(new TorusGeometry(0.3, 0.014, 8, 30), std('#e0e6ec')), 0, 0.25);
+  ring(g, std('#e0e6ec'), 0.3, 0.014, 0, 0.25, 0, 30);
   const h = put(g, new Mesh(new SphereGeometry(0.27, 24, 16), std(color)), 0, 0.26);
   h.scale.set(1, 0.4, 1);
   disc(g, new Color(color).lerp(new Color('#ffffff'), 0.18), 0.275, 0, 0.268);
@@ -1447,27 +1533,41 @@ const bowlDish = (color: string): Figure => (g) => {
 };
 /** A stack of flat cakes. */
 const pitha: Figure = (g) => {
-  // stacked slightly off true with a golden top, the way a plate of pitha
-  // actually sits, rather than three perfectly concentric discs
+  /**
+   * Rice cakes on a plate, stacked askew.
+   *
+   * They were three tiers of *decreasing* radius with scalloped edges and a
+   * golden ball on top, which is the shape of a wedding cake and read as one.
+   * Pitha are flat and all much of a size; what makes a stack of them read is
+   * that no two sit square with each other, and that the top one shows the
+   * pattern pressed into its face by the mould.
+   */
   const r = rng(0x9174a);
+  put(g, new Mesh(new CylinderGeometry(0.34, 0.3, 0.035, 30), std('#f4f7fa')), 0, 0.018);
+  ring(g, std('#e6ebf0'), 0.34, 0.014, 0, 0.032, 0, 32);
   for (let i = 0; i < 3; i++) {
-    const c = put(g, new Mesh(new CylinderGeometry(0.24 - i * 0.02, 0.245 - i * 0.02, 0.07, 26), std(i % 2 ? '#f0e2c8' : '#e6d2a8')),
-      (r() - 0.5) * 0.03, 0.05 + i * 0.075, (r() - 0.5) * 0.03);
+    const a = r() * 6.28, off = 0.035 + i * 0.014;
+    const cx = Math.cos(a) * off, cz = Math.sin(a) * off, y = 0.068 + i * 0.062;
+    const c = put(g, new Mesh(new CylinderGeometry(0.2, 0.205, 0.058, 26), std(i % 2 ? '#f0e2c8' : '#e8d6b4')), cx, y, cz);
     c.rotation.y = r() * 3;
-    // the scalloped edge a moulded pitha carries
-    for (let k = 0; k < 10; k++) {
-      const a = (k / 10) * Math.PI * 2;
-      ball(g, i % 2 ? '#e3d2b2' : '#d8c396', 0.018, c.position.x + Math.cos(a) * (0.235 - i * 0.02), c.position.y, c.position.z + Math.sin(a) * (0.235 - i * 0.02)).scale.set(1, 0.55, 1);
+    // the browned rim a hot pan leaves round the edge
+    ring(g, std(i % 2 ? '#dcc9a4' : '#d3bd92'), 0.2, 0.013, cx, y, cz, 26);
+    if (i !== 2) continue;
+    for (let k = 0; k < 8; k++) {
+      const ka = (k / 8) * Math.PI * 2;
+      box(g, '#e0cda6', 0.08, 0.009, 0.024, cx + Math.cos(ka) * 0.105, y + 0.031, cz + Math.sin(ka) * 0.105)
+        .rotation.set(0, -ka, 0);
     }
+    ball(g, '#d8c39a', 0.032, cx, y + 0.032, cz).scale.set(1, 0.45, 1);
   }
-  ball(g, '#c08a3a', 0.05, 0, 0.3);
-  ball(g, '#a8702a', 0.02, 0.03, 0.32, 0.03);
+  // a spoon of date molasses beside them, which is how they are eaten
+  ball(g, '#6b4a2a', 0.052, 0.2, 0.057, 0.17).scale.set(1.2, 0.35, 1.1);
 };
 /** A round sweet in syrup. */
 const sweet: Figure = (g) => {
   // syrup with a surface, and sweets that sit *in* it rather than on a lid
   put(g, new Mesh(new CylinderGeometry(0.3, 0.26, 0.1, 28), std('#e8eef5')), 0, 0.05);
-  put(g, new Mesh(new TorusGeometry(0.3, 0.014, 8, 30), std('#dde4ec')), 0, 0.1);
+  ring(g, std('#dde4ec'), 0.3, 0.014, 0, 0.1, 0, 30);
   const syrup = put(g, new Mesh(new CylinderGeometry(0.285, 0.25, 0.07, 28), std('#b5762f', { transparent: true, opacity: 0.72, roughness: 0.18 })), 0, 0.055);
   void syrup;
   const r = rng(0x57ee7);
@@ -1539,29 +1639,76 @@ const fossil: Figure = (g) => {
 };
 /** A long-necked dinosaur. */
 const dino: Figure = (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.26, 24, 16), std('#5f7a4a')), 0, 0.34);
-  b.scale.set(1.5, 0.9, 0.9);
-  rod(g, '#5f7a4a', 0.05, 0.44, 0.3, 0.56, 0, -0.35);
-  ball(g, '#5f7a4a', 0.09, 0.44, 0.76);
-  // tail: three tapering segments dropping away, rather than one rod pinned at
-  // a fixed angle, so the animal ends in a point the way a sauropod does
-  for (let i = 0; i < 3; i++) {
-    const t2 = i / 2;
-    taper(g, '#5f7a4a', 0.05 - t2 * 0.034, 0.062 - t2 * 0.034, 0.2, -0.3 - t2 * 0.17, 0.4 - t2 * 0.07, 0, 1.15 + t2 * 0.25);
-  }
+  /**
+   * A sauropod: a barrel slung between four columns, a neck up one end and a
+   * longer tail off the other.
+   *
+   * It was a round green body with one thick rod for a neck and a plain ball
+   * stuck on the end of it, three stubby cones behind for a tail, and a row of
+   * triangular plates along the whole back. None of that is this animal. The
+   * plates are a stegosaurus; the rod and ball is a lollipop; and the tail was
+   * shorter than the animal's own leg, so the silhouette read as a hedgehog.
+   * Neck and tail are tapering chains walking along a curve now, which is the
+   * only thing that reads as *long* at this size, and the tail is the longest
+   * part of the animal because on a sauropod it is.
+   */
+  const skin = '#5f7a4a', dark = '#4f6a3a';
+  /** A tapering chain of segments walking from (x, y) along a turning curve. */
+  const chain = (n: number, x: number, y: number, a0: number, a1: number, len: number, r0: number, r1: number) => {
+    let px = x, py = y;
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1);
+      const a = a0 + (a1 - a0) * t, rad = r0 + (r1 - r0) * t;
+      px += Math.cos(a) * len / 2; py += Math.sin(a) * len / 2;
+      // a cylinder points along +Y, so an axis at angle a needs a - 90 degrees
+      taper(g, skin, rad * 0.88, rad, len + 0.014, px, py, 0, a - Math.PI / 2);
+      px += Math.cos(a) * len / 2; py += Math.sin(a) * len / 2;
+    }
+    return [px, py] as const;
+  };
+
+  const b = put(g, new Mesh(new SphereGeometry(0.22, 26, 18), std(skin)), 0, 0.44);
+  b.scale.set(1.45, 0.95, 1);
+  // hips and shoulders, so the barrel is not one smooth egg
+  ball(g, skin, 0.175, -0.19, 0.45).scale.set(1, 1, 0.95);
+  ball(g, skin, 0.15, 0.21, 0.46).scale.set(1, 0.95, 0.92);
+
+  const [hx, hy] = chain(6, 0.25, 0.56, 1.24, 0.94, 0.095, 0.056, 0.032);
+  const head = put(g, new Mesh(new SphereGeometry(0.055, 18, 14), std(skin)), hx + 0.015, hy + 0.015);
+  head.scale.set(1.45, 1, 0.92);
+  const snout = put(g, new Mesh(new SphereGeometry(0.036, 16, 12), std(skin)), hx + 0.085, hy - 0.002);
+  snout.scale.set(1.2, 0.78, 0.85);
+  // a jaw slung under the snout, whose seam is the mouth line
+  const jaw = put(g, new Mesh(new SphereGeometry(0.03, 14, 10), std(dark)), hx + 0.085, hy - 0.022);
+  jaw.scale.set(1.25, 0.55, 0.8);
   for (const s of [1, -1]) {
-    ball(g, '#f2efe4', 0.019, 0.48, 0.79, s * 0.045).scale.set(1, 1, 0.6);
-    disc(g, '#15120c', 0.009, 0.487, 0.79, s * 0.056, 0).rotation.y = s * 1.2;
+    // flat discs on the side of the head. A small sphere set against a larger
+    // one is swallowed by it: the head is only 0.05 deep, so an eyeball at
+    // that scale sits entirely inside the skull and the animal reads blind.
+    const ex = hx + 0.035, ey = hy + 0.032, ez = s * 0.055;
+    const ry = s > 0 ? 0.35 : Math.PI - 0.35;
+    disc(g, '#f2efe4', 0.019, ex, ey, ez, 0).rotation.y = ry;
+    disc(g, '#15120c', 0.0095, ex + 0.004, ey, ez + s * 0.004, 0).rotation.y = ry;
   }
-  // a ridge of plates down the spine
-  for (let i = 0; i < 6; i++) {
-    const p = put(g, new Mesh(new ConeGeometry(0.032, 0.06 + Math.sin(i / 5 * Math.PI) * 0.05, 4), std('#4f6a3a')), 0.2 - i * 0.1, 0.56, 0);
-    p.scale.set(1, 1, 0.45);
+
+  // the tail sweeps back and up, clear of the ground rather than dragging
+  chain(6, -0.26, 0.47, Math.PI + 0.12, Math.PI - 0.45, 0.095, 0.058, 0.013);
+
+  // four columns, the back pair heavier, each on a broad foot
+  for (const [dx, dz, rTop, rBot, h] of [
+    [0.19, 0.13, 0.042, 0.055, 0.3], [0.19, -0.13, 0.042, 0.055, 0.3],
+    [-0.17, 0.145, 0.05, 0.066, 0.32], [-0.17, -0.145, 0.05, 0.066, 0.32],
+  ] as const) {
+    taper(g, dark, rTop, rBot, h, dx, h / 2, dz);
+    const f = ball(g, '#435c32', rBot * 1.15, dx, 0.032, dz + 0.012);
+    f.scale.set(1.15, 0.5, 1.25);
   }
-  for (const [dx, dz] of [[0.16, 0.14], [0.16, -0.14], [-0.16, 0.14], [-0.16, -0.14]] as const) {
-    taper(g, '#4f6a3a', 0.044, 0.06, 0.28, dx, 0.16, dz);
-    // a foot, so a four-tonne animal is not balancing on four pencils
-    const f = ball(g, '#435c32', 0.055, dx, 0.03, dz + 0.01); f.scale.set(1.1, 0.5, 1.2);
+  // a low ridge along the spine. A sauropod has one; a row of plates is a
+  // different animal entirely.
+  for (let i = 0; i < 7; i++) {
+    const rx = 0.2 - i * 0.075;
+    const k = put(g, new Mesh(new SphereGeometry(0.026, 10, 8), std(dark)), rx, 0.645 - Math.abs(rx) * 0.16, 0);
+    k.scale.set(1.1, 0.8, 0.5);
   }
 };
 /** An iceberg on water. */
