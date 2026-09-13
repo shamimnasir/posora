@@ -369,13 +369,23 @@ export function mountCosmos(
     (mat.uniforms.uLight.value as Vector3).copy(lightTmp);
   }
 
+  /**
+   * How wide this body actually is on screen.
+   *
+   * The sphere is drawn at radius 1, but a ringed planet is not its sphere:
+   * Saturn's rings reach out to 2.3. Treating every body as radius 1 put Earth
+   * down among Saturn's rings instead of beside the planet, and framed the
+   * pair as though the planet were less than half the size it is.
+   */
+  const selfRadius = (b: Body) => Math.max(1, b.visual.ring?.outer ?? 0);
+
   function layoutCompare(b: Body) {
     // Both drawn from real mean diameters: this body is radius 1, Earth scales against it.
     const d = FACTS[b.id]?.diameterKm ?? EARTH_DIAMETER_KM;
     const rel = EARTH_DIAMETER_KM / d;
     const r = Math.max(0.012, rel);          // keep Earth visible even beside the Sun
     cmpEarth.scale.setScalar(r);
-    cmpEarth.position.set(1 + r + Math.max(0.35, r * 0.5), 0, 0);
+    cmpEarth.position.set(selfRadius(b) + r + Math.max(0.35, r * 0.5), 0, 0);
   }
 
   function buildBody(b: Body) {
@@ -528,7 +538,11 @@ export function mountCosmos(
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
     // refit on resize, or a narrow window silently crops the outer orbits again
     if (level === 'system') camWant = fitDistance(maxOrbit);
-    else if (level === 'body' && cmpOn) camWant = fitDistance(Math.max((cmpEarth.position.x + cmpEarth.scale.x + 1) / 2, 1.35));
+    else if (level === 'body' && cmpOn) {
+      // the same span as compareEarth uses, or a resize re-crops the pair
+      const cb = all.find((x) => x.id === curId);
+      camWant = fitDistance(Math.max((cmpEarth.position.x + cmpEarth.scale.x + (cb ? selfRadius(cb) : 1)) / 2, 1.35));
+    }
     else if (level === 'body') camWant = fitDistance(Math.max(maxR, 1.35));
   }
   new ResizeObserver(resize).observe(host); resize();
@@ -555,7 +569,11 @@ export function mountCosmos(
   }
 
   function frameLoop(now: number) {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    // Clamped at zero: a rAF timestamp is the start of the frame and can
+    // predate the `performance.now()` that `start()` took just before asking
+    // for it, so the first frame after every start had a negative dt and the
+    // whole system stepped backwards. See the long version in heroes.ts.
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; t += dt;
     if (!dragging) { yaw += vx; pitch = MathUtils.clamp(pitch + vy, -1.1, 1.1); vx *= 0.92; vy *= 0.92; idle += dt; }
     if (!reduced && !dragging && Math.abs(vx) < 0.002) yaw += dt * (level === 'system' ? 0.05 : 0.12);
     pitch += (pitchWant - pitch) * 0.05;
@@ -656,9 +674,12 @@ export function mountCosmos(
       cmpOn = on; cmpG.visible = on;
       const b = all.find((x) => x.id === curId); if (b) layoutCompare(b);
       if (on) {
+        // the pair spans from -selfR to the far edge of Earth, so that is what
+        // the camera has to aim at the middle of and pull back far enough for
+        const selfR = b ? selfRadius(b) : 1;
         const right = cmpEarth.position.x + cmpEarth.scale.x;
-        camTargetWant.set((right - 1) / 2, 0, 0);
-        camWant = fitDistance(Math.max((right + 1) / 2, 1.35));
+        camTargetWant.set((right - selfR) / 2, 0, 0);
+        camWant = fitDistance(Math.max((right + selfR) / 2, 1.35));
       } else {
         camTargetWant.set(0, 0, 0);
         camWant = fitDistance(Math.max(maxR, 1.35));

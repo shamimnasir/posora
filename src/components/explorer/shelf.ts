@@ -289,7 +289,9 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
   ro.observe(host);
 
   function tick(now: number) {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    // clamped at zero: the first rAF timestamp can predate the
+    // `performance.now()` taken just before it. See heroes.ts.
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; t += dt;
     cells.forEach((c, i) => {
       if (c.body) {
         // Collected things turn slowly, so the shelf is alive without being

@@ -99,7 +99,11 @@ export function mountStatViz(canvas: HTMLCanvasElement, o: VizOpts): VizHandle {
 
   /* ---------- drawing ---------- */
   function draw(now: number) {
-    const t = reduced ? 0 : (now - t0) / 1000;
+    // clamped at zero: the first rAF timestamp can predate the
+    // `performance.now()` taken just before it, and a negative t here reaches
+    // `fillRect` as a negative width, which canvas draws leftward out of the
+    // chart. See heroes.ts for why the timestamp runs backwards at all.
+    const t = reduced ? 0 : Math.max(0, (now - t0) / 1000);
     ctx.clearRect(0, 0, W, H);
     ctx.textBaseline = 'middle';
 

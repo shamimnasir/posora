@@ -1,6 +1,6 @@
 ---
 import { bodies, branchesFor, FACTS, METRICS, SPEEDS, EARTH_DIAMETER_KM, type Body } from '../../data/space';
-import { bn, pad2, bnNum, bnDuration } from '../../lib/bn';
+import { bn, pad2, bnNum, bnDuration, bnOf } from '../../lib/bn';
 import { worlds } from '../../data/worlds';
 import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
 import { AWARDS, awardKey } from '../../lib/game';
@@ -101,7 +101,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
         <span class="sep" id="crumb-sep2" hidden aria-hidden="true">›</span>
         <button type="button" class="crumb" id="crumb-moon" hidden></button>
       </nav>
-      <div class="host" id="planet-host" aria-label={`${cur.bn}ের থ্রিডি মডেল - টেনে ঘোরাও, ক্লিক করে ভেতরে যাও`} role="img">
+      <div class="host" id="planet-host" aria-label={`${bnOf(cur.bn)} থ্রিডি মডেল - টেনে ঘোরাও, ক্লিক করে ভেতরে যাও`} role="img">
         <canvas></canvas>
         <div class="labels" id="moon-labels"></div>
       </div>
@@ -595,7 +595,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
 </style>
 
 <script>
-  import { bn, bnNum, bnBig, bnDuration } from '../../lib/bn';
+  import { bn, bnNum, bnBig, bnDuration, bnOf, bnAt } from '../../lib/bn';
   import { markSeen, getProgress, addXp, grantAward, setMission, setBest, finishTask, todayState } from '../../lib/progress';
   import { levelOf, AWARDS, awardKey, chime, soundOn, setSound, confetti, starsFor, starText, secText } from '../../lib/game';
   import { goalParts, goalMet } from '../../lib/daily';
@@ -674,8 +674,8 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   }
   function showMoon(i: number) {
     const m = cur.moons[i]; if (!m) return;
-    $('#sub-k').textContent = `${cur.bn}ের চাঁদ`;
-    $('#sub-text').textContent = `${m.bn} (${m.en}) - ${cur.bn}ের একটি চাঁদ। ক্যামেরা এখন এর সঙ্গে সঙ্গে ঘুরছে; টেনে চারপাশ থেকে দেখো, ফিরতে উপরে ${cur.bn}ের নামে চাপো।`;
+    $('#sub-k').textContent = `${bnOf(cur.bn)} চাঁদ`;
+    $('#sub-text').textContent = `${m.bn} (${m.en}) - ${bnOf(cur.bn)} একটি চাঁদ। ক্যামেরা এখন এর সঙ্গে সঙ্গে ঘুরছে; টেনে চারপাশ থেকে দেখো, ফিরতে উপরে ${bnOf(cur.bn)} নামে চাপো।`;
     $('#subtopic').hidden = false;
     renderCrumbs('moon', m.bn);
   }
@@ -918,7 +918,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
     let lt: string;
     if (cur.au === null) lt = 'চাঁদ থেকে পৃথিবীতে আলো আসতে লাগে মাত্র <strong>১.৩ সেকেন্ড</strong>।';
     else if (cur.au === 0) lt = 'সূর্যের আলো পৃথিবীতে পৌঁছাতে লাগে <strong>৮ মিনিট ২০ সেকেন্ড</strong>। তুমি এখন যে রোদ দেখছো, সেটা ৮ মিনিট আগের!';
-    else { const m = lightMinutes(cur.au); lt = m < 60 ? `সূর্যের আলো ${cur.bn}তে পৌঁছাতে লাগে <strong>${bn(Math.round(m))} মিনিট</strong>।` : `সূর্যের আলো ${cur.bn}তে পৌঁছাতে লাগে <strong>${bn((m / 60).toFixed(1))} ঘণ্টা</strong>।`; }
+    else { const m = lightMinutes(cur.au); lt = m < 60 ? `সূর্যের আলো ${bnAt(cur.bn)} পৌঁছাতে লাগে <strong>${bn(Math.round(m))} মিনিট</strong>।` : `সূর্যের আলো ${bnAt(cur.bn)} পৌঁছাতে লাগে <strong>${bn((m / 60).toFixed(1))} ঘণ্টা</strong>।`; }
     $('#light-out').innerHTML = lt;
   }
   function renderProgress() {
@@ -1145,7 +1145,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
     $('#b-name').textContent = cur.bn; $('#b-en').textContent = cur.en; $('#b-tag').textContent = cur.tagline;
     $('#b-chips').replaceChildren(...cur.chips.map((c) => Object.assign(document.createElement('span'), { className: 'pill', textContent: c })));
     $('#b-fun').textContent = cur.fun;
-    host.setAttribute('aria-label', `${cur.bn}ের থ্রিডি মডেল - টেনে ঘোরাও`);
+    host.setAttribute('aria-label', `${bnOf(cur.bn)} থ্রিডি মডেল - টেনে ঘোরাও`);
     rail.forEach((b) => { if (b.dataset.id === cur.id) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
     renderText(); renderSpec(); renderTools(); renderBranches(); renderSize(); renderTravel(); renderRecords(); renderGlance(); renderAge();
     closeDive(); toggleBranches(true); $('#subtopic').hidden = true; renderCrumbs(cosmos?.level() ?? 'body');

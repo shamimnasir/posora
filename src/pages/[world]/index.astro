@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { getWorld, getWorlds, itemCount } from '../../lib/content';
 import { isLoggedIn } from '../../lib/auth';
-import { bn, pad2 } from '../../lib/bn';
+import { bn, pad2, bnOf } from '../../lib/bn';
 import { heroFor } from '../../data/heroes';
 import { mathExplorer } from '../../data/math-explorer';
 import { physicsExplorer } from '../../data/physics-explorer';
@@ -147,7 +147,7 @@ const schema = [
   },
   {
     '@type': 'ItemList',
-    name: `${w.bn}ের বিভাগ`,
+    name: `${bnOf(w.bn)} বিভাগ`,
     numberOfItems: w.cats.length,
     itemListElement: w.cats.map((c, i) => ({
       '@type': 'ListItem', position: i + 1, name: c.n, description: c.play,
@@ -875,7 +875,7 @@ const schema = [
   import { goalParts, goalDone, goalMet } from '../../lib/daily';
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
   import { makeSpeaker, type Speaker } from '../../lib/speak';
-  import { bn, pad2 } from '../../lib/bn';
+  import { bn, pad2, bnOf } from '../../lib/bn';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import { setProgressScope } from '../../lib/progress';
   import { syncWorld, pushSeen } from '../../lib/sync';

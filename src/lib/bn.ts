@@ -1,6 +1,27 @@
 const DIGITS = '০১২৩৪৫৬৭৮৯';
 /** Latin digits → Bangla digits. Leaves everything else untouched. */
 export const bn = (v: string | number): string => String(v).replace(/\d/g, (d) => DIGITS[+d]);
+/**
+ * Bangla case endings, which depend on the letter the name ends in.
+ *
+ * A name ending in a vowel takes -র and -তে; one ending in a consonant takes
+ * -ের and -ে. Sticking one form on regardless is how the space pages came to
+ * offer "শনিের পুরো পাতা" and "পৃথিবীের থ্রিডি মডেল", and how the world pages
+ * described "ভাষাের বিভাগ": four of the eleven bodies and three of the eleven
+ * worlds are named with a final vowel, and ীের is not a thing anyone writes.
+ */
+const VOWEL_END = /[অআইঈউঊঋএঐওঔািীুূৃেৈোৌ]$/;
+/**
+ * Khanda ta is a consonant with the vowel cut off it, so it cannot carry one:
+ * before any vowel ending it reverts to the full ত. জগৎ + এর is জগতের, and
+ * "উদ্ভিদ ও প্রাণিজগৎের" is what the naive rule produces for one of the worlds.
+ */
+const stem = (name: string): string => name.replace(/ৎ$/, 'ত');
+/** Possessive: শনি → শনির, বুধ → বুধের, প্রাণিজগৎ → প্রাণিজগতের. */
+export const bnOf = (name: string): string => `${stem(name)}${VOWEL_END.test(name) ? 'র' : 'ের'}`;
+/** Locative: পৃথিবী → পৃথিবীতে, বুধ → বুধে, প্রাণিজগৎ → প্রাণিজগতে. */
+export const bnAt = (name: string): string => `${stem(name)}${VOWEL_END.test(name) ? 'তে' : 'ে'}`;
+
 /** Zero-padded two-digit Bangla ordinal, e.g. 3 → "০৩". */
 export const pad2 = (n: number): string => bn(String(n).padStart(2, '0'));
 /** Bangla thousands grouping: 384400 → "৩,৮৪,৪০০" (South Asian grouping). */

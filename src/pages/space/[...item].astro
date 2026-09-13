@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import SpaceExplorer from '../../components/explorer/SpaceExplorer.astro';
 import { DEFAULT_BODY, branchesFor } from '../../data/space';
 import { getBodies, getWorld } from '../../lib/content';
-import { bn } from '../../lib/bn';
+import { bn, bnOf } from '../../lib/bn';
 import { spaceExplorer, beltExtras } from '../../data/space-explorer';
 import { worlds } from '../../data/worlds';
 
@@ -84,7 +84,7 @@ const schema = [
             <details class="ix">
               <summary><b>{b.bn}</b><span class="pill">{b.en}</span></summary>
               <p>{b.l1}</p>
-              <p class="ix-more"><a href={`/space/${b.id}/`}>{b.bn}ের পুরো পাতা →</a></p>
+              <p class="ix-more"><a href={`/space/${b.id}/`}>{bnOf(b.bn)} পুরো পাতা →</a></p>
             </details>
           ))}
           {beltExtras.map((e) => (
@@ -126,14 +126,14 @@ const schema = [
         </div>
         <p class="bt-fun"><span class="lbl">মজার তথ্য</span>{cur.fun}</p>
 
-        <h3 class="bt-h">{cur.bn}ের সংখ্যা</h3>
+        <h3 class="bt-h">{bnOf(cur.bn)} সংখ্যা</h3>
         <dl class="bt-stats">
           {cur.stats.map((s) => <><dt>{s.k}</dt><dd>{s.v}</dd></>)}
         </dl>
 
         {branches.length > 0 && (
           <>
-            <h3 class="bt-h">{cur.bn}ের ভেতরে</h3>
+            <h3 class="bt-h">{bnOf(cur.bn)} ভেতরে</h3>
             <div class="bt-branches">
               {branches.map((b) => (
                 <details class="ix">
