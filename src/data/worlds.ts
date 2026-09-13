@@ -230,7 +230,21 @@ export const worlds: World[] = [
      "চোখ কীভাবে দেখে",
      "বর্ণান্ধতা"
     ],
-    "play": "স্লাইডার টানলে প্রিজম থেকে বেরোনো সাত রঙের রশ্মি ছড়িয়ে বা গুটিয়ে যায়।"
+    "play": "স্লাইডার টানলে প্রিজম থেকে বেরোনো সাত রঙের রশ্মি ছড়িয়ে বা গুটিয়ে যায়।",
+    "lab": "/physics/light/",
+    "labAnchors": [
+     "sorolrekha",
+     "chhaya",
+     "protifolon",
+     "somotol",
+     "golio",
+     "protisoron",
+     "lens",
+     "rongdhonu",
+     "rong",
+     "chokh",
+     "bornandhota"
+    ]
    },
    {
     "n": "শব্দ",

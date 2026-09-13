@@ -1,0 +1,615 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#2E7EA8';
+---
+<Base
+  title="আলো"
+  description="টর্চের সামনে জিনিসটা সরাও আর ছায়া বড় হোক। আয়নায় কোণ মাপো, পানিতে রশ্মি বাঁকাও, প্রিজমে সাত রং ছড়াও, আর দেখো চোখ কীভাবে সবটা করে।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/physics/">পদার্থবিজ্ঞান</a> <span>/</span> আলো</p>
+
+    <header class="head">
+      <p class="eyebrow">পদার্থবিজ্ঞান ভুবন · বিভাগ পরিচিতি</p>
+      <h1>আলো</h1>
+      <p class="lede">
+        আলো সোজা চলে - এই একটা কথা থেকেই ছায়া, আয়না, লেন্স, রংধনু সব বেরিয়ে আসে।
+        নিচের প্রতিটাতে রশ্মিটা সত্যিকারের নিয়ম মেনে আঁকা হয়েছে, তাই যা টানবে তাই ঘটবে।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#chhaya" class="pill pill-w">ছায়া</a>
+        <a href="#protifolon" class="pill pill-w">আয়না</a>
+        <a href="#protisoron" class="pill pill-w">প্রতিসরণ ও লেন্স</a>
+        <a href="#rongdhonu" class="pill pill-w">রং</a>
+        <a href="#chokh" class="pill pill-w">চোখ</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- ১. সরলরেখায় চলা ও ছায়া -->
+      <section class="tool card" id="chhaya">
+        <h2><span class="no">০১</span> <span id="sorolrekha">সরলরেখায় চলা</span> ও ছায়া</h2>
+        <p class="how">
+          টর্চ থেকে আলো সোজা যায়, বাঁক নেয় না। মাঝের জিনিসটা ধরে টানো - টর্চের যত কাছে
+          নেবে, ছায়া তত বড় হবে। কেন, সেটা রশ্মিগুলো দেখলেই বোঝা যায়।
+        </p>
+        <div class="wide">
+          <svg id="shadow-svg" viewBox="0 0 620 300" role="img" aria-label="টর্চ, জিনিস আর দেয়াল"></svg>
+        </div>
+        <p class="readout" id="shadow-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ২. প্রতিফলন ও আয়না -->
+      <section class="tool card" id="protifolon">
+        <h2><span class="no">০২</span> প্রতিফলন, <span id="somotol">সমতল</span> ও <span id="golio">গোলীয় আয়না</span></h2>
+        <p class="how">
+          আয়নায় পড়া রশ্মি যে কোণে আসে, ঠিক সেই কোণেই ফিরে যায়। রশ্মিটা ঘুরিয়ে দুটো
+          কোণ মিলিয়ে দেখো। তারপর আয়নাটা বাঁকিয়ে দেখো সমান্তরাল রশ্মিগুলোর কী হয়।
+        </p>
+        <div class="wide">
+          <svg id="mirror-svg" viewBox="0 0 620 300" role="img" aria-label="আয়না, রশ্মির কোণ টেনে বদলাও"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>আয়নার বাঁক
+            <input type="range" id="curve" min="-60" max="60" step="5" value="0" aria-label="আয়নার বাঁক" />
+            <b id="curve-v" class="num">০</b>
+          </label>
+        </div>
+        <p class="readout" id="mirror-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ৩. প্রতিসরণ ও লেন্স -->
+      <section class="tool card" id="protisoron">
+        <h2><span class="no">০৩</span> প্রতিসরণ ও <span id="lens">লেন্স</span></h2>
+        <p class="how">
+          আলো এক মাধ্যম থেকে আরেকটায় ঢুকলে গতি বদলায়, আর তাতেই বেঁকে যায়। সেজন্যই
+          পানিতে রাখা কাঠি ভাঙা দেখায়। রশ্মিটা ঘুরিয়ে দেখো কতটা বাঁকছে।
+        </p>
+        <div class="two">
+          <svg id="refr-svg" viewBox="0 0 320 280" role="img" aria-label="পানিতে ঢোকা রশ্মি"></svg>
+          <div class="side">
+            <p class="readout" id="refr-out" aria-live="polite"></p>
+          </div>
+        </div>
+        <p class="strip-h">লেন্স</p>
+        <div class="wide">
+          <svg id="lens-svg" viewBox="0 0 620 250" role="img" aria-label="লেন্স, ফোকাস টেনে বদলাও"></svg>
+        </div>
+        <p class="readout" id="lens-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ৪. রংধনু ও রঙের মিশ্রণ -->
+      <section class="tool card" id="rongdhonu">
+        <h2><span class="no">০৪</span> রংধনু ও <span id="rong">রঙের মিশ্রণ</span></h2>
+        <p class="how">
+          সাদা আলো আসলে সাত রঙের মিশেল। প্রিজমে ঢুকলে প্রতিটা রং আলাদা কোণে বাঁকে, তাই
+          আলাদা হয়ে যায়। নিচের তিনটে হাতল দিয়ে উল্টোটাও করে দেখো - রং মিশিয়ে সাদা বানাও।
+        </p>
+        <div class="wide">
+          <svg id="prism-svg" viewBox="0 0 620 250" role="img" aria-label="প্রিজম, সাদা আলো ছড়িয়ে সাত রং"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>লাল <input type="range" id="r" min="0" max="255" step="5" value="255" aria-label="লাল আলো" /> <b id="r-v" class="num">২৫৫</b></label>
+          <label>সবুজ <input type="range" id="g" min="0" max="255" step="5" value="255" aria-label="সবুজ আলো" /> <b id="g-v" class="num">২৫৫</b></label>
+          <label>নীল <input type="range" id="b" min="0" max="255" step="5" value="255" aria-label="নীল আলো" /> <b id="b-v" class="num">২৫৫</b></label>
+        </div>
+        <p class="readout" id="mix-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ৫. চোখ -->
+      <section class="tool card" id="chokh">
+        <h2><span class="no">০৫</span> চোখ কীভাবে দেখে ও <span id="bornandhota">বর্ণান্ধতা</span></h2>
+        <p class="how">
+          চোখ একটা লেন্সওয়ালা ক্যামেরা। জিনিসটা কাছে এলে লেন্স মোটা হয়, দূরে গেলে পাতলা -
+          তাতেই ছবিটা রেটিনার উপর ঠিক জায়গায় পড়ে। জিনিসটা টেনে সরাও।
+        </p>
+        <div class="wide">
+          <svg id="eye-svg" viewBox="0 0 620 260" role="img" aria-label="চোখ, জিনিসটা টেনে কাছে-দূরে নাও"></svg>
+        </div>
+        <p class="readout" id="eye-out" aria-live="polite"></p>
+        <p class="strip-h">বর্ণান্ধতা</p>
+        <p class="how">
+          রেটিনায় তিন রকম কোন থাকে - লাল, সবুজ আর নীলের জন্য। কারও কারও একটা ঠিকমতো কাজ
+          করে না, তখন কিছু রং আলাদা করা কঠিন হয়ে যায়। বোতামে চেপে দেখো ছবিটা তখন কেমন লাগে।
+        </p>
+        <div class="jumps" role="group" aria-label="দৃষ্টি বাছো">
+          <button type="button" class="jump" data-v="normal">স্বাভাবিক</button>
+          <button type="button" class="jump" data-v="protan">লাল কম দেখা</button>
+          <button type="button" class="jump" data-v="deutan">সবুজ কম দেখা</button>
+          <button type="button" class="jump" data-v="tritan">নীল কম দেখা</button>
+        </div>
+        <div class="wide">
+          <svg id="cb-svg" viewBox="0 0 620 150" role="img" aria-label="রঙের নমুনা"></svg>
+        </div>
+        <p class="readout" id="cb-out" aria-live="polite"></p>
+      </section>
+    </div>
+
+    <p class="back"><a href="/physics/">← পদার্থবিজ্ঞান ভুবনে ফিরে যাও</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; margin-right: 0.5rem; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); line-height: 1.8; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(.cost) { color: var(--muted); font-size: 13.5px; display: block; margin-top: 0.15rem; }
+  .strip-h { font-size: 12px; color: var(--muted); margin: 1.4rem 0 0.5rem; font-weight: 600; }
+
+  .wide { overflow-x: auto; padding-bottom: 4px; }
+  .wide svg { width: 100%; min-width: 440px; height: auto; display: block; touch-action: none; }
+  .two { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 1.6rem; align-items: center; }
+  .two svg { width: 100%; height: auto; display: block; touch-action: none; }
+  .side { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .ctl-row { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 1rem; }
+  label { font-size: 13.5px; color: var(--ink-2); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  input[type="range"] { accent-color: var(--w); min-width: 7rem; flex: 1; }
+
+  .jumps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .jump {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 0.35rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-2);
+  }
+  .jump:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); color: var(--ink); }
+  .jump[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .tool :global([role="slider"]:focus-visible),
+  .tool :global([role="button"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { bn } from '../../lib/bn';
+  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, aroundCentre, useItem } from '../../lib/handson';
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const WORLD = 'physics', CAT = 'আলো';
+  let live = false;
+  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 1 : 0));
+
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const RAY = '#e8a33d';
+  const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
+    const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
+    t.textContent = s; p.appendChild(t); return t;
+  };
+  const grip = () => {
+    const g = el('g');
+    g.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    return g;
+  };
+
+  /* ---------- ১. ছায়া ---------- */
+  (function shadow() {
+    const svg = $<SVGSVGElement>('#shadow-svg');
+    const LAMP = 60, WALL = 540, CY = 140, OBJ_H = 44;
+    svg.appendChild(el('rect', { x: WALL, y: 20, width: 26, height: 250, fill: SOFT, stroke: LINE, 'stroke-width': 2 }));
+    text(svg, WALL + 13, 288, 'দেয়াল');
+    const rays = el('g'); svg.appendChild(rays);
+    const shade = el('rect', { x: WALL, fill: INK, 'fill-opacity': 0.55 });
+    svg.appendChild(shade);
+    svg.appendChild(el('circle', { cx: LAMP, cy: CY, r: 14, fill: RAY }));
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      svg.appendChild(el('line', { x1: LAMP + Math.cos(a) * 18, y1: CY + Math.sin(a) * 18, x2: LAMP + Math.cos(a) * 24, y2: CY + Math.sin(a) * 24, stroke: RAY, 'stroke-width': 2.5, 'stroke-linecap': 'round' }));
+    }
+    text(svg, LAMP, 288, 'টর্চ');
+    const obj = el('g');
+    obj.append(
+      el('rect', { x: -26, y: -26, width: 52, height: 52, fill: 'transparent' }),
+      el('rect', { x: -9, y: -OBJ_H / 2, width: 18, height: OBJ_H, rx: 3, fill: W }),
+    );
+    svg.appendChild(obj);
+    const out = $('#shadow-out');
+    let ox = 250;
+
+    function render() {
+      obj.setAttribute('transform', `translate(${ox},${CY})`);
+      // similar triangles: the shadow grows in the same ratio as the distances
+      const scale = (WALL - LAMP) / Math.max(1, ox - LAMP);
+      const sh = OBJ_H * scale;
+      shade.setAttribute('y', String(CY - sh / 2));
+      shade.setAttribute('height', String(sh));
+      shade.setAttribute('width', '26');
+      rays.replaceChildren();
+      for (const s of [-1, 1]) {
+        const y1 = CY + (s * OBJ_H) / 2, y2 = CY + (s * sh) / 2;
+        rays.appendChild(el('line', { x1: LAMP, y1: CY, x2: WALL, y2, stroke: RAY, 'stroke-width': 2, 'stroke-opacity': 0.9 }));
+        rays.appendChild(el('circle', { cx: ox, cy: y1, r: 2.5, fill: RAY }));
+      }
+      const d1 = (ox - LAMP) / 40, d2 = (WALL - LAMP) / 40;
+      out.innerHTML = `টর্চ থেকে জিনিসটা <b>${num(d1)} মিটার</b>, দেয়াল <b>${num(d2)} মিটার</b>। জিনিসটা ${bn(Math.round(OBJ_H / 10))} সেমি লম্বা, ছায়া <b>${num(sh / 10)} সেমি</b> - ${num(scale)} গুণ বড়।`
+        + `<span class="cost">আলো সোজা চলে বলেই দুই প্রান্তের রশ্মি দুটো ছড়িয়ে যায়, আর ছায়াটা দূরত্বের অনুপাতেই বড় হয়। টর্চের যত কাছে, তত বড়।</span>`;
+      credit('সরলরেখায় চলা'); credit('ছায়া');
+    }
+    dragPoint({
+      surface: svg, handle: obj, view: { w: 620, h: 300 },
+      bounds: { x0: LAMP + 60, y0: CY, x1: WALL - 40, y1: CY },
+      x: ox, y: CY, step: 10, label: 'জিনিসটা',
+      onChange: (x) => { ox = x; render(); },
+    });
+    render();
+  })();
+
+  /* ---------- ২. আয়না ---------- */
+  (function mirror() {
+    const svg = $<SVGSVGElement>('#mirror-svg');
+    const CX = 310, MY = 200;
+    const face = el('path', { fill: 'none', stroke: INK, 'stroke-width': 4 });
+    const back = el('path', { fill: MUTED, 'fill-opacity': 0.25, stroke: 'none' });
+    svg.append(back, face);
+    const normal = el('line', { stroke: MUTED, 'stroke-width': 1.6, 'stroke-dasharray': '5 4' });
+    const inRay = el('line', { stroke: RAY, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const outRay = el('line', { stroke: RAY, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const para = el('g');
+    svg.append(para, normal, inRay, outRay);
+    const inLbl = text(svg, 0, 0, '', { fill: INK, 'font-weight': 700 });
+    const outLbl = text(svg, 0, 0, '', { fill: INK, 'font-weight': 700 });
+    svg.appendChild(el('line', { x1: 120, y1: 262, x2: 500, y2: 262, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    const curveIn = $<HTMLInputElement>('#curve'), curveV = $('#curve-v'), out = $('#mirror-out');
+    let ang = 35;   // from the normal, in degrees
+
+    function render() {
+      const c = +curveIn.value;
+      curveV.textContent = bn(c);
+      handle.setAttribute('transform', `translate(${120 + (ang / 80) * 380},262)`);
+      // The light arrives from above, so a mirror that cups toward it - middle
+      // lower on screen than the edges - is the concave one. Bowing the middle
+      // upward makes a dome, which is convex. Getting that backwards drew a
+      // dome and called it অবতল.
+      const HALF = 150;
+      const sag = c * 0.9;                      // positive dips the middle away from the light
+      const surfaceAt = (x: number) => MY + sag * (1 - ((x - CX) / HALF) ** 2);
+      const vertex = MY + sag;
+      const d = `M ${CX - HALF} ${MY} Q ${CX} ${MY + sag * 2} ${CX + HALF} ${MY}`;
+      face.setAttribute('d', d);
+      back.setAttribute('d', `${d} L ${CX + HALF} ${MY + 12} Q ${CX} ${MY + sag * 2 + 12} ${CX - HALF} ${MY + 12} Z`);
+      normal.setAttribute('x1', String(CX)); normal.setAttribute('y1', String(vertex));
+      normal.setAttribute('x2', String(CX)); normal.setAttribute('y2', String(vertex - 130));
+
+      const rad = (ang * Math.PI) / 180, L = 150;
+      inRay.setAttribute('x1', String(CX - Math.sin(rad) * L)); inRay.setAttribute('y1', String(vertex - Math.cos(rad) * L));
+      inRay.setAttribute('x2', String(CX)); inRay.setAttribute('y2', String(vertex));
+      outRay.setAttribute('x1', String(CX)); outRay.setAttribute('y1', String(vertex));
+      outRay.setAttribute('x2', String(CX + Math.sin(rad) * L)); outRay.setAttribute('y2', String(vertex - Math.cos(rad) * L));
+      inLbl.setAttribute('x', String(CX - Math.sin(rad) * 62 - 22)); inLbl.setAttribute('y', String(vertex - Math.cos(rad) * 62));
+      inLbl.textContent = `${bn(ang)}°`;
+      outLbl.setAttribute('x', String(CX + Math.sin(rad) * 62 + 22)); outLbl.setAttribute('y', String(vertex - Math.cos(rad) * 62));
+      outLbl.textContent = `${bn(ang)}°`;
+
+      // Parallel rays, so the focus is something you see rather than read
+      // about. A shallow mirror's focal length is a quarter of half-width
+      // squared over the sag, which is the half-radius rule written out.
+      para.replaceChildren();
+      if (c !== 0) {
+        const f = HALF ** 2 / (4 * Math.abs(sag));
+        const concave = sag > 0;
+        const fy = concave ? vertex - f : vertex + f;
+        for (let i = -2; i <= 2; i++) {
+          if (i === 0) continue;                // the middle ray is the one already drawn
+          const x = CX + i * 56;
+          const surf = surfaceAt(x);
+          para.appendChild(el('line', { x1: x, y1: 42, x2: x, y2: surf, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.5 }));
+          if (concave) {
+            para.appendChild(el('line', { x1: x, y1: surf, x2: CX, y2: fy, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.7 }));
+          } else {
+            // a convex mirror throws them apart; the dashed lines run back to
+            // where they only appear to have come from
+            const k = (42 - surf) / (fy - surf);
+            para.appendChild(el('line', { x1: x, y1: surf, x2: x + (x - CX) * Math.abs(k) * 1.4, y2: 42, stroke: RAY, 'stroke-width': 1.6, 'stroke-opacity': 0.7 }));
+            para.appendChild(el('line', { x1: x, y1: surf, x2: CX, y2: fy, stroke: RAY, 'stroke-width': 1.2, 'stroke-dasharray': '4 4', 'stroke-opacity': 0.4 }));
+          }
+        }
+        if (fy > 20 && fy < 290) {
+          para.appendChild(el('circle', { cx: CX, cy: fy, r: 5, fill: INK }));
+          const ft = el('text', { x: CX + 12, y: fy + 4, 'font-size': 11, fill: INK, 'text-anchor': 'start' });
+          ft.textContent = concave ? 'ফোকাস' : 'কাল্পনিক ফোকাস';
+          para.appendChild(ft);
+        }
+      }
+
+      out.innerHTML = c === 0
+        ? `আপতন কোণ <b>${bn(ang)}°</b>, প্রতিফলন কোণ <b>${bn(ang)}°</b> - সবসময় সমান, এটাই প্রতিফলনের নিয়ম।`
+          + `<span class="cost">সমতল আয়নায় তোমার প্রতিবিম্ব আয়নার যত সামনে তুমি, ঠিক তত পেছনে তৈরি হয়, আর ডান-বাম উল্টো দেখায়।</span>`
+        : c > 0
+          ? `আয়নাটা এখন <b>অবতল</b> - ভেতরের দিকে বাঁকা। সমান্তরাল রশ্মিগুলো একটা বিন্দুতে এসে মেশে, সেটাই ফোকাস।`
+            + `<span class="cost">দাড়ি কামানোর আয়না, টর্চের পেছনের আয়না আর টেলিস্কোপ - সবই অবতল। কোণের নিয়ম এখানেও খাটে, শুধু প্রতি বিন্দুতে আয়নার ঢাল আলাদা।</span>`
+          : `আয়নাটা এখন <b>উত্তল</b> - বাইরের দিকে বাঁকা। রশ্মিগুলো ছড়িয়ে যায়, তাই ছবি ছোট দেখায় কিন্তু অনেকটা জায়গা একসাথে দেখা যায়।`
+            + `<span class="cost">বাসের পেছনের আয়না আর দোকানের কোণের আয়না উত্তল - সেজন্যই সেখানে লেখা থাকে জিনিস যত কাছে দেখাচ্ছে তার চেয়ে কাছে।</span>`;
+      credit('প্রতিফলন');
+      if (c === 0) credit('সমতল আয়না'); else credit('গোলীয় আয়না');
+    }
+    curveIn.addEventListener('input', render);
+    const toAng = alongX(svg, 620, 120, 380 / 80);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 80, step: 1, value: ang,
+      toValue: (x) => toAng(x),
+      onChange: (v) => { ang = v; render(); },
+      label: 'রশ্মির কোণ', text: (v) => `${bn(v)} ডিগ্রি`,
+    });
+    render();
+  })();
+
+  /* ---------- ৩. প্রতিসরণ ও লেন্স ---------- */
+  (function refraction() {
+    const svg = $<SVGSVGElement>('#refr-svg');
+    const CX = 160, SY = 130;
+    svg.appendChild(el('rect', { x: 20, y: SY, width: 280, height: 130, fill: '#3f7fc4', 'fill-opacity': 0.28 }));
+    svg.appendChild(el('line', { x1: 20, y1: SY, x2: 300, y2: SY, stroke: '#3f7fc4', 'stroke-width': 2 }));
+    text(svg, 262, SY - 10, 'বাতাস'); text(svg, 262, SY + 22, 'পানি');
+    svg.appendChild(el('line', { x1: CX, y1: 20, x2: CX, y2: 250, stroke: MUTED, 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }));
+    const inRay = el('line', { stroke: RAY, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const outRay = el('line', { stroke: RAY, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const ghost = el('line', { stroke: RAY, 'stroke-width': 1.5, 'stroke-dasharray': '4 4', 'stroke-opacity': 0.5 });
+    svg.append(ghost, inRay, outRay);
+    const handle = el('g');
+    handle.append(el('circle', { r: 20, fill: 'transparent' }), el('circle', { r: 9, fill: W }), el('circle', { r: 3, fill: 'var(--panel)' }));
+    svg.appendChild(handle);
+    const out = $('#refr-out');
+    let inc = 45;   // from the normal
+
+    function render() {
+      const i = (inc * Math.PI) / 180;
+      // Snell: air to water, n = 1.33
+      const r = Math.asin(Math.sin(i) / 1.33);
+      const L = 110;
+      const sx = CX - Math.sin(i) * L, sy = SY - Math.cos(i) * L;
+      inRay.setAttribute('x1', String(sx)); inRay.setAttribute('y1', String(sy));
+      inRay.setAttribute('x2', String(CX)); inRay.setAttribute('y2', String(SY));
+      outRay.setAttribute('x1', String(CX)); outRay.setAttribute('y1', String(SY));
+      outRay.setAttribute('x2', String(CX + Math.sin(r) * L)); outRay.setAttribute('y2', String(SY + Math.cos(r) * L));
+      ghost.setAttribute('x1', String(CX)); ghost.setAttribute('y1', String(SY));
+      ghost.setAttribute('x2', String(CX + Math.sin(i) * L)); ghost.setAttribute('y2', String(SY + Math.cos(i) * L));
+      handle.setAttribute('transform', `translate(${sx},${sy})`);
+      out.innerHTML = `আপতন কোণ <b>${bn(inc)}°</b>, পানির ভেতরে প্রতিসরণ কোণ <b>${bn(Math.round((r * 180) / Math.PI))}°</b> - রশ্মিটা লম্বের দিকে বেঁকে গেছে।`
+        + `<span class="cost">পানিতে আলোর গতি বাতাসের চেয়ে কম, তাই বাঁক। ফুটকি দাগটা দেখাচ্ছে না বাঁকলে কোথায় যেত। এ কারণেই পানিতে রাখা কাঠি ভাঙা দেখায় আর পুকুর যতটা গভীর দেখায় তার চেয়ে গভীর।</span>`;
+      credit('প্রতিসরণ');
+    }
+    const angleAt = aroundCentre(svg, 320, CX, SY);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 80, step: 1, value: inc,
+      // the handle rides the quarter circle above the surface
+      toValue: (x, y) => clamp(180 - angleAt(x, y), 0, 80),
+      onChange: (v) => { inc = v; render(); },
+      label: 'আপতন কোণ', text: (v) => `${bn(v)} ডিগ্রি`,
+    });
+    render();
+  })();
+
+  /* ---------- লেন্স ---------- */
+  (function lens() {
+    const svg = $<SVGSVGElement>('#lens-svg');
+    const CX = 250, CY = 100;
+    svg.appendChild(el('line', { x1: 20, y1: CY, x2: 600, y2: CY, stroke: MUTED, 'stroke-width': 1.2, 'stroke-dasharray': '5 4' }));
+    const body = el('path', { fill: '#3f7fc4', 'fill-opacity': 0.3, stroke: '#3f7fc4', 'stroke-width': 2 });
+    const rays = el('g');
+    svg.append(rays, body);
+    const focus = el('circle', { r: 5, fill: INK, cy: CY });
+    svg.appendChild(focus);
+    svg.appendChild(el('line', { x1: 120, y1: 200, x2: 500, y2: 200, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    text(svg, 310, 230, 'লেন্সের মোটা-পাতলা টানো');
+    const out = $('#lens-out');
+    let fat = 30;   // how thick the lens is
+
+    function render() {
+      handle.setAttribute('transform', `translate(${120 + ((fat + 40) / 80) * 380},200)`);
+      const t = Math.abs(fat), conv = fat >= 0;
+      const H = 66;
+      body.setAttribute('d', conv
+        ? `M ${CX} ${CY - H} Q ${CX + t} ${CY} ${CX} ${CY + H} Q ${CX - t} ${CY} ${CX} ${CY - H} Z`
+        : `M ${CX - 16} ${CY - H} Q ${CX} ${CY} ${CX - 16} ${CY + H} L ${CX + 16} ${CY + H} Q ${CX} ${CY} ${CX + 16} ${CY - H} Z`);
+      // a fatter lens bends more, so its focus sits closer
+      const f = t < 3 ? 9999 : 2400 / t;
+      const fx = CX + (conv ? f : -f);
+      focus.setAttribute('cx', String(clamp(fx, 20, 600)));
+      focus.setAttribute('opacity', t < 3 ? '0' : '1');
+      rays.replaceChildren();
+      for (const dy of [-46, -23, 23, 46]) {
+        rays.appendChild(el('line', { x1: 40, y1: CY + dy, x2: CX, y2: CY + dy, stroke: RAY, 'stroke-width': 2 }));
+        if (t < 3) { rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: 600, y2: CY + dy, stroke: RAY, 'stroke-width': 2 })); continue; }
+        if (conv) {
+          rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: fx, y2: CY, stroke: RAY, 'stroke-width': 2 }));
+          const past = Math.min(600, fx + (fx - CX));
+          rays.appendChild(el('line', { x1: fx, y1: CY, x2: past, y2: CY - dy * ((past - fx) / Math.max(1, fx - CX)), stroke: RAY, 'stroke-width': 2, 'stroke-opacity': 0.6 }));
+        } else {
+          const slope = dy / f;
+          rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: 600, y2: CY + dy + slope * (600 - CX), stroke: RAY, 'stroke-width': 2 }));
+          rays.appendChild(el('line', { x1: CX, y1: CY + dy, x2: fx, y2: CY, stroke: RAY, 'stroke-width': 1.4, 'stroke-dasharray': '4 4', 'stroke-opacity': 0.5 }));
+        }
+      }
+      out.innerHTML = t < 3
+        ? `লেন্স প্রায় সমতল - রশ্মিগুলো সোজা বেরিয়ে যাচ্ছে, কিছুই ঘটছে না। হাতলটা দুই দিকের যেকোনো দিকে টানো।`
+        : conv
+          ? `<b>উত্তল লেন্স</b> - মাঝখানটা মোটা। সমান্তরাল রশ্মিগুলো একটা বিন্দুতে মেশে, ফোকাস দূরত্ব <b>${num(f / 40)} সেমি</b>।`
+            + `<span class="cost">লেন্স যত মোটা, ফোকাস তত কাছে। চশমার দূরের কাচ, ম্যাগনিফাইং গ্লাস আর আমাদের চোখের লেন্স - সবই উত্তল।</span>`
+          : `<b>অবতল লেন্স</b> - মাঝখানটা পাতলা। রশ্মিগুলো ছড়িয়ে যায়, আর পেছনের দিকে বাড়ালে একটা কাল্পনিক ফোকাসে মেলে।`
+            + `<span class="cost">ক্ষীণদৃষ্টির চশমায় অবতল লেন্স লাগে, কারণ চোখ যেটা বেশি বাঁকিয়ে ফেলছে সেটাকে একটু ছড়িয়ে দিতে হয়।</span>`;
+      credit('লেন্স');
+    }
+    const toFat = alongX(svg, 620, 120, 380 / 80);
+    dragTrack({
+      surface: svg, handle, min: -40, max: 40, step: 2, value: fat,
+      toValue: (x) => toFat(x) - 40,
+      onChange: (v) => { fat = v; render(); },
+      label: 'লেন্সের মোটা-পাতলা', text: (v) => (v > 2 ? `উত্তল ${bn(v)}` : v < -2 ? `অবতল ${bn(-v)}` : 'সমতল'),
+    });
+    render();
+  })();
+
+  /* ---------- ৪. রংধনু ও রঙের মিশ্রণ ---------- */
+  (function prism() {
+    const svg = $<SVGSVGElement>('#prism-svg');
+    const AX = 260, AY = 60, BX = 200, BY = 190, CXp = 330, CYp = 190;
+    svg.appendChild(el('line', { x1: 30, y1: 120, x2: 222, y2: 120, stroke: '#ffffff', 'stroke-width': 5 }));
+    svg.appendChild(el('line', { x1: 30, y1: 120, x2: 222, y2: 120, stroke: INK, 'stroke-width': 5, 'stroke-opacity': 0.12 }));
+    text(svg, 110, 108, 'সাদা আলো');
+    const SPECTRUM = [
+      ['#e03b2f', 'লাল'], ['#e8762c', 'কমলা'], ['#e8c62c', 'হলুদ'],
+      ['#4aa843', 'সবুজ'], ['#3f7fc4', 'নীল'], ['#4b4bb5', 'ঘন নীল'], ['#7d3fb5', 'বেগুনি'],
+    ] as const;
+    const fan = el('g'); svg.appendChild(fan);
+    SPECTRUM.forEach(([c], i) => {
+      const spread = 2 + i * 4.4;
+      fan.appendChild(el('line', { x1: 296, y1: 150, x2: 590, y2: 118 + spread * 2.1, stroke: c, 'stroke-width': 4, 'stroke-linecap': 'round' }));
+    });
+    SPECTRUM.forEach(([c, n], i) => {
+      const spread = 2 + i * 4.4;
+      text(svg, 604, 122 + spread * 2.1, n, { 'text-anchor': 'end', 'font-size': 10, fill: c });
+    });
+    svg.appendChild(el('polygon', { points: `${AX},${AY} ${BX},${BY} ${CXp},${CYp}`, fill: '#9fb8d4', 'fill-opacity': 0.35, stroke: '#9fb8d4', 'stroke-width': 2 }));
+    text(svg, AX, 216, 'প্রিজম');
+
+    const rIn = $<HTMLInputElement>('#r'), gIn = $<HTMLInputElement>('#g'), bIn = $<HTMLInputElement>('#b');
+    const rV = $('#r-v'), gV = $('#g-v'), bV = $('#b-v'), out = $('#mix-out');
+    const swatch = el('circle', { cx: 90, cy: 196, r: 26, stroke: LINE, 'stroke-width': 2 });
+    svg.appendChild(swatch);
+    text(svg, 90, 238, 'মেশানো রং');
+
+    function render() {
+      const r = +rIn.value, g = +gIn.value, b = +bIn.value;
+      rV.textContent = bn(r); gV.textContent = bn(g); bV.textContent = bn(b);
+      swatch.setAttribute('fill', `rgb(${r},${g},${b})`);
+      const name = r > 200 && g > 200 && b > 200 ? 'সাদা'
+        : r < 30 && g < 30 && b < 30 ? 'কালো - কোনো আলোই নেই'
+        : r > 180 && g > 180 && b < 60 ? 'হলুদ - লাল আর সবুজ মিলে'
+        : r > 180 && b > 180 && g < 60 ? 'ম্যাজেন্টা - লাল আর নীল মিলে'
+        : g > 180 && b > 180 && r < 60 ? 'সায়ান - সবুজ আর নীল মিলে'
+        : r > g && r > b ? 'লালচে' : g > b ? 'সবুজাভ' : 'নীলচে';
+      out.innerHTML = `প্রিজম সাদা আলোকে সাতটা রঙে ভাগ করেছে - লাল সবচেয়ে কম বাঁকে, বেগুনি সবচেয়ে বেশি। বৃষ্টির প্রতিটা ফোঁটা একেকটা প্রিজম, তাই রংধনু।`
+        + ` নিচের মিশেলটা এখন <b>${name}</b>।`
+        + `<span class="cost">আলোর রং মেশানো আর রঙের কৌটা মেশানো এক নয়। আলোয় লাল-সবুজ-নীল তিনটে একসাথে দিলে সাদা হয়; রঙে তিনটে মেশালে কালোর দিকে যায়। তোমার ফোনের পর্দাও এই তিনটে রং দিয়েই সব রং বানায়।</span>`;
+      credit('রংধনু'); credit('রঙের মিশ্রণ');
+    }
+    [rIn, gIn, bIn].forEach((x) => x.addEventListener('input', render));
+    render();
+  })();
+
+  /* ---------- ৫. চোখ ---------- */
+  (function eye() {
+    const svg = $<SVGSVGElement>('#eye-svg');
+    const EX = 460, EY = 120, ER = 62;
+    svg.appendChild(el('circle', { cx: EX, cy: EY, r: ER, fill: SOFT, stroke: LINE, 'stroke-width': 2.5 }));
+    svg.appendChild(el('path', { d: `M ${EX - ER} ${EY - 26} A 40 40 0 0 0 ${EX - ER} ${EY + 26}`, fill: '#bcd6ee', 'fill-opacity': 0.6, stroke: '#7fa8cc', 'stroke-width': 2 }));
+    const lens = el('ellipse', { cx: EX - ER + 24, cy: EY, fill: '#3f7fc4', 'fill-opacity': 0.45, stroke: '#3f7fc4', 'stroke-width': 2 });
+    svg.appendChild(lens);
+    svg.appendChild(el('path', { d: `M ${EX + ER - 6} ${EY - 44} A ${ER} ${ER} 0 0 1 ${EX + ER - 6} ${EY + 44}`, fill: 'none', stroke: '#c4564f', 'stroke-width': 5 }));
+    text(svg, EX + 20, EY + ER + 24, 'রেটিনা');
+    const rays = el('g'); svg.appendChild(rays);
+    const arrow = el('g');
+    arrow.append(
+      el('rect', { x: -24, y: -40, width: 48, height: 80, fill: 'transparent' }),
+      el('line', { x1: 0, y1: 30, x2: 0, y2: -30, stroke: W, 'stroke-width': 4, 'stroke-linecap': 'round' }),
+      el('polygon', { points: '0,-38 7,-24 -7,-24', fill: W }),
+    );
+    svg.appendChild(arrow);
+    const out = $('#eye-out');
+    let ox = 120;
+
+    function render() {
+      arrow.setAttribute('transform', `translate(${ox},${EY})`);
+      const dist = EX - ER - ox;
+      // the nearer the object, the fatter the lens has to be to keep focus
+      const fat = clamp(26 - dist / 16, 8, 24);
+      lens.setAttribute('rx', String(fat * 0.55));
+      lens.setAttribute('ry', String(34));
+      rays.replaceChildren();
+      const LX = EX - ER + 24;
+      for (const dy of [-26, 0, 26]) {
+        rays.appendChild(el('line', { x1: ox, y1: EY - 30, x2: LX, y2: EY + dy * 0.6, stroke: RAY, 'stroke-width': 1.8, 'stroke-opacity': 0.8 }));
+        rays.appendChild(el('line', { x1: LX, y1: EY + dy * 0.6, x2: EX + ER - 8, y2: EY + 22, stroke: RAY, 'stroke-width': 1.8, 'stroke-opacity': 0.8 }));
+      }
+      // the image lands upside down, which is the surprising part
+      rays.appendChild(el('line', { x1: EX + ER - 10, y1: EY + 6, x2: EX + ER - 10, y2: EY + 26, stroke: W, 'stroke-width': 4, 'stroke-linecap': 'round' }));
+      rays.appendChild(el('polygon', { points: `${EX + ER - 10},${EY + 32} ${EX + ER - 5},${EY + 20} ${EX + ER - 15},${EY + 20}`, fill: W }));
+      out.innerHTML = `জিনিসটা চোখ থেকে <b>${num(dist / 22)} মিটার</b> দূরে। লেন্স এখন <b>${dist < 140 ? 'মোটা' : 'পাতলা'}</b> হয়ে ছবিটা রেটিনার উপর ফেলছে।`
+        + `<span class="cost">খেয়াল করো রেটিনার ছবিটা উল্টো। মস্তিষ্ক সেটা সোজা করে দেখায় - এতটাই অভ্যস্ত যে আমরা টেরও পাই না। কাছের জিনিস বেশিক্ষণ দেখলে চোখ ক্লান্ত লাগে, কারণ লেন্সের পেশিটা তখন টানটান থাকে।</span>`;
+      credit('চোখ কীভাবে দেখে');
+    }
+    dragPoint({
+      surface: svg, handle: arrow, view: { w: 620, h: 260 },
+      bounds: { x0: 40, y0: EY, x1: EX - ER - 60, y1: EY },
+      x: ox, y: EY, step: 12, label: 'জিনিসটা',
+      onChange: (x) => { ox = x; render(); },
+    });
+    render();
+  })();
+
+  /* ---------- বর্ণান্ধতা ---------- */
+  (function colourBlind() {
+    const svg = $<SVGSVGElement>('#cb-svg');
+    const row = el('g'); svg.appendChild(row);
+    const out = $('#cb-out');
+    const jumps = [...root.querySelectorAll<HTMLButtonElement>('#chokh .jump')];
+    const SAMPLE: [number, number, number, string][] = [
+      [224, 59, 47, 'লাল'], [232, 118, 44, 'কমলা'], [232, 198, 44, 'হলুদ'],
+      [74, 168, 67, 'সবুজ'], [63, 127, 196, 'নীল'], [125, 63, 181, 'বেগুনি'], [140, 92, 60, 'বাদামি'],
+    ];
+    let mode = 'normal';
+
+    /**
+     * A rough stand-in, not a medical simulation: each kind of colour blindness
+     * is shown by pulling one channel toward the average of the other two, which
+     * gets the confusions roughly right without pretending to be exact.
+     */
+    function shift([r, g, b]: [number, number, number]): string {
+      if (mode === 'protan') { const m = (g + b) / 2; return `rgb(${Math.round(r * 0.35 + m * 0.65)},${g},${b})`; }
+      if (mode === 'deutan') { const m = (r + b) / 2; return `rgb(${r},${Math.round(g * 0.35 + m * 0.65)},${b})`; }
+      if (mode === 'tritan') { const m = (r + g) / 2; return `rgb(${r},${g},${Math.round(b * 0.35 + m * 0.65)})`; }
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function render() {
+      row.replaceChildren();
+      SAMPLE.forEach((s, i) => {
+        const x = 40 + i * 82;
+        row.appendChild(el('rect', { x, y: 24, width: 64, height: 64, rx: 10, fill: shift([s[0], s[1], s[2]]) }));
+        text(row, x + 32, 108, s[3], { 'font-size': 11 });
+      });
+      out.innerHTML = mode === 'normal'
+        ? `স্বাভাবিক দৃষ্টিতে সাতটা রংই আলাদা দেখাচ্ছে। উপরের বোতামগুলো চেপে দেখো একেক রকম বর্ণান্ধতায় কোনগুলো মিলে যায়।`
+        : `${mode === 'protan' ? 'লাল' : mode === 'deutan' ? 'সবুজ' : 'নীল'} কোনগুলো দুর্বল হলে পাশাপাশি রংগুলো কাছাকাছি হয়ে আসে - আলাদা করা কঠিন।`
+          + `<span class="cost">প্রায় বারোজন ছেলের একজনের কোনো না কোনো বর্ণান্ধতা থাকে, মেয়েদের অনেক কম। এটা রোগ নয়, আর এজন্যই ভালো নকশায় শুধু রঙের উপর ভরসা করা হয় না - সঙ্গে লেখা বা আকার থাকে। এই ছবিটা আন্দাজের, ডাক্তারি পরীক্ষা নয়।</span>`;
+      credit('বর্ণান্ধতা');
+    }
+    jumps.forEach((b) => b.addEventListener('click', () => {
+      mode = b.dataset.v!;
+      jumps.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      render();
+    }));
+    jumps[0]!.setAttribute('aria-pressed', 'true');
+    render();
+  })();
+
+  // Everything above has drawn its first frame; from here a change is a choice.
+  live = true;
+</script>
