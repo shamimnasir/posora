@@ -22,7 +22,7 @@ import {
 } from 'three';
 // Seeded, so a species always grows the same way: the variation between trees
 // is deliberate, and a tree must not reshuffle itself on every repaint.
-import { rng } from '../../lib/rand';
+import { rng, hash } from '../../lib/rand';
 
 /**
  * Roughness 0.75 rather than 0.6, and metalness flat zero.
@@ -609,28 +609,44 @@ const lock = (body = '#f0b429'): Figure => (g) => {
  * holding the head up, hands at the ends of the arms, and eyes.
  */
 const person = (coat: string, skin = '#c98f5f'): Figure => (g) => {
+  /**
+   * Seeded off the coat colour, so six people standing in a row are six people
+   * rather than one figure printed six times in different shirts. Same reason
+   * a grove of trees is seeded: the eye reads repetition long before it reads
+   * any single shape, and a category like বাঙালি বিজ্ঞানী is nine of these
+   * side by side.
+   */
+  const r = rng(hash(coat));
+  const H = 0.96 + r() * 0.13;            // how tall this one stands
+  const hd = 0.148 + r() * 0.018;         // and how big a head they have
+  const grey = r() < 0.3;
+  const hairC = grey ? '#6b6259' : '#2f261d';
   const trim = new Color(coat).multiplyScalar(0.78);
-  put(g, new Mesh(new CylinderGeometry(0.2, 0.3, 0.52, 28), std(coat)), 0, 0.3);
+  put(g, new Mesh(new CylinderGeometry(0.2, 0.3, 0.52 * H, 28), std(coat)), 0, 0.3 * H);
   // a hem, so the garment ends in something rather than just stopping
   put(g, new Mesh(new CylinderGeometry(0.305, 0.305, 0.05, 28), std(trim)), 0, 0.05);
-  const sh = ball(g, coat, 0.2, 0, 0.55); sh.scale.set(1, 0.55, 0.85);
-  rod(g, skin, 0.052, 0.1, 0, 0.62);
-  const head = ball(g, skin, 0.155, 0, 0.75); head.scale.set(0.97, 1.05, 0.95);
-  const jaw = ball(g, skin, 0.115, 0, 0.68, 0.015); jaw.scale.set(0.92, 0.8, 0.9);
+  const sh = ball(g, coat, 0.2, 0, 0.55 * H); sh.scale.set(1, 0.55, 0.85);
+  rod(g, skin, 0.052, 0.1, 0, 0.62 * H);
+  const hy = 0.75 * H;
+  const head = ball(g, skin, hd, 0, hy); head.scale.set(0.97, 1.05, 0.95);
+  const jaw = ball(g, skin, hd * 0.74, 0, hy - 0.07, 0.015); jaw.scale.set(0.92, 0.8, 0.9);
   // hair that clears the brow, not a cap pulled down over the whole head
-  const crown = put(g, new Mesh(new SphereGeometry(0.168, 22, 12, 0, Math.PI * 2, 0, Math.PI * 0.34), std('#2f261d', { roughness: 0.95 })), 0, 0.75, -0.005);
+  const crown = put(g, new Mesh(new SphereGeometry(hd * 1.08, 22, 12, 0, Math.PI * 2, 0, Math.PI * (0.3 + r() * 0.08)), std(hairC, { roughness: 0.95 })), 0, hy, -0.005);
   crown.scale.set(1, 1.04, 1);
-  const back = put(g, new Mesh(new SphereGeometry(0.162, 18, 14, Math.PI, Math.PI, 0, Math.PI * 0.6), std('#2f261d', { roughness: 0.95 })), 0, 0.75, -0.005);
+  const back = put(g, new Mesh(new SphereGeometry(hd * 1.045, 18, 14, Math.PI, Math.PI, 0, Math.PI * 0.6), std(hairC, { roughness: 0.95 })), 0, hy, -0.005);
   back.scale.set(1, 1.04, 0.99);
+  const fz = hd * 0.845;                  // the face's surface, front and centre
   for (const s of [1, -1]) {
-    rod(g, coat, 0.046, 0.34, s * 0.23, 0.36, 0, s * 0.22);
-    ball(g, skin, 0.048, s * 0.3, 0.2, 0);
+    rod(g, coat, 0.046, 0.34, s * 0.23, 0.36 * H, 0, s * 0.22);
+    ball(g, skin, 0.048, s * 0.3, 0.2 * H, 0);
     // seated on the face: a flat iris past the eyeball's front cannot be
     // swallowed by it, which a small sphere on a sphere always is
-    ball(g, '#f8fbff', 0.032, s * 0.058, 0.775, 0.131).scale.set(1.1, 0.9, 0.34);
-    disc(g, '#241a12', 0.016, s * 0.058, 0.775, 0.146, 0);
+    ball(g, '#f8fbff', 0.032, s * 0.058, hy + 0.025, fz).scale.set(1.1, 0.9, 0.34);
+    disc(g, '#241a12', 0.016, s * 0.058, hy + 0.025, fz + 0.015, 0);
   }
-  ball(g, skin, 0.026, 0, 0.745, 0.148).scale.set(0.85, 1, 1);
+  ball(g, skin, 0.026, 0, hy - 0.005, fz + 0.017).scale.set(0.85, 1, 1);
+  // a mouth: without one the face is a mask, and it costs one small box
+  box(g, '#8a5b4a', 0.05, 0.012, 0.012, 0, hy - 0.062, fz - 0.004);
 };
 /** A thermometer: a tube with a bulb. */
 const thermometer: Figure = (g) => {
