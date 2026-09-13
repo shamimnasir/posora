@@ -1,0 +1,299 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#2A9E9E';
+
+/**
+ * The six seasons and the twelve months, in the order the category lists
+ * them. Gregorian spans follow the Bangladesh calendar as revised in 2019,
+ * where বৈশাখ begins on 14 April and the first five months have 31 days.
+ */
+const SEASONS = [
+  { n: 'গ্রীষ্ম', slug: 'grishmo', months: [0, 1], hue: '#e08a3c' },
+  { n: 'বর্ষা', slug: 'borsha', months: [2, 3], hue: '#3f7fc4' },
+  { n: 'শরৎ', slug: 'shorot', months: [4, 5], hue: '#6fb2d8' },
+  { n: 'হেমন্ত', slug: 'hemonto', months: [6, 7], hue: '#c9a227' },
+  { n: 'শীত', slug: 'sheet', months: [8, 9], hue: '#8fa8bd' },
+  { n: 'বসন্ত', slug: 'boshonto', months: [10, 11], hue: '#d4676f' },
+];
+const MONTHS = [
+  { n: 'বৈশাখ', slug: 'boishakh', from: [3, 14], span: '১৪ এপ্রিল - ১৪ মে' },
+  { n: 'জ্যৈষ্ঠ', slug: 'jyoistho', from: [4, 15], span: '১৫ মে - ১৪ জুন' },
+  { n: 'আষাঢ়', slug: 'ashar', from: [5, 15], span: '১৫ জুন - ১৫ জুলাই' },
+  { n: 'শ্রাবণ', slug: 'srabon', from: [6, 16], span: '১৬ জুলাই - ১৫ আগস্ট' },
+  { n: 'ভাদ্র', slug: 'bhadro', from: [7, 16], span: '১৬ আগস্ট - ১৫ সেপ্টেম্বর' },
+  { n: 'আশ্বিন', slug: 'ashwin', from: [8, 16], span: '১৬ সেপ্টেম্বর - ১৫ অক্টোবর' },
+  { n: 'কার্তিক', slug: 'kartik', from: [9, 16], span: '১৬ অক্টোবর - ১৪ নভেম্বর' },
+  { n: 'অগ্রহায়ণ', slug: 'ogrohayon', from: [10, 15], span: '১৫ নভেম্বর - ১৪ ডিসেম্বর' },
+  { n: 'পৌষ', slug: 'poush', from: [11, 15], span: '১৫ ডিসেম্বর - ১৩ জানুয়ারি' },
+  { n: 'মাঘ', slug: 'magh', from: [0, 14], span: '১৪ জানুয়ারি - ১২ ফেব্রুয়ারি' },
+  { n: 'ফাল্গুন', slug: 'falgun', from: [1, 13], span: '১৩ ফেব্রুয়ারি - ১৪ মার্চ' },
+  { n: 'চৈত্র', slug: 'choitro', from: [2, 15], span: '১৫ মার্চ - ১৩ এপ্রিল' },
+];
+const payload = { seasons: SEASONS, months: MONTHS };
+---
+<Base
+  title="ছয় ঋতু ও বারো মাস"
+  description="বাংলা বছরের চাকা ঘুরিয়ে দেখো - কোন মাসে কোন ঋতু, কী ফোটে, কী পাকে, কী উৎসব। আর আজ বাংলা কত তারিখ, সেটাও।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/nature/">প্রকৃতি ও পরিবেশ</a> <span>/</span> ছয় ঋতু ও বারো মাস</p>
+
+    <header class="head">
+      <p class="eyebrow">প্রকৃতি ও পরিবেশ ভুবন · বিভাগ পরিচিতি</p>
+      <h1>ছয় ঋতু ও বারো মাস</h1>
+      <p class="lede">
+        বেশিরভাগ দেশে চারটে ঋতু, বাংলায় ছয়টা - প্রতি দুই মাসে একটা। চাকাটা ঘুরিয়ে বছরটা
+        হেঁটে আসো: কোন মাসে কী ফোটে, কী পাকে, আকাশ কেমন থাকে, আর কোন উৎসবটা তখন।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#chaka" class="pill pill-w">বছরের চাকা</a>
+        <a href="#aaj" class="pill pill-w">আজ কোন মাস</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <section class="tool card" id="chaka">
+        <h2><span class="no">০১</span> বছরের চাকা</h2>
+        <p class="how">চাকাটা ধরে ঘোরাও, অথবা নিচের যেকোনো মাসে চাপো। কাঁটা যে মাসে থামবে, সেই মাসের কথা নিচে লেখা হবে।</p>
+        <div class="two">
+          <svg id="wheel" viewBox="0 0 340 340" role="img" aria-label="বাংলা বছরের চাকা, ধরে ঘোরাও"></svg>
+          <div class="side">
+            <p class="mname"><b id="m-name"></b> <span id="m-span"></span></p>
+            <p class="season" id="m-season"></p>
+            <p class="readout" id="m-note"></p>
+          </div>
+        </div>
+        <p class="strip-h">ঋতু</p>
+        <div class="jumps" role="group" aria-label="ঋতু বাছো">
+          {SEASONS.map((s) => <button type="button" class="jump" id={s.slug} data-m={s.months[0]}>{s.n}</button>)}
+        </div>
+        <p class="strip-h">মাস</p>
+        <div class="jumps" role="group" aria-label="মাস বাছো">
+          {MONTHS.map((m, i) => <button type="button" class="jump" id={m.slug} data-m={i}>{m.n}</button>)}
+        </div>
+      </section>
+
+      <section class="tool card" id="aaj">
+        <h2><span class="no">০২</span> আজ কোন মাস</h2>
+        <p class="how">ইংরেজি তারিখ থেকে বাংলা মাস বের করা যায়, কারণ প্রতিটা বাংলা মাস একটা নির্দিষ্ট ইংরেজি তারিখে শুরু হয়।</p>
+        <p class="today" id="today-out"></p>
+        <p class="readout" id="today-note"></p>
+      </section>
+    </div>
+
+    <p class="back"><a href="/nature/">← প্রকৃতি ও পরিবেশ ভুবনে ফিরে যাও</a></p>
+  </div>
+  <script is:inline type="application/json" id="year-data" set:html={JSON.stringify(payload)}></script>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .readout { font-size: 15px; color: var(--ink-2); line-height: 1.85; }
+
+  .two { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 1.6rem; align-items: center; }
+  .two svg { width: 100%; height: auto; display: block; touch-action: none; }
+  .side { display: flex; flex-direction: column; gap: 0.5rem; }
+  .mname { font-size: 15px; color: var(--muted); }
+  .mname b { font-family: var(--font-display); font-size: 30px; color: var(--ink); margin-right: 0.5rem; }
+  .season { font-size: 14px; font-weight: 600; color: var(--w); }
+
+  .strip-h { font-size: 12px; color: var(--muted); margin: 1.1rem 0 0.4rem; font-weight: 600; }
+  .jumps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .jump {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 0.35rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-2);
+  }
+  .jump:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); color: var(--ink); }
+  .jump[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .tool :global([role="slider"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .today { font-size: 15px; color: var(--ink-2); margin-bottom: 0.5rem; }
+  .today :global(b) { font-family: var(--font-display); font-size: 26px; color: var(--ink); }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { bn } from '../../lib/bn';
+  import { svgEl as el, aroundCentre, dragTrack, useItem } from '../../lib/handson';
+
+  type Season = { n: string; slug: string; months: number[]; hue: string };
+  type Month = { n: string; slug: string; from: number[]; span: string };
+  const data: { seasons: Season[]; months: Month[] } = JSON.parse(document.getElementById('year-data')!.textContent!);
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const WORLD = 'nature', CAT = 'ছয় ঋতু ও বারো মাস';
+  const credit = (item: string) => { useItem(WORLD, CAT, item); };
+
+  /** What the month is actually like here, which is the whole reason to look. */
+  const NOTE: string[] = [
+    'বছরের প্রথম মাস। পহেলা বৈশাখে নতুন বছর, হালখাতা, মেলা। বিকেলে হঠাৎ কালবৈশাখী - আকাশ কালো করে ঝড়, তারপর বৃষ্টি। আম আর কাঁঠাল ধরতে শুরু করে।',
+    'মধুমাস। আম, কাঁঠাল, লিচু, জাম - বছরের সবচেয়ে বেশি ফল এই মাসে। গরমও সবচেয়ে বেশি, দুপুরে বাইরে টেকা যায় না।',
+    'বর্ষা নামে। আকাশ জুড়ে মেঘ, দিনভর ঝিরঝির। কৃষক ধানের চারা রোপণ করে, ব্যাঙ ডাকে, পুকুর ভরে ওঠে।',
+    'টানা বৃষ্টির মাস। নদী ফুলে ওঠে, নিচু জায়গা ডুবে যায়। কদম ফুল ফোটে - বর্ষার নিজের ফুল।',
+    'তালপাকা গরম - ভ্যাপসা, ঘামে ভেজা দিন। তাল পাকে, তালের পিঠা হয়। বৃষ্টি কমে আসে।',
+    'শরতের আসল মাস। আকাশ ঝকঝকে নীল, সাদা মেঘ ভেসে বেড়ায়, নদীর ধারে কাশফুল দোলে। দুর্গাপূজা এই মাসেই।',
+    'হেমন্তের শুরু। ভোরে কুয়াশা পড়ে, ঘাসে শিশির জমে। মাঠে আমন ধান সোনালি হয়ে আসে।',
+    'নবান্ন - নতুন ধান ঘরে তোলার উৎসব। নতুন চালের পিঠা, পায়েস। মাসের নামই এসেছে অগ্রহায়ণ মানে বছরের অগ্রভাগ থেকে, একসময় এটাই ছিল বছরের প্রথম মাস।',
+    'শীত জাঁকিয়ে বসে। খেজুর গাছে হাঁড়ি বাঁধা হয়, ভোরে রস নামে। পৌষ সংক্রান্তিতে পিঠা-পুলির উৎসব।',
+    'বছরের সবচেয়ে ঠান্ডা মাস - "মাঘের শীতে বাঘ কাঁপে"। কুয়াশায় সকাল ঢাকা থাকে, রোদ ওঠে দেরিতে।',
+    'বসন্ত আসে। পলাশ, শিমুল আর কৃষ্ণচূড়া ফোটে, গাছে নতুন পাতা। পহেলা ফাল্গুন আর একুশে ফেব্রুয়ারি - দুটোই এই মাসে।',
+    'বছরের শেষ মাস। গরম ফিরতে শুরু করে। চৈত্র সংক্রান্তিতে পুরোনো হিসাব চুকিয়ে নতুন বছরের প্রস্তুতি, চৈত্র সংক্রান্তির মেলা।',
+  ];
+  const SEASON_NOTE: Record<string, string> = {
+    'গ্রীষ্ম': 'গরম আর ঝড়ের কাল। কালবৈশাখী আসে বিকেলে, আর আমের মৌসুম শুরু হয়।',
+    'বর্ষা': 'টানা বৃষ্টির কাল। নদী ভরে ওঠে, ধান রোপণ হয়, দেশটা সবুজ হয়ে যায়।',
+    'শরৎ': 'বছরের সবচেয়ে পরিষ্কার আকাশ। নীল আকাশে সাদা মেঘ, নদীর ধারে কাশফুল।',
+    'হেমন্ত': 'ধান কাটার কাল। ভোরে কুয়াশা, মাঠভরা সোনালি ধান, আর নবান্ন।',
+    'শীত': 'শুকনো ঠান্ডার কাল। খেজুরের রস, পিঠা, আর কুয়াশায় ঢাকা সকাল।',
+    'বসন্ত': 'ফুল ফোটার কাল। আবহাওয়া আরামদায়ক, গাছে নতুন পাতা, পলাশ-শিমুল লাল।',
+  };
+
+  const seasonOf = (m: number) => data.seasons[Math.floor(m / 2)]!;
+
+  /* ---------- the wheel ---------- */
+  const svg = $<SVGSVGElement>('#wheel');
+  const C = 170, R_OUT = 152, R_IN = 96, R_HUB = 62;
+  const arc = (r0: number, r1: number, a0: number, a1: number) => {
+    const p = (r: number, a: number) => `${C + Math.cos(a) * r} ${C + Math.sin(a) * r}`;
+    const big = a1 - a0 > Math.PI ? 1 : 0;
+    return `M ${p(r0, a0)} A ${r0} ${r0} 0 ${big} 1 ${p(r0, a1)} L ${p(r1, a1)} A ${r1} ${r1} 0 ${big} 0 ${p(r1, a0)} Z`;
+  };
+  const STEP = (Math.PI * 2) / 12;
+  const START = -Math.PI / 2;   // বৈশাখ starts at the top and the year runs clockwise
+
+  data.seasons.forEach((s) => {
+    const a0 = START + s.months[0]! * STEP, a1 = a0 + STEP * 2;
+    svg.appendChild(el('path', { d: arc(R_OUT, R_IN + 22, a0 + 0.012, a1 - 0.012), fill: s.hue, 'fill-opacity': 0.85 }));
+    const mid = (a0 + a1) / 2;
+    const t = el('text', {
+      x: C + Math.cos(mid) * ((R_OUT + R_IN + 22) / 2), y: C + Math.sin(mid) * ((R_OUT + R_IN + 22) / 2) + 4,
+      'font-size': 13, 'text-anchor': 'middle', fill: '#fff', 'font-weight': 700,
+    });
+    t.textContent = s.n; svg.appendChild(t);
+  });
+  const wedges = data.months.map((m, i) => {
+    const a0 = START + i * STEP, a1 = a0 + STEP;
+    const w = el('path', { d: arc(R_IN + 16, R_HUB, a0 + 0.014, a1 - 0.014), fill: 'var(--panel-2)', stroke: 'var(--line)' });
+    svg.appendChild(w);
+    const mid = (a0 + a1) / 2;
+    const t = el('text', {
+      x: C + Math.cos(mid) * ((R_IN + R_HUB) / 2), y: C + Math.sin(mid) * ((R_IN + R_HUB) / 2) + 4,
+      'font-size': 11.5, 'text-anchor': 'middle', fill: 'var(--ink-2)',
+    });
+    t.textContent = m.n; svg.appendChild(t);
+    return { w, t };
+  });
+  svg.appendChild(el('circle', { cx: C, cy: C, r: R_HUB - 4, fill: 'var(--panel)', stroke: 'var(--line)', 'stroke-width': 2 }));
+  const hubTxt = el('text', { x: C, y: C + 7, 'font-size': 21, 'text-anchor': 'middle', fill: 'var(--ink)', 'font-weight': 700 });
+  hubTxt.style.fontFamily = 'var(--font-display)';
+  svg.appendChild(hubTxt);
+  const needle = el('g');
+  needle.append(
+    el('polygon', { points: `${C},${C - R_OUT - 10} ${C - 9},${C - R_OUT + 12} ${C + 9},${C - R_OUT + 12}`, fill: 'var(--w)' }),
+    el('circle', { cx: C, cy: C - R_OUT + 2, r: 6, fill: 'var(--w)' }),
+  );
+  svg.appendChild(needle);
+  const grab = el('circle', { cx: C, cy: C, r: R_OUT, fill: 'transparent' });
+  svg.appendChild(grab);
+
+  const nameEl = $('#m-name'), spanEl = $('#m-span'), seasonEl = $('#m-season'), noteEl = $('#m-note');
+  const jumps = [...root.querySelectorAll<HTMLButtonElement>('#chaka .jump')];
+  let cur = 0;
+
+  function render(mark = true) {
+    const m = data.months[cur]!, s = seasonOf(cur);
+    needle.setAttribute('transform', `rotate(${cur * 30 + 15} ${C} ${C})`);
+    wedges.forEach((x, i) => {
+      const on = i === cur;
+      x.w.setAttribute('fill', on ? s.hue : 'var(--panel-2)');
+      x.w.setAttribute('fill-opacity', on ? '0.55' : '1');
+      x.t.setAttribute('font-weight', on ? '700' : '400');
+      x.t.setAttribute('fill', on ? 'var(--ink)' : 'var(--ink-2)');
+    });
+    hubTxt.textContent = m.n;
+    nameEl.textContent = m.n;
+    spanEl.textContent = m.span;
+    seasonEl.textContent = `ঋতু: ${s.n} - ${SEASON_NOTE[s.n]}`;
+    noteEl.textContent = NOTE[cur]!;
+    jumps.forEach((b) => b.setAttribute('aria-pressed', String(b.id === m.slug || b.id === s.slug)));
+    // Only a turn of the wheel counts. Landing on the page is not reading it.
+    if (mark) { credit(m.n); credit(s.n); }
+  }
+
+  const angleAt = aroundCentre(svg, 340, C, C);
+  let last = 0, turn = 0;
+  dragTrack({
+    surface: svg, handle: grab, min: 0, max: 11, step: 1, value: 0, wrap: true,
+    // the needle follows the finger round the rim, in whole months
+    toValue: (x, y) => {
+      const a = angleAt(x, y);
+      let d = a - last;
+      if (d > 180) d -= 360; else if (d < -180) d += 360;
+      last = a; turn += d;
+      return Math.round(turn / 30);
+    },
+    onChange: (v) => { cur = v; render(); },
+    label: 'বছরের চাকা', text: () => data.months[cur]?.n ?? '',
+  });
+  grab.addEventListener('pointerdown', (e) => {
+    last = angleAt((e as PointerEvent).clientX, (e as PointerEvent).clientY);
+    turn = cur * 30;
+  });
+  jumps.forEach((b) => b.addEventListener('click', () => { cur = +b.dataset.m!; turn = cur * 30; render(); }));
+
+  /* ---------- আজ কোন মাস ---------- */
+  (function today() {
+    const now = new Date();
+    const y = now.getFullYear();
+    // Each Bengali month opens on a fixed English date, so today's month is
+    // simply the last opening that has already happened.
+    // All twelve openings are placed in the current English year on purpose.
+    // মাঘ, ফাল্গুন and চৈত্র belong to the Bengali year that started last
+    // April, and taking the latest opening that has already passed lands on
+    // the right one either side of the new year.
+    const opens = data.months.map((m, i) => {
+      const [mo, d] = m.from as [number, number];
+      return { i, at: new Date(y, mo, d) };
+    });
+    const past = opens.filter((o) => o.at <= now).sort((a, b) => b.at.getTime() - a.at.getTime());
+    const idx = past.length ? past[0]!.i : 8;   // before 14 January we are still in পৌষ
+    const m = data.months[idx]!, s = seasonOf(idx);
+    const ENG = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+    const eng = `${bn(now.getDate())} ${ENG[now.getMonth()]}`;
+    $('#today-out').innerHTML = `আজ <b>${m.n}</b> মাস, ঋতু <b>${s.n}</b>।`;
+    $('#today-note').textContent = `ইংরেজিতে আজ ${eng}। ${m.n} চলে ${m.span} পর্যন্ত। ${NOTE[idx]}`;
+  })();
+
+  render(false);
+  // Arriving by name from the world page should land on that month or season.
+  const fromHash = () => {
+    const id = location.hash.slice(1);
+    const b = jumps.find((x) => x.id === id);
+    if (b) { cur = +b.dataset.m!; turn = cur * 30; render(); }
+  };
+  addEventListener('hashchange', fromHash);
+  fromHash();
+</script>
