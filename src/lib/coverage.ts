@@ -36,6 +36,17 @@ const EXPLORERS: Record<string, (ItemDetail[] | null)[]> = {
 };
 
 export type Coverage = {
+  /**
+   * How many worlds and categories the site has.
+   *
+   * These live here for the same reason every other count does: copy that says
+   * "১১টি ভুবন" or "৮৭টি বিভাগে" was typed by hand in six places, and a hand
+   * typed number is right until the day somebody adds a category, after which
+   * the site is quietly lying on the home page, the family page, the school
+   * page and the printables page at once.
+   */
+  worlds: number;
+  cats: number;
   total: number;
   readable: number;
   tool: number;
@@ -74,7 +85,11 @@ function compute(): Coverage {
       else uncovered += c.items.length;
     });
   }
-  return { total, readable, tool, uncovered, covered: readable + tool };
+  return {
+    worlds: worlds.length,
+    cats: worlds.reduce((s, w) => s + w.cats.length, 0),
+    total, readable, tool, uncovered, covered: readable + tool,
+  };
 }
 
 export const COVERAGE: Coverage = compute();

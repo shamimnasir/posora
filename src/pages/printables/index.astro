@@ -9,6 +9,7 @@
 import Base from '../../layouts/Base.astro';
 import { sheets } from '../../data/printables';
 import { bn } from '../../lib/bn';
+import { COVERAGE } from '../../lib/coverage';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
@@ -77,7 +78,7 @@ const schema = [
         <p class="eyebrow">এরপর কী</p>
         <h2>শিটগুলো ভালো লাগলে</h2>
         <p>
-          পসরার ৮৩৩টি বিষয় ওয়েবসাইটেই ফ্রি, চিরকাল। আর যদি চান প্রতিটি সন্তানের
+          পসরার {bn(COVERAGE.total)}টি বিষয় ওয়েবসাইটেই ফ্রি, চিরকাল। আর যদি চান প্রতিটি সন্তানের
           নিজের হিসাব থাকুক, প্রতি সপ্তাহে আপনার কাছে একটা রিপোর্ট আসুক, আর
           অনুশীলনীর প্যাক ছাপাতে পারুন - সেটার জন্য পসরা পরিবার তৈরি হচ্ছে।
         </p>

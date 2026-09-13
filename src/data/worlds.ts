@@ -297,7 +297,7 @@ export const worlds: World[] = [
    null,
    null,
    null,
-   3
+   null
   ]
  },
  {
@@ -1186,7 +1186,7 @@ export const worlds: World[] = [
    null,
    null,
    null,
-   3
+   null
   ]
  },
  {
