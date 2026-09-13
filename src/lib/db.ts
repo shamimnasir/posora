@@ -10,6 +10,11 @@ export type Env = {
   DB?: D1Database;
   ADMIN_PASSWORD_HASH?: string;
   SITE_URL?: string;
+  /** Google sign-in. Set these and the panel's front door becomes Google. */
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  /** Comma separated. Only these Google accounts may enter the panel. */
+  ADMIN_EMAILS?: string;
 };
 
 export const dbEnv = () => env as unknown as Env;

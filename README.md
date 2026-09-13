@@ -44,10 +44,43 @@ before, so a database problem can never take posora.com down.
 
 ```bash
 npm run db:migrate                   # create the tables on the remote database
-npm run admin:hash 'a long passphrase'
-npx wrangler secret put ADMIN_PASSWORD_HASH   # paste the pbkdf2$... line
 npm run deploy
 ```
+
+Then set up a way in. **Google sign-in** is the one to prefer: there is no
+password to lose, mistype, or leak.
+
+1. Google Cloud Console → **APIs & Services → Credentials → Create credentials
+   → OAuth client ID → Web application**.
+2. Authorised redirect URI, exactly: `https://posora.com/api/admin/oauth/callback`
+3. It gives you a client ID and a client secret.
+
+```bash
+npx wrangler secret put GOOGLE_CLIENT_ID       # the ...apps.googleusercontent.com one
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put ADMIN_EMAILS           # your Google address; comma separated for more
+```
+
+Only an address on `ADMIN_EMAILS` can enter, and Google must have verified it.
+Anyone else who signs in successfully is still refused, and the attempt is
+recorded in the audit log.
+
+**A password is also supported**, and worth keeping as the way back in when
+Google is not an option: a misconfigured OAuth client, an address that
+changed. The panel shows whichever methods are configured.
+
+```bash
+node scripts/hash-password.mjs | npx wrangler secret put ADMIN_PASSWORD_HASH
+```
+
+That asks for the password on the terminal, echoes nothing, and pipes the hash
+straight across, so the eighty-character hash never goes through a clipboard.
+A password pasted where the hash belongs, or a stray leading space, fails
+exactly the way a wrong password fails and tells you nothing.
+
+Lockout is 8 failed passwords per IP, then 15 minutes. Retrying does not extend
+it, and a successful login clears it. To clear one by hand:
+`npx wrangler d1 execute posora --remote --command "DELETE FROM login_throttle"`.
 
 Then open `https://posora.com/admin`, log in, and press **কনটেন্ট আমদানি করো** once.
 That copies the current `src/data/` content into D1. It is idempotent: re-running
