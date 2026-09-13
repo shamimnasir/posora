@@ -185,6 +185,12 @@ const HUE = '#7E56C2';
   .back a:hover { color: var(--brand-ink); }
 
   @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+
+  /* A finger is not a mouse pointer: the chips and tiles get a real target
+     height on touch screens, where they were about thirty pixels tall. */
+  @media (pointer: coarse) {
+    .jump { min-height: 44px; padding-inline: 0.9rem; }
+  }
 </style>
 
 <script>

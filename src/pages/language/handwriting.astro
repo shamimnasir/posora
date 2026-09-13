@@ -198,6 +198,14 @@ const payload = { letters: [...vowels, ...consonants], kars };
     #lab :global(.tool:not(#chhapar)) { display: none !important; }
     .sheet { border: none; padding: 0; }
   }
+
+  /* A finger is not a mouse pointer: the chips and tiles get a real target
+     height on touch screens, where they were about thirty pixels tall. */
+  @media (pointer: coarse) {
+    .picker :global(button) { min-height: 44px; }
+    /* the sheet header is a print header; on a phone preview it needs to stack */
+    .sheet :global(.sh-h) { flex-direction: column; gap: 0.3rem; }
+  }
 </style>
 
 <script>
@@ -216,6 +224,28 @@ const payload = { letters: [...vowels, ...consonants], kars };
 
   /** Every board on the page, so the clear buttons can find their own. */
   const boards = new Map<string, Trace>();
+
+  /**
+   * A phone cannot hold a line of Bangla at a size a finger can trace. On a
+   * wide screen the boards are 880 units across and a sentence fits; at 288
+   * CSS pixels that same sentence renders about nineteen pixels tall, which is
+   * not tracing, it is guessing. So on a narrow screen every board is made
+   * squarer - the letters keep their size in units and therefore grow on
+   * screen - and the sentence is traced one word at a time.
+   */
+  const narrow = matchMedia('(max-width: 640px)').matches;
+  const shape = (id: string, w: number, h: number) => {
+    const c = document.getElementById(id) as HTMLCanvasElement;
+    if (narrow) { c.width = w; c.height = h; }
+    return c;
+  };
+  shape('matra-c', 460, 150);
+  shape('letter-c', 460, 300);
+  shape('kar-c', 460, 300);
+  shape('word-c', 460, 240);
+  shape('line-c', 460, 220);
+  /** Where the middle of a board is, whatever shape it ended up. */
+  const midOf = (c: HTMLCanvasElement) => c.width / 2;
   const GUIDE = '#ded8d0', RULE = '#e6e0d8', BLUE = '#b9cbe0';
   /** The display face, resolved once so the canvas can ask for it by name. */
   const face = getComputedStyle(document.body).getPropertyValue('--font-display').trim() || 'serif';
@@ -244,7 +274,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
   /* ---------- ১. মাত্রা ---------- */
   (function matra() {
     const c = $<HTMLCanvasElement>('#matra-c'), out = $('#matra-out');
-    const Y = 92, X0 = 70, X1 = 810;
+    const Y = narrow ? 74 : 92, X0 = 60, X1 = c.width - 60;
     const line = (g: CanvasRenderingContext2D, colour: string, wdt: number) => {
       g.strokeStyle = colour; g.lineWidth = wdt; g.lineCap = 'round';
       g.beginPath(); g.moveTo(X0, Y); g.lineTo(X1, Y); g.stroke();
@@ -252,11 +282,12 @@ const payload = { letters: [...vowels, ...consonants], kars };
     const board = traceBoard({
       canvas: c,
       drawGuide: (g) => {
-        ruling(g, 880, 40, Y, 146, 168);
+        ruling(g, c.width, Y - 52, Y, Y + 54, Y + 76);
         line(g, GUIDE, 16);
         g.fillStyle = '#b8b0a6'; g.font = `20px ${face}`; g.textAlign = 'left';
-        g.fillText('শুরু', X0 - 46, Y + 7);
-        g.fillText('শেষ', X1 + 12, Y + 7);
+        g.fillText('শুরু', 8, Y - 18);
+        g.textAlign = 'right';
+        g.fillText('শেষ', c.width - 8, Y - 18);
       },
       drawTarget: (g) => line(g, '#000', 16),
       lineWidth: 13,
@@ -283,7 +314,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
   (function letters() {
     const c = $<HTMLCanvasElement>('#letter-c'), out = $('#letter-out');
     const pick = $<HTMLElement>('#letter-pick');
-    const BASE = 210, SIZE = 170, CXp = 440;
+    const BASE = 210, SIZE = 170, CXp = midOf(c);
     let reveal = 1;   // 0 to 1 while the stroke order plays
 
     pick.replaceChildren(...data.letters.map((l) => {
@@ -295,7 +326,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
 
     const glyph = (g: CanvasRenderingContext2D, colour: string, clipTo?: number) => {
       g.save();
-      if (clipTo !== undefined) { g.beginPath(); g.rect(0, clipTo, 880, 300 - clipTo); g.clip(); }
+      if (clipTo !== undefined) { g.beginPath(); g.rect(0, clipTo, c.width, c.height - clipTo); g.clip(); }
       g.fillStyle = colour; g.font = `700 ${SIZE}px ${face}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
       g.fillText(currentLetter, CXp, BASE);
       g.restore();
@@ -308,14 +339,14 @@ const payload = { letters: [...vowels, ...consonants], kars };
     const board = traceBoard({
       canvas: c,
       drawGuide: (g) => {
-        ruling(g, 880, BASE - SIZE * 0.95, matraY, BASE, BASE + 26);
+        ruling(g, c.width, BASE - SIZE * 0.95, matraY, BASE, BASE + 26);
         if (reveal >= 1) { glyph(g, GUIDE); return; }
         // body first, then the headline
         if (reveal < 0.75) glyph(g, GUIDE, matraY + 4);
         else {
           glyph(g, GUIDE, matraY + 4);
           g.save();
-          g.beginPath(); g.rect(0, 0, 880, matraY + 6); g.clip();
+          g.beginPath(); g.rect(0, 0, c.width, matraY + 6); g.clip();
           glyph(g, '#b9a0ae');
           g.restore();
         }
@@ -357,7 +388,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
   (function kar() {
     const c = $<HTMLCanvasElement>('#kar-c'), out = $('#kar-out');
     const pick = $<HTMLElement>('#kar-pick');
-    const BASE = 210, SIZE = 150, CXp = 440;
+    const BASE = 210, SIZE = 150, CXp = midOf(c);
     // the first kar is "no sign at all", which cannot be traced
     const usable = data.kars.filter((k) => k.sign);
     let cur = usable[0]!;
@@ -391,12 +422,12 @@ const payload = { letters: [...vowels, ...consonants], kars };
     const board = traceBoard({
       canvas: c,
       drawGuide: (g) => {
-        ruling(g, 880, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 26);
+        ruling(g, c.width, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 26);
         // the letter solid, the kar pale: only the kar is yours to add
         draw(g, '#3a3a3a', GUIDE);
       },
       drawTarget: (g) => {
-        const tmp = document.createElement('canvas'); tmp.width = 880; tmp.height = 300;
+        const tmp = document.createElement('canvas'); tmp.width = c.width; tmp.height = c.height;
         const t = tmp.getContext('2d')!;
         draw(t, 'rgba(0,0,0,0)', '#000');
         g.drawImage(tmp, 0, 0);
@@ -426,7 +457,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
     const c = $<HTMLCanvasElement>('#word-c'), out = $('#word-out');
     const pick = $<HTMLElement>('#word-pick');
     const WORDS = ['বাংলা', 'আকাশ', 'নদী', 'পাখি', 'বই', 'মা', 'গাছ', 'ফুল'];
-    const BASE = 176, SIZE = 104;
+    const BASE = narrow ? 160 : 176, SIZE = 104;
 
     pick.replaceChildren(...WORDS.map((w) => {
       const b = document.createElement('button');
@@ -436,11 +467,11 @@ const payload = { letters: [...vowels, ...consonants], kars };
     }));
     const word = (g: CanvasRenderingContext2D, colour: string) => {
       g.fillStyle = colour; g.font = `700 ${SIZE}px ${face}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-      g.fillText(currentWord, 440, BASE);
+      g.fillText(currentWord, midOf(c), BASE);
     };
     const board = traceBoard({
       canvas: c,
-      drawGuide: (g) => { ruling(g, 880, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 24); word(g, GUIDE); },
+      drawGuide: (g) => { ruling(g, c.width, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 24); word(g, GUIDE); },
       drawTarget: (g) => word(g, '#000'),
       lineWidth: 11,
       onScore: ({ covered, accurate }) => {
@@ -464,27 +495,42 @@ const payload = { letters: [...vowels, ...consonants], kars };
   (function line() {
     const c = $<HTMLCanvasElement>('#line-c'), out = $('#line-out');
     const LINES = ['আমার নাম কী', 'আকাশে অনেক তারা', 'বই পড়তে ভালো লাগে', 'নদীর নাম পদ্মা'];
-    const BASE = 150, SIZE = 58;
-    let i = 0;
+    const BASE = narrow ? 140 : 150, SIZE = narrow ? 86 : 58;
+    let i = 0, w = 0;
+    // A whole sentence will not fit on a phone at a traceable size, so there it
+    // is walked one word at a time and the readout says which word you are on.
+    const piece = () => (narrow ? LINES[i]!.split(' ')[w]! : LINES[i]!);
+    const words = () => LINES[i]!.split(' ');
     const sentence = (g: CanvasRenderingContext2D, colour: string) => {
       g.fillStyle = colour; g.font = `700 ${SIZE}px ${face}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-      g.fillText(LINES[i]!, 440, BASE);
+      g.fillText(piece(), midOf(c), BASE);
     };
     const board = traceBoard({
       canvas: c,
-      drawGuide: (g) => { ruling(g, 880, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 22); sentence(g, GUIDE); },
+      drawGuide: (g) => {
+        ruling(g, c.width, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 22);
+        sentence(g, GUIDE);
+        if (narrow) {
+          g.fillStyle = '#b8b0a6'; g.font = `13px ${face}`; g.textAlign = 'center';
+          g.fillText(LINES[i]!, midOf(c), 26);
+        }
+      },
       drawTarget: (g) => sentence(g, '#000'),
-      lineWidth: 8,
+      lineWidth: narrow ? 11 : 8,
       onScore: ({ covered, accurate }) => {
         const v = verdict(covered, accurate);
-        out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> বাক্যের <b>${pc(covered)}</b> ঢেকেছে।`;
+        const where = narrow ? ` (${LINES[i]!.split(' ').length > 1 ? `শব্দ ${new Intl.NumberFormat('bn-BD').format(w + 1)} / ${new Intl.NumberFormat('bn-BD').format(words().length)}` : 'একটাই শব্দ'})` : '';
+        out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> ${narrow ? 'শব্দের' : 'বাক্যের'} <b>${pc(covered)}</b> ঢেকেছে।${where}`;
         if (covered > 0.3) credit('বাক্য লেখা');
       },
     });
     boards.set('line-c', board);
-    out.textContent = 'ফিকে বাক্যটার উপর দিয়ে লেখো।';
-    $('#line-next').addEventListener('click', () => {
-      i = (i + 1) % LINES.length;
+    const nextBtn = $<HTMLButtonElement>('#line-next');
+    if (narrow) nextBtn.textContent = 'পরের শব্দ';
+    out.textContent = narrow ? 'উপরে পুরো বাক্যটা আছে। নিচে একটা করে শব্দ লেখো।' : 'ফিকে বাক্যটার উপর দিয়ে লেখো।';
+    nextBtn.addEventListener('click', () => {
+      if (narrow && w < words().length - 1) w++;
+      else { i = (i + 1) % LINES.length; w = 0; }
       board.clear(); board.refresh();
     });
   })();

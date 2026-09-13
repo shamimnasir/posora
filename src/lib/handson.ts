@@ -118,6 +118,63 @@ export function fillGauge(
 
 /* ---------- dragging ---------- */
 
+/** How small a thing you have to hit may get, in real screen pixels. */
+const MIN_TOUCH = 44;
+
+/**
+ * Grow a handle's invisible hit area until it is a real finger wide.
+ *
+ * Handles are drawn in the SVG's own units, so a pad that is a comfortable 48
+ * units on a desktop shrinks with the drawing: the same pad is 20 pixels on a
+ * phone, which is smaller than a fingertip and turns every one of these pages
+ * into something only a mouse can use. The pad only ever grows, and grows
+ * about its own centre, so a handle that deliberately sits off-centre stays
+ * where its author put it.
+ *
+ * The pad is the child marked `data-pad`, or failing that the first
+ * transparent shape inside the handle, or the handle itself when it is one.
+ */
+function fitPad(surface: SVGSVGElement, handle: SVGElement): void {
+  const isPad = (e: Element) => e.getAttribute('fill') === 'transparent';
+  const pad = handle.querySelector<SVGElement>('[data-pad]')
+    ?? [...handle.children].find(isPad) as SVGElement | undefined
+    ?? (isPad(handle) ? handle : null);
+  if (!pad) return;
+  const vb = surface.viewBox.baseVal;
+  const box = surface.getBoundingClientRect();
+  if (!box.width || !vb || !vb.width) return;
+  const perUnit = box.width / vb.width;           // screen pixels per SVG unit
+  if (!perUnit) return;
+  const need = MIN_TOUCH / perUnit;               // units that make 44 pixels
+
+  if (pad.tagName === 'circle') {
+    const base = Number(pad.dataset.baseR ?? pad.getAttribute('r') ?? 0);
+    pad.dataset.baseR = String(base);
+    pad.setAttribute('r', String(Math.max(base, need / 2)));
+    return;
+  }
+  const bw = Number(pad.dataset.baseW ?? pad.getAttribute('width') ?? 0);
+  const bh = Number(pad.dataset.baseH ?? pad.getAttribute('height') ?? 0);
+  if (!bw || !bh) return;
+  pad.dataset.baseW = String(bw); pad.dataset.baseH = String(bh);
+  const cx = Number(pad.dataset.baseX ?? pad.getAttribute('x') ?? 0) + bw / 2;
+  const cy = Number(pad.dataset.baseY ?? pad.getAttribute('y') ?? 0) + bh / 2;
+  pad.dataset.baseX = String(cx - bw / 2); pad.dataset.baseY = String(cy - bh / 2);
+  const w = Math.max(bw, need), h = Math.max(bh, need);
+  pad.setAttribute('width', String(w)); pad.setAttribute('height', String(h));
+  pad.setAttribute('x', String(cx - w / 2)); pad.setAttribute('y', String(cy - h / 2));
+}
+
+/** Keep the hit area right through a rotation or a resize. */
+function watchPad(surface: SVGSVGElement, handle: SVGElement): void {
+  fitPad(surface, handle);
+  // The first measurement can land before layout has settled, so take another.
+  requestAnimationFrame(() => fitPad(surface, handle));
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(() => fitPad(surface, handle)).observe(surface);
+  }
+}
+
 export type TrackOpts = {
   /** Where pointer events are watched. Usually the whole `<svg>`. */
   surface: SVGSVGElement;
@@ -179,6 +236,7 @@ export function dragTrack(o: TrackOpts): Track {
     announce();
   };
 
+  watchPad(surface, grab);
   grab.setAttribute('role', 'slider');
   grab.setAttribute('tabindex', '0');
   grab.setAttribute('aria-label', o.label);
@@ -263,6 +321,7 @@ export function dragPoint(o: PointOpts): Point {
     if (tell) o.onChange(x, y);
   };
 
+  watchPad(surface, handle);
   handle.setAttribute('tabindex', '0');
   handle.setAttribute('role', 'button');
   handle.setAttribute('aria-label', o.label);

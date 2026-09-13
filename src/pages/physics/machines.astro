@@ -547,6 +547,13 @@ const items = [
     svg.append(top, bot);
     const wedgeShape = el('polygon', { fill: INK, 'fill-opacity': 0.85 });
     svg.appendChild(wedgeShape);
+    // The wedge is drawn by moving its points rather than by a transform, so
+    // the thing you grab is a separate pad that rides along with it. That also
+    // gives the library something to widen for a fingertip; the polygon itself
+    // is only twenty-odd pixels tall on a phone when the head is thin.
+    const wedgeGrab = el('g');
+    wedgeGrab.appendChild(el('rect', { x: -64, y: -26, width: 128, height: 52, fill: 'transparent' }));
+    svg.appendChild(wedgeGrab);
     const hit = arrow(svg, MUTED);
     const splitA = arrow(svg, W), splitB = arrow(svg, W);
     text(svg, (LOG_X + LOG_X1) / 2, 232, 'কাঠের গুঁড়ি');
@@ -566,6 +573,7 @@ const items = [
       // tip first, then the two back corners: the wedge drives in from the left
       const tipX = LOG_X + 26 + (depth / 100) * 110, backX = tipX - LEN_PX;
       wedgeShape.setAttribute('points', `${tipX},${MID} ${backX},${MID - headPx} ${backX},${MID + headPx}`);
+      wedgeGrab.setAttribute('transform', `translate(${(tipX + backX) / 2},${MID})`);
 
       const lenMm = LEN_PX * MM_PER_PX;
       const ma = lenMm / headMm;
@@ -583,7 +591,7 @@ const items = [
 
     const toX = alongX(svg, 620, LOG_X + 26, 1.1);
     dragTrack({
-      surface: svg, handle: wedgeShape, min: 0, max: 100, step: 2, value: depth,
+      surface: svg, handle: wedgeGrab, min: 0, max: 100, step: 2, value: depth,
       toValue: (x) => toX(x),
       onChange: (v) => { depth = v; render(); used('wedge'); },
       label: 'কীলক কতটা ঢুকেছে', text: (v) => `${bn(Math.round(v))} ভাগ ঢুকেছে`,

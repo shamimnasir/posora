@@ -144,18 +144,23 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
 
   .picker { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 1rem; scrollbar-width: thin; }
   .picker.wrapy { flex-wrap: wrap; overflow: visible; }
-  .tile {
-    flex: 0 0 auto; min-width: 52px; padding: 0.45rem 0.6rem; border-radius: 10px;
+  /* The consonant tiles are built by the script, so every rule here needs
+     :global(). Without it they lost their padding and min-width entirely and
+     came out thirteen pixels wide - unhittable on a phone, and the fola and
+     conjunct tiles beside them looked fine because those are server-rendered. */
+  .picker :global(.tile) {
+    flex: 0 0 auto; min-width: 52px; min-height: 44px; padding: 0.45rem 0.6rem; border-radius: 10px;
     border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
-    display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer;
+    font: inherit;
     transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
   }
-  .tile .glyph { font-size: 22px; }
-  .tile small { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
-  .tile:hover { background: color-mix(in oklab, var(--w) 12%, var(--panel-2)); transform: translateY(-1px); }
-  .tile[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
-  .tile[aria-pressed="true"] small { color: var(--on-brand); opacity: 0.85; }
-  .tile:focus-visible { outline: 2px solid var(--w); outline-offset: 2px; }
+  .picker :global(.tile .glyph) { font-size: 22px; }
+  .picker :global(.tile small) { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+  .picker :global(.tile:hover) { background: color-mix(in oklab, var(--w) 12%, var(--panel-2)); transform: translateY(-1px); }
+  .picker :global(.tile[aria-pressed="true"]) { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .picker :global(.tile[aria-pressed="true"] small) { color: var(--on-brand); opacity: 0.85; }
+  .picker :global(.tile:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
 
   .stage { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
   .build { min-height: clamp(4rem, 12vw, 6rem); display: grid; place-items: center; }
@@ -179,6 +184,12 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
 
   .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
   .back a:hover { color: var(--brand-ink); }
+
+  /* A finger is not a mouse pointer: the chips and tiles get a real target
+     height on touch screens, where they were about thirty pixels tall. */
+  @media (pointer: coarse) {
+    .picker :global(.tile) { min-height: 48px; }
+  }
 </style>
 
 <script>
