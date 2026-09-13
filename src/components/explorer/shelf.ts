@@ -18,7 +18,7 @@
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Color, Vector2, Vector3, Box3, Raycaster, MathUtils,
   CylinderGeometry, MeshStandardMaterial, MeshBasicMaterial,
-  CanvasTexture, Sprite, SpriteMaterial, BoxGeometry, DoubleSide, PlaneGeometry,
+  CanvasTexture, Sprite, SpriteMaterial, TorusGeometry, PlaneGeometry,
 } from 'three';
 import { FIGURES } from './figures';
 import { dressScene, castShadows } from './render';
@@ -59,27 +59,55 @@ function textSprite(text: string, font: string, colour: string, px = 44, w = 256
   return s;
 }
 
-/** An emoji on a standing tile, for the items that have no figure of their own. */
+/**
+ * A medallion carrying the item's emoji, for the items with no figure of
+ * their own - which is most of the eight hundred.
+ *
+ * This was a flat plane on a thin slab, and the shelf turns everything it
+ * holds: a flat card sweeps edge-on twice a turn and disappears, so for half
+ * of every rotation most of the collection was a row of white slivers. A disc
+ * has a rim, so it catches the key light from any angle, and the emoji goes on
+ * both faces so there is no blank side. It is still the same one draw call's
+ * worth of work.
+ */
 function emojiTile(emoji: string, hue: Color): Group {
   const g = new Group();
   const c = document.createElement('canvas');
-  c.width = c.height = 128;
+  c.width = c.height = 256;      // 128 was visibly soft on a retina screen
   const x = c.getContext('2d')!;
-  x.font = '92px "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", sans-serif';
+  x.font = '188px "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", sans-serif';
   x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(emoji, 64, 70);
+  x.fillText(emoji, 128, 140);
   const tex = new CanvasTexture(c);
-  const face = new Mesh(
-    new PlaneGeometry(0.82, 0.82),
-    new MeshBasicMaterial({ map: tex, transparent: true, side: DoubleSide }),
+  tex.anisotropy = 4;
+
+  const R = 0.47, D = 0.13, Y = 0.55;
+  const body = new Mesh(
+    new CylinderGeometry(R, R, D, 44),
+    new MeshStandardMaterial({ color: hue.clone().lerp(new Color('#ffffff'), 0.62), roughness: 0.58, metalness: 0.12 }),
   );
-  face.position.y = 0.62;
-  const back = new Mesh(
-    new BoxGeometry(0.94, 0.94, 0.07),
-    new MeshStandardMaterial({ color: hue.clone().lerp(new Color('#ffffff'), 0.72), roughness: 0.75 }),
+  body.rotation.x = Math.PI / 2;   // the flat faces look out along z
+  body.position.y = Y;
+  g.add(body);
+  // a bezel standing slightly proud of the face, which is what reads as struck
+  // metal rather than a printed counter
+  const bezel = new Mesh(
+    new TorusGeometry(R - 0.015, 0.03, 12, 44),
+    new MeshStandardMaterial({ color: hue.clone().lerp(new Color('#ffffff'), 0.34), roughness: 0.42, metalness: 0.3 }),
   );
-  back.position.set(0, 0.62, -0.05);
-  g.add(back, face);
+  bezel.position.y = Y;
+  g.add(bezel);
+  for (const s of [1, -1]) {
+    const face = new Mesh(
+      new PlaneGeometry(R * 1.42, R * 1.42),
+      new MeshBasicMaterial({ map: tex, transparent: true }),
+    );
+    face.position.set(0, Y, s * (D / 2 + 0.004));
+    if (s < 0) face.rotation.y = Math.PI;
+    g.add(face);
+  }
+  // the tick loop rocks these rather than spinning them
+  g.userData.flat = true;
   return g;
 }
 
@@ -99,7 +127,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
   // own pedestals and a disc under the whole shelf would fight them.
   const look = dressScene(renderer, scene, { radius: 7, exposure: 1.02 });
 
-  type Cell = { g: Group; body: Group | null; got: boolean; y0: number; spin: number };
+  type Cell = { g: Group; body: Group | null; got: boolean; y0: number; spin: number; flat: boolean };
   let cells: Cell[] = [];
   let rows = 1, hue = new Color('#15544c'), active = -1;
 
@@ -194,7 +222,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
 
       cell.userData.i = i;
       stage.add(cell);
-      cells.push({ g: cell, body, got: slot.got, y0: cell.position.y, spin: Math.random() * Math.PI * 2 });
+      cells.push({ g: cell, body, got: slot.got, y0: cell.position.y, spin: Math.random() * Math.PI * 2, flat: !!body?.userData.flat });
     });
     frame();
   }
@@ -263,7 +291,12 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
       if (c.body) {
         // Collected things turn slowly, so the shelf is alive without being
         // busy. The ghosts stay still: they are not yours to play with yet.
-        if (!reduced && c.got) c.body.rotation.y = c.spin + t * 0.35;
+        // A medallion rocks instead of turning: a full revolution would still
+        // carry its face away from the viewer for half of every cycle, and the
+        // face is the only thing on it that says which item this is.
+        if (!reduced && c.got) {
+          c.body.rotation.y = c.flat ? Math.sin(t * 0.5 + c.spin) * 0.5 : c.spin + t * 0.35;
+        }
         const lift = i === active ? 0.18 : 0;
         c.body.position.y = MathUtils.lerp(c.body.position.y, lift, 0.12);
         const s = i === active ? 1.14 : 1;

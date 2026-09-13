@@ -222,7 +222,14 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
             place(); fact.textContent = stops[at]!.fact;
             if (!reduced()) fact.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 300 });
             step();
-          } else { foot.textContent = `${c} খাবারের পথে পড়ে না।`; wrong(b); }
+          } else {
+            // This used to say "খাবারের পথে পড়ে না" - "does not lie on the
+            // food's path" - with the food hardcoded. Two missions run this
+            // engine, and the other one is a raindrop going round the water
+            // cycle, so every wrong answer there told the child about food.
+            foot.textContent = `${tokenName} ওখানে যায় না। আরেকবার ভাবো।`;
+            wrong(b);
+          }
         });
         return b;
       }));
@@ -358,7 +365,10 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
     const pad = el('div', 'mz-pad');
     const paint = () => { outN.textContent = typed ? typed.split('').map((d) => BN_D[+d]).join('') : '-'; out.classList.toggle('empty', !typed); };
     const submit = (btn: Element) => {
-      if (over || !typed) return;
+      if (over) return;
+      // pressing ✔ on an empty box used to do nothing at all, which reads as a
+      // broken button rather than as "you have not answered yet"
+      if (!typed) { foot.textContent = 'আগে সংখ্যাটা লেখো, তারপর ঠিক আছে চাপো।'; chime('tick'); return; }
       if (+typed === rounds[ri]!.a) {
         correct(btn); foot.textContent = rounds[ri]!.fact ?? '';
         ri++; typed = ''; paint();
@@ -396,9 +406,10 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
     const track = el('span', 'mz-btrack'); const trackI = el('i'); track.append(trackI);
     const needBar = el('div', 'mz-needs');
     const needEls = need.map((n) => { const x = el('span', 'mz-need', n.label); needBar.append(x); return x; });
+    /** Which requirements are already covered, so a payout lands on the right chip. */
+    const covered = need.map(() => false);
     const grid = el('div', 'mz-pool');
     const doneBtn = el('button', 'mz-btn mz-primary mz-next', submit); doneBtn.type = 'button';
-    let metBefore = 0;
     const spent = () => [...chosen].reduce((s, i) => s + i.cost, 0);
     const repaint = () => {
       const s = spent();
@@ -406,11 +417,21 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
       trackI.style.width = `${Math.min(100, (s / budget) * 100)}%`;
       track.classList.toggle('over', s > budget);
       left.textContent = s > budget ? `${bn(s - budget)} ${unit} বেশি` : `বাকি ${bn(budget - s)} ${unit}`;
+      /**
+       * Each newly covered requirement is one step of progress and one payout,
+       * and the payout has to land on the requirement that was actually just
+       * covered. The old version counted how many were met and then burst on
+       * `needEls[count - 1]`, so covering the third requirement first threw the
+       * confetti and the +10 onto the first chip, which was still unlit.
+       */
       let met = 0;
-      need.forEach((n, i) => { const on = [...chosen].some((it) => it.tags.includes(n.tag)); needEls[i]!.classList.toggle('on', on); if (on) met++; });
-      // each newly covered requirement is one step of progress and one payout
-      while (met > metBefore) { metBefore++; done++; setProgress(); addPoints(STEP_BASE, needEls[metBefore - 1]!); chime('ok'); burstAt(needEls[metBefore - 1]!); }
-      if (met < metBefore) { metBefore = met; done = met; setProgress(); }
+      need.forEach((n, i) => {
+        const on = [...chosen].some((it) => it.tags.includes(n.tag));
+        needEls[i]!.classList.toggle('on', on);
+        if (on) met++;
+        if (on && !covered[i]) { covered[i] = true; done++; setProgress(); addPoints(STEP_BASE, needEls[i]!); chime('ok'); burstAt(needEls[i]!); }
+        else if (!on && covered[i]) { covered[i] = false; done = Math.max(0, done - 1); setProgress(); }
+      });
       doneBtn.disabled = !(met === need.length && s <= budget);
       doneBtn.textContent = met < need.length ? `আরও ${bn(need.length - met)}টি বাকি` : s > budget ? `${bn(s - budget)} ${unit} কমাতে হবে` : submit;
     };

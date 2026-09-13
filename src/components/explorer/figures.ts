@@ -50,14 +50,14 @@ const ball = (g: Group, c: string, r: number, x = 0, y = 0, z = 0) =>
 const box = (g: Group, c: string, w: number, h: number, d: number, x = 0, y = 0, z = 0, rz = 0) =>
   put(g, new Mesh(new BoxGeometry(w, h, d), std(c)), x, y, z, 0, 0, rz);
 const rod = (g: Group, c: string, r: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
-  put(g, new Mesh(new CylinderGeometry(r, r, h, 14), std(c)), x, y, z, rx, 0, rz);
+  put(g, new Mesh(new CylinderGeometry(r, r, h, 20), std(c)), x, y, z, rx, 0, rz);
 /** A tapered rod: a trunk, a branch, a stalk. Nothing in nature is a cylinder. */
 const taper = (g: Group, c: string, rTop: number, rBot: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
-  put(g, new Mesh(new CylinderGeometry(rTop, rBot, h, 12), std(c)), x, y, z, rx, 0, rz);
+  put(g, new Mesh(new CylinderGeometry(rTop, rBot, h, 20), std(c)), x, y, z, rx, 0, rz);
 const cone = (g: Group, c: string, r: number, h: number, x = 0, y = 0, z = 0, rz = 0) =>
-  put(g, new Mesh(new ConeGeometry(r, h, 12), std(c)), x, y, z, 0, 0, rz);
+  put(g, new Mesh(new ConeGeometry(r, h, 20), std(c)), x, y, z, 0, 0, rz);
 const disc = (g: Group, c: string, r: number, x = 0, y = 0, z = 0, rx = -Math.PI / 2) =>
-  put(g, new Mesh(new CircleGeometry(r, 24), std(c, { side: DoubleSide })), x, y, z, rx);
+  put(g, new Mesh(new CircleGeometry(r, 32), std(c, { side: DoubleSide })), x, y, z, rx);
 
 /* ---------- trees and plants ---------- */
 /**
@@ -84,7 +84,7 @@ const broadleaf = (crown: string, trunk = '#7a4f2a', h = 0.55, spread = 0.42, se
   // Trunk: thick at the root, thin at the fork, leaning slightly off vertical.
   taper(g, trunk, 0.042, 0.075, h, 0, h / 2, 0, lean);
   // A flare where it meets the ground, which is what stops it looking pushed in.
-  put(g, new Mesh(new CylinderGeometry(0.075, 0.12, 0.09, 12), std(bark.clone().multiplyScalar(0.88))), 0, 0.045, 0);
+  put(g, new Mesh(new CylinderGeometry(0.075, 0.12, 0.09, 20), std(bark.clone().multiplyScalar(0.88))), 0, 0.045, 0);
 
   // Three branches out of the fork, each carrying its own clump of crown.
   const forkY = h * 0.94;
@@ -93,7 +93,7 @@ const broadleaf = (crown: string, trunk = '#7a4f2a', h = 0.55, spread = 0.42, se
     const a = (i / arms) * Math.PI * 2 + r() * 0.9;
     const len = spread * (0.62 + r() * 0.3);
     const tilt = 0.5 + r() * 0.25;
-    const br = new Mesh(new CylinderGeometry(0.016, 0.036, len, 8), std(bark.clone().multiplyScalar(0.94)));
+    const br = new Mesh(new CylinderGeometry(0.016, 0.036, len, 14), std(bark.clone().multiplyScalar(0.94)));
     br.position.set(Math.cos(a) * len * 0.3, forkY + len * 0.34, Math.sin(a) * len * 0.3);
     br.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
     g.add(br);
@@ -142,7 +142,7 @@ const palm = (leaf: string, trunk = '#8a6a44', h = 0.85, seed = 5): Figure => (g
   for (let i = 0; i < segs; i++) {
     const f = i / segs;
     const sr = 0.062 - f * 0.022;
-    const m = new Mesh(new CylinderGeometry(sr * 0.94, sr, h / segs + 0.012, 12), std(bark.clone().offsetHSL(0, 0, (i % 2 ? 0.03 : -0.02))));
+    const m = new Mesh(new CylinderGeometry(sr * 0.94, sr, h / segs + 0.012, 20), std(bark.clone().offsetHSL(0, 0, (i % 2 ? 0.03 : -0.02))));
     m.position.set(lean * f * f * 2.2, h * (f + 0.5 / segs), 0);
     m.rotation.z = -lean * f;
     g.add(m);
@@ -191,12 +191,12 @@ const culms = (stem: string, leaf: string, seed = 9): Figure => (g) => {
     for (let k = 0; k < joints; k++) {
       const f = k / joints;
       const sy = h * (f + 0.5 / joints);
-      const sec = new Mesh(new CylinderGeometry(0.019, 0.023, h / joints - 0.012, 10), std(col));
+      const sec = new Mesh(new CylinderGeometry(0.019, 0.023, h / joints - 0.012, 16), std(col));
       sec.position.set(x + lean * f * f, sy, z);
       sec.rotation.z = -lean * f * 0.8;
       g.add(sec);
       // the node itself
-      const node = new Mesh(new CylinderGeometry(0.026, 0.026, 0.014, 10), std(col.clone().offsetHSL(0, 0, -0.06)));
+      const node = new Mesh(new CylinderGeometry(0.026, 0.026, 0.014, 16), std(col.clone().offsetHSL(0, 0, -0.06)));
       node.position.set(x + lean * f * f, h * (k + 1) / joints, z);
       g.add(node);
       // a pair of blades off the upper joints, drooping outward
@@ -216,17 +216,17 @@ const lily: Figure = (g) => {
   disc(g, '#2f6b3f', 0.42, 0, 0.02);
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
-    put(g, new Mesh(new SphereGeometry(0.08, 8, 6), std('#f4f6f8')), Math.cos(a) * 0.12, 0.1, Math.sin(a) * 0.12).scale.set(1, 0.5, 0.45);
+    put(g, new Mesh(new SphereGeometry(0.08, 16, 12), std('#f4f6f8')), Math.cos(a) * 0.12, 0.1, Math.sin(a) * 0.12).scale.set(1, 0.5, 0.45);
   }
   ball(g, '#f0b429', 0.06, 0, 0.13);
 };
 /** A low leafy herb in a pot, for the medicinal and kitchen plants. */
 const herb = (leaf: string, pot = '#a8643c'): Figure => (g) => {
-  const p = put(g, new Mesh(new CylinderGeometry(0.2, 0.15, 0.22, 12), std(pot)), 0, 0.11);
+  const p = put(g, new Mesh(new CylinderGeometry(0.2, 0.15, 0.22, 20), std(pot)), 0, 0.11);
   void p;
   for (let i = 0; i < 7; i++) {
     const a = i * 0.9, r = 0.1 + (i % 3) * 0.05;
-    const l = new Mesh(new SphereGeometry(0.1, 10, 8), std(leaf));
+    const l = new Mesh(new SphereGeometry(0.1, 20, 14), std(leaf));
     l.position.set(Math.cos(a) * r, 0.28 + (i % 3) * 0.08, Math.sin(a) * r);
     l.scale.set(1.5, 0.5, 0.9); l.rotation.y = a;
     g.add(l);
@@ -237,7 +237,7 @@ const herb = (leaf: string, pot = '#a8643c'): Figure => (g) => {
 /** A four-legged body with a head and tail; stripes or spots are optional. */
 const quadruped = (body: string, opts: { stripe?: string; big?: boolean; trunk?: boolean; tail?: number } = {}): Figure => (g) => {
   const s = opts.big ? 1.25 : 1;
-  const b = put(g, new Mesh(new SphereGeometry(0.26 * s, 16, 12), std(body)), 0, 0.34 * s);
+  const b = put(g, new Mesh(new SphereGeometry(0.26 * s, 26, 18), std(body)), 0, 0.34 * s);
   b.scale.set(1.55, 0.82, 0.86);
   ball(g, body, 0.17 * s, 0.38 * s, 0.44 * s);
   for (const [dx, dz] of [[0.24, 0.13], [0.24, -0.13], [-0.24, 0.13], [-0.24, -0.13]] as const)
@@ -252,7 +252,7 @@ const quadruped = (body: string, opts: { stripe?: string; big?: boolean; trunk?:
 };
 /** A streamlined body with fins and a forked tail. */
 const fish = (body: string, fin?: string): Figure => (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.3, 16, 12), std(body)), 0, 0.32);
+  const b = put(g, new Mesh(new SphereGeometry(0.3, 26, 18), std(body)), 0, 0.32);
   b.scale.set(1.5, 0.72, 0.5);
   const t = put(g, new Mesh(new ConeGeometry(0.2, 0.28, 3), std(fin ?? body)), -0.5, 0.32, 0, 0, 0, Math.PI / 2);
   t.scale.set(1, 1, 0.3);
@@ -261,12 +261,12 @@ const fish = (body: string, fin?: string): Figure => (g) => {
 };
 /** A perched bird: round body, beak, two wings, a tail. */
 const bird = (body: string, wing?: string, beak = '#f0b429'): Figure => (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.2, 14, 12), std(body)), 0, 0.4);
+  const b = put(g, new Mesh(new SphereGeometry(0.2, 24, 18), std(body)), 0, 0.4);
   b.scale.set(1.15, 1, 0.9);
   ball(g, body, 0.12, 0.16, 0.58);
   cone(g, beak, 0.045, 0.14, 0.31, 0.58, 0, -Math.PI / 2);
   for (const s of [1, -1]) {
-    const w = put(g, new Mesh(new SphereGeometry(0.14, 10, 8), std(wing ?? body)), 0, 0.42, s * 0.17);
+    const w = put(g, new Mesh(new SphereGeometry(0.14, 20, 14), std(wing ?? body)), 0, 0.42, s * 0.17);
     w.scale.set(1.2, 0.35, 0.6);
   }
   put(g, new Mesh(new ConeGeometry(0.09, 0.26, 4), std(wing ?? body)), -0.26, 0.38, 0, 0, 0, Math.PI / 2).scale.set(1, 1, 0.35);
@@ -274,7 +274,7 @@ const bird = (body: string, wing?: string, beak = '#f0b429'): Figure => (g) => {
 };
 /** A long low body with a ridged back and a wide snout. */
 const croc: Figure = (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.22, 14, 10), std('#4b5c3a')), 0, 0.16);
+  const b = put(g, new Mesh(new SphereGeometry(0.22, 24, 16), std('#4b5c3a')), 0, 0.16);
   b.scale.set(2.1, 0.55, 0.8);
   const s = put(g, new Mesh(new BoxGeometry(0.3, 0.1, 0.16), std('#4b5c3a')), 0.5, 0.15, 0);
   void s;
@@ -285,7 +285,7 @@ const croc: Figure = (g) => {
 };
 /** A shell with a head and four stumps. */
 const turtle: Figure = (g) => {
-  const sh = put(g, new Mesh(new SphereGeometry(0.28, 16, 10), std('#5d6b3e')), 0, 0.2);
+  const sh = put(g, new Mesh(new SphereGeometry(0.28, 26, 16), std('#5d6b3e')), 0, 0.2);
   sh.scale.set(1, 0.55, 0.85);
   ball(g, '#7d8a55', 0.1, 0.3, 0.2, 0);
   for (const [dx, dz] of [[0.18, 0.2], [0.18, -0.2], [-0.2, 0.2], [-0.2, -0.2]] as const)
@@ -295,13 +295,13 @@ const turtle: Figure = (g) => {
 const bee: Figure = (g) => {
   for (let i = 0; i < 3; i++) ball(g, i % 2 ? '#2b2b2b' : '#f0b429', 0.1 - i * 0.012, -i * 0.12, 0.4);
   for (const s of [1, -1]) {
-    const w = put(g, new Mesh(new CircleGeometry(0.13, 12), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.55, side: DoubleSide })), -0.02, 0.52, s * 0.1);
+    const w = put(g, new Mesh(new CircleGeometry(0.13, 20), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.55, side: DoubleSide })), -0.02, 0.52, s * 0.1);
     w.rotation.set(-0.5, 0, s * 0.4);
   }
 };
 /** A dolphin-like body for the river dolphin: no dorsal fin worth speaking of. */
 const dolphin: Figure = (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.26, 16, 12), std('#8e9bab')), 0, 0.34);
+  const b = put(g, new Mesh(new SphereGeometry(0.26, 26, 18), std('#8e9bab')), 0, 0.34);
   b.scale.set(1.9, 0.7, 0.66);
   cone(g, '#8e9bab', 0.07, 0.26, 0.52, 0.34, 0, -Math.PI / 2);
   const t = put(g, new Mesh(new ConeGeometry(0.16, 0.2, 3), std('#8e9bab')), -0.5, 0.34, 0, 0, 0, Math.PI / 2);
@@ -321,10 +321,10 @@ const monkey: Figure = (g) => {
 /* ---------- things, tools, objects ---------- */
 /** A shallow bowl holding loose powder, for spices. */
 const bowl = (powder: string, vessel = '#cfd6de'): Figure => (g) => {
-  const b = put(g, new Mesh(new CylinderGeometry(0.3, 0.2, 0.16, 18, 1, true), std(vessel, { side: DoubleSide })), 0, 0.1);
+  const b = put(g, new Mesh(new CylinderGeometry(0.3, 0.2, 0.16, 26, 1, true), std(vessel, { side: DoubleSide })), 0, 0.1);
   void b;
   disc(g, vessel, 0.2, 0, 0.02);
-  const heap = put(g, new Mesh(new SphereGeometry(0.26, 16, 10), std(powder, { roughness: 1 })), 0, 0.17);
+  const heap = put(g, new Mesh(new SphereGeometry(0.26, 26, 16), std(powder, { roughness: 1 })), 0, 0.17);
   heap.scale.set(1, 0.45, 1);
 };
 /** A few dried sticks or pods lying together. */
@@ -345,16 +345,16 @@ const seeds = (color: string): Figure => (g) => {
 };
 /** A curved pod tapering at both ends: the chilli. */
 const chilli = (color: string): Figure => (g) => {
-  const c = put(g, new Mesh(new ConeGeometry(0.09, 0.52, 10), std(color)), 0, 0.3, 0, 0, 0, 3.0);
+  const c = put(g, new Mesh(new ConeGeometry(0.09, 0.52, 16), std(color)), 0, 0.3, 0, 0, 0, 3.0);
   c.scale.set(1, 1, 0.85);
   rod(g, '#4b7a3a', 0.02, 0.12, 0.04, 0.56);
 };
 /** A lidded cooking pot on a flame. */
 const pot = (body = '#8e99a6', lid = '#b6c0cb'): Figure => (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.3, 0.26, 0.3, 20), std(body)), 0, 0.26);
-  put(g, new Mesh(new CylinderGeometry(0.32, 0.32, 0.04, 20), std(lid)), 0, 0.43);
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.26, 0.3, 28), std(body)), 0, 0.26);
+  put(g, new Mesh(new CylinderGeometry(0.32, 0.32, 0.04, 28), std(lid)), 0, 0.43);
   ball(g, lid, 0.05, 0, 0.47);
-  for (const s of [1, -1]) put(g, new Mesh(new TorusGeometry(0.07, 0.018, 6, 12), std(lid)), s * 0.33, 0.3, 0, 0, Math.PI / 2);
+  for (const s of [1, -1]) put(g, new Mesh(new TorusGeometry(0.07, 0.018, 10, 20), std(lid)), s * 0.33, 0.3, 0, 0, Math.PI / 2);
   for (let i = 0; i < 5; i++) {
     const f = put(g, new Mesh(new ConeGeometry(0.06, 0.16, 6), glow(i % 2 ? '#f0b429' : '#e06a2b', 0.75)), (i - 2) * 0.07, 0.07, 0);
     void f;
@@ -362,13 +362,13 @@ const pot = (body = '#8e99a6', lid = '#b6c0cb'): Figure => (g) => {
 };
 /** A glass with a liquid line. */
 const glass = (liquid = '#79b6e8'): Figure => (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.19, 0.15, 0.44, 18, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide, roughness: 0.2 })), 0, 0.24);
-  put(g, new Mesh(new CylinderGeometry(0.17, 0.15, 0.26, 18), std(liquid, { transparent: true, opacity: 0.85 })), 0, 0.15);
+  put(g, new Mesh(new CylinderGeometry(0.19, 0.15, 0.44, 26, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide, roughness: 0.2 })), 0, 0.24);
+  put(g, new Mesh(new CylinderGeometry(0.17, 0.15, 0.26, 26), std(liquid, { transparent: true, opacity: 0.85 })), 0, 0.15);
 };
 /** A bowl of rice, and by shape a plate of any staple. */
 const riceBowl: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.3, 0.18, 0.22, 20), std('#e6ebf1')), 0, 0.13);
-  const h = put(g, new Mesh(new SphereGeometry(0.27, 16, 10), std('#fbfbf6')), 0, 0.26);
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.18, 0.22, 28), std('#e6ebf1')), 0, 0.13);
+  const h = put(g, new Mesh(new SphereGeometry(0.27, 26, 16), std('#fbfbf6')), 0, 0.26);
   h.scale.set(1, 0.5, 1);
 };
 /** A rounded fruit with a small stalk. */
@@ -395,7 +395,7 @@ const crystal = (color: string): Figure => (g) => {
 };
 /** A stack of coins. */
 const coinStack = (color = '#d9b44a', n = 5): Figure => (g) => {
-  for (let i = 0; i < n; i++) put(g, new Mesh(new CylinderGeometry(0.2, 0.2, 0.05, 20), std(color, { metalness: 0.5, roughness: 0.35 })), 0, 0.03 + i * 0.055);
+  for (let i = 0; i < n; i++) put(g, new Mesh(new CylinderGeometry(0.2, 0.2, 0.05, 28), std(color, { metalness: 0.5, roughness: 0.35 })), 0, 0.03 + i * 0.055);
 };
 /** A columned building front, for the bank. */
 const building = (wall = '#d7dee6', roof = '#8fa0b4'): Figure => (g) => {
@@ -420,22 +420,22 @@ const phone = (body = '#222a33', screen = '#9fd8ff'): Figure => (g) => {
 /** A padlock. */
 const lock = (body = '#f0b429'): Figure => (g) => {
   box(g, body, 0.36, 0.3, 0.22, 0, 0.2);
-  put(g, new Mesh(new TorusGeometry(0.13, 0.035, 8, 16, Math.PI), std('#b9c3ce')), 0, 0.36, 0);
+  put(g, new Mesh(new TorusGeometry(0.13, 0.035, 12, 24, Math.PI), std('#b9c3ce')), 0, 0.36, 0);
   ball(g, '#5b452a', 0.04, 0, 0.2, 0.12);
 };
 /** An upright person: a rounded head and a simple torso. */
 const person = (coat: string, skin = '#c98f5f'): Figure => (g) => {
   ball(g, skin, 0.16, 0, 0.72);
-  const t = put(g, new Mesh(new CylinderGeometry(0.2, 0.26, 0.5, 14), std(coat)), 0, 0.32);
+  const t = put(g, new Mesh(new CylinderGeometry(0.2, 0.26, 0.5, 20), std(coat)), 0, 0.32);
   void t;
   for (const s of [1, -1]) rod(g, coat, 0.05, 0.36, s * 0.24, 0.36, 0, s * 0.25);
   ball(g, '#2a2a2a', 0.17, 0, 0.78).scale.set(1, 0.6, 1);
 };
 /** A thermometer: a tube with a bulb. */
 const thermometer: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.05, 0.05, 0.6, 12), std('#e8eef5', { transparent: true, opacity: 0.8 })), 0, 0.4);
+  put(g, new Mesh(new CylinderGeometry(0.05, 0.05, 0.6, 20), std('#e8eef5', { transparent: true, opacity: 0.8 })), 0, 0.4);
   ball(g, '#c0392b', 0.1, 0, 0.1);
-  put(g, new Mesh(new CylinderGeometry(0.025, 0.025, 0.4, 8), std('#c0392b')), 0, 0.3);
+  put(g, new Mesh(new CylinderGeometry(0.025, 0.025, 0.4, 14), std('#c0392b')), 0, 0.3);
 };
 /** A two-pan balance. */
 const balance: Figure = (g) => {
@@ -443,7 +443,7 @@ const balance: Figure = (g) => {
   box(g, '#8a94a0', 0.7, 0.035, 0.035, 0, 0.62);
   for (const s of [1, -1]) {
     rod(g, '#8a94a0', 0.008, 0.18, s * 0.33, 0.53);
-    put(g, new Mesh(new CylinderGeometry(0.12, 0.09, 0.05, 14), std('#b9c3ce')), s * 0.33, 0.44);
+    put(g, new Mesh(new CylinderGeometry(0.12, 0.09, 0.05, 20), std('#b9c3ce')), s * 0.33, 0.44);
   }
 };
 /** A ruler laid flat with tick marks. */
@@ -458,7 +458,7 @@ const microscope: Figure = (g) => {
   box(g, '#4c5867', 0.3, 0.05, 0.22, 0.04, 0.3);
   const tube = rod(g, '#2b333d', 0.06, 0.34, 0.1, 0.56, 0, 0.25);
   void tube;
-  put(g, new Mesh(new CylinderGeometry(0.045, 0.06, 0.1, 12), std('#8a94a0')), 0.14, 0.38);
+  put(g, new Mesh(new CylinderGeometry(0.045, 0.06, 0.1, 20), std('#8a94a0')), 0.14, 0.38);
 };
 /** A telescope on a tripod. */
 const telescope: Figure = (g) => {
@@ -466,13 +466,13 @@ const telescope: Figure = (g) => {
     const a = (i / 3) * Math.PI * 2;
     rod(g, '#5b4a3a', 0.022, 0.5, Math.cos(a) * 0.13, 0.24, Math.sin(a) * 0.13, Math.cos(a) * 0.5, Math.sin(a) * 0.5);
   }
-  const t = put(g, new Mesh(new CylinderGeometry(0.09, 0.06, 0.56, 14), std('#2f3a46')), 0, 0.62, 0, 0, 0, -0.7);
+  const t = put(g, new Mesh(new CylinderGeometry(0.09, 0.06, 0.56, 20), std('#2f3a46')), 0, 0.62, 0, 0, 0, -0.7);
   void t;
-  put(g, new Mesh(new CylinderGeometry(0.1, 0.1, 0.05, 14), std('#d9b44a')), 0.19, 0.78, 0, 0, 0, -0.7);
+  put(g, new Mesh(new CylinderGeometry(0.1, 0.1, 0.05, 20), std('#d9b44a')), 0.19, 0.78, 0, 0, 0, -0.7);
 };
 /** A compass: a dial with a needle. */
 const compass: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.28, 0.28, 0.07, 24), std('#c9a15e', { metalness: 0.4 })), 0, 0.06);
+  put(g, new Mesh(new CylinderGeometry(0.28, 0.28, 0.07, 32), std('#c9a15e', { metalness: 0.4 })), 0, 0.06);
   disc(g, '#f4f8fc', 0.24, 0, 0.1);
   const n = box(g, '#c0392b', 0.03, 0.01, 0.22, 0, 0.11, 0.05);
   n.rotation.y = 0.5;
@@ -481,7 +481,7 @@ const compass: Figure = (g) => {
 };
 /** A clock face with two hands. */
 const clockFace: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.32, 0.32, 0.08, 26), std('#e8eef5')), 0, 0.34, 0, Math.PI / 2);
+  put(g, new Mesh(new CylinderGeometry(0.32, 0.32, 0.08, 32), std('#e8eef5')), 0, 0.34, 0, Math.PI / 2);
   disc(g, '#fbfdff', 0.27, 0, 0.34, 0.045, 0);
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
@@ -494,11 +494,11 @@ const clockFace: Figure = (g) => {
 const stopwatch: Figure = (g) => {
   clockFace(g);
   rod(g, '#8a94a0', 0.04, 0.1, 0, 0.71);
-  put(g, new Mesh(new TorusGeometry(0.06, 0.02, 6, 12), std('#8a94a0')), 0, 0.79, 0, Math.PI / 2);
+  put(g, new Mesh(new TorusGeometry(0.06, 0.02, 10, 20), std('#8a94a0')), 0, 0.79, 0, Math.PI / 2);
 };
 /** A barometer: a dial on a wall plate. */
 const barometer: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.3, 0.3, 0.1, 24), std('#5b4a3a')), 0, 0.34, 0, Math.PI / 2);
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.3, 0.1, 32), std('#5b4a3a')), 0, 0.34, 0, Math.PI / 2);
   disc(g, '#f0e7d2', 0.24, 0, 0.34, 0.055, 0);
   box(g, '#2f3a46', 0.012, 0.18, 0.012, 0.03, 0.4, 0.07, -0.5);
 };
@@ -532,27 +532,27 @@ const tap: Figure = (g) => {
   box(g, '#b9c3ce', 0.3, 0.06, 0.06, -0.02, 0.78);
   rod(g, '#b9c3ce', 0.035, 0.12, 0.12, 0.71);
   for (let i = 0; i < 4; i++) ball(g, '#79b6e8', 0.035, 0.12, 0.56 - i * 0.12, 0);
-  const h = put(g, new Mesh(new SphereGeometry(0.2, 14, 10), std('#c98f5f')), 0.12, 0.2);
+  const h = put(g, new Mesh(new SphereGeometry(0.2, 24, 16), std('#c98f5f')), 0.12, 0.2);
   h.scale.set(1.2, 0.4, 0.9);
 };
 /** A gear wheel. */
 const gear = (color = '#8a94a0', r = 0.28): Figure => (g) => {
-  put(g, new Mesh(new CylinderGeometry(r, r, 0.09, 20), std(color, { metalness: 0.35 })), 0, 0.34, 0, Math.PI / 2);
+  put(g, new Mesh(new CylinderGeometry(r, r, 0.09, 28), std(color, { metalness: 0.35 })), 0, 0.34, 0, Math.PI / 2);
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
     box(g, color, 0.1, 0.1, 0.09, Math.cos(a) * (r + 0.05), 0.34 + Math.sin(a) * (r + 0.05), 0, a);
   }
-  put(g, new Mesh(new CylinderGeometry(0.07, 0.07, 0.11, 12), std('#39414b')), 0, 0.34, 0, Math.PI / 2);
+  put(g, new Mesh(new CylinderGeometry(0.07, 0.07, 0.11, 20), std('#39414b')), 0, 0.34, 0, Math.PI / 2);
 };
 /** A lit bulb. */
 const bulb: Figure = (g) => {
   ball(g, '#ffe9a8', 0.22, 0, 0.5);
-  put(g, new Mesh(new SphereGeometry(0.3, 12, 10), glow('#f0b429', 0.22)), 0, 0.5);
-  put(g, new Mesh(new CylinderGeometry(0.1, 0.12, 0.16, 12), std('#9aa5b1', { metalness: 0.5 })), 0, 0.24);
+  put(g, new Mesh(new SphereGeometry(0.3, 20, 16), glow('#f0b429', 0.22)), 0, 0.5);
+  put(g, new Mesh(new CylinderGeometry(0.1, 0.12, 0.16, 20), std('#9aa5b1', { metalness: 0.5 })), 0, 0.24);
 };
 /** A wheel: the first machine. */
 const wheel: Figure = (g) => {
-  put(g, new Mesh(new TorusGeometry(0.3, 0.06, 10, 24), std('#7a5a3a')), 0, 0.36, 0, Math.PI / 2);
+  put(g, new Mesh(new TorusGeometry(0.3, 0.06, 12, 32), std('#7a5a3a')), 0, 0.36, 0, Math.PI / 2);
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI;
     box(g, '#a8763f', 0.03, 0.58, 0.03, 0, 0.36, 0, a);
@@ -583,9 +583,9 @@ const robot: Figure = (g) => {
 };
 /** A flask. */
 const flask = (liquid = '#7ac8a0'): Figure => (g) => {
-  put(g, new Mesh(new ConeGeometry(0.28, 0.44, 16, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide })), 0, 0.24);
-  put(g, new Mesh(new CylinderGeometry(0.07, 0.07, 0.2, 12, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide })), 0, 0.55);
-  put(g, new Mesh(new ConeGeometry(0.2, 0.2, 16), std(liquid, { transparent: true, opacity: 0.9 })), 0, 0.12);
+  put(g, new Mesh(new ConeGeometry(0.28, 0.44, 24, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide })), 0, 0.24);
+  put(g, new Mesh(new CylinderGeometry(0.07, 0.07, 0.2, 20, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide })), 0, 0.55);
+  put(g, new Mesh(new ConeGeometry(0.2, 0.2, 24), std(liquid, { transparent: true, opacity: 0.9 })), 0, 0.12);
 };
 /** A cloud with rain, for a wet habitat. */
 const cloudDrop: Figure = (g) => {
@@ -601,11 +601,11 @@ const shrub = (leaf: string): Figure => (g) => {
 };
 /** Soil with something growing out: decomposers and roots. */
 const soil = (): Figure => (g) => {
-  const s = put(g, new Mesh(new CylinderGeometry(0.34, 0.3, 0.18, 18), std('#6b5233')), 0, 0.09);
+  const s = put(g, new Mesh(new CylinderGeometry(0.34, 0.3, 0.18, 26), std('#6b5233')), 0, 0.09);
   void s;
   for (let i = 0; i < 5; i++) {
     const a = i * 1.4;
-    const m = put(g, new Mesh(new SphereGeometry(0.07, 10, 8), std('#c9b98f')), Math.cos(a) * 0.14, 0.2, Math.sin(a) * 0.14);
+    const m = put(g, new Mesh(new SphereGeometry(0.07, 20, 14), std('#c9b98f')), Math.cos(a) * 0.14, 0.2, Math.sin(a) * 0.14);
     m.scale.set(1, 0.55, 1);
     rod(g, '#e8e0cc', 0.012, 0.08, Math.cos(a) * 0.14, 0.15, Math.sin(a) * 0.14);
   }
@@ -613,7 +613,7 @@ const soil = (): Figure => (g) => {
 /** A sun disc with rays. */
 const sunDisc: Figure = (g) => {
   ball(g, '#f5b731', 0.24, 0, 0.5);
-  put(g, new Mesh(new SphereGeometry(0.33, 14, 12), glow('#f5b731', 0.25)), 0, 0.5);
+  put(g, new Mesh(new SphereGeometry(0.33, 24, 18), glow('#f5b731', 0.25)), 0, 0.5);
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
     box(g, '#f5b731', 0.04, 0.14, 0.04, Math.cos(a) * 0.36, 0.5 + Math.sin(a) * 0.36, 0, a);
@@ -668,11 +668,11 @@ const faceFig = (opts: { brow?: 'flat' | 'angry' | 'sad' | 'up'; eye?: 'open' | 
     if (brow === 'up') b.position.y = 0.71;
   }
   const mouth = opts.mouth ?? 'smile';
-  if (mouth === 'o') { put(g, new Mesh(new TorusGeometry(0.07, 0.025, 8, 14), std('#8a3b3b')), 0, 0.35, 0.32); }
+  if (mouth === 'o') { put(g, new Mesh(new TorusGeometry(0.07, 0.025, 12, 22), std('#8a3b3b')), 0, 0.35, 0.32); }
   else if (mouth === 'flat') box(g, '#8a3b3b', 0.18, 0.028, 0.02, 0, 0.35, 0.33);
   else {
     const w = mouth === 'small' ? 0.1 : 0.15;
-    const m = put(g, new Mesh(new TorusGeometry(w, 0.028, 8, 14, Math.PI), std('#8a3b3b')), 0, 0.37, 0.31);
+    const m = put(g, new Mesh(new TorusGeometry(w, 0.028, 12, 22, Math.PI), std('#8a3b3b')), 0, 0.37, 0.31);
     m.rotation.z = mouth === 'frown' ? 0 : Math.PI;
     if (mouth === 'frown') m.position.y = 0.31;
   }
@@ -691,7 +691,7 @@ const mangrove: Figure = (g) => {
 };
 /** A beach: sand, a wave line, a palm. */
 const beach: Figure = (g) => {
-  const sand = put(g, new Mesh(new CylinderGeometry(0.6, 0.6, 0.08, 24), std('#e6d2a8')), 0, 0.04);
+  const sand = put(g, new Mesh(new CylinderGeometry(0.6, 0.6, 0.08, 32), std('#e6d2a8')), 0, 0.04);
   void sand;
   disc(g, '#3f86b8', 0.62, 0, 0.09, -Math.PI / 2).scale.set(1, 0.45, 1);
   rod(g, '#8a6a44', 0.04, 0.55, -0.2, 0.34, 0.1, 0.18);
@@ -706,7 +706,7 @@ const beach: Figure = (g) => {
 /** A small island ringed by water. */
 const island: Figure = (g) => {
   disc(g, '#3f86b8', 0.62, 0, 0.02);
-  put(g, new Mesh(new SphereGeometry(0.3, 16, 10), std('#e6d2a8')), 0, 0.06).scale.set(1, 0.4, 1);
+  put(g, new Mesh(new SphereGeometry(0.3, 26, 16), std('#e6d2a8')), 0, 0.06).scale.set(1, 0.4, 1);
   ball(g, '#4b8f4f', 0.14, 0.06, 0.2);
   ball(g, '#e07a8a', 0.07, -0.16, 0.12, 0.12);
 };
@@ -756,27 +756,27 @@ const bridge: Figure = (g) => {
 /* ---------- dishes ---------- */
 /** A plate with a mound and a side. */
 const dish = (main: string, side: string, extra?: string): Figure => (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.4, 0.34, 0.06, 24), std('#f4f7fa')), 0, 0.03);
-  const m = put(g, new Mesh(new SphereGeometry(0.22, 14, 10), std(main)), -0.08, 0.12);
+  put(g, new Mesh(new CylinderGeometry(0.4, 0.34, 0.06, 32), std('#f4f7fa')), 0, 0.03);
+  const m = put(g, new Mesh(new SphereGeometry(0.22, 24, 16), std(main)), -0.08, 0.12);
   m.scale.set(1, 0.55, 1);
-  const s2 = put(g, new Mesh(new SphereGeometry(0.13, 12, 8), std(side)), 0.18, 0.1, 0.05);
+  const s2 = put(g, new Mesh(new SphereGeometry(0.13, 20, 14), std(side)), 0.18, 0.1, 0.05);
   s2.scale.set(1, 0.6, 1);
   if (extra) ball(g, extra, 0.07, 0.12, 0.12, -0.16);
 };
 /** A bowl of something thick. */
 const bowlDish = (color: string): Figure => (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.3, 0.2, 0.22, 20), std('#eef2f6')), 0, 0.12);
-  const h = put(g, new Mesh(new SphereGeometry(0.26, 14, 10), std(color)), 0, 0.24);
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.2, 0.22, 28), std('#eef2f6')), 0, 0.12);
+  const h = put(g, new Mesh(new SphereGeometry(0.26, 24, 16), std(color)), 0, 0.24);
   h.scale.set(1, 0.45, 1);
 };
 /** A stack of flat cakes. */
 const pitha: Figure = (g) => {
-  for (let i = 0; i < 3; i++) put(g, new Mesh(new CylinderGeometry(0.24 - i * 0.02, 0.24 - i * 0.02, 0.07, 18), std(i % 2 ? '#f0e2c8' : '#e6d2a8')), 0, 0.05 + i * 0.075);
+  for (let i = 0; i < 3; i++) put(g, new Mesh(new CylinderGeometry(0.24 - i * 0.02, 0.24 - i * 0.02, 0.07, 26), std(i % 2 ? '#f0e2c8' : '#e6d2a8')), 0, 0.05 + i * 0.075);
   ball(g, '#c08a3a', 0.05, 0, 0.3);
 };
 /** A round sweet in syrup. */
 const sweet: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.3, 0.26, 0.1, 20), std('#e8eef5')), 0, 0.05);
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.26, 0.1, 28), std('#e8eef5')), 0, 0.05);
   for (let i = 0; i < 3; i++) {
     const a = i * 2.1;
     ball(g, '#b5762f', 0.12, Math.cos(a) * 0.11, 0.15, Math.sin(a) * 0.11);
@@ -791,16 +791,16 @@ const rock = (color = '#7d848c'): Figure => (g) => {
 };
 /** A shell pressed into stone. */
 const fossil: Figure = (g) => {
-  const slab = put(g, new Mesh(new CylinderGeometry(0.34, 0.34, 0.12, 8), std('#a89a86')), 0, 0.06);
+  const slab = put(g, new Mesh(new CylinderGeometry(0.34, 0.34, 0.12, 14), std('#a89a86')), 0, 0.06);
   void slab;
   for (let i = 0; i < 5; i++) {
-    const t = put(g, new Mesh(new TorusGeometry(0.06 + i * 0.04, 0.016, 6, 18, Math.PI * 1.5), std('#6b6257')), 0, 0.13, 0, -Math.PI / 2);
+    const t = put(g, new Mesh(new TorusGeometry(0.06 + i * 0.04, 0.016, 10, 26, Math.PI * 1.5), std('#6b6257')), 0, 0.13, 0, -Math.PI / 2);
     t.rotation.z = i * 0.5;
   }
 };
 /** A long-necked dinosaur. */
 const dino: Figure = (g) => {
-  const b = put(g, new Mesh(new SphereGeometry(0.26, 14, 10), std('#5f7a4a')), 0, 0.34);
+  const b = put(g, new Mesh(new SphereGeometry(0.26, 24, 16), std('#5f7a4a')), 0, 0.34);
   b.scale.set(1.5, 0.9, 0.9);
   rod(g, '#5f7a4a', 0.05, 0.44, 0.3, 0.56, 0, -0.35);
   ball(g, '#5f7a4a', 0.09, 0.44, 0.76);
@@ -820,7 +820,7 @@ const iceberg: Figure = (g) => {
 const strata: Figure = (g) => {
   const cols = ['#6b5233', '#8a6a44', '#b09873', '#cbb894'];
   for (let i = 0; i < cols.length; i++)
-    put(g, new Mesh(new CylinderGeometry(0.34, 0.34, 0.12, 18), std(cols[i]!)), 0, 0.06 + i * 0.12);
+    put(g, new Mesh(new CylinderGeometry(0.34, 0.34, 0.12, 26), std(cols[i]!)), 0, 0.06 + i * 0.12);
 };
 /** A black lump and a dark drop: coal and oil. */
 const coalOil: Figure = (g) => {
@@ -835,7 +835,7 @@ const continents: Figure = (g) => {
   ball(g, '#3b6b8f', 0.32, 0, 0.36);
   for (let i = 0; i < 4; i++) {
     const a = i * 1.6;
-    const p = put(g, new Mesh(new SphereGeometry(0.14, 10, 8), std('#4f8f4a')), Math.cos(a) * 0.24, 0.36 + Math.sin(a) * 0.16, 0.2);
+    const p = put(g, new Mesh(new SphereGeometry(0.14, 20, 14), std('#4f8f4a')), Math.cos(a) * 0.24, 0.36 + Math.sin(a) * 0.16, 0.2);
     p.scale.set(1, 0.7, 0.4);
   }
 };
@@ -843,15 +843,15 @@ const continents: Figure = (g) => {
 /* ---------- safety and everyday ---------- */
 /** An open palm: touch, and saying no. */
 const palmHand = (color = '#e8b98e'): Figure => (g) => {
-  const p = put(g, new Mesh(new SphereGeometry(0.2, 14, 10), std(color)), 0, 0.34);
+  const p = put(g, new Mesh(new SphereGeometry(0.2, 24, 16), std(color)), 0, 0.34);
   p.scale.set(1, 1.15, 0.45);
-  for (let i = 0; i < 4; i++) put(g, new Mesh(new CylinderGeometry(0.035, 0.035, 0.2, 8), std(color)), (i - 1.5) * 0.09, 0.58, 0);
-  put(g, new Mesh(new CylinderGeometry(0.038, 0.038, 0.16, 8), std(color)), -0.2, 0.36, 0, 0, 0, 0.9);
+  for (let i = 0; i < 4; i++) put(g, new Mesh(new CylinderGeometry(0.035, 0.035, 0.2, 14), std(color)), (i - 1.5) * 0.09, 0.58, 0);
+  put(g, new Mesh(new CylinderGeometry(0.038, 0.038, 0.16, 14), std(color)), -0.2, 0.36, 0, 0, 0, 0.9);
 };
 /** A red octagon on a post. */
 const stopSign: Figure = (g) => {
   rod(g, '#8a94a0', 0.03, 0.5, 0, 0.25);
-  const s = put(g, new Mesh(new CylinderGeometry(0.26, 0.26, 0.05, 8), std('#c0392b')), 0, 0.62, 0, Math.PI / 2);
+  const s = put(g, new Mesh(new CylinderGeometry(0.26, 0.26, 0.05, 14), std('#c0392b')), 0, 0.62, 0, Math.PI / 2);
   s.rotation.z = Math.PI / 8;
   box(g, '#f8fbff', 0.26, 0.05, 0.02, 0, 0.62, 0.04);
 };
@@ -864,21 +864,21 @@ const crossing: Figure = (g) => {
 const flame: Figure = (g) => {
   for (let i = 0; i < 3; i++) {
     const c = ['#e8622b', '#f0a52b', '#f7d84a'][i]!;
-    const f = put(g, new Mesh(new ConeGeometry(0.2 - i * 0.05, 0.5 - i * 0.1, 10), std(c, { emissive: c, emissiveIntensity: 0.4 })), 0, 0.25 + i * 0.03);
+    const f = put(g, new Mesh(new ConeGeometry(0.2 - i * 0.05, 0.5 - i * 0.1, 16), std(c, { emissive: c, emissiveIntensity: 0.4 })), 0, 0.25 + i * 0.03);
     void f;
   }
 };
 /** A medicine bottle with a cap. */
 const medicine: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.17, 0.17, 0.4, 16), std('#c9603f', { transparent: true, opacity: 0.9 })), 0, 0.22);
-  put(g, new Mesh(new CylinderGeometry(0.12, 0.12, 0.1, 14), std('#e8eef5')), 0, 0.46);
+  put(g, new Mesh(new CylinderGeometry(0.17, 0.17, 0.4, 24), std('#c9603f', { transparent: true, opacity: 0.9 })), 0, 0.22);
+  put(g, new Mesh(new CylinderGeometry(0.12, 0.12, 0.1, 20), std('#e8eef5')), 0, 0.46);
   box(g, '#f8fbff', 0.2, 0.14, 0.02, 0, 0.24, 0.17);
 };
 /** Waves with a warning buoy. */
 const water: Figure = (g) => {
   disc(g, '#3b7a9e', 0.6, 0, 0.02);
   for (let i = 0; i < 3; i++) {
-    const w = put(g, new Mesh(new TorusGeometry(0.18 + i * 0.13, 0.02, 6, 22, Math.PI), std('#7fc2e0')), 0, 0.06, 0, -Math.PI / 2);
+    const w = put(g, new Mesh(new TorusGeometry(0.18 + i * 0.13, 0.02, 10, 28, Math.PI), std('#7fc2e0')), 0, 0.06, 0, -Math.PI / 2);
     void w;
   }
   ball(g, '#e8622b', 0.1, 0.05, 0.12);
@@ -892,19 +892,19 @@ const swatches: Figure = (g) => {
 const shirt = (color = '#3d6b8f'): Figure => (g) => {
   box(g, color, 0.42, 0.4, 0.08, 0, 0.32);
   for (const s of [1, -1]) box(g, color, 0.16, 0.12, 0.08, s * 0.28, 0.48, 0, s * 0.5);
-  put(g, new Mesh(new TorusGeometry(0.06, 0.014, 6, 14, Math.PI), std('#9aa5b1')), 0, 0.6, 0);
+  put(g, new Mesh(new TorusGeometry(0.06, 0.014, 10, 22, Math.PI), std('#9aa5b1')), 0, 0.6, 0);
 };
 /** A bus, for the words about vehicles. */
 const bus = (color = '#c8a24a'): Figure => (g) => {
   box(g, color, 0.8, 0.34, 0.34, 0, 0.3);
   box(g, '#9fd8ff', 0.6, 0.14, 0.36, 0.02, 0.38);
-  for (const dx of [-0.25, 0.25]) put(g, new Mesh(new CylinderGeometry(0.11, 0.11, 0.36, 14), std('#2b2b2e')), dx, 0.11, 0, Math.PI / 2);
+  for (const dx of [-0.25, 0.25]) put(g, new Mesh(new CylinderGeometry(0.11, 0.11, 0.36, 20), std('#2b2b2e')), dx, 0.11, 0, Math.PI / 2);
 };
 /** A pair of figures side by side: family, and words about people. */
 const family: Figure = (g) => {
   const one = (x: number, h: number, coat: string) => {
     ball(g, '#e8b98e', 0.11 * h, x, 0.56 * h);
-    put(g, new Mesh(new CylinderGeometry(0.13 * h, 0.17 * h, 0.36 * h, 12), std(coat)), x, 0.3 * h);
+    put(g, new Mesh(new CylinderGeometry(0.13 * h, 0.17 * h, 0.36 * h, 20), std(coat)), x, 0.3 * h);
   };
   one(-0.2, 1.15, '#3d6b8f'); one(0.12, 1.0, '#a8563c'); one(0.34, 0.7, '#2f8f5b');
 };
@@ -924,7 +924,7 @@ const opposites: Figure = (g) => {
 };
 /** A volcano of foam. */
 const volcano: Figure = (g) => {
-  put(g, new Mesh(new ConeGeometry(0.36, 0.44, 14, 1, true), std('#7a5a45', { side: DoubleSide })), 0, 0.22);
+  put(g, new Mesh(new ConeGeometry(0.36, 0.44, 22, 1, true), std('#7a5a45', { side: DoubleSide })), 0, 0.22);
   for (let i = 0; i < 7; i++) {
     const a = i * 1.2, r = 0.06 + (i % 3) * 0.07;
     ball(g, '#e8622b', 0.07, Math.cos(a) * r, 0.46 + (i % 3) * 0.09, Math.sin(a) * r);
@@ -946,9 +946,9 @@ const rainbowPaper: Figure = (g) => {
 };
 /** A glass of separated layers. */
 const layers: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.19, 0.16, 0.48, 18, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.32, side: DoubleSide })), 0, 0.26);
+  put(g, new Mesh(new CylinderGeometry(0.19, 0.16, 0.48, 26, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.32, side: DoubleSide })), 0, 0.26);
   const cols = ['#b5762f', '#3d6b8f', '#e8c86a'];
-  for (let i = 0; i < 3; i++) put(g, new Mesh(new CylinderGeometry(0.17, 0.16, 0.14, 18), std(cols[i]!, { transparent: true, opacity: 0.9 })), 0, 0.1 + i * 0.14);
+  for (let i = 0; i < 3; i++) put(g, new Mesh(new CylinderGeometry(0.17, 0.16, 0.14, 26), std(cols[i]!, { transparent: true, opacity: 0.9 })), 0, 0.1 + i * 0.14);
 };
 /** A balloon with a jet of air. */
 const balloonRocket: Figure = (g) => {
@@ -959,14 +959,14 @@ const balloonRocket: Figure = (g) => {
 };
 /** An egg floating in a glass. */
 const floatEgg: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.21, 0.18, 0.5, 18, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.32, side: DoubleSide })), 0, 0.27);
-  put(g, new Mesh(new CylinderGeometry(0.19, 0.18, 0.3, 18), std('#9fd0ea', { transparent: true, opacity: 0.6 })), 0, 0.18);
+  put(g, new Mesh(new CylinderGeometry(0.21, 0.18, 0.5, 26, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.32, side: DoubleSide })), 0, 0.27);
+  put(g, new Mesh(new CylinderGeometry(0.19, 0.18, 0.3, 26), std('#9fd0ea', { transparent: true, opacity: 0.6 })), 0, 0.18);
   const e = ball(g, '#f6efe2', 0.11, 0, 0.34);
   e.scale.set(1, 1.25, 1);
 };
 /** A gnomon casting a shadow on a dial. */
 const sundial: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.36, 0.36, 0.06, 22), std('#d9cdb4')), 0, 0.03);
+  put(g, new Mesh(new CylinderGeometry(0.36, 0.36, 0.06, 28), std('#d9cdb4')), 0, 0.03);
   const gn = put(g, new Mesh(new ConeGeometry(0.06, 0.4, 3), std('#8a6a44')), 0, 0.24, 0, 0, 0, 0.35);
   void gn;
   for (let i = 0; i < 8; i++) {
