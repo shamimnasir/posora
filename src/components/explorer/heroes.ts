@@ -1535,14 +1535,26 @@ export function mountHero(
     while (orbitYawTo - orbitYaw < -Math.PI) orbitYawTo += Math.PI * 2;
   }
   const ray = new Raycaster(), ndc = new Vector2();
+  const pickable: Object3D[] = [];
+  /**
+   * Which item is under the pointer, or -1.
+   *
+   * The name pill counts as much as the badge does. A sprite is hit-tested
+   * against its own quad, and the badge is a small disc - at the pinned scale
+   * it is a few dozen pixels on a phone, while the pill beside it is the part
+   * a person actually reads and therefore aims at. Leaving the pill out meant
+   * clicking the name of a thing did nothing, which reads as the site being
+   * broken rather than as the badge being the target.
+   */
   function pick(clientX: number, clientY: number): number {
     if (!badges.length) return -1;
     const r = host.getBoundingClientRect();
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const hit = ray.intersectObjects(badges.map((b) => b.sp), false)[0];
-    if (hit) { /* nearest sprite wins */ }
-    return hit ? badges.findIndex((b) => b.sp === hit.object) : -1;
+    pickable.length = 0;
+    for (const b of badges) pickable.push(b.sp, b.label);
+    const hit = ray.intersectObjects(pickable, false)[0];   // nearest wins
+    return hit ? badges.findIndex((b) => b.sp === hit.object || b.label === hit.object) : -1;
   }
 
   /* ---- the exploded view, for any scene ----
@@ -1693,7 +1705,17 @@ export function mountHero(
     const i = pick(e.clientX, e.clientY);
     if (i >= 0) { focus(i); onPick?.(i); }
   });
-  host.addEventListener('pointermove', (e) => { if (!dragging) return; vx = (e.clientX - lx) * 0.006; vy = (e.clientY - ly) * 0.006; lx = e.clientX; ly = e.clientY; yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); });
+  host.addEventListener('pointermove', (e) => {
+    if (!dragging) {
+      // The canvas says "grab" everywhere, which invites dragging and says
+      // nothing about what can be opened. Answer the hover instead.
+      host.classList.toggle('over-item', e.pointerType === 'mouse' && pick(e.clientX, e.clientY) >= 0);
+      return;
+    }
+    vx = (e.clientX - lx) * 0.006; vy = (e.clientY - ly) * 0.006; lx = e.clientX; ly = e.clientY;
+    yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8);
+  });
+  host.addEventListener('pointerleave', () => host.classList.remove('over-item'));
   const up = () => { dragging = false; host.classList.remove('dragging'); }; host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
 
   let w = 1, h = 1, visible = true, raf = 0, last = performance.now(), t = 0;

@@ -608,6 +608,9 @@ const schema = [
     background: radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 22%, #141c2e) 0%, #0c1220 52%, #05070e 100%); }
   .host { position: absolute; inset: 0; cursor: grab; touch-action: none; overflow: hidden; }
   .host.dragging { cursor: grabbing; }
+  /* set by the scene when an item is under the pointer: the canvas otherwise
+     says "grab" everywhere and never that anything can be opened */
+  .host.over-item { cursor: pointer; }
   .host canvas { width: 100%; height: 100%; }
   .loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; pointer-events: none; transition: opacity 0.35s ease; }
   .loading span { width: 44px; height: 44px; border-radius: 50%; background: color-mix(in oklab, var(--w) 55%, #0c1220); opacity: 0.25; animation: hb 1.4s ease-in-out infinite; }
@@ -945,7 +948,11 @@ const schema = [
     const loading = root.querySelector<HTMLElement>('#hero-loading');
     if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
     hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => {
-      if (!readable(cats[curCat])) return;
+      const c = cats[curCat];
+      // A category with no writing yet still shows every item as a labelled
+      // badge, so a click there used to fall into silence. Do what the chip
+      // does instead: put it on the list and say so.
+      if (!readable(c)) { starItem(keyOf(curCat, j), c.items[j] ?? ''); return; }
       if (quest.on) questPick(j); else selectItem(j);
     });
     ctlLabel.textContent = hero.set(cats[curCat].hero);
@@ -1511,19 +1518,29 @@ const schema = [
   rail.forEach((b) => b.addEventListener('click', () => showCat(+b.dataset.i!)));
   $('#crumb-cat').addEventListener('click', () => $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }));
   $('#crumb-item').addEventListener('click', () => $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }));
+  /**
+   * Star an item that has no writing yet, and say so.
+   *
+   * Reachable from the chip and from the 3D scene, because the same item is
+   * on screen twice and a click has to mean the same thing in both places.
+   */
+  function starItem(key: string, label: string, chip?: HTMLButtonElement) {
+    const on = toggleStar(key);
+    if (chip) {
+      chip.setAttribute('aria-pressed', String(on));
+      if (on && !reduced) chip.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 });
+    }
+    starToast.textContent = on ? `"${label}" এখন তোমার তালিকায় - আমরা এটাই আগে বানাবো` : `"${label}" তালিকা থেকে সরানো হলো`;
+    starToast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => starToast.classList.remove('show'), 2600);
+  }
   chips.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return;
     const di = b.dataset.di, key = b.dataset.key;
     if (di !== undefined) { selectItem(+di); return; }
     if (key === undefined) return;
-    const label = b.textContent!.replace('★', '').trim();
-    const on = toggleStar(key);
-    b.setAttribute('aria-pressed', String(on));
-    if (on && !reduced) b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 });
-    starToast.textContent = on ? `"${label}" এখন তোমার তালিকায় - আমরা এটাই আগে বানাবো` : `"${label}" তালিকা থেকে সরানো হলো`;
-    starToast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => starToast.classList.remove('show'), 2600);
+    starItem(key, b.textContent!.replace('★', '').trim(), b);
   });
   root.querySelectorAll<HTMLButtonElement>('.key-jump').forEach((b) => b.addEventListener('click', () => {
     showCat(+b.dataset.cat!);
