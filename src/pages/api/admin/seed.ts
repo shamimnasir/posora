@@ -40,7 +40,6 @@ export const POST: APIRoute = async (ctx) => {
     space: bodies,
     math: { tools, numberWords, denominations, shopItems },
     language: { vowels, consonants, kars, folas, conjuncts },
-    heroes: {},
   };
   let datasetsWritten = 0;
   for (const [key, value] of Object.entries(datasets)) {

@@ -9,15 +9,26 @@
  */
 import Base from '../../layouts/Base.astro';
 import { sheetBySlug, sheets } from '../../data/printables';
-import { vowels, consonants, kars, conjuncts } from '../../data/language';
-import { numberWords, denominations, shopItems } from '../../data/math';
-import { bodies, FACTS } from '../../data/space';
+import { FACTS } from '../../data/space';
+import { getBodies, getLanguage, getMath } from '../../lib/content';
 import { bn, bnNum } from '../../lib/bn';
 
 export const prerender = false;
 
 const sheet = sheetBySlug(Astro.params.sheet!);
 if (!sheet) return Astro.rewrite('/404');
+
+/**
+ * Read through the content layer, not from `src/data/*`.
+ *
+ * This page was importing the letters, the numbers and the bodies straight
+ * from the files, which is why editing any of them in the admin panel did
+ * nothing: the row changed and the sheet did not. `content.ts` falls back to
+ * those same files when D1 is empty, so nothing here depends on the database
+ * being seeded.
+ */
+const [{ vowels, consonants, kars, conjuncts }, { numberWords, denominations, shopItems }, bodies] =
+  await Promise.all([getLanguage(), getMath(), getBodies()]);
 
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
 

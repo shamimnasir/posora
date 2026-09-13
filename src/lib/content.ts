@@ -12,6 +12,8 @@
 import { db, selectWorlds, getDataset, type AdminWorld } from './db';
 import { worlds as staticWorlds, type World } from '../data/worlds';
 import { bodies as staticBodies, type Body } from '../data/space';
+import { tools, numberWords, denominations, shopItems } from '../data/math';
+import { vowels, consonants, kars, folas, conjuncts } from '../data/language';
 
 const CACHE_MS = 30_000;
 
@@ -83,6 +85,22 @@ export const getBodies = (fresh = false): Promise<Body[]> => dataset<Body[]>('sp
 
 export const getBody = async (id: string): Promise<Body | undefined> => (await getBodies()).find((b) => b.id === id);
 
+/**
+ * The other two editable datasets, which the panel offered and nothing read.
+ *
+ * `space` was wired to D1; `math` and `language` were seeded into it, listed on
+ * the ডেটা page with a working editor, and then never read back, because the
+ * one page that uses them imported `src/data/*` directly. Saving an edit
+ * changed the row and changed nothing a visitor could see, which is the panel
+ * claiming an ability it did not have. Same shape as `getBodies`: D1 when it
+ * has the row, the checked-in file when it does not.
+ */
+const staticMath = { tools, numberWords, denominations, shopItems };
+export const getMath = (fresh = false): Promise<typeof staticMath> => dataset('math', staticMath, fresh);
+
+const staticLanguage = { vowels, consonants, kars, folas, conjuncts };
+export const getLanguage = (fresh = false): Promise<typeof staticLanguage> => dataset('language', staticLanguage, fresh);
+
 /** Header/footer counts, derived from whatever is currently live. */
 export function computeTotals(list: World[]) {
   return {
@@ -94,7 +112,13 @@ export function computeTotals(list: World[]) {
 
 export const itemCount = (w: World): number => w.cats.reduce((s, c) => s + c.items.length, 0);
 
-/** Datasets the panel exposes as raw JSON documents. */
-export const DATASET_KEYS = ['space', 'math', 'language', 'heroes'] as const;
+/**
+ * Datasets the panel exposes as raw JSON documents.
+ *
+ * `heroes` was here too, seeded as an empty object and read by nothing: the
+ * hero scenes are code, in `src/data/heroes.ts`. The panel listed it with an
+ * edit button, so it looked like a thing you could change. It wasn't.
+ */
+export const DATASET_KEYS = ['space', 'math', 'language'] as const;
 export type DatasetKey = (typeof DATASET_KEYS)[number];
 export const isDatasetKey = (k: string): k is DatasetKey => (DATASET_KEYS as readonly string[]).includes(k);
