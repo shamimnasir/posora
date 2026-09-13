@@ -151,7 +151,10 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
   function clear() {
     stage.traverse((o) => {
       const m = o as Mesh;
-      if (m.geometry && m.geometry !== plankGeo) m.geometry.dispose();
+      // `userData.shared` marks a cached geometry that figures.ts hands out to
+      // every builder that asks for the same size. Disposing one here would
+      // pull the buffers out from under the next category the shelf shows.
+      if (m.geometry && m.geometry !== plankGeo && !m.geometry.userData?.shared) m.geometry.dispose();
       const mat = (m as unknown as { material?: MeshStandardMaterial | MeshStandardMaterial[] }).material;
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
       else if (mat && mat !== ghostMat) mat.dispose();
