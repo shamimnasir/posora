@@ -1,0 +1,521 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#7E56C2';
+---
+<Base
+  title="পদার্থের অবস্থা"
+  description="তাপমাত্রা টেনে বদলাও আর দেখো কণাগুলো কী করে - কঠিন থেকে তরল, তরল থেকে গ্যাস, আর ঘনত্ব মেপে দেখো কোনটা ভাসবে কোনটা ডুববে।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/chemistry/">রসায়ন</a> <span>/</span> পদার্থের অবস্থা</p>
+
+    <header class="head">
+      <p class="eyebrow">রসায়ন ভুবন · বিভাগ পরিচিতি</p>
+      <h1>পদার্থের অবস্থা</h1>
+      <p class="lede">
+        কঠিন, তরল আর গ্যাস - তিনটেই একই কণা, শুধু কণাগুলো কতটা শক্তি পেয়েছে তার তফাত।
+        তাপ দিলে কণারা জোরে নড়ে, বাঁধন আলগা হয়, আর অবস্থা বদলে যায়। নিচের বাক্সে
+        তাপমাত্রা টানলে সেটা চোখের সামনেই ঘটবে।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#state" class="pill pill-w">তিন অবস্থা</a>
+        <a href="#bashpo" class="pill pill-w">বাষ্পীভবন</a>
+        <a href="#urdhopaton" class="pill pill-w">ঊর্ধ্বপাতন</a>
+        <a href="#plasma" class="pill pill-w">প্লাজমা</a>
+        <a href="#ghonotto" class="pill pill-w">ঘনত্ব</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- ১. তিন অবস্থা -->
+      <section class="tool card" id="state">
+        <h2><span class="no">০১</span> তাপ দাও, অবস্থা বদলাও</h2>
+        <p class="how">
+          বাক্সে চল্লিশটা পানির কণা। তাপমাত্রা টেনে বদলাও - কণাগুলো কেমন নড়ছে, কতটা কাছাকাছি
+          আছে, বাক্সের কতটা জুড়ে ছড়িয়ে আছে, সব একসাথে বদলাবে।
+        </p>
+        <div class="box">
+          <canvas id="particles" width="720" height="330" role="img" aria-label="পানির কণা, তাপমাত্রা অনুযায়ী নড়ছে"></canvas>
+        </div>
+        <div class="ctl-row">
+          <label>তাপমাত্রা
+            <input type="range" id="temp" min="-30" max="160" step="1" value="25" aria-label="তাপমাত্রা, সেলসিয়াসে" />
+            <b id="temp-v" class="num">২৫</b>°সে
+          </label>
+        </div>
+        <div class="jumps" role="group" aria-label="সরাসরি যাও">
+          <button type="button" class="jump" id="kothin" data-t="-20">কঠিন · বরফ</button>
+          <button type="button" class="jump" id="golon" data-t="0">গলন · ০°</button>
+          <button type="button" class="jump" id="toral" data-t="40">তরল · পানি</button>
+          <button type="button" class="jump" id="sphuton" data-t="100">স্ফুটন · ১০০°</button>
+          <button type="button" class="jump" id="gas" data-t="140">গ্যাস · বাষ্প</button>
+        </div>
+        <p class="readout" id="state-out"></p>
+      </section>
+
+      <!-- ২. বাষ্পীভবন ও ঘনীভবন -->
+      <section class="tool card" id="bashpo">
+        <h2><span class="no">০২</span> বাষ্পীভবন ও <span id="ghonibhobon">ঘনীভবন</span></h2>
+        <p class="how">
+          পানি ফুটতেই হবে এমন নয় - রোদে ভেজা কাপড়ও শুকোয়। উপরের কণাগুলো যখন যথেষ্ট শক্তি পায়,
+          একটা-দুটো করে উড়ে যায়। আর ঠান্ডা কাচের গায়ে বাতাসের জলীয় বাষ্প ফিরে পানি হয়ে জমে।
+        </p>
+        <div class="two">
+          <svg id="evap-svg" viewBox="0 0 340 260" role="img" aria-label="রোদ টেনে বাষ্পীভবন দেখো"></svg>
+          <div class="side">
+            <label>রোদের তেজ
+              <input type="range" id="sun" min="0" max="100" step="5" value="40" aria-label="রোদের তেজ" />
+              <b id="sun-v" class="num">৪০</b>
+            </label>
+            <label>কাচের ঠান্ডা
+              <input type="range" id="cold" min="0" max="100" step="5" value="20" aria-label="গ্লাস কতটা ঠান্ডা" />
+              <b id="cold-v" class="num">২০</b>
+            </label>
+            <p class="readout" id="evap-out"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ৩. ঊর্ধ্বপাতন -->
+      <section class="tool card" id="urdhopaton">
+        <h2><span class="no">০৩</span> ঊর্ধ্বপাতন</h2>
+        <p class="how">
+          কিছু জিনিস গলে না - কঠিন থেকে সরাসরি গ্যাস হয়ে যায়। আলমারির ন্যাপথলিন ছোট হতে হতে
+          একদিন উধাও, অথচ নিচে এক ফোঁটা পানিও পড়ে না। হাতলটা টেনে সময় এগিয়ে দাও।
+        </p>
+        <div class="wide">
+          <svg id="subl-svg" viewBox="0 0 620 230" role="img" aria-label="ন্যাপথলিন, সময় টেনে এগোও"></svg>
+        </div>
+        <p class="readout" id="subl-out"></p>
+      </section>
+
+      <!-- ৪. প্লাজমা -->
+      <section class="tool card" id="plasma">
+        <h2><span class="no">০৪</span> প্লাজমা</h2>
+        <p class="how">
+          গ্যাসকে আরও তাতাতে থাকলে একসময় কণা ভেঙে যায় - ইলেকট্রন ছিটকে বেরিয়ে আসে, পড়ে থাকে
+          চার্জওয়ালা টুকরো। সেটাই প্লাজমা। সূর্য, বজ্রপাত আর নিয়ন সাইন - সবই প্লাজমা।
+        </p>
+        <div class="wide">
+          <svg id="plasma-svg" viewBox="0 0 620 210" role="img" aria-label="তাপ বাড়িয়ে প্লাজমা বানাও"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>তাপ <input type="range" id="heat" min="0" max="100" step="2" value="10" aria-label="তাপ" /> <b id="heat-v" class="num">১০</b></label>
+        </div>
+        <p class="readout" id="plasma-out"></p>
+      </section>
+
+      <!-- ৫. ঘনত্ব -->
+      <section class="tool card" id="ghonotto">
+        <h2><span class="no">০৫</span> ঘনত্ব</h2>
+        <p class="how">
+          ভারী মানেই ডোবে না। এক কেজি তুলা আর এক কেজি লোহার ওজন সমান, কিন্তু জায়গা আলাদা।
+          যেটা আসল, সেটা হলো ঘনত্ব: ভর ভাগ আয়তন। পানির ঘনত্ব ১, তার চেয়ে কম হলে ভাসে।
+          ব্লকটা ধরে পানিতে ছেড়ে দাও।
+        </p>
+        <div class="wide">
+          <svg id="dens-svg" viewBox="0 0 620 280" role="img" aria-label="ব্লকটা পানিতে ছাড়ো"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>ভর <input type="range" id="mass" min="10" max="900" step="10" value="200" aria-label="ভর, গ্রাম" /> <b id="mass-v" class="num">২০০</b> গ্রাম</label>
+          <label>আয়তন <input type="range" id="vol" min="50" max="600" step="10" value="250" aria-label="আয়তন, ঘন সেন্টিমিটার" /> <b id="vol-v" class="num">২৫০</b> ঘন সেমি</label>
+        </div>
+        <div class="jumps" role="group" aria-label="চেনা জিনিস">
+          <button type="button" class="jump" data-m="120" data-v="240">কাঠ</button>
+          <button type="button" class="jump" data-m="92" data-v="100">বরফ</button>
+          <button type="button" class="jump" data-m="200" data-v="200">পানি</button>
+          <button type="button" class="jump" data-m="790" data-v="100">লোহা</button>
+        </div>
+        <p class="readout" id="dens-out"></p>
+      </section>
+    </div>
+
+    <p class="back"><a href="/chemistry/">← রসায়ন ভুবনে ফিরে যাও</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); line-height: 1.8; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(.cost) { color: var(--muted); font-size: 13.5px; display: block; margin-top: 0.15rem; }
+
+  .box { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--panel-2); }
+  #particles { width: 100%; height: auto; display: block; }
+  .wide { overflow-x: auto; padding-bottom: 4px; }
+  .wide svg { width: 100%; min-width: 440px; height: auto; display: block; touch-action: none; }
+  .two { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 1.4rem; align-items: center; }
+  .two svg { width: 100%; height: auto; display: block; }
+  .side { display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .ctl-row { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 1rem; }
+  label { font-size: 13.5px; color: var(--ink-2); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .side label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.35rem 0.5rem; }
+  .side label input[type="range"] { grid-column: 1 / -1; }
+  input[type="range"] { accent-color: var(--w); min-width: 8rem; flex: 1; }
+
+  .jumps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.9rem; }
+  .jump {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 0.35rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-2);
+  }
+  .jump:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); color: var(--ink); }
+  .jump[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .tool :global([role="slider"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { bn } from '../../lib/bn';
+  import { svgEl as el, clamp, dragTrack, alongX, useItem } from '../../lib/handson';
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const WORLD = 'chemistry', CAT = 'পদার্থের অবস্থা';
+  /** Credit follows use, not arrival. See the flag flipped at the end. */
+  let live = false;
+  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 2 : 0));
+
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const text = (parent: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
+    const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
+    t.textContent = s; parent.appendChild(t); return t;
+  };
+  const grip = () => {
+    const g = el('g');
+    g.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    return g;
+  };
+
+  /* ---------- ১. তিন অবস্থা ---------- */
+  (function states() {
+    const cv = $<HTMLCanvasElement>('#particles');
+    const g = cv.getContext('2d')!;
+    const Wd = cv.width, Ht = cv.height, N = 40, R = 9;
+    type P = { x: number; y: number; vx: number; vy: number; hx: number; hy: number };
+    // a lattice to sit in while solid, eight across and five down
+    const parts: P[] = Array.from({ length: N }, (_, i) => {
+      const col = i % 8, row = Math.floor(i / 8);
+      const hx = Wd / 2 - 7 * 30 + col * 60, hy = Ht - 40 - row * 46;
+      return { x: hx, y: hy, vx: 0, vy: 0, hx, hy };
+    });
+
+    const tempIn = $<HTMLInputElement>('#temp'), tempV = $('#temp-v'), out = $('#state-out');
+    const jumps = [...root.querySelectorAll<HTMLButtonElement>('#state .jump')];
+
+    /** Which of the five labelled points the current temperature belongs to. */
+    const phase = (t: number) => (t < 0 ? 'solid' : t === 0 ? 'melt' : t < 100 ? 'liquid' : t === 100 ? 'boil' : 'gas');
+    const ITEM: Record<string, string> = { solid: 'কঠিন', melt: 'গলন', liquid: 'তরল', boil: 'স্ফুটন', gas: 'গ্যাস' };
+
+    function describe(t: number) {
+      const p = phase(t);
+      jumps.forEach((b) => b.setAttribute('aria-pressed', String(b.id === p || (p === 'solid' && b.id === 'kothin') || (p === 'liquid' && b.id === 'toral') || (p === 'gas' && b.id === 'gas') || (p === 'melt' && b.id === 'golon') || (p === 'boil' && b.id === 'sphuton'))));
+      const lines: Record<string, string> = {
+        solid: `<b>কঠিন</b> - কণারা নিজের জায়গায় বসে শুধু কাঁপছে। বাঁধন এত শক্ত যে আকারও বদলায় না, আয়তনও না।`,
+        melt: `<b>গলন</b> - ঠিক ০°সে-তে বরফ পানি হতে শুরু করে। তাপ দিতে থাকলেও এই সময়টায় তাপমাত্রা বাড়ে না, পুরো তাপটা খরচ হয় বাঁধন ভাঙতে।`,
+        liquid: `<b>তরল</b> - বাঁধন আলগা, কণারা একে অন্যের গা ঘেঁষে গড়িয়ে যাচ্ছে। আকার পাত্রের মতো হয়, কিন্তু আয়তন একই থাকে।`,
+        boil: `<b>স্ফুটন</b> - ১০০°সে-তে পানির ভেতর থেকেই বুদবুদ উঠতে শুরু করে। এখানেও তাপমাত্রা থেমে থাকে যতক্ষণ না সবটা বাষ্প হয়।`,
+        gas: `<b>গ্যাস</b> - বাঁধন ছিঁড়ে গেছে, কণারা যে যেদিকে পারে ছুটছে আর পুরো পাত্র ভরে ফেলছে।`,
+      };
+      out.innerHTML = `${lines[p]}<span class="cost">এখন ${bn(t)}°সে। পানির গলনাঙ্ক ০°, স্ফুটনাঙ্ক ১০০° - সমুদ্রপৃষ্ঠে।</span>`;
+      credit(ITEM[p]!);
+    }
+
+    let temp = 25;
+    function sync(from: 'input' | 'jump' = 'input') {
+      temp = +tempIn.value;
+      tempV.textContent = bn(temp);
+      describe(temp);
+      if (from === 'jump') tempIn.value = String(temp);
+      if (reduced) draw(0);
+    }
+    tempIn.addEventListener('input', () => sync());
+    jumps.forEach((b) => b.addEventListener('click', () => { tempIn.value = b.dataset.t!; sync('jump'); }));
+
+    function draw(dt: number) {
+      const t = temp;
+      // how loose the bonds are: 0 at deep freeze, 1 once fully boiling
+      const free = clamp((t + 20) / 140, 0, 1);
+      const jitter = 0.4 + free * 9;
+      const pull = t < 0 ? 0.09 : t < 100 ? 0.012 : 0;
+      const surface = t < 100 ? Ht * 0.42 : 0;   // liquid fills the lower half, gas the lot
+
+      g.clearRect(0, 0, Wd, Ht);
+      for (const p of parts) {
+        p.vx += (Math.random() - 0.5) * jitter * dt * 60;
+        p.vy += (Math.random() - 0.5) * jitter * dt * 60;
+        if (pull) { p.vx += (p.hx - p.x) * pull; p.vy += (p.hy - p.y) * pull; }
+        p.vx *= 0.92; p.vy *= 0.92;
+        p.x += p.vx * dt * 22; p.y += p.vy * dt * 22;
+        if (p.x < R) { p.x = R; p.vx = Math.abs(p.vx); }
+        if (p.x > Wd - R) { p.x = Wd - R; p.vx = -Math.abs(p.vx); }
+        // A liquid keeps its volume: the particles wander freely but stay
+        // under the surface and fill the depth below it. A gas has the whole
+        // box. Letting gravity pull them instead piled every particle onto one
+        // line, which is not what water looks like.
+        const ceiling = t < 100 ? surface + R : R;
+        const floor = Ht - R;
+        if (p.y < ceiling) { p.y = ceiling; p.vy = Math.abs(p.vy); }
+        if (p.y > floor) { p.y = floor; p.vy = -Math.abs(p.vy); }
+        g.beginPath();
+        g.arc(p.x, p.y, R, 0, Math.PI * 2);
+        g.fillStyle = t < 0 ? '#7fb4e8' : t < 100 ? '#3f7fc4' : '#b9cfe8';
+        g.fill();
+      }
+      if (t >= 0 && t < 100) {
+        g.strokeStyle = 'rgba(63,127,196,0.5)'; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(0, surface); g.lineTo(Wd, surface); g.stroke();
+      }
+    }
+
+    // The frame loop's own clock: a timestamp can arrive before the one taken
+    // when it was scheduled, so the delta is clamped rather than trusted.
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
+      last = now;
+      draw(dt);
+      raf = requestAnimationFrame(tick);
+    };
+    let raf = 0;
+    sync();
+    if (reduced) draw(0); else raf = requestAnimationFrame(tick);
+    // Nothing is learned from a box that keeps running in a tab nobody is looking at.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
+      else if (!raf && !reduced) { last = performance.now(); raf = requestAnimationFrame(tick); }
+    });
+  })();
+
+  /* ---------- ২. বাষ্পীভবন ও ঘনীভবন ---------- */
+  (function evaporation() {
+    const svg = $<SVGSVGElement>('#evap-svg');
+    svg.appendChild(el('rect', { x: 110, y: 90, width: 120, height: 130, rx: 8, fill: 'none', stroke: LINE, 'stroke-width': 3 }));
+    const water = el('rect', { x: 114, y: 140, width: 112, height: 76, rx: 4, fill: '#3f7fc4', 'fill-opacity': 0.7 });
+    svg.appendChild(water);
+    const sunG = el('g'); svg.appendChild(sunG);
+    const sun = el('circle', { cx: 60, cy: 56, r: 20, fill: '#e8a33d' });
+    sunG.appendChild(sun);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      sunG.appendChild(el('line', {
+        x1: 60 + Math.cos(a) * 25, y1: 56 + Math.sin(a) * 25,
+        x2: 60 + Math.cos(a) * 33, y2: 56 + Math.sin(a) * 33,
+        stroke: '#e8a33d', 'stroke-width': 3, 'stroke-linecap': 'round',
+      }));
+    }
+    const rising = el('g'); svg.appendChild(rising);
+    const beads = el('g'); svg.appendChild(beads);
+    text(svg, 170, 240, 'এক গ্লাস পানি');
+
+    const sunIn = $<HTMLInputElement>('#sun'), sunV = $('#sun-v');
+    const coldIn = $<HTMLInputElement>('#cold'), coldV = $('#cold-v'), out = $('#evap-out');
+
+    function render() {
+      const s = +sunIn.value, c = +coldIn.value;
+      sunV.textContent = bn(s); coldV.textContent = bn(c);
+      sunG.setAttribute('opacity', String(0.25 + (s / 100) * 0.75));
+      sun.setAttribute('r', String(14 + (s / 100) * 10));
+
+      // more sun, more particles leaving the surface
+      const n = Math.round((s / 100) * 9);
+      rising.replaceChildren();
+      for (let i = 0; i < n; i++) {
+        const x = 122 + (i / Math.max(1, n - 1)) * 96;
+        const y = 134 - (i % 3) * 22 - (s / 100) * 26;
+        rising.appendChild(el('circle', { cx: x, cy: y, r: 4, fill: '#9ec4ea' }));
+      }
+      // colder glass, more of the air's vapour turns back into water on it
+      const m = Math.round((c / 100) * 12);
+      beads.replaceChildren();
+      for (let i = 0; i < m; i++) {
+        const side = i % 2 === 0 ? 106 : 234;
+        beads.appendChild(el('circle', { cx: side, cy: 104 + Math.floor(i / 2) * 18, r: 3 + (c / 100) * 2, fill: '#3f7fc4', 'fill-opacity': 0.85 }));
+      }
+
+      out.innerHTML = `রোদ যত চড়া, উপরের কণারা তত বেশি শক্তি পায় আর <b>${bn(n)}</b>টা করে উড়ে যাচ্ছে - এটাই <b>বাষ্পীভবন</b>, ফোটার দরকার হয় না।`
+        + `<span class="cost">গ্লাসের গা ঠান্ডা হলে বাতাসের জলীয় বাষ্প সেখানে ফিরে পানি হয়: <b>${bn(m)}</b>টা ফোঁটা জমেছে। সেটাই ঘনীভবন - শিশির আর মেঘ এভাবেই হয়।</span>`;
+      credit('বাষ্পীভবন');
+      if (c > 30) credit('ঘনীভবন');
+    }
+    sunIn.addEventListener('input', render);
+    coldIn.addEventListener('input', render);
+    render();
+  })();
+
+  /* ---------- ৩. ঊর্ধ্বপাতন ---------- */
+  (function sublimation() {
+    const svg = $<SVGSVGElement>('#subl-svg');
+    const CX = 200, CY = 130;
+    svg.appendChild(el('line', { x1: 60, y1: 178, x2: 380, y2: 178, stroke: LINE, 'stroke-width': 2 }));
+    const ball = el('circle', { cx: CX, cy: CY, fill: '#dfe3ea', stroke: LINE, 'stroke-width': 2 });
+    svg.appendChild(ball);
+    const fumes = el('g'); svg.appendChild(fumes);
+    text(svg, CX, 202, 'ন্যাপথলিনের গুলি');
+    text(svg, 480, 202, 'নিচে এক ফোঁটা পানিও নেই');
+    svg.appendChild(el('line', { x1: 150, y1: 214, x2: 470, y2: 214, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    const out = $('#subl-out');
+    let days = 0;
+
+    function render() {
+      const t = days / 100;
+      ball.setAttribute('r', String(42 * (1 - t * 0.92)));
+      ball.setAttribute('cy', String(CY + 42 * t * 0.92));
+      handle.setAttribute('transform', `translate(${150 + t * 320},214)`);
+      fumes.replaceChildren();
+      const n = Math.round(t * 14);
+      for (let i = 0; i < n; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        fumes.appendChild(el('circle', {
+          cx: CX + Math.cos(a) * (60 + i * 4), cy: CY - 20 - Math.sin(a) * (30 + i * 3),
+          r: 3.5, fill: MUTED, 'fill-opacity': 0.5,
+        }));
+      }
+      out.innerHTML = `${bn(Math.round(days * 0.6))} দিন পরে গুলিটা ছোট হয়ে <b>${bn(Math.round((1 - t * 0.92) * 100))}%</b> আছে।`
+        + `<span class="cost">গলে যায়নি, তরল হয়নি - কঠিন থেকে সোজা গ্যাস। এটাই <b>ঊর্ধ্বপাতন</b>। শুকনো বরফ আর কর্পূরও তাই করে।</span>`;
+      if (days > 10) credit('ঊর্ধ্বপাতন');
+    }
+    const toDays = alongX(svg, 620, 150, 3.2);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 100, step: 2, value: 0,
+      toValue: (x) => toDays(x),
+      onChange: (v) => { days = v; render(); },
+      label: 'সময় এগোও', text: (v) => `${bn(Math.round(v * 0.6))} দিন`,
+    });
+    render();
+  })();
+
+  /* ---------- ৪. প্লাজমা ---------- */
+  (function plasma() {
+    const svg = $<SVGSVGElement>('#plasma-svg');
+    const dots = el('g'); svg.appendChild(dots);
+    const heatIn = $<HTMLInputElement>('#heat'), heatV = $('#heat-v'), out = $('#plasma-out');
+    const N = 18;
+    const seeds = Array.from({ length: N }, (_, i) => ({
+      x: 60 + ((i * 97) % 500), y: 40 + ((i * 53) % 110),
+    }));
+
+    function render() {
+      const h = +heatIn.value;
+      heatV.textContent = bn(h);
+      const ion = clamp((h - 60) / 40, 0, 1);
+      dots.replaceChildren();
+      for (const s of seeds) {
+        if (ion < 0.05) {
+          dots.appendChild(el('circle', { cx: s.x, cy: s.y, r: 9, fill: '#8b7fc4' }));
+        } else {
+          // the atom comes apart: a heavy positive core and a light electron
+          dots.appendChild(el('circle', { cx: s.x - ion * 12, cy: s.y, r: 8, fill: '#c4564f' }));
+          dots.appendChild(el('circle', { cx: s.x + ion * 20, cy: s.y - ion * 14, r: 4, fill: '#3f7fc4' }));
+        }
+      }
+      out.innerHTML = ion < 0.05
+        ? `এখন এটা <b>গ্যাস</b> - কণারা ছুটছে, কিন্তু আস্ত আছে। তাপ আরও বাড়াও।`
+        : `কণারা ভেঙে গেছে: লাল টুকরোগুলো ধনাত্মক, নীলগুলো ছিটকে যাওয়া ইলেকট্রন। এই চার্জওয়ালা গ্যাসই <b>প্লাজমা</b>, পদার্থের চতুর্থ অবস্থা।`
+          + `<span class="cost">মহাবিশ্বের বেশিরভাগ দৃশ্যমান পদার্থই প্লাজমা - প্রতিটা তারা। কাছেপিঠে বজ্রপাত আর নিয়ন সাইন।</span>`;
+      if (ion > 0.3) credit('প্লাজমা');
+    }
+    heatIn.addEventListener('input', render);
+    render();
+  })();
+
+  /* ---------- ৫. ঘনত্ব ---------- */
+  (function density() {
+    const svg = $<SVGSVGElement>('#dens-svg');
+    const TANK_X = 150, TANK_W = 320, TOP = 60, BOT = 250, LEVEL = 110;
+    svg.appendChild(el('rect', { x: TANK_X, y: TOP, width: TANK_W, height: BOT - TOP, rx: 6, fill: 'none', stroke: LINE, 'stroke-width': 3 }));
+    svg.appendChild(el('rect', { x: TANK_X + 3, y: LEVEL, width: TANK_W - 6, height: BOT - LEVEL - 3, fill: '#3f7fc4', 'fill-opacity': 0.45 }));
+    svg.appendChild(el('line', { x1: TANK_X, y1: LEVEL, x2: TANK_X + TANK_W, y2: LEVEL, stroke: '#3f7fc4', 'stroke-width': 2 }));
+    text(svg, TANK_X + TANK_W + 46, LEVEL + 4, 'পানি', { 'text-anchor': 'start' });
+    const block = el('g'); svg.appendChild(block);
+    const box = el('rect', { rx: 4, fill: W, 'fill-opacity': 0.9 });
+    const boxTxt = el('text', { 'font-size': 13, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle' });
+    block.append(el('rect', { x: -40, y: -40, width: 80, height: 80, fill: 'transparent' }), box, boxTxt);
+    text(svg, TANK_X + TANK_W / 2, 272, 'ব্লকটা ধরে টেনে পানিতে ছাড়ো');
+
+    const massIn = $<HTMLInputElement>('#mass'), massV = $('#mass-v');
+    const volIn = $<HTMLInputElement>('#vol'), volV = $('#vol-v'), out = $('#dens-out');
+    const jumps = [...root.querySelectorAll<HTMLButtonElement>('#ghonotto .jump')];
+    let held = 40;   // where the visitor has dragged it, left to right
+
+    function render() {
+      const m = +massIn.value, v = +volIn.value;
+      massV.textContent = bn(m); volV.textContent = bn(v);
+      const d = m / v;
+      const side = 30 + Math.cbrt(v) * 5.4;
+      box.setAttribute('x', String(-side / 2)); box.setAttribute('y', String(-side / 2));
+      box.setAttribute('width', String(side)); box.setAttribute('height', String(side));
+      boxTxt.textContent = `${num(d)}`;
+      boxTxt.setAttribute('y', '5');
+
+      // Off to the left it is in your hand; over the tank it settles where its
+      // own density says it should.
+      const x = 60 + (held / 100) * 460;
+      const overTank = x > TANK_X - 10 && x < TANK_X + TANK_W + 10;
+      let y = 150;
+      if (overTank) {
+        // a floater sinks until the water it pushes aside weighs what it does
+        y = d >= 1 ? BOT - 6 - side / 2 : LEVEL - side / 2 + side * Math.min(1, d);
+      }
+      block.setAttribute('transform', `translate(${x},${y})`);
+
+      const verdict = !overTank ? 'ব্লকটা টেনে পানির উপরে নিয়ে যাও।'
+        : d < 1 ? `ঘনত্ব <b>${num(d)}</b>, পানির চেয়ে কম - তাই <b>ভাসছে</b>। যতটা ডুবেছে, ঠিক ততটুকু পানির ওজন ব্লকটার ওজনের সমান।`
+        : d === 1 ? `ঘনত্ব ঠিক <b>১</b> - পানির সমান। ডুবেও না, ভাসেও না।`
+        : `ঘনত্ব <b>${num(d)}</b>, পানির চেয়ে বেশি - তাই <b>ডুবে গেছে</b>।`;
+      out.innerHTML = `${bn(m)} গ্রাম ÷ ${bn(v)} ঘন সেমি = ঘনত্ব <b>${num(d)}</b> গ্রাম/ঘন সেমি। ${verdict}`
+        + `<span class="cost">ভারী বলে ডোবে না, ঘন বলে ডোবে। একটা জাহাজ লোহার, তবু ভাসে - কারণ ভেতরে অনেকটা বাতাস।</span>`;
+      if (overTank) credit('ঘনত্ব');
+    }
+
+    massIn.addEventListener('input', render);
+    volIn.addEventListener('input', render);
+    jumps.forEach((b) => b.addEventListener('click', () => {
+      massIn.value = b.dataset.m!; volIn.value = b.dataset.v!;
+      jumps.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      if (held < 30) held = 55;
+      render();
+    }));
+    const toHeld = alongX(svg, 620, 60, 4.6);
+    dragTrack({
+      surface: svg, handle: block, min: 0, max: 100, step: 2, value: held,
+      toValue: (x) => toHeld(x),
+      onChange: (v) => { held = v; render(); },
+      label: 'ব্লকটা সরাও', text: (v) => (v > 18 && v < 92 ? 'পানির উপরে' : 'হাতে'),
+    });
+    render();
+  })();
+
+  // Everything above has drawn its first frame; from here a change is a choice.
+  live = true;
+</script>
