@@ -1493,6 +1493,18 @@ export function mountHero(
   let anchoredCount = 0;
   // the model sits half size inside a ring of badges, full size when the badges are pinned on it
   let baseScale = 1, pinScale = 0.55;
+  /**
+   * The invitation.
+   *
+   * The badges have always been pickable and the scene has never said so: it
+   * turns slowly, the cursor says grab, and a child has to guess that the
+   * little discs do anything. So until the first touch they breathe, slightly
+   * and out of phase with each other, which reads as alive rather than as
+   * decoration. The first pointer down ends it for good - once you know, being
+   * nudged is just fidgeting.
+   */
+  let beckon = reduced ? 0 : 1, beckonWant = reduced ? 0 : 1;
+  const beckonAt = (i: number, t: number) => 1 + 0.09 * beckon * Math.sin(t * 2.1 + i * 0.7);
   let active = -1, orbitYawTo = 0, orbitYaw = 0, hueNow = new Color(spec.hue);
   function clearItems() {
     for (const b of badges) { b.sp.material.map?.dispose(); b.sp.material.dispose(); b.label.material.map?.dispose(); b.label.material.dispose(); }
@@ -1699,7 +1711,7 @@ export function mountHero(
   let auto = !reduced, yawTo: number | null = null;
   const yawDeg = () => { const d = ((yaw * 180) / Math.PI) % 360; return d < 0 ? d + 360 : d; };
   let downX = 0, downY = 0;
-  host.addEventListener('pointerdown', (e) => { dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; downX = e.clientX; downY = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
+  host.addEventListener('pointerdown', (e) => { beckonWant = 0; dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; downX = e.clientX; downY = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
   host.addEventListener('pointerup', (e) => {
     if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;   // that was a drag, not a click
     const i = pick(e.clientX, e.clientY);
@@ -1812,6 +1824,7 @@ export function mountHero(
       if (!dragging && auto && Math.abs(orbitYawTo - orbitYaw) < 0.01) { orbitYawTo += dt * 0.05; }
       // the ring counter-rotates the user's yaw so badges stay readable from the front
       orbit.rotation.y = orbitYaw - yaw;
+      beckon += (beckonWant - beckon) * 0.06;
       const wp = new Vector3();
       badges.forEach((b, i) => {
         const on = i === active;
@@ -1830,7 +1843,7 @@ export function mountHero(
            * of every one of them is a tap or a slider nudge away, and the
            * reading panel beside the stage has it in full.
            */
-          const target = (on ? 1 : pinScale * 0.72) * sprK();
+          const target = (on ? 1 : pinScale * 0.72) * sprK() * beckonAt(i, t);
           b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
           (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.42;
           b.label.position.copy(b.sp.position); b.label.position.y -= 0.42 * sprK() + 0.3;
@@ -1846,7 +1859,7 @@ export function mountHero(
           return;
         }
         const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
-        const target = on ? 1.45 : 0.8 + 0.18 * depth;
+        const target = (on ? 1.45 : 0.8 + 0.18 * depth) * beckonAt(i, t);
         b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.12);
         b.sp.position.set(Math.cos(b.a0) * ORBIT_R, Math.sin(t * 0.9 + i) * 0.12 + (on ? 0.15 : 0), Math.sin(b.a0) * ORBIT_R);
         (b.sp.material as SpriteMaterial).opacity = on ? 1 : 0.7 + 0.3 * Math.max(0, depth);

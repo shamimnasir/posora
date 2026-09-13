@@ -203,6 +203,16 @@ const schema = [
             <span class="xp-float" id="xp-float" aria-hidden="true"></span>
           </div>
 
+          {/* One thing to do next, named.
+
+              The page is a good catalogue and was only a catalogue: everything
+              available, nothing proposed. A child coming back had to pick from
+              a wall. This names one thing - usually the next unread item, by
+              its actual name - and takes them there. */}
+          <p class="next" id="next-up" hidden>
+            <span id="next-why"></span>
+            <button type="button" id="next-go"></button>
+          </p>
           <div class="scene">
             <nav class="zoombar" aria-label="কোথায় আছো">
               <a class="crumb crumb-world" href="/#worlds">{w.bn}</a>
@@ -406,6 +416,9 @@ const schema = [
 
         <section class="card">
           <div class="card-h"><span class="lbl">অর্জন</span><span class="lbl num" id="aw-count">০ / {bn(AWARDS.length)}</span></div>
+          {/* Eleven grey locks say "you have done nothing". This says which one
+              is within reach and how far, so the grid has a way in. */}
+          <p class="aw-near" id="aw-near" hidden></p>
           <div class="awards" id="awards">
             {AWARDS.map((a) => (
               <span class="aw" data-id={awardKey(a, w.slug)} title={a.desc}>
@@ -606,12 +619,35 @@ const schema = [
   .aw-n { font-size: 11px; font-weight: 700; line-height: 1.25; }
   .aw-d { display: none; }
   .aw.on { background: color-mix(in oklab, var(--sun) 16%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 55%, var(--line)); color: var(--ink); }
+  .aw.near { border-color: color-mix(in oklab, var(--w) 60%, var(--line)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--w) 18%, transparent); color: var(--ink-2); }
+  .aw.near .aw-e { filter: grayscale(0.35); opacity: 0.8; }
+  .aw-near { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; margin-bottom: 0.6rem; }
+  .aw-near :global(b) { color: var(--ink); }
   .aw.on .aw-e { filter: none; opacity: 1; transform: scale(1.12); }
 
   /* the scene is the same dark stage the space explorer uses, so every world
      reads as one product; the hero canvas is transparent and sits on top of it */
   .scene { position: relative; flex: 1; min-height: min(68vh, 660px); overflow: hidden; margin-top: 1rem;
     background: radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 22%, #141c2e) 0%, #0c1220 52%, #05070e 100%); }
+  .next {
+    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+    margin: 0 0 0.7rem; padding: 0.6rem 0.9rem; border-radius: 12px;
+    font-size: 14px; color: var(--ink-2); line-height: 1.5;
+    background: color-mix(in oklab, var(--w) 12%, var(--panel));
+    border: 1px solid color-mix(in oklab, var(--w) 28%, var(--line));
+  }
+  .next span { flex: 1; min-width: 12ch; }
+  .next :global(b) { color: var(--ink); font-weight: 700; }
+  .next button {
+    font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    padding: 0.45rem 0.95rem; border-radius: 999px; border: 1px solid transparent;
+    background: var(--w); color: var(--on-brand);
+    transition: transform 0.14s ease, filter 0.14s ease;
+  }
+  .next button:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .next button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  @media (pointer: coarse) { .next button { min-height: 44px; } }
+
   .host { position: absolute; inset: 0; cursor: grab; touch-action: none; overflow: hidden; }
   .host.dragging { cursor: grabbing; }
   /* set by the scene when an item is under the pointer: the canvas otherwise
@@ -880,7 +916,7 @@ const schema = [
 
 <script>
   import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, setMission, finishTask, todayState, freezeCount } from '../../lib/progress';
-  import { levelOf, AWARDS, awardKey, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
+  import { levelOf, AWARDS, awardKey, closestAward, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
   import { praise } from '../../lib/praise';
   import { goalParts, goalDone, goalMet } from '../../lib/daily';
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
@@ -1046,16 +1082,36 @@ const schema = [
     let n = 0;
     root.querySelectorAll<HTMLElement>('.aw[data-id]').forEach((el) => { const on = have.has(el.dataset.id!); el.classList.toggle('on', on); if (on) n++; });
     $('#aw-count').textContent = `${bn(n)} / ${bn(AWARDS.length)}`;
+
+    const line = $('#aw-near');
+    const close = closestAward(awardCtx(), have, slug);
+    root.querySelectorAll<HTMLElement>('.aw[data-id]').forEach((el) => el.classList.remove('near'));
+    if (!close) {
+      line.innerHTML = n === AWARDS.length ? 'সবগুলো অর্জন হয়ে গেছে। 🏆' : '';
+      line.hidden = n !== AWARDS.length;
+      return;
+    }
+    const gap = Math.max(1, close.near.need - close.near.have);
+    root.querySelector<HTMLElement>(`.aw[data-id="${awardKey(close.award, slug)}"]`)?.classList.add('near');
+    // টা is a classifier and sits against its numeral (৫টা); the word units
+    // take a space (৩ দিন).
+    const unit = close.near.unit === 'টা' ? `${bn(gap)}টা` : `${bn(gap)} ${close.near.unit}`;
+    line.innerHTML = `সবচেয়ে কাছে <b>${close.award.emoji} ${close.award.name}</b> - আর ${unit}।`;
+    line.hidden = false;
   }
-  function checkAwards() {
+  /** Where this world stands, in the shape the awards ask about. */
+  function awardCtx() {
     const seen = new Set(seenList());
     const mDone = getProgress().missions;
-    const ctx = {
+    return {
       seen: cats.reduce((s, _c, i) => s + readCount(i, seen), 0), total: TOTAL,
       catsDone: cats.filter((c, i) => readable(c) && readCount(i, seen) === c.items.length).length,
       played: playedEver, questsDone, perfect: perfectEver, streak: streakDays,
       missionsDone: missionKeys.filter((k) => (mDone[k] ?? 0) > 0).length, missionsTotal: missionKeys.length,
     };
+  }
+  function checkAwards() {
+    const ctx = awardCtx();
     let any = false;
     for (const a of AWARDS) {
       if (!a.test(ctx)) continue;
@@ -1471,7 +1527,7 @@ const schema = [
       chip?.classList.add('done');
       if (childId) pushSeen(slug, keyOf(curCat, ii));
       noteItem(slug);
-      renderProgress(); renderGlance(); renderRecords();
+      renderProgress(); renderGlance(); renderRecords(); renderNext();
       /**
        * Reading something new is the commonest good thing that happens here,
        * and it used to happen in silence: the points floated up by the pill in
@@ -1515,6 +1571,9 @@ const schema = [
     }
     renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
     if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); noteItem(slug); renderProgress(); renderGlance(); renderRecords(); renderChips(); checkGoal(); } }
+    // After the arrival has been marked read, not before: the line names what
+    // is next, and landing somewhere is what makes the next one next.
+    renderNext();
     // the gated features follow the category
     const extras = $('#extras');
     extras.hidden = !readable(c) && !c.lab;
@@ -1618,6 +1677,64 @@ const schema = [
     track('print_category', { world: slug, category: cats[curCat].n });
     window.print();
   });
+  /**
+   * What to do next, in one line.
+   *
+   * Picks the first thing that is true, most urgent first, and always names
+   * something concrete rather than gesturing at the page. The daily goal wins
+   * when it is nearly met, because "one more" is the strongest reason there
+   * is; after that it is simply the next thing unread, by name.
+   */
+  function nextUnread(): { cat: number; item: number } | null {
+    const seen = new Set(seenList());
+    for (let i = 0; i < cats.length; i++) {
+      if (!readable(cats[i])) continue;
+      const j = cats[i].items.findIndex((_it, ii) => !seen.has(keyOf(i, ii)));
+      if (j >= 0) return { cat: i, item: j };
+    }
+    return null;
+  }
+  function renderNext() {
+    const box = $('#next-up'), why = $('#next-why'), go = $<HTMLButtonElement>('#next-go');
+    const up = nextUnread();
+    const t = todayState();
+    const left = Math.max(0, 3 - t.items);
+    const lab = cats.find((c) => c.lab);
+    const labLeft = lab ? lab.items.some((_it, ii) => !new Set(seenList()).has(`${lab.n}:${lab.items[ii]}`)) : false;
+
+    let text = '', label = '', act: () => void;
+    if (up && left > 0 && t.items > 0) {
+      text = `আজ আর <b>${bn(left)}টা</b> নতুন দেখলেই লক্ষ্য পূরণ।`;
+      label = `পরেরটা: ${cats[up.cat].items[up.item]} →`;
+      act = () => jumpTo(up);
+    } else if (up) {
+      const rest = cats.reduce((n, c, i) => n + (readable(c) ? c.items.filter((_x, ii) => !new Set(seenList()).has(keyOf(i, ii))).length : 0), 0);
+      text = `এই ভুবনে আরও <b>${bn(rest)}টা</b> বাকি আছে।`;
+      label = `পরেরটা: ${cats[up.cat].items[up.item]} →`;
+      act = () => jumpTo(up);
+    } else if (lab && labLeft) {
+      text = 'পড়া শেষ। এবার <b>হাতে-কলমে</b> করে দেখো।';
+      label = `${lab.n} টুলে যাও →`;
+      act = () => { location.href = lab.lab!; };
+    } else if (!t.done.includes('quiz')) {
+      text = 'সব পড়া হয়ে গেছে - <b>কতটা মনে আছে</b> দেখি?';
+      label = 'যাচাই দাও →';
+      act = () => { location.href = `/${slug}/quiz/${curCat}/`; };
+    } else {
+      text = 'এই ভুবনের সবটাই দেখা হয়ে গেছে। 🎉';
+      label = 'অন্য ভুবনে যাই →';
+      act = () => { location.href = '/#worlds'; };
+    }
+    why.innerHTML = text;
+    go.textContent = label;
+    go.onclick = act;
+    box.hidden = false;
+  }
+  function jumpTo(at: { cat: number; item: number }) {
+    showCat(at.cat, at.item);
+    $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }
+
   $('#next-new').addEventListener('click', () => {
     const seen = new Set(seenList());
     for (let i = 0; i < cats.length; i++) {
@@ -1647,9 +1764,9 @@ const schema = [
   renderProgress();
   renderChips();
   $('#extras').hidden = !readable(cats[0]);
-  renderPlayer(); renderAwards(); renderQuestBtn(); renderMissions(); checkAwards();
+  renderPlayer(); renderAwards(); renderQuestBtn(); renderMissions(); checkAwards(); renderNext();
   // Pull the child's progress from other devices, then repaint what it changes.
-  if (childId) syncWorld(slug).then(() => { renderProgress(); renderGlance(); renderRecords(); renderChips(); renderPlayer(); checkAwards(); });
+  if (childId) syncWorld(slug).then(() => { renderProgress(); renderGlance(); renderRecords(); renderChips(); renderPlayer(); checkAwards(); renderNext(); });
   // count the category and item the page lands on the same way a click is
   // counted, so the totals are not skewed toward whatever happens to be first
   trackCategory(slug, cats[0].n);

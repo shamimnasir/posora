@@ -23,21 +23,45 @@ export type AwardCtx = {
   questsDone: number; perfect: boolean; streak: number;
   missionsDone: number; missionsTotal: number;
 };
-export type Award = { id: string; name: string; desc: string; emoji: string; global?: boolean; test(c: AwardCtx): boolean };
+/**
+ * How close an unearned award is.
+ *
+ * A grid of eleven grey locks says "you have done nothing" and gives the eye
+ * nowhere to go. Every award here is a threshold, so each can say how far off
+ * it is, and the page can point at the nearest one instead of at all of them.
+ */
+export type AwardNear = { have: number; need: number; unit: string };
+export type Award = {
+  id: string; name: string; desc: string; emoji: string; global?: boolean;
+  test(c: AwardCtx): boolean;
+  near(c: AwardCtx): AwardNear;
+};
 export const AWARDS: Award[] = [
-  { id: 'first', name: 'প্রথম আবিষ্কার', desc: 'একটা আইটেম খুলে দেখা', emoji: '🔦', test: (c) => c.seen >= 1 },
-  { id: 'ten', name: 'দশে দশ', desc: '১০টি আইটেম খুলে দেখা', emoji: '🔟', test: (c) => c.seen >= 10 },
-  { id: 'cat', name: 'একটা বিভাগ সম্পূর্ণ', desc: 'একটা বিভাগের সব আইটেম দেখা', emoji: '🧩', test: (c) => c.catsDone >= 1 },
-  { id: 'half', name: 'অর্ধেক পথ', desc: 'ভুবনের অর্ধেক আইটেম দেখা', emoji: '🌗', test: (c) => c.total > 0 && c.seen * 2 >= c.total },
-  { id: 'world', name: 'পুরো ভুবন', desc: 'এই ভুবনের সবকিছু দেখা', emoji: '🏆', test: (c) => c.total > 0 && c.seen >= c.total },
-  { id: 'play', name: 'হাতে-কলমে', desc: 'মডেল ঘুরিয়ে বা স্লাইডার টেনে দেখা', emoji: '🎛️', test: (c) => c.played },
-  { id: 'quest', name: 'খোঁজার খেলা', desc: 'একটা খোঁজার খেলা শেষ করা', emoji: '🎯', test: (c) => c.questsDone >= 1 },
-  { id: 'perfect', name: 'নিখুঁত খোঁজ', desc: 'একটাও ভুল না করে খেলা শেষ', emoji: '💯', test: (c) => c.perfect },
-  { id: 'mission', name: 'প্রথম মিশন', desc: 'একটা মিশন শেষ করা', emoji: '🚀', test: (c) => c.missionsDone >= 1 },
-  { id: 'missions', name: 'মিশন মাস্টার', desc: 'এই ভুবনের সব মিশন শেষ করা', emoji: '🎖️', test: (c) => c.missionsTotal > 0 && c.missionsDone >= c.missionsTotal },
-  { id: 'streak3', name: 'টানা তিন দিন', desc: 'পরপর তিন দিন ফিরে আসা', emoji: '🔥', global: true, test: (c) => c.streak >= 3 },
-  { id: 'streak7', name: 'টানা সাত দিন', desc: 'পরপর সাত দিন ফিরে আসা', emoji: '🗓️', global: true, test: (c) => c.streak >= 7 },
+  { id: 'first', name: 'প্রথম আবিষ্কার', desc: 'একটা আইটেম খুলে দেখা', emoji: '🔦', test: (c) => c.seen >= 1, near: (c) => ({ have: c.seen, need: 1, unit: 'টা' }) },
+  { id: 'ten', name: 'দশে দশ', desc: '১০টি আইটেম খুলে দেখা', emoji: '🔟', test: (c) => c.seen >= 10, near: (c) => ({ have: c.seen, need: 10, unit: 'টা' }) },
+  { id: 'cat', name: 'একটা বিভাগ সম্পূর্ণ', desc: 'একটা বিভাগের সব আইটেম দেখা', emoji: '🧩', test: (c) => c.catsDone >= 1, near: (c) => ({ have: c.catsDone, need: 1, unit: 'বিভাগ' }) },
+  { id: 'half', name: 'অর্ধেক পথ', desc: 'ভুবনের অর্ধেক আইটেম দেখা', emoji: '🌗', test: (c) => c.total > 0 && c.seen * 2 >= c.total, near: (c) => ({ have: c.seen, need: Math.ceil(c.total / 2), unit: 'টা' }) },
+  { id: 'world', name: 'পুরো ভুবন', desc: 'এই ভুবনের সবকিছু দেখা', emoji: '🏆', test: (c) => c.total > 0 && c.seen >= c.total, near: (c) => ({ have: c.seen, need: c.total, unit: 'টা' }) },
+  { id: 'play', name: 'হাতে-কলমে', desc: 'মডেল ঘুরিয়ে বা স্লাইডার টেনে দেখা', emoji: '🎛️', test: (c) => c.played, near: (c) => ({ have: c.played ? 1 : 0, need: 1, unit: 'বার' }) },
+  { id: 'quest', name: 'খোঁজার খেলা', desc: 'একটা খোঁজার খেলা শেষ করা', emoji: '🎯', test: (c) => c.questsDone >= 1, near: (c) => ({ have: c.questsDone, need: 1, unit: 'খেলা' }) },
+  { id: 'perfect', name: 'নিখুঁত খোঁজ', desc: 'একটাও ভুল না করে খেলা শেষ', emoji: '💯', test: (c) => c.perfect, near: (c) => ({ have: c.perfect ? 1 : 0, need: 1, unit: 'খেলা' }) },
+  { id: 'mission', name: 'প্রথম মিশন', desc: 'একটা মিশন শেষ করা', emoji: '🚀', test: (c) => c.missionsDone >= 1, near: (c) => ({ have: c.missionsDone, need: 1, unit: 'মিশন' }) },
+  { id: 'missions', name: 'মিশন মাস্টার', desc: 'এই ভুবনের সব মিশন শেষ করা', emoji: '🎖️', test: (c) => c.missionsTotal > 0 && c.missionsDone >= c.missionsTotal, near: (c) => ({ have: c.missionsDone, need: Math.max(1, c.missionsTotal), unit: 'মিশন' }) },
+  { id: 'streak3', name: 'টানা তিন দিন', desc: 'পরপর তিন দিন ফিরে আসা', emoji: '🔥', global: true, test: (c) => c.streak >= 3, near: (c) => ({ have: c.streak, need: 3, unit: 'দিন' }) },
+  { id: 'streak7', name: 'টানা সাত দিন', desc: 'পরপর সাত দিন ফিরে আসা', emoji: '🗓️', global: true, test: (c) => c.streak >= 7, near: (c) => ({ have: c.streak, need: 7, unit: 'দিন' }) },
 ];
+
+/** The unearned award closest to being earned, if any is left. */
+export function closestAward(c: AwardCtx, have: ReadonlySet<string>, world: string): { award: Award; near: AwardNear } | null {
+  let best: { award: Award; near: AwardNear; frac: number } | null = null;
+  for (const a of AWARDS) {
+    if (have.has(awardKey(a, world)) || a.test(c)) continue;
+    const n = a.near(c);
+    const frac = n.need > 0 ? n.have / n.need : 0;
+    if (!best || frac > best.frac) best = { award: a, near: n, frac };
+  }
+  return best ? { award: best.award, near: best.near } : null;
+}
 export const awardKey = (a: Award, world: string) => (a.global ? a.id : `${world}:${a.id}`);
 
 /* ---------- stars for a খোঁজার খেলা round ---------- */
