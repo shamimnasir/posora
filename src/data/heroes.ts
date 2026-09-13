@@ -8,7 +8,10 @@ const T = (type: string, v?: string, p?: number): H => ({ type, v, p });
 const MAP: Record<string, H[]> = {
   physics:   [T('ramp'), T('pendulum'), T('gears'), T('prism', undefined, 0.6), T('wave'), T('particles', undefined, 0.55), T('circuit', undefined, 0.7)],
   chemistry: [T('particles', undefined, 0.2), T('atom', undefined, 0.5), T('atom', undefined, 0.9), T('beaker', undefined, 0.6), T('beaker', 'ph', 0.2), T('particles', 'mix', 0.2), T('molecule')],
-  life:      [T('treeparts', undefined, 0.75), T('tree', 'photo', 0.7), T('tree', undefined, 0.15), T('collection'), T('collection'), T('collection'), T('collection'), T('bodyparts', undefined, 0.25)],
+  // জীবনচক্র opened at 0.15, where the tree is still a speck: the stage read as
+  // empty, and a hero that looks broken is not an invitation to touch the
+  // slider. 0.42 is a young sapling, which is still early in the cycle.
+  life:      [T('treeparts', undefined, 0.75), T('tree', 'photo', 0.7), T('tree', undefined, 0.42), T('collection'), T('collection'), T('collection'), T('collection'), T('bodyparts', undefined, 0.25)],
   nature:    [T('weather', undefined, 0.4), T('seasonwheel'), T('terrain', 'delta', 0.6), T('terrain', undefined, 0.6), T('collection'), T('collection'), T('earth', undefined, 0.2), T('weather', 'storm', 0.9)],
   food:      [T('collection'), T('plate', undefined, 0.7), T('terrain', 'farm', 0.6), T('seasonwheel', 'fruit'), T('collection'), T('collection'), T('collection'), T('collection')],
   math:      [T('blocks', undefined, 0.47), T('blocks', undefined, 0.25), T('pie', undefined, 0.375), T('shapes', undefined, 0.15), T('scale', undefined, 0.5), T('coins', undefined, 0.5), T('blocks', 'wave'), T('bars', undefined, 0.6), T('scale', undefined, 0.3)],

@@ -43,7 +43,18 @@ type SceneObj = {
    * interest somewhere else, and aiming at the origin regardless leaves the
    * subject stranded in a corner with the frame full of empty ground.
    */
-  aim?: { y?: number; z?: number; eye?: number; dolly?: number };
+  aim?: { y?: number; z?: number; eye?: number; dolly?: number;
+    /**
+     * A landscape, not an object: it may run past the left and right edges.
+     *
+     * The camera fit keeps whole objects inside the frame, which is right for
+     * a clock or a minar and wrong for terrain: pulling back far enough to see
+     * both ends of a wide, flat plate leaves it a sliver across the middle of
+     * an empty screen. A scene that says `wide` is fitted vertically only, so
+     * the ground still fills the frame and bleeds off the sides the way a
+     * landscape does.
+     */
+    wide?: boolean };
 };
 type Builder = (c: Ctx) => SceneObj;
 
@@ -909,7 +920,9 @@ const SCENES: Record<string, Builder> = {
     // The terrain is its own ground, so the shared shadow disc stays away:
     // two grounds a hair apart is exactly the z-fighting stripe that ruined
     // the collection scene before it got one ground instead of two.
-    return { label: v === 'farm' ? 'ফসল' : 'উচ্চতা', aim: { y: -0.15, eye: 1.55 }, update(t, _dt, p) { if (Math.abs(p - last) > 0.01) { paint(p); last = p; } root.rotation.y += 0.0015; sea.position.y = -1 + 0.01 + Math.sin(t) * 0.02; } };
+    // a landscape fills the frame and runs off the sides; pulling back far
+    // enough to see both ends of the plate leaves it a sliver in empty space
+    return { label: v === 'farm' ? 'ফসল' : 'উচ্চতা', aim: { y: -0.15, eye: 1.55, wide: true }, update(t, _dt, p) { if (Math.abs(p - last) > 0.01) { paint(p); last = p; } root.rotation.y += 0.0015; sea.position.y = -1 + 0.01 + Math.sin(t) * 0.02; } };
   },
 
   seasonwheel({ root, hue, v, font }) {
@@ -1449,7 +1462,7 @@ export function mountHero(
   // `dolly` pulls the camera in for scenes whose badges are pinned on the
   // model rather than orbiting it: the default distance exists to clear that
   // ring, and a scene without one should not be framed as if it had one.
-  let aimY = 0.1, aimZ = 0, eyeY = 1.35, dolly = 1;
+  let aimY = 0.1, aimZ = 0, eyeY = 1.35, dolly = 1, wide = false;
   /**
    * Badges and labels are sprites measured in world units, so pulling the
    * camera in for a close scene magnifies them along with everything else -
@@ -1543,6 +1556,8 @@ export function mountHero(
   let parts: Part[] = [];
   let spread = 1, explodeTo = 0, explodeNow = 0;
   const boxTmp = new Box3(), sphTmp = new Sphere(), vTmp = new Vector3();
+  /** The built model's own extent, unrotated and unscaled. See `fitDistance`. */
+  const fitMin = new Vector3(-1, -1, -1), fitMax = new Vector3(1, 1, 1);
   /** Model centre and radius, measured once with the view transforms neutral. */
   let modelCentre = new Vector3(), modelRadius = 1;
   /**
@@ -1635,6 +1650,25 @@ export function mountHero(
     // One call after the scene is built, rather than a flag inside ninety
     // builders that a ninety-first would forget.
     castShadows(root);
+    /**
+     * Measure the model while it is unrotated and unscaled, so the camera can
+     * be placed for the thing that is actually there. See `fitDistance`.
+     *
+     * Sampled over a few moments of the animation rather than once, because a
+     * scene that lays its pieces out inside `update` has every one of them
+     * sitting on the origin at build time. `shapes` is exactly that: its
+     * solids are positioned every frame, so a single measurement said the
+     * model was a point and the camera stayed where it was.
+     */
+    fitMin.set(Infinity, Infinity, Infinity); fitMax.set(-Infinity, -Infinity, -Infinity);
+    for (const ts of [0, 1.1, 2.7, 4.9]) {
+      cur.update(ts, 0, param);
+      root.updateMatrixWorld(true);
+      boxTmp.setFromObject(root);
+      if (!boxTmp.isEmpty()) { fitMin.min(boxTmp.min); fitMax.max(boxTmp.max); }
+    }
+    if (!Number.isFinite(fitMin.x)) { fitMin.set(-1, -1, -1); fitMax.set(1, 1, 1); }
+    wide = cur.aim?.wide === true;
     // The ground belongs to the world, not to the model, so it sits outside
     // the turntable group: the figures turn on it and their shadows sweep
     // across it, which is what the eye expects. A floating scene gets none.
@@ -1664,10 +1698,82 @@ export function mountHero(
 
   let w = 1, h = 1, visible = true, raf = 0, last = performance.now(), t = 0;
   let camZBase = 6.2;
-  function resize() { const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); camZBase = ((w < 600 ? 7.4 : 6.2) + (badges.length ? (anchoredCount ? 1.2 : 1.9) : 0)) * dolly; camera.position.z = camZBase; aimCamera(); }
+  /**
+   * Does the model fit in the frame with the camera at z?
+   *
+   * The turntable spins the whole scene about the origin, so what has to fit
+   * sideways is the circle the model *sweeps* there, not its own half width: a
+   * plate 7 units across still needs 3.5 of clearance when it has turned
+   * ninety degrees. The tightest moment is the near side of that sweep, which
+   * is where the frustum is narrowest, so every test is made at `z - rxz`.
+   */
+  function fits(z: number): boolean {
+    const halfV = Math.tan(MathUtils.degToRad(camera.fov) / 2), halfH = halfV * camera.aspect;
+    const s = baseScale;
+    const rxz = Math.hypot(
+      Math.max(Math.abs(fitMin.x), Math.abs(fitMax.x)),
+      Math.max(Math.abs(fitMin.z), Math.abs(fitMax.z)),
+    ) * s;
+    const near = z - rxz;
+    if (near <= 0.6) return false;
+    const axisY = eyeY + (aimY - eyeY) * (near / Math.max(0.01, z - aimZ));
+    const halfAt = near * halfV;
+    // a pinned badge hovers over its part and the chosen one carries a name
+    // tag, so a model that reaches the top of the frame pushes its own label
+    // off the top of it
+    const padTop = anchoredCount ? pinScale * 1.05 : 0;
+    return (wide || rxz <= near * halfH)
+      && fitMax.y * s + padTop - axisY <= halfAt
+      && axisY - fitMin.y * s <= halfAt;
+  }
+  /**
+   * A fixed camera distance crops silently, which is how the space explorer
+   * lost four orbit rings off the edge and how fourteen of the sixty-one hero
+   * specs were running off the frame here: the wave ribbon is 7 units wide
+   * against 6.3 of visible width, the heat box is 4.4 deep and clipped at its
+   * near corners, the Shaheed Minar's columns ran out of the top, and the
+   * grove of fourteen trees was being viewed from inside itself.
+   *
+   * This only ever moves the camera *back*. A scene that already fits keeps
+   * the framing it was composed with, including the three that deliberately
+   * stand close by declaring a `dolly` under one; a scene that does not fit is
+   * eased out in five per cent steps until it does.
+   */
+  function fitDistance(base: number): number {
+    let z = base;
+    for (let i = 0; i < 40 && !fits(z); i++) z *= 1.05;
+    return z;
+  }
+  function resize() {
+    const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height);
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    const base = ((w < 600 ? 7.4 : 6.2) + (badges.length ? (anchoredCount ? 1.2 : 1.9) : 0)) * dolly;
+    camZBase = fitDistance(base);
+    camera.position.z = camZBase; aimCamera();
+  }
   new ResizeObserver(resize).observe(host); resize(); framed = true;
   function frame(now: number) {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    /**
+     * Time cannot run backwards, and without the clamp it did.
+     *
+     * `start()` sets `last = performance.now()` and then asks for a frame, but
+     * a requestAnimationFrame callback is handed the timestamp of the *start*
+     * of the frame, which is routinely a whole vsync EARLIER than the moment
+     * it was scheduled. Measured here at -15.8ms. So the first frame after
+     * every start had a negative dt and `t` went backwards through zero.
+     *
+     * That is not cosmetic. The circuit scene walks its electrons with
+     * `curve.getPointAt(((t * k) + i / N) % 1)`, and a JavaScript remainder
+     * keeps the sign of its operand: at negative t the argument goes negative,
+     * `getUtoTmapping` indexes its arc-length table at -1, reads `undefined`,
+     * and `getPoint(NaN)` throws. The throw escapes `frame` before the line
+     * that requests the next one, so the loop is never rescheduled and the
+     * whole hero is dead until the page is reloaded. `start()` is called on
+     * mount, on setItems, on clicking an item, on moving the slider and every
+     * time the stage scrolls back into view, so this was reachable from a
+     * visitor simply scrolling.
+     */
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
     const run = auto || dragging; if (run) t += dt;
     if (!dragging) {
       yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); vx *= 0.92; vy *= 0.92;
