@@ -26,7 +26,7 @@
  *   4. Fog, so depth reads.
  */
 import {
-  ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, PMREMGenerator,
+  ACESFilmicToneMapping, PCFShadowMap, SRGBColorSpace, PMREMGenerator,
   Scene, Mesh, BoxGeometry, MeshBasicMaterial, BackSide, Color, Fog,
   AmbientLight, DirectionalLight, WebGLRenderer, Object3D, CircleGeometry,
   MeshStandardMaterial, DoubleSide, Texture,
@@ -97,7 +97,18 @@ export function dressScene(
   renderer.toneMappingExposure = exposure;
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, weak ? 1.5 : 2));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = PCFSoftShadowMap;
+  /**
+   * PCF, not PCF-soft.
+   *
+   * three still exports the `PCFSoftShadowMap` constant, so asking for it
+   * compiles and typechecks cleanly, but 0.186 removed the implementation:
+   * `WebGLShadowMap.render` quietly rewrites the type to PCFShadowMap and
+   * warns, once per scene mount, which was eighteen console warnings on a
+   * world page. PCFShadowMap is already the default, so this line is really a
+   * statement of intent - the softness now has to come from the map size and
+   * the normal bias below, not from the filter.
+   */
+  renderer.shadowMap.type = PCFShadowMap;
 
   const env = skyEnvironment(renderer);
   scene.environment = env;

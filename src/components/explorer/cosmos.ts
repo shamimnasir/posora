@@ -13,6 +13,7 @@ import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, MeshBasicMaterial, Color, Vector2, Vector3, MathUtils,
   SphereGeometry, RingGeometry, ShaderMaterial, BufferGeometry, Float32BufferAttribute,
   LineLoop, LineBasicMaterial, Points, PointsMaterial, AdditiveBlending, DoubleSide, Raycaster,
+  SRGBColorSpace, ACESFilmicToneMapping,
 } from 'three';
 import type { Visual, Moon, Body } from '../../data/space';
 import { FACTS, EARTH_DIAMETER_KM } from '../../data/space';
@@ -58,16 +59,20 @@ void main(){
   vec3 p = normalize(vP); vec3 col; float n = fbm(p * uScale);
   vec3 N = normalize(vN); vec3 V = vec3(0.0, 0.0, 1.0);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-  if (uType == 0) {
+  bool star = uType == 0;
+  if (star) {
     float t = uTime * 0.12;
     float g  = fbm(p * uScale + vec3(t, -t * 0.7, t * 0.3));
     float g2 = fbm(p * uScale * 2.6 - vec3(t * 0.5));
     col = mix(uB, uA, smoothstep(-0.45, 0.55, g));
     col = mix(col, uC, smoothstep(0.3, 0.8, g2) * 0.55);
-    col += uGlow * pow(rim, 2.2) * 0.7;
-    gl_FragColor = vec4(col, 1.0); return;
-  }
-  if (uType == 1) {
+    // Pushed well past 1.0 on purpose. A star is the brightest thing in the
+    // frame and it used to be clamped to the same ceiling as Mars; with the
+    // filmic curve on the tail of this shader, over-bright values roll off
+    // into a hot white core instead of clipping to a flat orange disc.
+    col *= 1.5;
+    col += uGlow * pow(rim, 2.2) * 1.5;
+  } else if (uType == 1) {
     float m = fbm(p * uScale * 1.7 + 3.1);
     col = mix(uB, uA, smoothstep(-0.5, 0.5, n));
     col = mix(col, uC, smoothstep(0.25, 0.7, m) * 0.5);
@@ -88,15 +93,37 @@ void main(){
     float cl = fbm(p * uScale * 1.4 + vec3(uTime * 0.035, uTime * 0.008, 0.0));
     col = mix(col, vec3(1.0), smoothstep(0.15, 0.6, cl) * 0.85);
   }
-  float diff = max(dot(N, normalize(uLight)), 0.0);
-  col = col * (0.14 + diff * 0.98) + uGlow * rim * 0.35 * (0.3 + diff);
+  if (!star) {
+    float diff = max(dot(N, normalize(uLight)), 0.0);
+    col = col * (0.14 + diff * 0.98) + uGlow * rim * 0.35 * (0.3 + diff);
+  }
   gl_FragColor = vec4(col, 1.0);
+  /**
+   * The two chunks every built-in three material ends with, and which a
+   * hand-written ShaderMaterial has to ask for.
+   *
+   * Without <colorspace_fragment> the shader's linear result was written
+   * straight into an sRGB framebuffer with no conversion, so every planet
+   * rendered darker and more contrasty than its own palette says: the colours
+   * arrive here already linear, because three converts a hex through
+   * ColorManagement on the way into the uniform. Without <tonemapping_fragment>
+   * anything over 1.0 clips flat, which is the whole surface of the sun.
+   * WebGLProgram injects toneMapping() and linearToOutputTexel() into the
+   * fragment prefix for us, so these two lines are all it takes.
+   */
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
 }`;
 
 const GLOW_VERT = /* glsl */ `varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 const GLOW_FRAG = /* glsl */ `
-precision highp float; uniform vec3 uGlow; uniform float uStrength; varying vec3 vN;
-void main(){ float f = pow(1.0 - max(dot(normalize(vN), vec3(0.0,0.0,1.0)), 0.0), 3.5); gl_FragColor = vec4(uGlow, f * uStrength); }`;
+precision highp float; uniform vec3 uGlow; uniform float uStrength; uniform float uFall; varying vec3 vN;
+void main(){
+  float f = pow(1.0 - max(dot(normalize(vN), vec3(0.0,0.0,1.0)), 0.0), uFall);
+  gl_FragColor = vec4(uGlow, f * uStrength);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
 
 const RING_VERT = /* glsl */ `varying vec2 vXY; void main(){ vXY = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 const RING_FRAG = /* glsl */ `
@@ -108,10 +135,24 @@ void main(){
   float a = smoothstep(0.0, 0.04, t) * smoothstep(1.0, 0.92, t) * (0.45 + 0.55 * bands);
   a *= 1.0 - smoothstep(0.60, 0.63, t) * smoothstep(0.69, 0.66, t) * 0.85;
   gl_FragColor = vec4(mix(uA, uB, bands), a * 0.92);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
 }`;
 
 const TYPE = { sun: 0, rocky: 1, gas: 2, earth: 3, ice: 4 } as const;
-const LIGHT = new Vector3(-0.55, 0.45, 0.75).normalize();
+/**
+ * Where the light comes from for a body shown on its own, in WORLD space.
+ *
+ * This used to be the value of `uLight` for every body at every level, and
+ * `vN` is a view-space normal, so it was a light welded to the camera: orbit
+ * the planet and the terminator came with you, and in the system view all
+ * eight planets were lit from the upper left at once, including the ones on
+ * the far side of the sun. A solar system whose sun lights nothing is the
+ * first thing anyone notices. `setLight` now writes a per-body direction each
+ * frame, taken from the real sun in the system view and from this constant
+ * when a body is alone in frame.
+ */
+const BODY_LIGHT = new Vector3(-0.55, 0.45, 0.75).normalize();
 
 function planetMaterial(v: Visual) {
   return new ShaderMaterial({
@@ -120,8 +161,15 @@ function planetMaterial(v: Visual) {
       uTime: { value: 0 }, uType: { value: TYPE[v.type] },
       uA: { value: new Color(v.colors[0]) }, uB: { value: new Color(v.colors[1]) }, uC: { value: new Color(v.colors[2]) },
       uBands: { value: v.bands }, uScale: { value: v.scale }, uTurb: { value: v.turb },
-      uLight: { value: LIGHT }, uGlow: { value: new Color(v.glow) },
+      uLight: { value: BODY_LIGHT.clone() }, uGlow: { value: new Color(v.glow) },
     },
+  });
+}
+/** The rim shell used for atmospheres and the sun's corona. */
+function glowMaterial(color: Color | string, strength: number, fall = 3.5) {
+  return new ShaderMaterial({
+    vertexShader: GLOW_VERT, fragmentShader: GLOW_FRAG, transparent: true, depthWrite: false, blending: AdditiveBlending,
+    uniforms: { uGlow: { value: new Color(color) }, uStrength: { value: strength }, uFall: { value: fall } },
   });
 }
 
@@ -156,23 +204,46 @@ export function mountCosmos(
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  // The same filmic curve the world stages use, so a planet looks like it
+  // belongs to the same site as a mango tree. The shaders opt in at their tail.
+  renderer.outputColorSpace = SRGBColorSpace;
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
   const scene = new Scene();
   const camera = new PerspectiveCamera(38, 1, 0.05, 400);
   const ray = new Raycaster();
   const ndc = new Vector2();
 
   /* ---------- starfield: the thing that makes it feel vast ---------- */
-  const starGeo = new BufferGeometry();
-  {
-    const N = 1800, pos = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) {
+  /**
+   * Two layers, and every star its own colour.
+   *
+   * One layer of 1800 identical white dots at one size and one opacity is a
+   * texture, not a sky: real stars span an enormous brightness range and a
+   * narrow but visible colour range, and it is the handful of bright ones
+   * that make the rest read as distance. PointsMaterial has no per-point
+   * size, so the bright few are a second, sparser draw; brightness within
+   * each layer comes from vertex colours, which cost nothing.
+   */
+  const stars = new Group(); scene.add(stars);
+  const COOL = new Color('#bcd2ff'), WARM = new Color('#ffd7b0'), tint = new Color();
+  function starLayer(n: number, size: number, opacity: number, minBright: number) {
+    const geo = new BufferGeometry();
+    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
       const r = 90 + Math.random() * 120, th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
       pos[i * 3] = r * Math.sin(ph) * Math.cos(th); pos[i * 3 + 1] = r * Math.cos(ph); pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
+      // most stars are faint; a few are not, which is what the curve does
+      const b = minBright + (1 - minBright) * Math.pow(Math.random(), 2.2);
+      tint.copy(COOL).lerp(WARM, Math.random()).multiplyScalar(b);
+      col[i * 3] = tint.r; col[i * 3 + 1] = tint.g; col[i * 3 + 2] = tint.b;
     }
-    starGeo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+    geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new Float32BufferAttribute(col, 3));
+    stars.add(new Points(geo, new PointsMaterial({ size, sizeAttenuation: true, transparent: true, opacity, vertexColors: true, depthWrite: false })));
   }
-  const stars = new Points(starGeo, new PointsMaterial({ color: 0xffffff, size: 0.55, sizeAttenuation: true, transparent: true, opacity: 0.85 }));
-  scene.add(stars);
+  starLayer(1700, 0.5, 0.8, 0.25);   // the field
+  starLayer(90, 1.15, 0.95, 0.75);   // the bright few
 
   const user = new Group(); scene.add(user);              // drag-orbit
   const systemG = new Group(); user.add(systemG);         // level: system
@@ -197,11 +268,22 @@ export function mountCosmos(
   comet.add(cometHead);
   const tailGeo = new BufferGeometry();
   {
-    const N = 26, pos = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) { pos[i * 3] = i * 0.34; pos[i * 3 + 1] = 0; pos[i * 3 + 2] = 0; }
+    // A tail thins and fades as it goes: the old one was 26 evenly spaced dots
+    // of one colour, which reads as a dotted line drawn beside the comet.
+    const N = 44, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+    const head = new Color('#dff0ff'), far = new Color('#5b7fd0');
+    for (let i = 0; i < N; i++) {
+      const k = i / (N - 1);
+      pos[i * 3] = k * k * 9.5 + k * 1.2;                       // bunched near the head
+      pos[i * 3 + 1] = (Math.random() - 0.5) * k * 0.9;          // and spreading behind it
+      pos[i * 3 + 2] = (Math.random() - 0.5) * k * 0.9;
+      const c = head.clone().lerp(far, k).multiplyScalar(1 - k * 0.85);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
     tailGeo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+    tailGeo.setAttribute('color', new Float32BufferAttribute(col, 3));
   }
-  const cometTail = new Points(tailGeo, new PointsMaterial({ color: 0x9fd8ff, size: 0.16, sizeAttenuation: true, transparent: true, opacity: 0.55 }));
+  const cometTail = new Points(tailGeo, new PointsMaterial({ size: 0.17, sizeAttenuation: true, transparent: true, opacity: 0.75, vertexColors: true, depthWrite: false }));
   comet.add(cometTail);
 
   /* ---------- system view ---------- */
@@ -213,13 +295,17 @@ export function mountCosmos(
   const sysGeo = new SphereGeometry(1, 32, 32);
   if (sunBody) {
     const sun = new Mesh(sysGeo, planetMaterial(sunBody.visual));
-    sun.scale.setScalar(1.8); sun.userData = { kind: 'body', id: 'sun' };
+    sun.scale.setScalar(2.5); sun.userData = { kind: 'body', id: 'sun' };
     systemG.add(sun);
-    const halo = new Mesh(new SphereGeometry(2.6, 32, 32), new ShaderMaterial({
-      vertexShader: GLOW_VERT, fragmentShader: GLOW_FRAG, transparent: true, depthWrite: false, blending: AdditiveBlending,
-      uniforms: { uGlow: { value: new Color(sunBody.visual.glow) }, uStrength: { value: 1.5 } },
-    }));
-    systemG.add(halo);
+    /**
+     * Two shells, not one. A single tight halo gave the sun a hard edge with a
+     * thin ring round it, which reads as a painted disc. The inner shell is
+     * the bright chromosphere hugging the surface; the outer one is a wide,
+     * slow falloff standing in for the corona, and it is the thing that makes
+     * a star look like it is pouring light into the space around it.
+     */
+    systemG.add(new Mesh(new SphereGeometry(3.4, 32, 32), glowMaterial(sunBody.visual.glow, 1.6, 3.2)));
+    systemG.add(new Mesh(new SphereGeometry(7.0, 32, 32), glowMaterial('#ffd9a0', 0.38, 1.5)));
   }
   planets.forEach((b, i) => {
     const r = 4.5 + Math.log10((b.au ?? 0.4) + 1) * 11;
@@ -228,7 +314,10 @@ export function mountCosmos(
     const og = new BufferGeometry(); og.setAttribute('position', new Float32BufferAttribute(pts, 3));
     systemG.add(new LineLoop(og, new LineBasicMaterial({ color: 0x8695a8, transparent: true, opacity: 0.3 })));
     const m = new Mesh(sysGeo, planetMaterial(b.visual));
-    const size = b.id === 'jupiter' ? 0.95 : b.id === 'saturn' ? 0.85 : b.id === 'uranus' || b.id === 'neptune' ? 0.7 : b.id === 'earth' || b.id === 'venus' ? 0.5 : 0.42;
+    // Sized for a camera that now stands back far enough to hold Pluto's
+    // orbit, which is roughly twice as far out as the old hardcoded distance:
+    // at the previous sizes every planet was a two-pixel speck out there.
+    const size = b.id === 'jupiter' ? 1.5 : b.id === 'saturn' ? 1.35 : b.id === 'uranus' || b.id === 'neptune' ? 1.12 : b.id === 'earth' || b.id === 'venus' ? 0.8 : 0.68;
     m.scale.setScalar(size); m.userData = { kind: 'body', id: b.id };
     systemG.add(m);
     const label = document.createElement('button');
@@ -237,6 +326,8 @@ export function mountCosmos(
     labelsEl.appendChild(label);
     sysRefs.push({ mesh: m, id: b.id, r, a0: (i / planets.length) * Math.PI * 2 + i, speed: 0.06 / Math.sqrt(r / 4.5), label });
   });
+  /** The outermost orbit, which is what the system view has to fit. */
+  const maxOrbit = sysRefs.reduce((a, s) => Math.max(a, s.r), 4.5);
 
   /* ---------- body view ---------- */
   const tiltG = new Group(); bodyG.add(tiltG);
@@ -244,10 +335,7 @@ export function mountCosmos(
   let planet = new Mesh(sphere, planetMaterial(all[0].visual));
   planet.userData = { kind: 'self' };
   tiltG.add(planet);
-  const glow = new Mesh(new SphereGeometry(1.1, 48, 48), new ShaderMaterial({
-    vertexShader: GLOW_VERT, fragmentShader: GLOW_FRAG, transparent: true, depthWrite: false, blending: AdditiveBlending,
-    uniforms: { uGlow: { value: new Color('#fff') }, uStrength: { value: 0.9 } },
-  }));
+  const glow = new Mesh(new SphereGeometry(1.1, 48, 48), glowMaterial('#ffffff', 0.9));
   bodyG.add(glow);
   const extras = new Group(); bodyG.add(extras);
 
@@ -263,7 +351,23 @@ export function mountCosmos(
   type MoonRef = { mesh: Mesh; period: number; r: number; a0: number; label: HTMLElement; tilt: number };
   let moonRefs: MoonRef[] = [];
   const moonGeo = new SphereGeometry(1, 28, 28);
-  let curId = startId, maxR = 0, spin = 0;
+  let curId = startId, maxR = 0, spin = 0, glowBase = 1.045;
+
+  /**
+   * Point a body's light at something real.
+   *
+   * `vN` is a view-space normal, so `uLight` has to be a view-space direction:
+   * we take the direction in world space and push it through the camera's view
+   * matrix every frame. That is the whole difference between a sun that lights
+   * the system and a lamp bolted to the camera.
+   */
+  const lightTmp = new Vector3();
+  function setLight(m: Mesh, worldDir: Vector3) {
+    const mat = m.material as ShaderMaterial;
+    if (!mat.uniforms?.uLight) return;
+    lightTmp.copy(worldDir).transformDirection(camera.matrixWorldInverse);
+    (mat.uniforms.uLight.value as Vector3).copy(lightTmp);
+  }
 
   function layoutCompare(b: Body) {
     // Both drawn from real mean diameters: this body is radius 1, Earth scales against it.
@@ -282,9 +386,13 @@ export function mountCosmos(
     tiltG.rotation.z = MathUtils.degToRad(b.visual.tilt);
     spin = b.visual.spin;
     const gm = glow.material as ShaderMaterial;
+    const isStar = b.visual.type === 'sun';
     gm.uniforms.uGlow.value.set(b.visual.glow);
-    gm.uniforms.uStrength.value = b.visual.type === 'sun' ? 1.5 : 0.45;
-    glow.scale.setScalar(b.visual.type === 'sun' ? 1.22 : 1.045);
+    gm.uniforms.uStrength.value = isStar ? 1.5 : 0.45;
+    // a star's light falls off slowly; a thin atmosphere hugs the limb
+    gm.uniforms.uFall.value = isStar ? 2.0 : 3.5;
+    glowBase = isStar ? 1.3 : 1.045;
+    glow.scale.setScalar(glowBase);
     if (b.visual.ring) {
       const rg = new RingGeometry(b.visual.ring.inner, b.visual.ring.outer, 160, 1);
       const rm = new ShaderMaterial({
@@ -330,7 +438,17 @@ export function mountCosmos(
   function showSystem() {
     setLevel('system'); followMoon = -1;
     systemG.visible = true; bodyG.visible = false;
-    camDist = 6; camWant = 30; camTargetWant.set(0, 0, 0); pitchWant = 0.35;
+    /**
+     * Fit the real outermost orbit, rather than a hardcoded 30.
+     *
+     * Neptune's ring sits at radius 21 and Pluto's at 22, and at distance 30
+     * this camera only reaches about 13 across: the view called সৌরজগৎ was
+     * showing the solar system out to Jupiter, with four orbit rings running
+     * off the edge of the frame and their planets invisible unless you
+     * happened to catch them swinging through the corner.
+     */
+    camDist = Math.min(camDist, 12); camWant = fitDistance(maxOrbit);
+    camTargetWant.set(0, 0, 0); pitchWant = 0.35;
   }
   /** Distance at which the outermost orbit still fits on screen, from the real frustum. */
   function fitDistance(radius: number): number {
@@ -408,11 +526,14 @@ export function mountCosmos(
   function resize() {
     const r = host.getBoundingClientRect(); w = Math.max(1, r.width); h = Math.max(1, r.height);
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
-    if (level === 'body' && !cmpOn) camWant = fitDistance(Math.max(maxR, 1.35));
+    // refit on resize, or a narrow window silently crops the outer orbits again
+    if (level === 'system') camWant = fitDistance(maxOrbit);
+    else if (level === 'body' && cmpOn) camWant = fitDistance(Math.max((cmpEarth.position.x + cmpEarth.scale.x + 1) / 2, 1.35));
+    else if (level === 'body') camWant = fitDistance(Math.max(maxR, 1.35));
   }
   new ResizeObserver(resize).observe(host); resize();
 
-  const tmp = new Vector3(), moonWorld = new Vector3();
+  const tmp = new Vector3(), moonWorld = new Vector3(), sunWorld = new Vector3(), lightDir = new Vector3();
   const LABEL_PAD = 34; // keep the pill fully inside, not just its anchor point
   /**
    * Take a label off screen. The pointer-events half matters as much as the
@@ -448,11 +569,17 @@ export function mountCosmos(
       const cx = Math.cos(ca) * 17, cz = Math.sin(ca) * 9;     // stretched, comet-ish orbit
       comet.position.set(cx, Math.sin(ca * 0.5) * 1.6, cz);
       comet.lookAt(0, 0, 0); comet.rotateY(Math.PI);            // tail points away from the sun
+      systemG.getWorldPosition(sunWorld);          // the sun sits at this group's origin
       for (const s of sysRefs) {
         const a = s.a0 + (reduced ? 0 : t * s.speed);
         s.mesh.position.set(Math.cos(a) * s.r, 0, Math.sin(a) * s.r);
         s.mesh.rotation.y += dt * 0.2;
         s.mesh.getWorldPosition(moonWorld);
+        // lit by the actual sun in the middle of the actual scene
+        setLight(s.mesh, lightDir.subVectors(sunWorld, moonWorld).normalize());
+        // the bands and storms only ever advanced on the focused body, so a
+        // gas giant sat frozen for as long as you looked at the whole system
+        (s.mesh.material as ShaderMaterial).uniforms.uTime.value = t;
         project(moonWorld, s.label, false);
       }
     } else {
@@ -461,17 +588,22 @@ export function mountCosmos(
 
     // focused body + moons
     if (bodyG.visible) {
-      if (cmpOn) { cmpEarth.rotation.y += dt * 0.25; cmpEarth.getWorldPosition(moonWorld); project(moonWorld, cmpLabel, false); }
+      if (cmpOn) { cmpEarth.rotation.y += dt * 0.25; setLight(cmpEarth, BODY_LIGHT); cmpEarth.getWorldPosition(moonWorld); project(moonWorld, cmpLabel, false); }
       else hideLabel(cmpLabel);
       if (!reduced || dragging) planet.rotation.y += spin * dt * (idle > 4 ? 1 : 0.6);
       const pop = Math.min(1, (now - popStart) / 500); const sc = 1 - Math.pow(1 - pop, 3);
       planet.scale.setScalar(sc);
-      glow.scale.setScalar(((planet.material as ShaderMaterial).uniforms.uType.value === 0 ? 1.22 : 1.045) * sc);
+      glow.scale.setScalar(glowBase * sc);
       (planet.material as ShaderMaterial).uniforms.uTime.value = t;
+      // A body alone in frame has no sun in the scene, so the direction is the
+      // art-directed one - but still pushed through the view matrix, so the
+      // terminator now stays put in space while the camera orbits around it.
+      setLight(planet, BODY_LIGHT);
       moonRefs.forEach((m, i) => {
         const a = m.a0 + (reduced ? 0 : t * (Math.PI * 2) / m.period);
         m.mesh.position.set(Math.cos(a) * m.r, 0, Math.sin(a) * m.r);
         m.mesh.rotation.y = t * 0.3;
+        setLight(m.mesh, BODY_LIGHT);   // a moon is lit from where its planet is
         m.mesh.getWorldPosition(moonWorld);
         if (followMoon === i) camTargetWant.copy(moonWorld);
         const behind = moonWorld.z < -0.2 && Math.hypot(moonWorld.x, moonWorld.y) < 1.0;
@@ -501,14 +633,36 @@ export function mountCosmos(
 
   focusBody(startId);
   camDist = camWant; // no zoom-from-space on first paint, just be there
+  // Place the camera before the first frame runs. setLight reads
+  // `camera.matrixWorldInverse`, and an unplaced camera leaves it as the
+  // identity, which would light the opening frame from nowhere in particular.
+  camera.position.set(camTarget.x, camTarget.y + camDist * 0.24, camTarget.z + camDist);
+  camera.lookAt(camTarget);
+  camera.updateMatrixWorld();
   start();
 
   return {
+    /**
+     * Park a true-to-scale Earth beside this body and frame the pair.
+     *
+     * The camera looks at the origin, which is the middle of the *focused*
+     * body, while the pair straddles it: Earth sits out to the right and next
+     * to Mars it is nearly twice the size, so the old hand-rolled distance
+     * pulled back far enough in total but never moved the centre of interest,
+     * and Earth's right half hung off the edge of the picture. Aim at the
+     * midpoint of the two and fit their combined half-width.
+     */
     compareEarth(on: boolean) {
       cmpOn = on; cmpG.visible = on;
       const b = all.find((x) => x.id === curId); if (b) layoutCompare(b);
-      if (on) { const r = cmpEarth.scale.x; camWant = Math.max(camWant, 2.6 + r * 2 + cmpEarth.position.x); }
-      else camWant = fitDistance(Math.max(maxR, 1.35));
+      if (on) {
+        const right = cmpEarth.position.x + cmpEarth.scale.x;
+        camTargetWant.set((right - 1) / 2, 0, 0);
+        camWant = fitDistance(Math.max((right + 1) / 2, 1.35));
+      } else {
+        camTargetWant.set(0, 0, 0);
+        camWant = fitDistance(Math.max(maxR, 1.35));
+      }
       start();
     },
     showSystem() { showSystem(); start(); },
