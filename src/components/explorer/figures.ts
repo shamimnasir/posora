@@ -536,14 +536,30 @@ const pot = (body = '#8e99a6', lid = '#b6c0cb'): Figure => (g) => {
 };
 /** A glass with a liquid line. */
 const glass = (liquid = '#79b6e8'): Figure => (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.19, 0.15, 0.44, 26, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide, roughness: 0.2 })), 0, 0.24);
-  put(g, new Mesh(new CylinderGeometry(0.17, 0.15, 0.26, 26), std(liquid, { transparent: true, opacity: 0.85 })), 0, 0.15);
+  const gm = () => new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.26, side: DoubleSide, roughness: 0.1, depthWrite: false });
+  put(g, new Mesh(new CylinderGeometry(0.19, 0.15, 0.44, 26, 1, true), gm()), 0, 0.24);
+  // a base and a rolled rim, the two bits of a tumbler you can feel
+  put(g, new Mesh(new CylinderGeometry(0.152, 0.16, 0.035, 26), gm()), 0, 0.03);
+  put(g, new Mesh(new TorusGeometry(0.19, 0.012, 8, 28), gm()), 0, 0.46);
+  put(g, new Mesh(new CylinderGeometry(0.17, 0.15, 0.26, 26), std(liquid, { transparent: true, opacity: 0.82, roughness: 0.18 })), 0, 0.15);
+  // the surface: a liquid needs a top or it is a coloured solid in a tube
+  disc(g, new Color(liquid).lerp(new Color('#ffffff'), 0.22), 0.168, 0, 0.28);
 };
 /** A bowl of rice, and by shape a plate of any staple. */
 const riceBowl: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.3, 0.18, 0.22, 28), std('#e6ebf1')), 0, 0.13);
-  const h = put(g, new Mesh(new SphereGeometry(0.27, 26, 16), std('#fbfbf6')), 0, 0.26);
+  // a foot ring, so the bowl stands rather than being a cone resting on its tip
+  put(g, new Mesh(new CylinderGeometry(0.13, 0.15, 0.04, 24), std('#dde3ea')), 0, 0.02);
+  put(g, new Mesh(new CylinderGeometry(0.3, 0.18, 0.22, 28), std('#e6ebf1')), 0, 0.15);
+  put(g, new Mesh(new TorusGeometry(0.3, 0.014, 8, 30), std('#d5dce4')), 0, 0.26);
+  const h = put(g, new Mesh(new SphereGeometry(0.27, 26, 16), std('#fbfbf6')), 0, 0.28);
   h.scale.set(1, 0.5, 1);
+  // a few loose grains on top, which is what stops the rice being one smooth dome
+  const r = rng(0x21ce);
+  for (let i = 0; i < 7; i++) {
+    const a = r() * 6.28, rad = r() * 0.2;
+    const grain = ball(g, '#ffffff', 0.022, Math.cos(a) * rad, 0.4 + r() * 0.02, Math.sin(a) * rad);
+    grain.scale.set(1.6, 0.8, 1); grain.rotation.y = a;
+  }
 };
 /** A rounded fruit with a small stalk. */
 const fruit = (color: string, leaf = '#4b7a3a'): Figure => (g) => {
@@ -569,14 +585,37 @@ const crystal = (color: string): Figure => (g) => {
 };
 /** A stack of coins. */
 const coinStack = (color = '#d9b44a', n = 5): Figure => (g) => {
-  for (let i = 0; i < n; i++) put(g, new Mesh(new CylinderGeometry(0.2, 0.2, 0.05, 28), std(color, { metalness: 0.5, roughness: 0.35 })), 0, 0.03 + i * 0.055);
+  const r = rng(hash(color));
+  const rim = new Color(color).multiplyScalar(0.82);
+  for (let i = 0; i < n; i++) {
+    // a hand-stacked pile is never perfectly aligned, and the tiny offsets are
+    // what stop this reading as one grooved cylinder
+    const c = put(g, new Mesh(new CylinderGeometry(0.2, 0.2, 0.05, 28), std(color, { metalness: 0.55, roughness: 0.32 })), (r() - 0.5) * 0.018, 0.03 + i * 0.055, (r() - 0.5) * 0.018);
+    c.rotation.y = r() * 3;
+    put(g, new Mesh(new TorusGeometry(0.193, 0.012, 8, 26), std(rim, { metalness: 0.5, roughness: 0.38 })), c.position.x, c.position.y, c.position.z);
+  }
+  // the top coin gets a face, so the stack has a head on it
+  put(g, new Mesh(new CylinderGeometry(0.13, 0.13, 0.056, 24), std(rim, { metalness: 0.5, roughness: 0.4 })), 0, 0.03 + (n - 1) * 0.055, 0);
 };
 /** A columned building front, for the bank. */
 const building = (wall = '#d7dee6', roof = '#8fa0b4'): Figure => (g) => {
-  box(g, wall, 0.9, 0.12, 0.5, 0, 0.06);
-  for (let i = 0; i < 4; i++) rod(g, wall, 0.055, 0.52, (i - 1.5) * 0.22, 0.38);
-  box(g, roof, 1.0, 0.08, 0.56, 0, 0.68);
-  const ped = put(g, new Mesh(new ConeGeometry(0.56, 0.24, 4), std(roof)), 0, 0.84, 0, 0, Math.PI / 4);
+  // steps up to the portico, which is how you get into a building
+  box(g, new Color(wall).multiplyScalar(0.92), 1.0, 0.04, 0.62, 0, 0.02);
+  box(g, new Color(wall).multiplyScalar(0.96), 0.94, 0.04, 0.56, 0, 0.06);
+  box(g, wall, 0.9, 0.08, 0.5, 0, 0.12);
+  // a wall behind the colonnade with a door in it: the columns used to stand in
+  // front of open air, so the bank was a portico with no bank behind it
+  box(g, new Color(wall).multiplyScalar(0.9), 0.86, 0.52, 0.06, 0, 0.42, -0.18);
+  box(g, '#5b6470', 0.2, 0.34, 0.02, 0, 0.33, -0.14);
+  for (let i = 0; i < 4; i++) {
+    const x = (i - 1.5) * 0.22;
+    rod(g, wall, 0.05, 0.46, x, 0.39, 0.1);
+    // base and capital, the two mouldings that make a cylinder a column
+    put(g, new Mesh(new CylinderGeometry(0.066, 0.072, 0.045, 18), std(wall)), x, 0.18, 0.1);
+    put(g, new Mesh(new CylinderGeometry(0.072, 0.066, 0.045, 18), std(wall)), x, 0.61, 0.1);
+  }
+  box(g, roof, 1.0, 0.07, 0.56, 0, 0.665);
+  const ped = put(g, new Mesh(new ConeGeometry(0.56, 0.24, 4), std(roof)), 0, 0.82, 0, 0, Math.PI / 4);
   ped.scale.set(1, 1, 0.5);
 };
 /** A bank card. */
@@ -650,32 +689,54 @@ const person = (coat: string, skin = '#c98f5f'): Figure => (g) => {
 };
 /** A thermometer: a tube with a bulb. */
 const thermometer: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.05, 0.05, 0.6, 20), std('#e8eef5', { transparent: true, opacity: 0.8 })), 0, 0.4);
+  put(g, new Mesh(new CylinderGeometry(0.05, 0.05, 0.6, 20), std('#e8eef5', { transparent: true, opacity: 0.72, roughness: 0.15 })), 0, 0.4);
   ball(g, '#c0392b', 0.1, 0, 0.1);
   put(g, new Mesh(new CylinderGeometry(0.025, 0.025, 0.4, 14), std('#c0392b')), 0, 0.3);
+  // A scale. An instrument that measures and carries no marks is a glass tube
+  // with red in it, and the marks are the entire reason the thing exists.
+  for (let i = 0; i < 9; i++) box(g, '#4c5867', i % 2 ? 0.03 : 0.05, 0.008, 0.008, i % 2 ? 0.055 : 0.065, 0.2 + i * 0.055, 0.048);
 };
 /** A two-pan balance. */
 const balance: Figure = (g) => {
-  rod(g, '#8a94a0', 0.03, 0.6, 0, 0.3);
-  box(g, '#8a94a0', 0.7, 0.035, 0.035, 0, 0.62);
+  const metal2 = '#8a94a0';
+  // a foot, so it stands on the bench rather than being a rod pushed into it
+  put(g, new Mesh(new CylinderGeometry(0.24, 0.28, 0.05, 28), std('#6b7583')), 0, 0.025);
+  rod(g, metal2, 0.03, 0.58, 0, 0.31);
+  // the knife edge the beam actually pivots on
+  put(g, new Mesh(new ConeGeometry(0.05, 0.08, 4), std('#b9c3ce')), 0, 0.63);
+  box(g, metal2, 0.7, 0.035, 0.035, 0, 0.66);
+  // a pointer, which is how you read a balance at all
+  box(g, '#c0392b', 0.016, 0.13, 0.016, 0, 0.72);
   for (const s of [1, -1]) {
-    rod(g, '#8a94a0', 0.008, 0.18, s * 0.33, 0.53);
-    put(g, new Mesh(new CylinderGeometry(0.12, 0.09, 0.05, 20), std('#b9c3ce')), s * 0.33, 0.44);
+    // three cords rather than one strut: a pan hangs
+    for (const d of [-1, 1]) rod(g, '#9aa5b1', 0.008, 0.2, s * 0.33 + d * 0.045, 0.56, 0, -d * 0.12);
+    const pan = put(g, new Mesh(new CylinderGeometry(0.13, 0.1, 0.04, 26), std('#b9c3ce', { metalness: 0.35, roughness: 0.4 })), s * 0.33, 0.46);
+    void pan;
+    put(g, new Mesh(new TorusGeometry(0.125, 0.012, 8, 26), std('#a4aeb9')), s * 0.33, 0.48);
   }
 };
 /** A ruler laid flat with tick marks. */
 const ruler: Figure = (g) => {
   box(g, '#e8c86a', 0.86, 0.06, 0.16, 0, 0.03);
+  // a bevelled reading edge, and marks on both faces the way a real rule has
+  box(g, '#d4b25a', 0.86, 0.015, 0.04, 0, 0.058, 0.06);
   for (let i = 0; i < 9; i++) box(g, '#5b452a', 0.012, 0.02, i % 2 ? 0.05 : 0.09, -0.38 + i * 0.095, 0.065, 0.03);
+  for (let i = 0; i < 9; i++) box(g, '#5b452a', 0.01, 0.02, i % 2 ? 0.035 : 0.06, -0.38 + i * 0.095, 0.065, -0.05);
 };
 /** A microscope: base, arm, tube. */
 const microscope: Figure = (g) => {
   box(g, '#3b4551', 0.42, 0.08, 0.3, 0, 0.04);
   rod(g, '#4c5867', 0.05, 0.46, -0.1, 0.28);
   box(g, '#4c5867', 0.3, 0.05, 0.22, 0.04, 0.3);
-  const tube = rod(g, '#2b333d', 0.06, 0.34, 0.1, 0.56, 0, 0.25);
-  void tube;
+  // a slide on the stage, which is what a microscope is looking at
+  box(g, '#dbe8f2', 0.16, 0.012, 0.11, 0.08, 0.335);
+  rod(g, '#2b333d', 0.06, 0.34, 0.1, 0.56, 0, 0.25);
+  // the eyepiece at the top of the tube and the objective at the bottom: a
+  // microscope without an eyepiece is a pipe on a stick
+  put(g, new Mesh(new CylinderGeometry(0.05, 0.042, 0.11, 20), std('#20262e')), 0.02, 0.73, 0, 0, 0, 0.25);
   put(g, new Mesh(new CylinderGeometry(0.045, 0.06, 0.1, 20), std('#8a94a0')), 0.14, 0.38);
+  // the focus knob
+  put(g, new Mesh(new CylinderGeometry(0.055, 0.055, 0.05, 20), std('#6b7583')), -0.1, 0.4, 0.14, Math.PI / 2);
 };
 /** A telescope on a tripod. */
 const telescope: Figure = (g) => {
@@ -683,18 +744,49 @@ const telescope: Figure = (g) => {
     const a = (i / 3) * Math.PI * 2;
     rod(g, '#5b4a3a', 0.022, 0.5, Math.cos(a) * 0.13, 0.24, Math.sin(a) * 0.13, Math.cos(a) * 0.5, Math.sin(a) * 0.5);
   }
-  const t = put(g, new Mesh(new CylinderGeometry(0.09, 0.06, 0.56, 20), std('#2f3a46')), 0, 0.62, 0, 0, 0, -0.7);
-  void t;
+  // the head the tube swivels on, so the tripod carries something
+  put(g, new Mesh(new CylinderGeometry(0.06, 0.08, 0.09, 18), std('#4c5867')), 0, 0.52);
+  put(g, new Mesh(new CylinderGeometry(0.09, 0.06, 0.56, 20), std('#2f3a46')), 0, 0.62, 0, 0, 0, -0.7);
   put(g, new Mesh(new CylinderGeometry(0.1, 0.1, 0.05, 20), std('#d9b44a')), 0.19, 0.78, 0, 0, 0, -0.7);
+  // the eyepiece, at the low end where the eye goes
+  put(g, new Mesh(new CylinderGeometry(0.035, 0.045, 0.12, 16), std('#20262e')), -0.2, 0.46, 0, 0, 0, -0.7);
+  // and a finder scope riding on top
+  put(g, new Mesh(new CylinderGeometry(0.028, 0.028, 0.22, 14), std('#4c5867')), 0.02, 0.76, 0.08, 0, 0, -0.7);
 };
-/** A compass: a dial with a needle. */
+/**
+ * A compass: a dial with a needle.
+ *
+ * The needle used to be two separate bars sitting at z = +0.05 and -0.05 - two
+ * parallel sticks at different depths rather than one needle through the
+ * pivot, which is the only moving part the instrument has.
+ */
 const compass: Figure = (g) => {
-  put(g, new Mesh(new CylinderGeometry(0.28, 0.28, 0.07, 32), std('#c9a15e', { metalness: 0.4 })), 0, 0.06);
+  put(g, new Mesh(new CylinderGeometry(0.28, 0.28, 0.07, 32), std('#c9a15e', { metalness: 0.45, roughness: 0.35 })), 0, 0.06);
+  put(g, new Mesh(new TorusGeometry(0.275, 0.022, 10, 34), std('#a8823f', { metalness: 0.5, roughness: 0.3 })), 0, 0.095);
   disc(g, '#f4f8fc', 0.24, 0, 0.1);
-  const n = box(g, '#c0392b', 0.03, 0.01, 0.22, 0, 0.11, 0.05);
-  n.rotation.y = 0.5;
-  const s2 = box(g, '#39506b', 0.03, 0.01, 0.22, 0, 0.11, -0.05);
-  s2.rotation.y = 0.5;
+  // the cardinal marks, longer at the four points
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const long = i % 3 === 0;
+    put(g, new Mesh(new BoxGeometry(0.014, 0.006, long ? 0.07 : 0.035), std(long ? '#39506b' : '#8a94a0')), Math.sin(a) * (long ? 0.195 : 0.207), 0.105, Math.cos(a) * (long ? 0.195 : 0.207), 0, a, 0);
+  }
+  /**
+   * One needle: two tapered halves meeting at the pivot, north in red.
+   *
+   * The tilt is baked into the geometry rather than composed at the mesh, so
+   * the only rotation left is a single turn about y. Stacking an x-rotation
+   * and a y-rotation on one Euler is where this kind of thing goes quietly
+   * wrong, because the order they compose in is not the order they are written.
+   */
+  const th = 0.5;
+  for (const [c, turn] of [['#c0392b', 0], ['#39506b', Math.PI]] as const) {
+    const geo = new ConeGeometry(0.028, 0.19, 4);
+    geo.rotateX(Math.PI / 2);                       // apex now points along +z
+    const half = new Mesh(geo, std(c));
+    half.scale.set(1, 0.42, 1);                     // a needle is thin, not square
+    put(g, half, Math.sin(th + turn) * 0.095, 0.115, Math.cos(th + turn) * 0.095, 0, th + turn, 0);
+  }
+  put(g, new Mesh(new CylinderGeometry(0.025, 0.025, 0.03, 14), std('#8a94a0', { metalness: 0.5 })), 0, 0.125);
 };
 /** A clock face with two hands. */
 const clockFace: Figure = (g) => {
@@ -728,10 +820,19 @@ const envelope = (color = '#f4f8fc'): Figure => (g) => {
 /** A shopping stall: a counter under a striped awning. */
 const stall = (awning = '#c0392b'): Figure => (g) => {
   box(g, '#a8763f', 0.8, 0.3, 0.4, 0, 0.15);
-  for (const s of [1, -1]) rod(g, '#8a6a44', 0.028, 0.7, s * 0.36, 0.5, 0.16);
-  const a = box(g, awning, 0.9, 0.06, 0.44, 0, 0.86, 0.06, 0);
+  box(g, '#8a6a44', 0.84, 0.04, 0.44, 0, 0.32);
+  // four posts, not two. The back pair were missing, so the awning was a roof
+  // resting on nothing along its whole rear edge.
+  for (const s of [1, -1]) for (const z of [0.16, -0.16]) rod(g, '#8a6a44', 0.026, 0.7, s * 0.36, 0.5, z);
+  const a = box(g, awning, 0.9, 0.06, 0.46, 0, 0.86, 0.04, 0);
   a.rotation.x = -0.22;
-  for (let i = 0; i < 3; i++) ball(g, i === 0 ? '#e8c86a' : i === 1 ? '#5f9e4a' : '#c0392b', 0.08, (i - 1) * 0.2, 0.36, 0.1);
+  // the stripes every market awning has, and a scalloped valance along the front
+  for (let i = -2; i <= 2; i++) {
+    const st = box(g, '#f4f1e8', 0.1, 0.02, 0.47, i * 0.18, 0.89, 0.04);
+    st.rotation.x = -0.22;
+  }
+  for (let i = -4; i <= 4; i++) ball(g, awning, 0.045, i * 0.1, 0.83, 0.27).scale.set(1, 1, 0.5);
+  for (let i = 0; i < 3; i++) ball(g, i === 0 ? '#e8c86a' : i === 1 ? '#5f9e4a' : '#c0392b', 0.08, (i - 1) * 0.2, 0.38, 0.1);
 };
 /** A paper sheet with lines, for receipts and ledgers. */
 const sheet = (color = '#fbfdff'): Figure => (g) => {
@@ -749,8 +850,24 @@ const tap: Figure = (g) => {
   box(g, '#b9c3ce', 0.3, 0.06, 0.06, -0.02, 0.78);
   rod(g, '#b9c3ce', 0.035, 0.12, 0.12, 0.71);
   for (let i = 0; i < 4; i++) ball(g, '#79b6e8', 0.035, 0.12, 0.56 - i * 0.12, 0);
-  const h = put(g, new Mesh(new SphereGeometry(0.2, 24, 16), std('#c98f5f')), 0.12, 0.2);
-  h.scale.set(1.2, 0.4, 0.9);
+  /**
+   * A cupped hand, not a flattened ball.
+   *
+   * The figure is called `tap` but the subject is washing, and a palm with
+   * fingers is the half of it a child recognises. A squashed sphere under a
+   * spout is a stone.
+   */
+  const palm = put(g, new Mesh(new SphereGeometry(0.17, 24, 16), std('#c98f5f')), 0.12, 0.2);
+  palm.scale.set(1.15, 0.45, 0.95);
+  // the cup: a shallow dish sunk into the palm so water would sit in it
+  const cup = put(g, new Mesh(new SphereGeometry(0.13, 22, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), std('#b87f52')), 0.12, 0.225);
+  cup.scale.set(1.1, 0.35, 0.9);
+  for (let i = 0; i < 4; i++) {
+    const f = put(g, new Mesh(new CylinderGeometry(0.021, 0.025, 0.14, 12), std('#c98f5f')), 0.25, 0.215 + i * 0.004, (i - 1.5) * 0.055, 0, 0, -1.15);
+    void f;
+  }
+  const thumb = put(g, new Mesh(new CylinderGeometry(0.024, 0.028, 0.1, 12), std('#c98f5f')), 0.06, 0.215, 0.13, 0, 0.9, -1.3);
+  void thumb;
 };
 /** A gear wheel. */
 const gear = (color = '#8a94a0', r = 0.28): Figure => (g) => {
@@ -763,9 +880,19 @@ const gear = (color = '#8a94a0', r = 0.28): Figure => (g) => {
 };
 /** A lit bulb. */
 const bulb: Figure = (g) => {
+  // the envelope, and a neck between it and the cap, which is the pear shape
   ball(g, '#ffe9a8', 0.22, 0, 0.5);
+  put(g, new Mesh(new CylinderGeometry(0.13, 0.1, 0.1, 20), std('#ffe9a8', { transparent: true, opacity: 0.85 })), 0, 0.33);
   put(g, new Mesh(new SphereGeometry(0.3, 20, 16), glow('#f0b429', 0.22)), 0, 0.5);
-  put(g, new Mesh(new CylinderGeometry(0.1, 0.12, 0.16, 20), std('#9aa5b1', { metalness: 0.5 })), 0, 0.24);
+  // a filament, which is the thing that actually lights and the only part a
+  // child can point at and name
+  const fil = put(g, new Mesh(new TorusGeometry(0.05, 0.009, 8, 18, Math.PI * 1.4), std('#ffd45e', { emissive: '#ffb020', emissiveIntensity: 0.9 })), 0, 0.5, 0, Math.PI / 2);
+  void fil;
+  for (const s of [1, -1]) rod(g, '#c9a15e', 0.008, 0.12, s * 0.035, 0.42);
+  // a screw cap with real threads rather than a smooth collar
+  put(g, new Mesh(new CylinderGeometry(0.1, 0.115, 0.15, 20), std('#9aa5b1', { metalness: 0.55, roughness: 0.35 })), 0, 0.24);
+  for (let i = 0; i < 3; i++) put(g, new Mesh(new TorusGeometry(0.106 - i * 0.002, 0.014, 7, 20), std('#8d97a2', { metalness: 0.5, roughness: 0.4 })), 0, 0.2 + i * 0.045);
+  put(g, new Mesh(new SphereGeometry(0.035, 14, 10), std('#4c5867')), 0, 0.15);
 };
 /** A wheel: the first machine. */
 const wheel: Figure = (g) => {
@@ -774,6 +901,12 @@ const wheel: Figure = (g) => {
     const a = (i / 6) * Math.PI;
     box(g, '#a8763f', 0.03, 0.58, 0.03, 0, 0.36, 0, a);
   }
+  // a hub. Six spokes crossing in mid air is a wheel with nothing at the
+  // centre, and the centre is the whole idea of a wheel.
+  put(g, new Mesh(new CylinderGeometry(0.085, 0.085, 0.12, 20), std('#6b4a2a')), 0, 0.36, 0, Math.PI / 2);
+  put(g, new Mesh(new CylinderGeometry(0.03, 0.03, 0.18, 14), std('#4c5867', { metalness: 0.5 })), 0, 0.36, 0, Math.PI / 2);
+  // an iron tyre round the rim, the way a cart wheel is banded
+  put(g, new Mesh(new TorusGeometry(0.345, 0.022, 10, 34), std('#6b7583', { metalness: 0.45, roughness: 0.45 })), 0, 0.36, 0, Math.PI / 2);
 };
 /** A book. */
 const book = (cover = '#3d6b8f'): Figure => (g) => {
@@ -800,9 +933,24 @@ const robot: Figure = (g) => {
 };
 /** A flask. */
 const flask = (liquid = '#7ac8a0'): Figure => (g) => {
-  put(g, new Mesh(new ConeGeometry(0.28, 0.44, 24, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide })), 0, 0.24);
-  put(g, new Mesh(new CylinderGeometry(0.07, 0.07, 0.2, 20, 1, true), new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.35, side: DoubleSide })), 0, 0.55);
-  put(g, new Mesh(new ConeGeometry(0.2, 0.2, 24), std(liquid, { transparent: true, opacity: 0.9 })), 0, 0.12);
+  const glassMat = () => new MeshStandardMaterial({ color: '#dce8f5', transparent: true, opacity: 0.28, side: DoubleSide, roughness: 0.12, depthWrite: false });
+  put(g, new Mesh(new ConeGeometry(0.28, 0.44, 26, 1, true), glassMat()), 0, 0.24);
+  put(g, new Mesh(new CylinderGeometry(0.07, 0.07, 0.2, 20, 1, true), glassMat()), 0, 0.55);
+  put(g, new Mesh(new TorusGeometry(0.072, 0.014, 8, 20), glassMat()), 0, 0.645);
+  /**
+   * The contents are a frustum, not a cone.
+   *
+   * A cone pointing the same way as the flask means the liquid comes to a
+   * *point* at the top and is widest at the bottom - which is the shape of the
+   * vessel, not the shape of what is in it. Liquid in a conical flask is the
+   * bottom slice of that cone: narrow below, wide at the surface, with a flat
+   * top where it meets the air.
+   */
+  const yTop = 0.19, fill = 0.17;
+  const rAt = (y: number) => 0.28 * (1 - (y - 0.02) / 0.44);
+  put(g, new Mesh(new CylinderGeometry(rAt(yTop), rAt(yTop - fill), fill, 26), std(liquid, { transparent: true, opacity: 0.88, roughness: 0.2 })), 0, yTop - fill / 2);
+  disc(g, new Color(liquid).lerp(new Color('#ffffff'), 0.2), rAt(yTop) * 0.99, 0, yTop);
+  put(g, new Mesh(new CylinderGeometry(0.285, 0.285, 0.02, 26), glassMat()), 0, 0.025);
 };
 /** A cloud with rain, for a wet habitat. */
 const cloudDrop: Figure = (g) => {
@@ -811,9 +959,21 @@ const cloudDrop: Figure = (g) => {
 };
 /** A leafy shrub with no pot: undergrowth and producers. */
 const shrub = (leaf: string): Figure => (g) => {
-  for (let i = 0; i < 5; i++) {
-    const a = i * 1.3, r = 0.13;
-    ball(g, leaf, 0.15, Math.cos(a) * r, 0.16 + (i % 2) * 0.1, Math.sin(a) * r);
+  // Seeded off the leaf colour and varied in size, height and shade, for the
+  // same reason the tree crowns are: five identical balls in a ring read as
+  // five identical balls, however good any one of them is.
+  const r = rng(hash(leaf));
+  const base = new Color(leaf);
+  // a few woody stems under the mass, so it grows out of the ground
+  for (let i = 0; i < 3; i++) {
+    const a = i * 2.1 + r();
+    rod(g, '#6b5233', 0.016, 0.16, Math.cos(a) * 0.07, 0.08, Math.sin(a) * 0.07, Math.cos(a) * 0.25);
+  }
+  for (let i = 0; i < 7; i++) {
+    const a = i * 1.3 + r() * 0.5, rad = 0.06 + r() * 0.11;
+    const blob = put(g, new Mesh(new IcosahedronGeometry(0.1 + r() * 0.06, 1), std(base.clone().offsetHSL(r() * 0.03 - 0.015, 0, r() * 0.12 - 0.06), { flatShading: true })),
+      Math.cos(a) * rad, 0.14 + r() * 0.16, Math.sin(a) * rad);
+    blob.rotation.set(r() * 3, r() * 3, 0);
   }
 };
 /** Soil with something growing out: decomposers and roots. */
@@ -847,19 +1007,42 @@ const flyingBird = (color = '#5b6b7d'): Figure => (g) => {
 };
 /** A branching coral. */
 const coral = (color = '#e07a8a'): Figure => (g) => {
+  // Coral branches: each arm forks once, which is what makes coral read as
+  // coral rather than as a handful of sticks pushed into the sand.
+  const r = rng(hash(color));
+  const base = new Color(color);
+  put(g, new Mesh(new CylinderGeometry(0.17, 0.22, 0.07, 22), std('#d8cbb0')), 0, 0.035);
   for (let i = 0; i < 5; i++) {
-    const a = i * 1.25, r = 0.1;
-    const h = 0.3 + (i % 3) * 0.14;
-    rod(g, color, 0.035, h, Math.cos(a) * r, h / 2, Math.sin(a) * r, Math.cos(a) * 0.35);
-    ball(g, color, 0.055, Math.cos(a) * (r + 0.09), h, Math.sin(a) * (r + 0.09));
+    const a = i * 1.25 + r() * 0.4, rad = 0.09;
+    const h = 0.26 + r() * 0.16;
+    const lean = Math.cos(a) * 0.35;
+    const x = Math.cos(a) * rad, z = Math.sin(a) * rad;
+    const tint = base.clone().offsetHSL(r() * 0.04 - 0.02, 0, r() * 0.1 - 0.05);
+    taper(g, tint, 0.022, 0.038, h, x, 0.06 + h / 2, z, lean);
+    const tipX = x - Math.sin(lean) * h * 0.5, tipY = 0.06 + h * 0.98;
+    for (const s of [1, -1]) {
+      const bh = 0.11 + r() * 0.08;
+      taper(g, tint, 0.013, 0.022, bh, tipX + s * 0.045, tipY + bh * 0.4, z + s * 0.03, lean + s * 0.6);
+      ball(g, tint.clone().lerp(new Color('#ffffff'), 0.25), 0.032, tipX + s * 0.085, tipY + bh * 0.78, z + s * 0.055);
+    }
   }
 };
 /** A simple house. */
 const house = (wall = '#e2d6bf', roof = '#a8563c'): Figure => (g) => {
   box(g, wall, 0.6, 0.44, 0.46, 0, 0.22);
-  const r = put(g, new Mesh(new ConeGeometry(0.5, 0.3, 4), std(roof)), 0, 0.59, 0, 0, Math.PI / 4);
-  void r;
+  put(g, new Mesh(new ConeGeometry(0.5, 0.3, 4), std(roof)), 0, 0.59, 0, 0, Math.PI / 4);
+  // eaves: a roof that stops flush with the wall reads as a lid, not a roof
+  put(g, new Mesh(new ConeGeometry(0.53, 0.06, 4), std(new Color(roof).multiplyScalar(0.85))), 0, 0.47, 0, 0, Math.PI / 4);
   box(g, '#6b4a2a', 0.16, 0.24, 0.02, 0, 0.12, 0.24);
+  box(g, '#8a6a44', 0.02, 0.02, 0.02, 0.055, 0.12, 0.253);
+  // windows, which is most of what tells a box from a house at a glance
+  for (const s of [1, -1]) {
+    box(g, '#9fd0e8', 0.13, 0.13, 0.02, s * 0.19, 0.28, 0.238);
+    box(g, wall, 0.15, 0.015, 0.025, s * 0.19, 0.355, 0.24);
+    box(g, wall, 0.015, 0.14, 0.025, s * 0.19, 0.28, 0.24);
+  }
+  // a step at the door
+  box(g, '#c3b79c', 0.22, 0.04, 0.09, 0, 0.02, 0.27);
 };
 
 
@@ -980,36 +1163,68 @@ const wetland: Figure = (g) => {
 };
 /** Terraced rows on a slope: the tea garden. */
 const teaGarden: Figure = (g) => {
+  const r = rng(0x7ea0);
   for (let i = 0; i < 4; i++) {
     const y = i * 0.13, z = -i * 0.18;
-    const t = put(g, new Mesh(new BoxGeometry(1.0 - i * 0.12, 0.1, 0.22), std('#3f6b3a')), 0, y + 0.05, z);
-    void t;
-    for (let k = 0; k < 4; k++) ball(g, '#4f8f4a', 0.06, (k - 1.5) * 0.22, y + 0.14, z);
+    put(g, new Mesh(new BoxGeometry(1.0 - i * 0.12, 0.1, 0.22), std('#3f6b3a')), 0, y + 0.05, z);
+    // the cut face of each terrace, which is what makes a hillside terraced
+    put(g, new Mesh(new BoxGeometry(1.0 - i * 0.12, 0.13, 0.02), std('#6b5233')), 0, y + 0.02, z + 0.11);
+    // bushes at their own sizes and greens: four identical balls per row, four
+    // rows deep, was sixteen copies of one ball
+    for (let k = 0; k < 4; k++) {
+      const b = ball(g, new Color('#4f8f4a').offsetHSL(r() * 0.03 - 0.015, 0, r() * 0.1 - 0.05), 0.05 + r() * 0.025, (k - 1.5) * 0.22 + (r() - 0.5) * 0.04, y + 0.14, z + (r() - 0.5) * 0.05);
+      b.scale.set(1, 0.85, 1);
+    }
   }
 };
 /** Layered hills. */
 const hills: Figure = (g) => {
-  for (let i = 0; i < 3; i++) {
-    const c = ['#5b7a5a', '#4a6b52', '#3c5a49'][i]!;
-    const m = put(g, new Mesh(new ConeGeometry(0.42 - i * 0.05, 0.5 + i * 0.12, 5), std(c)), (i - 1) * 0.34, 0.25 + i * 0.06, -i * 0.2);
-    void m;
+  const r = rng(0x4111);
+  for (let i = 0; i < 5; i++) {
+    // five ridges at varied width, height and green, receding backwards: three
+    // cones in a row all the same shape read as three cones in a row
+    const c = ['#6b8a68', '#5b7a5a', '#4a6b52', '#41604a', '#3c5a49'][i]!;
+    const m = put(g, new Mesh(new ConeGeometry(0.3 + r() * 0.18, 0.36 + r() * 0.3, 5), std(c, { flatShading: true })),
+      (i - 2) * 0.26 + (r() - 0.5) * 0.1, 0.2 + r() * 0.1, -i * 0.14);
+    m.rotation.y = r() * 3;
   }
 };
 /** A dense patch of forest. */
 const forest: Figure = (g) => {
-  for (let i = 0; i < 5; i++) {
-    const a = i * 1.25, r = 0.22;
-    const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    rod(g, '#6b4a2a', 0.035, 0.34, x, 0.17, z);
-    ball(g, i % 2 ? '#2f6b3f' : '#3f7a42', 0.2, x, 0.5, z);
+  // a stand of trees at different heights and greens rather than five copies
+  // of one lollipop standing in a ring
+  const r = rng(0x0f0e57);
+  const ground = put(g, new Mesh(new CylinderGeometry(0.38, 0.34, 0.06, 26), std('#4a5d3a')), 0, 0.03);
+  void ground;
+  for (let i = 0; i < 7; i++) {
+    const a = i * 1.25 + r() * 0.4, rad = 0.09 + r() * 0.2;
+    const x = Math.cos(a) * rad, z = Math.sin(a) * rad;
+    const h = 0.26 + r() * 0.2;
+    taper(g, '#6b4a2a', 0.022, 0.035, h, x, 0.03 + h / 2, z);
+    const crown = put(g, new Mesh(new IcosahedronGeometry(0.13 + r() * 0.07, 1), std(new Color('#2f6b3f').offsetHSL(r() * 0.04 - 0.02, 0, r() * 0.12 - 0.05), { flatShading: true })), x, 0.06 + h + 0.08, z);
+    crown.rotation.set(r() * 3, r() * 3, 0);
   }
 };
 /** A road bridge on piers over water. */
 const bridge: Figure = (g) => {
   disc(g, '#3b6b8f', 0.7, 0, 0.02);
   box(g, '#c3ccd6', 1.2, 0.07, 0.24, 0, 0.44);
-  for (let i = 0; i < 4; i++) rod(g, '#9aa5b1', 0.05, 0.42, (i - 1.5) * 0.32, 0.22);
-  for (let i = 0; i < 4; i++) box(g, '#8a94a0', 0.03, 0.2, 0.03, (i - 1.5) * 0.32, 0.57, 0.1);
+  for (let i = 0; i < 4; i++) {
+    rod(g, '#9aa5b1', 0.05, 0.42, (i - 1.5) * 0.32, 0.22);
+    // a pier cap, so the deck rests on the piers instead of hovering over them
+    box(g, '#b3bcc6', 0.14, 0.04, 0.28, (i - 1.5) * 0.32, 0.41);
+  }
+  /**
+   * Railings on both sides.
+   *
+   * There were posts along z = +0.1 only, so the bridge had a parapet on one
+   * edge and a drop on the other - which is the kind of thing nobody notices
+   * until they turn the model round, and the collection scene turns everything.
+   */
+  for (const z of [0.1, -0.1]) {
+    for (let i = 0; i < 5; i++) box(g, '#8a94a0', 0.03, 0.2, 0.03, (i - 2) * 0.27, 0.57, z);
+    box(g, '#9aa5b1', 1.14, 0.025, 0.025, 0, 0.67, z);
+  }
 };
 
 /* ---------- dishes ---------- */
