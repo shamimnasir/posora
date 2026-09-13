@@ -337,6 +337,142 @@ export const aroundCentre = (surface: SVGSVGElement, viewW: number, cx: number, 
     return a < 0 ? a + 360 : a;
   };
 
+/* ---------- tracing ---------- */
+
+export type TraceOpts = {
+  canvas: HTMLCanvasElement;
+  /** Everything the tracer should see: ruled lines, the pale letter, arrows. */
+  drawGuide: (g: CanvasRenderingContext2D) => void;
+  /** Only the shape that has to be covered, in any solid colour. */
+  drawTarget: (g: CanvasRenderingContext2D) => void;
+  /** Thickness of the tracing line. */
+  lineWidth?: number;
+  /** Ink colour. */
+  colour?: string;
+  onScore: (r: { covered: number; accurate: number; strokes: number }) => void;
+};
+
+export type Trace = { clear: () => void; refresh: () => void; strokes: () => number };
+
+/**
+ * A surface you trace a shape on, and a score for how well you did.
+ *
+ * The shape being traced is drawn from the page's own font rather than from
+ * hand-authored point paths. Authoring Bangla letterforms by hand is how a
+ * handwriting page ends up teaching a letter that is subtly the wrong shape,
+ * and the typeface already knows the right one.
+ *
+ * Scoring compares two coarse grids: how much of the letter got ink on it, and
+ * how much of the ink landed on the letter. Both matter - covering the letter
+ * by scribbling over the whole box is not tracing.
+ *
+ * There is no keyboard path here, because tracing is a hand movement and
+ * pretending otherwise would be worse than saying so. Pair it with a button
+ * that plays the stroke order, which is the part that can be watched.
+ */
+export function traceBoard(o: TraceOpts): Trace {
+  const { canvas } = o;
+  const W = canvas.width, H = canvas.height;
+  const g = canvas.getContext('2d')!;
+  const CELL = 6, cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
+
+  const layer = (draw?: (c: CanvasRenderingContext2D) => void) => {
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    if (draw) draw(c.getContext('2d')!);
+    return c;
+  };
+  const ink = layer();
+  const inkCtx = ink.getContext('2d')!;
+  inkCtx.lineCap = inkCtx.lineJoin = 'round';
+  inkCtx.lineWidth = o.lineWidth ?? 14;
+  inkCtx.strokeStyle = o.colour ?? '#1d3557';
+
+  /** Which cells of a layer carry any mark at all. */
+  const cellsOf = (c: HTMLCanvasElement): Uint8Array => {
+    const d = c.getContext('2d')!.getImageData(0, 0, W, H).data;
+    const out = new Uint8Array(cols * rows);
+    for (let y = 0; y < H; y++) {
+      const row = Math.floor(y / CELL) * cols;
+      for (let x = 0; x < W; x++) {
+        if (d[(y * W + x) * 4 + 3]! > 100) out[row + Math.floor(x / CELL)] = 1;
+      }
+    }
+    return out;
+  };
+  /** Grow a mask by one cell, which is the tolerance a finger deserves. */
+  const grow = (m: Uint8Array): Uint8Array => {
+    const out = new Uint8Array(m.length);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (!m[r * cols + c]) continue;
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const rr = r + dr, cc = c + dc;
+            if (rr >= 0 && rr < rows && cc >= 0 && cc < cols) out[rr * cols + cc] = 1;
+          }
+        }
+      }
+    }
+    return out;
+  };
+
+  let target = cellsOf(layer(o.drawTarget));
+  let targetFat = grow(target);
+
+  const paint = () => {
+    g.clearRect(0, 0, W, H);
+    o.drawGuide(g);
+    g.drawImage(ink, 0, 0);
+  };
+
+  let drawing = false, count = 0;
+  const at = (e: PointerEvent) => {
+    const r = canvas.getBoundingClientRect();
+    return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
+  };
+  const score = () => {
+    const mine = cellsOf(ink);
+    let hit = 0, tot = 0, on = 0, all = 0;
+    const fat = grow(mine);
+    for (let i = 0; i < target.length; i++) {
+      if (target[i]) { tot++; if (fat[i]) hit++; }
+      if (mine[i]) { all++; if (targetFat[i]) on++; }
+    }
+    o.onScore({ covered: tot ? hit / tot : 0, accurate: all ? on / all : 0, strokes: count });
+  };
+
+  canvas.addEventListener('pointerdown', (e) => {
+    drawing = true; count++;
+    canvas.setPointerCapture(e.pointerId);
+    const p = at(e);
+    inkCtx.beginPath();
+    inkCtx.moveTo(p.x, p.y);
+    inkCtx.lineTo(p.x + 0.01, p.y);
+    inkCtx.stroke();
+    paint();
+    e.preventDefault();
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drawing) return;
+    const p = at(e);
+    inkCtx.lineTo(p.x, p.y);
+    inkCtx.stroke();
+    paint();
+  });
+  const end = () => { if (!drawing) return; drawing = false; score(); };
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('lostpointercapture', end);
+
+  paint();
+  return {
+    clear() { inkCtx.clearRect(0, 0, W, H); count = 0; paint(); score(); },
+    refresh() { target = cellsOf(layer(o.drawTarget)); targetFat = grow(target); paint(); },
+    strokes: () => count,
+  };
+}
+
 /* ---------- credit ---------- */
 
 /**

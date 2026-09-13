@@ -1,0 +1,518 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getLanguage } from '../../lib/content';
+
+export const prerender = false;
+
+const HUE = '#B4437E';
+const { consonants, vowels, kars } = await getLanguage();
+const payload = { letters: [...vowels, ...consonants], kars };
+---
+<Base
+  title="হাতের লেখা"
+  description="মাত্রা টানো, বর্ণের উপর আঙুল বোলাও, কার বসাও, শব্দ আর বাক্য লিখে দেখো - প্রতিবারই নম্বর পাবে কতটা মিলল। শেষে নিজের অনুশীলনীর পাতা ছাপিয়ে নাও।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/language/">ভাষা</a> <span>/</span> হাতের লেখা</p>
+
+    <header class="head">
+      <p class="eyebrow">ভাষা ভুবন · বিভাগ পরিচিতি</p>
+      <h1>হাতের লেখা</h1>
+      <p class="lede">
+        হাতের লেখা চোখে দেখে শেখা যায় না, হাত নাড়িয়ে শিখতে হয়। নিচের পাতাগুলোতে আঙুল
+        বা মাউস দিয়ে সরাসরি লেখা যায় - প্রতিবার কতটা মিলল সেটা মেপে বলে দেবে।
+      </p>
+      <p class="note">
+        এই পাতাটা আঙুল বা মাউস দিয়ে করতে হয় - কিবোর্ডে লেখা যায় না, কারণ হাতের লেখা
+        হাতের কাজ। তবে প্রতিটা বর্ণের চেহারা আর মাত্রার নিয়ম বোতাম চেপে দেখে নেওয়া যায়।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#matra" class="pill pill-w">মাত্রা</a>
+        <a href="#stroke" class="pill pill-w">বর্ণ</a>
+        <a href="#karbosano" class="pill pill-w">কার</a>
+        <a href="#shobdo" class="pill pill-w">শব্দ</a>
+        <a href="#bakko" class="pill pill-w">বাক্য</a>
+        <a href="#chhapar" class="pill pill-w">ছাপার পাতা</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- ১. মাত্রা -->
+      <section class="tool card" id="matra">
+        <h2><span class="no">০১</span> মাত্রা টানা</h2>
+        <p class="how">
+          বাংলা লেখার মাথার উপরের টানা দাগটার নাম মাত্রা। প্রায় সব বর্ণেরই মাত্রা আছে,
+          আর সেটা টানা হয় সবার শেষে। ফিকে দাগটার উপর দিয়ে বাঁ থেকে ডানে একটানে টানো।
+        </p>
+        <div class="board">
+          <canvas id="matra-c" width="880" height="180" aria-label="মাত্রার দাগ, উপর দিয়ে টানো"></canvas>
+        </div>
+        <div class="row">
+          <button type="button" class="btn" data-clear="matra-c">মুছে ফেলো</button>
+          <p class="readout" id="matra-out" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ২. বর্ণ -->
+      <section class="tool card" id="stroke">
+        <h2><span class="no">০২</span> বর্ণের স্ট্রোক ক্রম</h2>
+        <p class="how">
+          একটা বর্ণ বাছো। <b>দেখাও</b> চাপলে আগে বর্ণের শরীরটা আসবে, তারপর মাত্রা - এই
+          ক্রমেই লিখতে হয়। তারপর নিজে ফিকে বর্ণটার উপর দিয়ে লেখো।
+        </p>
+        <div class="picker" id="letter-pick" role="group" aria-label="বর্ণ বাছো"></div>
+        <div class="board">
+          <canvas id="letter-c" width="880" height="300" aria-label="বর্ণ, উপর দিয়ে লেখো"></canvas>
+        </div>
+        <div class="row">
+          <button type="button" class="btn btn-primary" id="letter-show">দেখাও</button>
+          <button type="button" class="btn" data-clear="letter-c">মুছে ফেলো</button>
+          <p class="readout" id="letter-out" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ৩. কার -->
+      <section class="tool card" id="karbosano">
+        <h2><span class="no">০৩</span> কার বসানো</h2>
+        <p class="how">
+          বর্ণটা আগে থেকেই লেখা আছে। এখন শুধু কারের চিহ্নটা তার গায়ে বসাও - ঠিক জায়গায়,
+          ঠিক মাপে। কার বদলে বদলে দেখো কোনটা কোথায় বসে।
+        </p>
+        <div class="picker" id="kar-pick" role="group" aria-label="কার বাছো"></div>
+        <div class="board">
+          <canvas id="kar-c" width="880" height="300" aria-label="কার বসাও"></canvas>
+        </div>
+        <div class="row">
+          <button type="button" class="btn" data-clear="kar-c">মুছে ফেলো</button>
+          <p class="readout" id="kar-out" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ৪. শব্দ -->
+      <section class="tool card" id="shobdo">
+        <h2><span class="no">০৪</span> শব্দ লেখা</h2>
+        <p class="how">
+          একটা গোটা শব্দ। খেয়াল করো মাত্রাগুলো কীভাবে একটানা হয়ে যায় - বাংলায় শব্দের
+          মাত্রা প্রায় জোড়া লেগে থাকে, সেটাই লেখাটাকে বাংলা দেখায়।
+        </p>
+        <div class="picker" id="word-pick" role="group" aria-label="শব্দ বাছো"></div>
+        <div class="board">
+          <canvas id="word-c" width="880" height="260" aria-label="শব্দ লেখো"></canvas>
+        </div>
+        <div class="row">
+          <button type="button" class="btn" data-clear="word-c">মুছে ফেলো</button>
+          <p class="readout" id="word-out" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ৫. বাক্য -->
+      <section class="tool card" id="bakko">
+        <h2><span class="no">০৫</span> বাক্য লেখা</h2>
+        <p class="how">
+          এবার পুরো একটা বাক্য, চার দাগের কাগজে। শব্দের মাঝে ফাঁক সমান রাখা আর সব বর্ণ
+          একই উচ্চতায় বসানো - এই দুটোই হাতের লেখা সুন্দর দেখানোর আসল কাজ।
+        </p>
+        <div class="board">
+          <canvas id="line-c" width="880" height="230" aria-label="বাক্য লেখো"></canvas>
+        </div>
+        <div class="row">
+          <button type="button" class="btn" data-clear="line-c">মুছে ফেলো</button>
+          <button type="button" class="btn" id="line-next">নতুন বাক্য</button>
+          <p class="readout" id="line-out" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ৬. ছাপার পাতা -->
+      <section class="tool card" id="chhapar">
+        <h2><span class="no">০৬</span> ছাপার যোগ্য পাতা</h2>
+        <p class="how">
+          পর্দায় আঙুল বোলানো শুরু, কিন্তু হাতের লেখা আসলে কাগজে কলমে হয়। নিচের বোতামে
+          চাপলে এই মুহূর্তে বাছা বর্ণ বা শব্দ দিয়ে একটা অনুশীলনীর পাতা তৈরি হবে - ফিকে
+          লেখা সহ, যাতে তার উপর দিয়ে পেন্সিল চালানো যায়।
+        </p>
+        <div class="sheet" id="sheet"></div>
+        <div class="row">
+          <button type="button" class="btn btn-primary" id="print">এই পাতাটা ছাপাও</button>
+          <a class="btn" href="/printables/">সব ছাপার প্যাক দেখো</a>
+        </div>
+      </section>
+    </div>
+
+    <p class="back"><a href="/language/">← ভাষা ভুবনে ফিরে যাও</a></p>
+  </div>
+  <script is:inline type="application/json" id="hand-data" set:html={JSON.stringify(payload)}></script>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .note { margin-top: 0.8rem; font-size: 13px; color: var(--muted); max-width: 62ch; line-height: 1.7; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; margin-right: 0.5rem; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .how :global(b) { color: var(--ink-2); }
+  .readout { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; flex: 1; min-width: 14rem; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 16px; }
+  .readout :global(.ok) { color: var(--ok); }
+
+  .board { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fdfcfa; }
+  .board canvas { width: 100%; height: auto; display: block; touch-action: none; cursor: crosshair; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-top: 0.9rem; }
+
+  .picker { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 1rem; scrollbar-width: thin; }
+  /* the tiles are built by the script, so they never take Astro's scope stamp */
+  .picker :global(button) {
+    flex: 0 0 auto; min-width: 48px; padding: 0.4rem 0.6rem; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+    font: inherit; font-family: var(--font-display); font-size: 20px; font-weight: 700; cursor: pointer;
+  }
+  .picker :global(button small) { display: block; font-family: var(--font-body); font-size: 10px; font-weight: 400; color: var(--muted); }
+  .picker :global(button:hover) { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); }
+  .picker :global(button[aria-pressed="true"]) { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .picker :global(button[aria-pressed="true"] small) { color: var(--on-brand); opacity: 0.85; }
+
+  .sheet { border: 1px solid var(--line); border-radius: 12px; padding: 1.2rem; background: #fff; }
+  .sheet :global(.sh-h) { font-size: 13px; color: #666; margin-bottom: 0.8rem; display: flex; justify-content: space-between; }
+  .sheet :global(.sh-row) {
+    font-family: var(--font-display); font-size: 42px; color: #c9c4bd; letter-spacing: 0.25em;
+    border-bottom: 1px solid #ddd; padding: 0.35rem 0; white-space: nowrap; overflow: hidden;
+  }
+  .sheet :global(.sh-row.blank) { color: transparent; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media print {
+    .head, .quicknav, .crumbs, .back, .row, .how, .picker, .board, .tool h2 { display: none !important; }
+    .tool { border: none; padding: 0; }
+    #lab :global(.tool:not(#chhapar)) { display: none !important; }
+    .sheet { border: none; padding: 0; }
+  }
+</style>
+
+<script>
+  import { traceBoard, useItem, type Trace } from '../../lib/handson';
+
+  type Letter = { ch: string; name: string; roman: string; word: string; emoji: string };
+  type Kar = { sign: string; name: string; roman: string; word: string; emoji: string };
+  const data: { letters: Letter[]; kars: Kar[] } = JSON.parse(document.getElementById('hand-data')!.textContent!);
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const WORLD = 'language', CAT = 'হাতের লেখা';
+  let live = false;
+  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const pc = (v: number) => `${new Intl.NumberFormat('bn-BD').format(Math.round(v * 100))}%`;
+
+  /** Every board on the page, so the clear buttons can find their own. */
+  const boards = new Map<string, Trace>();
+  const GUIDE = '#ded8d0', RULE = '#e6e0d8', BLUE = '#b9cbe0';
+  /** The display face, resolved once so the canvas can ask for it by name. */
+  const face = getComputedStyle(document.body).getPropertyValue('--font-display').trim() || 'serif';
+
+  /** Four-line ruling, the way a Bangla copybook is printed. */
+  function ruling(g: CanvasRenderingContext2D, w: number, top: number, mid: number, base: number, low: number) {
+    g.strokeStyle = RULE; g.lineWidth = 1.5;
+    for (const y of [top, base, low]) { g.beginPath(); g.moveTo(20, y); g.lineTo(w - 20, y); g.stroke(); }
+    g.strokeStyle = BLUE; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(20, mid); g.lineTo(w - 20, mid); g.stroke();
+  }
+  /**
+   * Accuracy is judged before coverage on purpose. Scribbling over the whole
+   * box covers the letter completely, and calling that "নিচে কিছু বাকি আছে"
+   * would be both wrong and the opposite of the lesson.
+   */
+  const verdict = (covered: number, accurate: number) => {
+    if (covered < 0.12) return { s: 'শুরু করো - ফিকে দাগের উপর দিয়ে টানো।', ok: false };
+    if (accurate < 0.4) return { s: 'দাগের বাইরে অনেকটা চলে যাচ্ছে - ধীরে, দাগ ধরে টানো।', ok: false };
+    if (covered > 0.8 && accurate > 0.65) return { s: 'চমৎকার! প্রায় পুরোটাই ঠিক জায়গায় পড়েছে।', ok: true };
+    if (covered > 0.6 && accurate > 0.5) return { s: 'ভালো হয়েছে। আরেকটু যত্ন করলেই হয়ে যাবে।', ok: true };
+    if (covered > 0.6) return { s: 'ঢাকা হয়েছে, তবে টানটা আরেকটু দাগের উপরে রাখো।', ok: false };
+    return { s: 'আরও কিছু জায়গা বাকি আছে।', ok: false };
+  };
+
+  /* ---------- ১. মাত্রা ---------- */
+  (function matra() {
+    const c = $<HTMLCanvasElement>('#matra-c'), out = $('#matra-out');
+    const Y = 92, X0 = 70, X1 = 810;
+    const line = (g: CanvasRenderingContext2D, colour: string, wdt: number) => {
+      g.strokeStyle = colour; g.lineWidth = wdt; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(X0, Y); g.lineTo(X1, Y); g.stroke();
+    };
+    const board = traceBoard({
+      canvas: c,
+      drawGuide: (g) => {
+        ruling(g, 880, 40, Y, 146, 168);
+        line(g, GUIDE, 16);
+        g.fillStyle = '#b8b0a6'; g.font = `20px ${face}`; g.textAlign = 'left';
+        g.fillText('শুরু', X0 - 46, Y + 7);
+        g.fillText('শেষ', X1 + 12, Y + 7);
+      },
+      drawTarget: (g) => line(g, '#000', 16),
+      lineWidth: 13,
+      onScore: ({ covered, accurate, strokes }) => {
+        const v = verdict(covered, accurate);
+        out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> দাগের <b>${pc(covered)}</b> ঢেকেছে, আর তোমার টানের <b>${pc(accurate)}</b> দাগের উপরেই ছিল।`
+          + (strokes > 1 && covered > 0.7 ? ' মাত্রা একটানে টানার চেষ্টা করো - তাতে দাগটা সোজা থাকে।' : '');
+        if (covered > 0.3) credit('মাত্রা টানা');
+      },
+    });
+    boards.set('matra-c', board);
+    out.textContent = 'ফিকে দাগটার উপর দিয়ে বাঁ থেকে ডানে টানো।';
+  })();
+
+  /* ---------- shared: the clear buttons ---------- */
+  function wireClear() {
+    for (const b of root.querySelectorAll<HTMLButtonElement>('[data-clear]')) {
+      b.addEventListener('click', () => boards.get(b.dataset.clear!)?.clear());
+    }
+  }
+
+  /* ---------- ২. বর্ণ ---------- */
+  let currentLetter = 'ক';
+  (function letters() {
+    const c = $<HTMLCanvasElement>('#letter-c'), out = $('#letter-out');
+    const pick = $<HTMLElement>('#letter-pick');
+    const BASE = 210, SIZE = 170, CXp = 440;
+    let reveal = 1;   // 0 to 1 while the stroke order plays
+
+    pick.replaceChildren(...data.letters.map((l) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.ch = l.ch; b.setAttribute('aria-pressed', String(l.ch === currentLetter));
+      b.append(l.ch);
+      return b;
+    }));
+
+    const glyph = (g: CanvasRenderingContext2D, colour: string, clipTo?: number) => {
+      g.save();
+      if (clipTo !== undefined) { g.beginPath(); g.rect(0, clipTo, 880, 300 - clipTo); g.clip(); }
+      g.fillStyle = colour; g.font = `700 ${SIZE}px ${face}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.fillText(currentLetter, CXp, BASE);
+      g.restore();
+    };
+    // The মাত্রা sits just under the top of the glyph box, and it is the last
+    // stroke. That is the rule this animation shows; it does not claim to know
+    // the exact order of the strokes inside the body.
+    const matraY = BASE - SIZE * 0.72;
+
+    const board = traceBoard({
+      canvas: c,
+      drawGuide: (g) => {
+        ruling(g, 880, BASE - SIZE * 0.95, matraY, BASE, BASE + 26);
+        if (reveal >= 1) { glyph(g, GUIDE); return; }
+        // body first, then the headline
+        if (reveal < 0.75) glyph(g, GUIDE, matraY + 4);
+        else {
+          glyph(g, GUIDE, matraY + 4);
+          g.save();
+          g.beginPath(); g.rect(0, 0, 880, matraY + 6); g.clip();
+          glyph(g, '#b9a0ae');
+          g.restore();
+        }
+      },
+      drawTarget: (g) => glyph(g, '#000'),
+      onScore: ({ covered, accurate }) => {
+        const v = verdict(covered, accurate);
+        out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> বর্ণের <b>${pc(covered)}</b> ঢেকেছে, তোমার লেখার <b>${pc(accurate)}</b> বর্ণের উপরে।`;
+        if (covered > 0.3) credit('বর্ণের স্ট্রোক ক্রম');
+      },
+    });
+    boards.set('letter-c', board);
+    out.textContent = 'ফিকে বর্ণটার উপর দিয়ে লেখো। আগে শরীর, শেষে মাত্রা।';
+
+    pick.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+      if (!b) return;
+      currentLetter = b.dataset.ch!;
+      [...pick.querySelectorAll('button')].forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      reveal = 1;
+      board.clear(); board.refresh();
+      buildSheet();
+    });
+    $('#letter-show').addEventListener('click', () => {
+      reveal = 0;
+      board.clear();
+      const t0 = performance.now();
+      const step = (now: number) => {
+        reveal = Math.min(1, (now - t0) / 1400);
+        board.refresh();
+        if (reveal < 1) requestAnimationFrame(step);
+        else credit('বর্ণের স্ট্রোক ক্রম');
+      };
+      requestAnimationFrame(step);
+    });
+  })();
+
+  /* ---------- ৩. কার ---------- */
+  (function kar() {
+    const c = $<HTMLCanvasElement>('#kar-c'), out = $('#kar-out');
+    const pick = $<HTMLElement>('#kar-pick');
+    const BASE = 210, SIZE = 150, CXp = 440;
+    // the first kar is "no sign at all", which cannot be traced
+    const usable = data.kars.filter((k) => k.sign);
+    let cur = usable[0]!;
+
+    pick.replaceChildren(...usable.map((k) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.sign = k.sign; b.setAttribute('aria-pressed', String(k === cur));
+      b.append(`ক${k.sign}`);
+      const s = document.createElement('small'); s.textContent = k.name.replace('-কার', '');
+      b.append(s);
+      return b;
+    }));
+
+    const draw = (g: CanvasRenderingContext2D, base: string, sign: string) => {
+      g.font = `700 ${SIZE}px ${face}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      const full = g.measureText(`ক${cur.sign}`).width;
+      g.fillStyle = base; g.fillText('ক', CXp - full / 2 + g.measureText('ক').width / 2, BASE);
+      if (sign !== 'none') {
+        // the sign is drawn as the difference: whole word minus the bare letter
+        g.save();
+        g.globalCompositeOperation = 'source-over';
+        g.fillStyle = sign;
+        g.fillText(`ক${cur.sign}`, CXp, BASE);
+        g.globalCompositeOperation = 'destination-out';
+        g.fillStyle = '#000';
+        g.fillText('ক', CXp - full / 2 + g.measureText('ক').width / 2, BASE);
+        g.restore();
+      }
+    };
+
+    const board = traceBoard({
+      canvas: c,
+      drawGuide: (g) => {
+        ruling(g, 880, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 26);
+        // the letter solid, the kar pale: only the kar is yours to add
+        draw(g, '#3a3a3a', GUIDE);
+      },
+      drawTarget: (g) => {
+        const tmp = document.createElement('canvas'); tmp.width = 880; tmp.height = 300;
+        const t = tmp.getContext('2d')!;
+        draw(t, 'rgba(0,0,0,0)', '#000');
+        g.drawImage(tmp, 0, 0);
+      },
+      onScore: ({ covered, accurate }) => {
+        const v = verdict(covered, accurate);
+        out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> <b>${cur.name}</b> - যেমন ${cur.emoji} ${cur.word}। কারের <b>${pc(covered)}</b> ঢেকেছে।`;
+        if (covered > 0.3) credit('কার বসানো');
+      },
+    });
+    boards.set('kar-c', board);
+    out.innerHTML = `<b>${cur.name}</b> - ক-এর গায়ে চিহ্নটা বসাও।`;
+
+    pick.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+      if (!b) return;
+      cur = usable.find((k) => k.sign === b.dataset.sign) ?? cur;
+      [...pick.querySelectorAll('button')].forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      board.clear(); board.refresh();
+      out.innerHTML = `<b>${cur.name}</b> - ক-এর গায়ে চিহ্নটা বসাও।`;
+    });
+  })();
+
+  /* ---------- ৪. শব্দ ---------- */
+  let currentWord = 'বাংলা';
+  (function words() {
+    const c = $<HTMLCanvasElement>('#word-c'), out = $('#word-out');
+    const pick = $<HTMLElement>('#word-pick');
+    const WORDS = ['বাংলা', 'আকাশ', 'নদী', 'পাখি', 'বই', 'মা', 'গাছ', 'ফুল'];
+    const BASE = 176, SIZE = 104;
+
+    pick.replaceChildren(...WORDS.map((w) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.w = w; b.setAttribute('aria-pressed', String(w === currentWord));
+      b.append(w);
+      return b;
+    }));
+    const word = (g: CanvasRenderingContext2D, colour: string) => {
+      g.fillStyle = colour; g.font = `700 ${SIZE}px ${face}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.fillText(currentWord, 440, BASE);
+    };
+    const board = traceBoard({
+      canvas: c,
+      drawGuide: (g) => { ruling(g, 880, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 24); word(g, GUIDE); },
+      drawTarget: (g) => word(g, '#000'),
+      lineWidth: 11,
+      onScore: ({ covered, accurate }) => {
+        const v = verdict(covered, accurate);
+        out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> শব্দের <b>${pc(covered)}</b> ঢেকেছে।`;
+        if (covered > 0.3) credit('শব্দ লেখা');
+      },
+    });
+    boards.set('word-c', board);
+    out.textContent = 'ফিকে শব্দটার উপর দিয়ে লেখো।';
+    pick.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+      if (!b) return;
+      currentWord = b.dataset.w!;
+      [...pick.querySelectorAll('button')].forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      board.clear(); board.refresh(); buildSheet();
+    });
+  })();
+
+  /* ---------- ৫. বাক্য ---------- */
+  (function line() {
+    const c = $<HTMLCanvasElement>('#line-c'), out = $('#line-out');
+    const LINES = ['আমার নাম কী', 'আকাশে অনেক তারা', 'বই পড়তে ভালো লাগে', 'নদীর নাম পদ্মা'];
+    const BASE = 150, SIZE = 58;
+    let i = 0;
+    const sentence = (g: CanvasRenderingContext2D, colour: string) => {
+      g.fillStyle = colour; g.font = `700 ${SIZE}px ${face}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.fillText(LINES[i]!, 440, BASE);
+    };
+    const board = traceBoard({
+      canvas: c,
+      drawGuide: (g) => { ruling(g, 880, BASE - SIZE * 0.95, BASE - SIZE * 0.72, BASE, BASE + 22); sentence(g, GUIDE); },
+      drawTarget: (g) => sentence(g, '#000'),
+      lineWidth: 8,
+      onScore: ({ covered, accurate }) => {
+        const v = verdict(covered, accurate);
+        out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> বাক্যের <b>${pc(covered)}</b> ঢেকেছে।`;
+        if (covered > 0.3) credit('বাক্য লেখা');
+      },
+    });
+    boards.set('line-c', board);
+    out.textContent = 'ফিকে বাক্যটার উপর দিয়ে লেখো।';
+    $('#line-next').addEventListener('click', () => {
+      i = (i + 1) % LINES.length;
+      board.clear(); board.refresh();
+    });
+  })();
+
+  /* ---------- ৬. ছাপার পাতা ---------- */
+  function buildSheet() {
+    const host = $<HTMLElement>('#sheet');
+    const head = document.createElement('div'); head.className = 'sh-h';
+    const left = document.createElement('span'); left.textContent = `অনুশীলনী: ${currentLetter} ও ${currentWord}`;
+    const right = document.createElement('span'); right.textContent = 'নাম: ____________  তারিখ: ________';
+    head.append(left, right);
+    const rows: HTMLElement[] = [head];
+    const make = (txt: string, blank = false) => {
+      const d = document.createElement('div');
+      d.className = blank ? 'sh-row blank' : 'sh-row';
+      d.textContent = txt;
+      return d;
+    };
+    const rep = (s: string, n: number) => Array.from({ length: n }, () => s).join(' ');
+    rows.push(make(rep(currentLetter, 9)), make(rep(currentLetter, 9)), make(rep(currentLetter, 9), true));
+    rows.push(make(rep(currentWord, 4)), make(rep(currentWord, 4)), make(rep(currentWord, 4), true));
+    host.replaceChildren(...rows);
+  }
+  const boardsReady = () => { buildSheet(); };
+  $('#print').addEventListener('click', () => { buildSheet(); credit('ছাপার যোগ্য পাতা'); window.print(); });
+
+  wireClear();
+  boardsReady();
+  // Everything above has drawn its first frame; from here a change is a choice.
+  live = true;
+</script>
