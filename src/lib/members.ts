@@ -599,6 +599,38 @@ export type WeekRow = {
  * Everything here is counted from rows the child's own devices already wrote.
  * Nothing new is collected to make it.
  */
+/**
+ * This week in one world, per child.
+ *
+ * `familyWeek` sums across every world, which is right for a parent's summary
+ * and useless on a world page. Siblings on one plan and nobody else, same as
+ * everywhere: this adds no stranger and no new data, it only asks a narrower
+ * question of rows the children's own devices already wrote.
+ */
+export type WorldWeekRow = { childId: string; nickname: string; items: number; last: number };
+export async function familyWeekIn(kids: Child[], world: string, days = 7): Promise<WorldWeekRow[]> {
+  if (!kids.length) return [];
+  const d = db();
+  if (!d) return [];
+  const since = Date.now() - days * 86400000;
+  const ids = kids.map((k) => k.id);
+  const marks = ids.map(() => '?').join(', ');
+  try {
+    const rows = await d.prepare(
+      `SELECT child_id, COUNT(*) AS n, MAX(seen_at) AS last
+       FROM child_progress WHERE child_id IN (${marks}) AND world = ? AND seen_at >= ?
+       GROUP BY child_id`,
+    ).bind(...ids, world, since).all<{ child_id: string; n: number; last: number }>();
+    return kids.map((k) => {
+      const r = rows.results.find((x) => x.child_id === k.id);
+      return { childId: k.id, nickname: k.nickname, items: r?.n ?? 0, last: r?.last ?? 0 };
+    });
+  } catch {
+    // A world page must never fail over a sibling count.
+    return [];
+  }
+}
+
 export async function familyWeek(kids: Child[], days = 7): Promise<WeekRow[]> {
   if (!kids.length) return [];
   const d = requireDb();

@@ -15,7 +15,7 @@ import { languageExplorer } from '../../data/language-explorer';
 import { socialExplorer } from '../../data/social-explorer';
 import { discoveryExplorer } from '../../data/discovery-explorer';
 import type { ItemDetail } from '../../data/explorer-types';
-import { getMember, hasPlan, activeChild } from '../../lib/members';
+import { getMember, hasPlan, activeChild, familyWeekIn } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
 import { catEmoji } from '../../data/cat-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
@@ -64,6 +64,20 @@ const payload = w.cats.map((c, i) => {
 const member = await getMember(Astro);
 const plan = hasPlan(member);
 const child = plan ? activeChild(Astro, member) : null;
+/**
+ * Who else has been in this world this week.
+ *
+ * The page is a silent room: nothing on it suggests another person exists.
+ * The only other people this site can honestly show a child are their own
+ * siblings on the family plan - no strangers, no invented counts, and no new
+ * data about anyone, only a narrower question asked of rows their own devices
+ * already wrote. Without a plan, or with one child, there is nobody to show
+ * and the strip does not appear.
+ */
+const family = member && plan && member.children.length > 1
+  ? (await familyWeekIn(member.children, w.slug)).filter((r) => r.items > 0)
+  : [];
+const familyTop = family.slice().sort((a, b) => b.items - a.items);
 
 const first = w.cats[0];
 const firstDetail = payload[0].detail;
@@ -414,6 +428,22 @@ const schema = [
           </div>
         </section>
 
+        {familyTop.length > 0 && (
+          <section class="card fam">
+            <div class="card-h"><span class="lbl">পরিবারে এই সপ্তাহে</span><span class="lbl num">{w.bn}</span></div>
+            <ul class="famlist">
+              {familyTop.map((r) => (
+                <li class={r.childId === child?.id ? 'me' : undefined}>
+                  <span class="fn">{r.nickname}{r.childId === child?.id && <small>তুমি</small>}</span>
+                  <span class="fb" aria-hidden="true"><i style={`width:${Math.round((r.items / familyTop[0]!.items) * 100)}%`}></i></span>
+                  <span class="fnum"><b>{bn(r.items)}</b>টা</span>
+                </li>
+              ))}
+            </ul>
+            <p class="note">শুধু এই ভুবনে, শেষ সাত দিনে। এটা পরিবারের ভেতরের হিসাব - বাইরের কেউ নেই।</p>
+          </section>
+        )}
+
         <section class="card">
           <div class="card-h"><span class="lbl">অর্জন</span><span class="lbl num" id="aw-count">০ / {bn(AWARDS.length)}</span></div>
           {/* Eleven grey locks say "you have done nothing". This says which one
@@ -621,6 +651,15 @@ const schema = [
   .aw.on { background: color-mix(in oklab, var(--sun) 16%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 55%, var(--line)); color: var(--ink); }
   .aw.near { border-color: color-mix(in oklab, var(--w) 60%, var(--line)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--w) 18%, transparent); color: var(--ink-2); }
   .aw.near .aw-e { filter: grayscale(0.35); opacity: 0.8; }
+  .famlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+  .famlist li { display: grid; grid-template-columns: minmax(4.5rem, auto) 1fr auto; align-items: center; gap: 0.5rem; font-size: 13px; color: var(--ink-2); }
+  .famlist li.me .fn { color: var(--ink); font-weight: 700; }
+  .fn small { display: inline-block; margin-left: 0.3rem; font-size: 10px; font-weight: 600; color: var(--on-brand); background: var(--w); padding: 0.05rem 0.35rem; border-radius: 999px; vertical-align: 1px; }
+  .fb { height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+  .fb i { display: block; height: 100%; border-radius: 999px; background: var(--w); }
+  .fnum { font-variant-numeric: tabular-nums; font-size: 12.5px; white-space: nowrap; }
+  .fnum b { color: var(--ink); font-family: var(--font-display); font-size: 15px; }
+
   .aw-near { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; margin-bottom: 0.6rem; }
   .aw-near :global(b) { color: var(--ink); }
   .aw.on .aw-e { filter: none; opacity: 1; transform: scale(1.12); }
@@ -915,13 +954,13 @@ const schema = [
 </style>
 
 <script>
-  import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, setMission, finishTask, todayState, freezeCount } from '../../lib/progress';
+  import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, setMission, finishTask, todayState, freezeCount, dayKey } from '../../lib/progress';
   import { levelOf, AWARDS, awardKey, closestAward, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
   import { praise } from '../../lib/praise';
   import { goalParts, goalDone, goalMet } from '../../lib/daily';
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
   import { makeSpeaker, type Speaker } from '../../lib/speak';
-  import { bn, pad2, bnOf } from '../../lib/bn';
+  import { bn, pad2, bnOf, bnAt } from '../../lib/bn';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import { setProgressScope } from '../../lib/progress';
   import { syncWorld, pushSeen } from '../../lib/sync';
@@ -1516,6 +1555,7 @@ const schema = [
     const c = cats[curCat];
     if (!readable(c)) return;
     curItem = ii;
+    rememberSpot(curCat, ii);
     chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
     hero?.focus(ii);
     renderRead(); renderCrumbs();
@@ -1527,6 +1567,7 @@ const schema = [
       chip?.classList.add('done');
       if (childId) pushSeen(slug, keyOf(curCat, ii));
       noteItem(slug);
+      resume = null;
       renderProgress(); renderGlance(); renderRecords(); renderNext();
       /**
        * Reading something new is the commonest good thing that happens here,
@@ -1678,6 +1719,42 @@ const schema = [
     window.print();
   });
   /**
+   * Where you stopped last time.
+   *
+   * The room was silent about you as well as about everyone else: every visit
+   * opened on item one as though you had never been. This remembers the last
+   * thing you actually read here and, on a later day, offers it back by name.
+   * It lives in this browser only - no account, nothing sent anywhere - and is
+   * spent the moment it is used or the moment you read something new.
+   */
+  const SPOT = `posora:spot:${slug}`;
+  type Spot = { c: number; i: number; on: string };
+  let resume: Spot | null = (() => {
+    try {
+      const raw = localStorage.getItem(SPOT);
+      if (!raw) return null;
+      const v = JSON.parse(raw) as Spot;
+      // Only a different day is worth mentioning. Coming back after lunch and
+      // being told where you were is noise.
+      if (!v || v.on === dayKey(new Date())) return null;
+      if (!cats[v.c] || !readable(cats[v.c]) || !cats[v.c].items[v.i]) return null;
+      return v;
+    } catch { return null; }
+  })();
+  function rememberSpot(c: number, i: number) {
+    try { localStorage.setItem(SPOT, JSON.stringify({ c, i, on: dayKey(new Date()) })); } catch { /* private mode */ }
+  }
+  /** How long ago, in the words a child uses. */
+  function agoText(on: string): string {
+    const then = new Date(`${on}T00:00:00`), now = new Date(dayKey(new Date()) + 'T00:00:00');
+    const days = Math.round((now.getTime() - then.getTime()) / 86400000);
+    if (days <= 1) return 'কাল';
+    if (days < 7) return `${bn(days)} দিন আগে`;
+    if (days < 30) return `${bn(Math.round(days / 7))} সপ্তাহ আগে`;
+    return 'অনেকদিন আগে';
+  }
+
+  /**
    * What to do next, in one line.
    *
    * Picks the first thing that is true, most urgent first, and always names
@@ -1703,7 +1780,14 @@ const schema = [
     const labLeft = lab ? lab.items.some((_it, ii) => !new Set(seenList()).has(`${lab.n}:${lab.items[ii]}`)) : false;
 
     let text = '', label = '', act: () => void;
-    if (up && left > 0 && t.items > 0) {
+    if (resume) {
+      const at = resume;
+      // bnAt puts the locative on properly: কীলকে, not কীলক-এ, and চাকাতে for
+      // a name that ends in a vowel.
+      text = `${agoText(at.on)} তুমি থেমেছিলে <b>${bnAt(cats[at.c].items[at.i]!)}</b>।`;
+      label = 'ওখান থেকে শুরু করি →';
+      act = () => { resume = null; jumpTo({ cat: at.c, item: at.i }); };
+    } else if (up && left > 0 && t.items > 0) {
       text = `আজ আর <b>${bn(left)}টা</b> নতুন দেখলেই লক্ষ্য পূরণ।`;
       label = `পরেরটা: ${cats[up.cat].items[up.item]} →`;
       act = () => jumpTo(up);
