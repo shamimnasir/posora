@@ -305,25 +305,59 @@ const quadruped = (body: string, opts: { stripe?: string; big?: boolean; trunk?:
 };
 /** A streamlined body with fins and a forked tail. */
 const fish = (body: string, fin?: string): Figure => (g) => {
+  const finC = fin ?? body, dark = new Color(body).multiplyScalar(0.7);
   const b = put(g, new Mesh(new SphereGeometry(0.3, 26, 18), std(body)), 0, 0.32);
   b.scale.set(1.5, 0.72, 0.5);
-  const t = put(g, new Mesh(new ConeGeometry(0.2, 0.28, 3), std(fin ?? body)), -0.5, 0.32, 0, 0, 0, Math.PI / 2);
-  t.scale.set(1, 1, 0.3);
-  put(g, new Mesh(new ConeGeometry(0.1, 0.2, 3), std(fin ?? body)), 0, 0.52, 0).scale.set(1, 1, 0.25);
-  ball(g, '#10161f', 0.03, 0.34, 0.38, 0.1);
+  // a paler belly, which is what nearly every fish has and what stops the body
+  // reading as one moulded lozenge
+  const belly = put(g, new Mesh(new SphereGeometry(0.29, 22, 14), std(new Color(body).lerp(new Color('#ffffff'), 0.45))), 0, 0.27, 0);
+  belly.scale.set(1.45, 0.5, 0.47);
+  // a forked tail: two blades off the peduncle, not one flat triangle
+  for (const s of [1, -1]) {
+    const t = put(g, new Mesh(new ConeGeometry(0.15, 0.3, 3), std(finC)), -0.52, 0.32 + s * 0.06, 0, 0, 0, Math.PI / 2 + s * 0.32);
+    t.scale.set(1, 1, 0.26);
+  }
+  put(g, new Mesh(new ConeGeometry(0.1, 0.2, 3), std(finC)), 0, 0.52, 0).scale.set(1, 1, 0.25);
+  // pectoral fins, swept back along the flanks
+  for (const s of [1, -1]) {
+    const p = put(g, new Mesh(new ConeGeometry(0.07, 0.16, 3), std(finC)), 0.08, 0.29, s * 0.13, 0, 0, Math.PI / 2 + 0.5);
+    p.scale.set(1, 1, 0.2); p.rotation.y = s * 0.5;
+  }
+  // the gill cover, the one line that says where the head ends
+  const gill = put(g, new Mesh(new TorusGeometry(0.1, 0.012, 8, 18, Math.PI * 1.1), std(dark)), 0.2, 0.33, 0, 0, Math.PI / 2, 0.4);
+  gill.scale.set(1, 1.3, 1);
+  for (const s of [1, -1]) {
+    ball(g, '#f4f7fa', 0.035, 0.36, 0.37, s * 0.085).scale.set(1, 1, 0.5);
+    disc(g, '#10161f', 0.018, 0.375, 0.37, s * 0.095, 0).rotation.y = s * 1.15;
+  }
 };
 /** A perched bird: round body, beak, two wings, a tail. */
 const bird = (body: string, wing?: string, beak = '#f0b429'): Figure => (g) => {
+  const wingC = wing ?? body;
   const b = put(g, new Mesh(new SphereGeometry(0.2, 24, 18), std(body)), 0, 0.4);
   b.scale.set(1.15, 1, 0.9);
-  ball(g, body, 0.12, 0.16, 0.58);
-  cone(g, beak, 0.045, 0.14, 0.31, 0.58, 0, -Math.PI / 2);
+  // a neck, so the head is joined to the body rather than resting on it
+  taper(g, body, 0.075, 0.12, 0.14, 0.1, 0.52, 0, -0.5);
+  const head = ball(g, body, 0.12, 0.17, 0.585); head.scale.set(1.05, 1, 0.95);
+  cone(g, beak, 0.042, 0.15, 0.315, 0.575, 0, -Math.PI / 2);
+  // the eye: a small pale ball with a flat pupil past its front, the same trick
+  // the faces use, because a dark dot sunk into the skull is no eye at all
   for (const s of [1, -1]) {
-    const w = put(g, new Mesh(new SphereGeometry(0.14, 20, 14), std(wing ?? body)), 0, 0.42, s * 0.17);
-    w.scale.set(1.2, 0.35, 0.6);
+    ball(g, '#f6f9fc', 0.03, 0.215, 0.615, s * 0.078).scale.set(1, 1, 0.55);
+    disc(g, '#12161c', 0.017, 0.222, 0.615, s * 0.094, 0).rotation.y = s * 1.2;
   }
-  put(g, new Mesh(new ConeGeometry(0.09, 0.26, 4), std(wing ?? body)), -0.26, 0.38, 0, 0, 0, Math.PI / 2).scale.set(1, 1, 0.35);
-  for (const s of [1, -1]) rod(g, '#c8862c', 0.018, 0.2, 0.02, 0.1, s * 0.06);
+  // wings swept back and tilted, rather than two bulges lying flat on the flanks
+  for (const s of [1, -1]) {
+    const w = put(g, new Mesh(new SphereGeometry(0.145, 20, 14), std(wingC)), -0.03, 0.43, s * 0.155);
+    w.scale.set(1.25, 0.28, 0.62); w.rotation.set(0, -s * 0.22, s * 0.12);
+  }
+  const tail = put(g, new Mesh(new ConeGeometry(0.1, 0.3, 4), std(wingC)), -0.28, 0.36, 0, 0, 0, Math.PI / 2 + 0.22);
+  tail.scale.set(1, 1, 0.3);
+  for (const s of [1, -1]) {
+    rod(g, '#c8862c', 0.016, 0.2, 0.02, 0.1, s * 0.06);
+    // a foot, so the bird stands on the shelf instead of balancing on two wires
+    box(g, '#c8862c', 0.09, 0.02, 0.055, 0.035, 0.01, s * 0.06);
+  }
 };
 /** A long low body with a ridged back and a wide snout. */
 const croc: Figure = (g) => {
