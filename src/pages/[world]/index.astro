@@ -284,6 +284,7 @@ const schema = [
                 <button type="button" id="q-start" class="q-start">🎯 খোঁজার খেলা</button>
                 <button type="button" id="h-spin" aria-pressed="true">ঘোরানো থামাও</button>
                 <button type="button" id="h-reset">সোজা করো</button>
+                <button type="button" id="h-big" aria-pressed="false">⛶ পর্দাজুড়ে</button>
                 <span class="hang" id="h-angle">কোণ ০°</span>
               </div>
             </div>
@@ -569,20 +570,40 @@ const schema = [
             ছোট লেখাটা খুলবে। পুরো লেখা আর তিনটি গভীরতা উপরের মডেলে।
           </p>
         </div>
+        {/* Eighty-four things in a grid is a wall, and a wall is only useful to
+            someone who already knows what they are looking for. Typing filters
+            every name, every tag and every line of the reading at once, which
+            is the difference between a list and a way in. Plain markup, so the
+            list is still whole and quotable with scripts off. */}
+        <div class="ix-find">
+          <label class="lbl" for="ix-q">খুঁজে নাও</label>
+          <input type="search" id="ix-q" placeholder={`${first.items[0]}, ${w.cats[1]?.items[0] ?? ''}…`} autocomplete="off" />
+          <span class="lbl num" id="ix-count" role="status" aria-live="polite"></span>
+        </div>
       </div>
       {/* The sideways links to the other ten worlds used to be a plain row of
           names here. এরপর কোথায় now carries the same ten as real links a few
           hundred pixels up, each with its size and how far this browser has
           got, so this line was the same list said worse, twice on one page. */}
       {payload.map((c, ci) => (
-        <div class="index-cat">
-          <h3><span class="lbl">বিভাগ {pad2(ci + 1)}</span>{c.n}</h3>
+        <div class="index-cat" style={`--o:${shade(ci)}`}>
+          <h3>
+            <span class="ix-e" aria-hidden="true">{catEmoji(w.slug, c.n)}</span>
+            <span class="lbl">বিভাগ {pad2(ci + 1)}</span>{c.n}
+            <span class="lbl num ix-n">{bn(c.items.length)}টি</span>
+          </h3>
           <p class="index-play">{c.play}</p>
           {c.detail && c.detail.length === c.items.length ? (
             <div class="index-items">
               {c.items.map((it, ii) => (
                 <details class="ix">
-                  <summary><b>{it}</b>{c.detail![ii].chips.slice(0, 2).map((ch) => <span class="pill">{ch}</span>)}</summary>
+                  <summary>
+                    <span class="ix-i" aria-hidden="true">{c.emoji[ii] ?? '•'}</span>
+                    {/* Name and tags wrap inside their own box, so the chevron
+                        stays on the first line instead of being pushed onto a
+                        second one by a long name. */}
+                    <span class="ix-t"><b>{it}</b>{c.detail![ii].chips.slice(0, 2).map((ch) => <span class="pill">{ch}</span>)}</span>
+                  </summary>
                   <p>{c.detail![ii].l1}</p>
                   <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{c.detail![ii].fun}</p>
                   <p class="ix-more">
@@ -598,6 +619,7 @@ const schema = [
           )}
         </div>
       ))}
+      <p class="ix-none" id="ix-none" hidden></p>
     </section>
 
     {/* Built on demand when someone presses ছাপাও, and only ever visible on
@@ -618,6 +640,9 @@ const schema = [
 
 <style>
   .page { padding-block: 1rem 3.5rem; }
+  /* Past this width the extra goes to the stage, because the two side columns
+     are fixed. Below it nothing changes. */
+  @media (min-width: 1400px) { .page { --wrap: 1540px; } }
   .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
   .crumbs span { margin: 0 0.35rem; }
   .xp { display: grid; grid-template-columns: 250px minmax(0, 1fr) 292px; gap: 0.85rem; align-items: start; }
@@ -723,8 +748,22 @@ const schema = [
 
   /* the scene is the same dark stage the space explorer uses, so every world
      reads as one product; the hero canvas is transparent and sits on top of it */
-  .scene { position: relative; flex: 1; min-height: min(68vh, 660px); overflow: hidden; margin-top: 1rem;
+  /**
+   * The model is the product, so give it the room.
+   *
+   * 660px in a 711px column is a postage stamp on a 1600px display, and the
+   * page around it was mostly margin. The wrap opens to 1540 past 1400px wide
+   * - the rail and the reading column are fixed, so every pixel of that goes
+   * to the stage - and the stage itself is taller. Measured on a 1700px
+   * screen that takes the canvas from 709x646 to about 990x760: two and a half
+   * times the area, for two numbers.
+   */
+  .scene { position: relative; flex: 1; min-height: min(74vh, 780px); overflow: hidden; margin-top: 1rem;
     background: radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 22%, #141c2e) 0%, #0c1220 52%, #05070e 100%); }
+  /* Nothing but the model. The engine's own ResizeObserver refits the camera,
+     so going full screen costs no extra code on the 3D side. */
+  .scene:fullscreen { min-height: 100vh; border-radius: 0; margin: 0; }
+  .scene:fullscreen .scenebar { padding-bottom: 1.6rem; }
   .next {
     display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
     margin: 0 0 0.7rem; padding: 0.6rem 0.9rem; border-radius: 12px;
@@ -998,13 +1037,36 @@ const schema = [
   .index-note { font-size: 13.5px; color: var(--ink-2); line-height: 1.8; max-width: 76ch; }
   .index-note :global(a) { color: var(--brand-ink); font-weight: 700; }
   .index-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; }
-  .ix { border: 1px solid var(--line-soft); border-radius: 12px; background: var(--panel); overflow: hidden; align-self: start; }
-  .ix summary { list-style: none; cursor: pointer; padding: 0.6rem 0.85rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; transition: background 0.15s ease; }
+  /* Each row leads with the thing itself. Eighty-four identical word-boxes is
+     a spreadsheet; the same eighty-four with their own picture on the front is
+     a list you can scan without reading. */
+  .ix-i { width: 30px; height: 30px; flex: none; display: grid; place-items: center; font-size: 15px; line-height: 1; border-radius: 9px;
+    background: color-mix(in oklab, var(--o) 14%, var(--panel-2)); border: 1px solid color-mix(in oklab, var(--o) 26%, var(--line-soft));
+    transition: transform 0.2s ease; }
+  .ix summary:hover .ix-i { transform: scale(1.12) rotate(-5deg); }
+  .ix-e { width: 30px; height: 30px; display: inline-grid; place-items: center; font-size: 16px; line-height: 1; border-radius: 10px;
+    background: color-mix(in oklab, var(--o) 16%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 34%, var(--line)); }
+  .ix-n { margin-left: auto; }
+  .ix { border: 1px solid var(--line-soft); border-radius: 12px; background: var(--panel); overflow: hidden; align-self: start;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+  .ix:hover { border-color: color-mix(in oklab, var(--o) 45%, var(--line)); }
+  .ix[open] { border-color: color-mix(in oklab, var(--o) 55%, var(--line)); box-shadow: var(--shadow-sm); }
+  .ix summary { list-style: none; cursor: pointer; padding: 0.5rem 0.75rem; display: flex; align-items: center; gap: 0.5rem; transition: background 0.15s ease; }
+  .ix-t { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
   .ix summary::-webkit-details-marker { display: none; }
-  .ix summary::after { content: "+"; margin-left: auto; font-family: var(--font-mono); color: var(--muted); }
-  .ix[open] summary::after { content: "−"; }
+  .ix summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; flex: none;
+    border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translate(-2px, -2px); transition: transform 0.2s ease; }
+  .ix[open] summary::after { transform: rotate(-135deg) translate(-3px, -3px); border-color: var(--o); }
   .ix summary:hover { background: var(--panel-2); }
   .ix summary b { font-size: 14.5px; }
+
+  /* খুঁজে নাও */
+  .ix-find { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.9rem; }
+  .ix-find input { flex: 1 1 230px; max-width: 22rem; padding: 0.5rem 0.9rem; border-radius: 999px; font: inherit; font-size: 14px;
+    background: var(--panel); border: 1px solid var(--line); color: var(--ink); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+  .ix-find input:focus-visible { outline: none; border-color: var(--w); box-shadow: 0 0 0 3px color-mix(in oklab, var(--w) 22%, transparent); }
+  .ix-find input::placeholder { color: var(--muted); }
+  .ix-none { margin-top: 1.4rem; color: var(--muted); font-size: 14px; }
   .ix summary .pill { font-size: 10.5px; padding: 1px 7px; }
   .ix p { padding: 0 0.85rem 0.6rem; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
   .ix-fun { color: var(--ink-2); font-size: 13px; }
@@ -1151,6 +1213,29 @@ const schema = [
     host.addEventListener('pointerdown', () => { $('#hero-hint').style.opacity = '0'; }, { once: true });
   });
   spinBtn.addEventListener('click', () => { if (!hero) return; const on = !hero.isAuto(); hero.setAuto(on); syncSpin(on); });
+  /**
+   * পর্দাজুড়ে: the model with nothing else on the screen.
+   *
+   * Full screen rather than a bigger box, because the interesting thing about
+   * a 3D model is the one you can lean into, and a phone has no room to give
+   * it any other way. The button hides itself where the browser will not do
+   * it - older iOS Safari has no element fullscreen at all - rather than
+   * offering something that does nothing.
+   */
+  const bigBtn = $<HTMLButtonElement>('#h-big');
+  const scene = $('.scene');
+  if (!scene.requestFullscreen) bigBtn.hidden = true;
+  const syncBig = () => {
+    const on = document.fullscreenElement === scene;
+    bigBtn.setAttribute('aria-pressed', String(on));
+    bigBtn.textContent = on ? '⛶ ছোট করো' : '⛶ পর্দাজুড়ে';
+  };
+  bigBtn.addEventListener('click', () => {
+    if (document.fullscreenElement === scene) void document.exitFullscreen();
+    else void scene.requestFullscreen?.().catch(() => { bigBtn.hidden = true; });
+    track('scene_fullscreen', { world: slug });
+  });
+  document.addEventListener('fullscreenchange', syncBig);
   resetBtn.addEventListener('click', () => hero?.resetView());
   ctl.addEventListener('input', () => { hero?.setParam(+ctl.value / 100); countPlay(); });
   /**
@@ -2031,6 +2116,61 @@ const schema = [
     if (e.key === 'ArrowRight') step(1);
     if (e.key === 'ArrowLeft') step(-1);
   });
+
+  /**
+   * খুঁজে নাও: typing narrows the whole index at once.
+   *
+   * Names and tags first, the reading only if that finds nothing.
+   *
+   * Matching the whole row was the obvious thing and the wrong one: বল on
+   * পদার্থবিজ্ঞান matched thirty-four of sixty-five items, because the word is
+   * in half the sentences on the page. Someone typing a word means the thing
+   * called that. So the headings are searched first, and the body of the
+   * readings is a second pass that only runs when the first finds nothing -
+   * which turns a useless result into a useful one and says which it gave you.
+   *
+   * A category with nothing left in it hides too, so the result is a short
+   * page rather than a long page of empty headings. `content-visibility: auto`
+   * on the categories means the browser has not laid most of this out yet, so
+   * the text is read once, on the first keystroke, and kept.
+   */
+  const ixQ = root.querySelector<HTMLInputElement>('#ix-q');
+  if (ixQ) {
+    const none = $('#ix-none'), ixCount = $('#ix-count');
+    type Row = { el: HTMLElement; name: string; body: string };
+    let rows: Row[] | null = null;
+    const cats2 = [...root.querySelectorAll<HTMLElement>('.index-cat')];
+    const load = () => (rows ??= [...root.querySelectorAll<HTMLElement>('.ix')].map((el) => ({
+      el,
+      name: (el.querySelector('summary')?.textContent ?? '').toLowerCase(),
+      body: (el.textContent ?? '').toLowerCase(),
+    })));
+    const run = () => {
+      const q = ixQ.value.trim().toLowerCase();
+      const all = load();
+      if (!q) {
+        for (const r of all) r.el.hidden = false;
+        for (const c of cats2) c.hidden = false;
+        none.hidden = true;
+        ixCount.textContent = '';
+        return;
+      }
+      let hit = 0;
+      for (const r of all) { const on = r.name.includes(q); r.el.hidden = !on; if (on) hit++; }
+      let deep = false;
+      if (!hit) {
+        deep = true;
+        for (const r of all) { const on = r.body.includes(q); r.el.hidden = !on; if (on) hit++; }
+      }
+      for (const c of cats2) c.hidden = !c.querySelector('.ix:not([hidden])');
+      ixCount.textContent = hit ? `${bn(hit)} / ${bn(all.length)}${deep ? ' · লেখার ভেতরে' : ''}` : '';
+      none.hidden = hit > 0;
+      if (!hit) none.textContent = `"${ixQ.value.trim()}" এই ভুবনে পাওয়া গেল না - নামেও নয়, লেখার ভেতরেও নয়। বানানটা একবার দেখে নাও, বা উপরের মডেলে ঘুরে দেখো।`;
+    };
+    ixQ.addEventListener('input', run);
+    // Escape clears, the way a search box is expected to.
+    ixQ.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ixQ.value) { ixQ.value = ''; run(); } });
+  }
 
   // the plain-text index at the bottom hands you back to the 3D explorer
   root.querySelector('#all')?.addEventListener('click', (e) => {

@@ -24,6 +24,7 @@ import {
 // Seeded, so a species always grows the same way: the variation between trees
 // is deliberate, and a tree must not reshuffle itself on every repaint.
 import { rng, hash } from '../../lib/rand';
+import { stylise } from './render';
 
 /**
  * Roughness 0.75 rather than 0.6, and metalness flat zero.
@@ -34,7 +35,7 @@ import { rng, hash } from '../../lib/rand';
  * was one. Anything that genuinely is metal or glazed passes its own values.
  */
 const std = (color: string | Color, o: Record<string, unknown> = {}) =>
-  new MeshStandardMaterial({ color: color as Color, roughness: 0.75, metalness: 0, ...o });
+  stylise(new MeshStandardMaterial({ color: color as Color, roughness: 0.75, metalness: 0, ...o }));
 const glow = (color: string, opacity = 0.4) =>
   new MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
 
@@ -48,8 +49,46 @@ const put = (g: Group, m: Mesh, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) => 
  *  faceted silhouette is the first thing that gives cheap 3D away. */
 const ball = (g: Group, c: string | Color, r: number, x = 0, y = 0, z = 0) =>
   put(g, new Mesh(new SphereGeometry(r, 24, 16), std(c)), x, y, z);
+/**
+ * Boxes with the edges taken off.
+ *
+ * A BoxGeometry edge is a perfectly sharp right angle, and at the size these
+ * are now drawn that single fact does more to say "untextured CAD" than
+ * anything else in the scene. Nothing a child recognises has one: not a
+ * tiger's stripe, not a book, not a bus, not a slab of rock. A bevel of about
+ * a tenth of the smallest side catches the key light along every edge, which
+ * is the highlight that reads as a made object rather than a primitive.
+ *
+ * Cached on a quantised key, because the same handful of sizes recur across
+ * ninety figures and an ExtrudeGeometry is not free. Anything thinner than
+ * 3cm in scene units keeps the cheap sharp box: a bevel that size is invisible
+ * and would eat most of the sliver it is bevelling.
+ */
+const boxCache = new Map<string, ExtrudeGeometry>();
+function roundedBox(w: number, h: number, d: number): ExtrudeGeometry {
+  const q = (n: number) => Math.round(n * 500) / 500;
+  const key = `${q(w)}|${q(h)}|${q(d)}`;
+  const hit = boxCache.get(key);
+  if (hit) return hit;
+  const bev = Math.min(0.02, Math.min(w, h, d) * 0.16);
+  const W = w / 2 - bev, H = h / 2 - bev;
+  const sh = new Shape();
+  sh.moveTo(-W, -H); sh.lineTo(W, -H); sh.lineTo(W, H); sh.lineTo(-W, H); sh.closePath();
+  const geo = new ExtrudeGeometry(sh, {
+    depth: Math.max(1e-4, d - bev * 2), bevelEnabled: true,
+    bevelThickness: bev, bevelSize: bev, bevelSegments: 2, curveSegments: 1,
+  });
+  geo.translate(0, 0, -(d - bev * 2) / 2 - bev);
+  geo.computeVertexNormals();
+  geo.userData.shared = true;
+  boxCache.set(key, geo);
+  return geo;
+}
 const box = (g: Group, c: string | Color, w: number, h: number, d: number, x = 0, y = 0, z = 0, rz = 0) =>
-  put(g, new Mesh(new BoxGeometry(w, h, d), std(c)), x, y, z, 0, 0, rz);
+  put(g, new Mesh(
+    Math.min(w, h, d) >= 0.03 ? roundedBox(w, h, d) : new BoxGeometry(w, h, d),
+    std(c),
+  ), x, y, z, 0, 0, rz);
 const rod = (g: Group, c: string | Color, r: number, h: number, x = 0, y = 0, z = 0, rz = 0, rx = 0) =>
   put(g, new Mesh(new CylinderGeometry(r, r, h, 20), std(c)), x, y, z, rx, 0, rz);
 /** A tapered rod: a trunk, a branch, a stalk. Nothing in nature is a cylinder. */
@@ -318,26 +357,82 @@ const herb = (leaf: string, pot = '#a8643c'): Figure => (g) => {
  * **muzzle** on the front of the head, and legs that **taper into a hoof**
  * rather than ending in a flat disc in the grass.
  */
-const quadruped = (body: string, opts: { stripe?: string; spot?: string; big?: boolean; trunk?: boolean; tail?: number } = {}): Figure => (g) => {
+const quadruped = (body: string, opts: {
+  stripe?: string; spot?: string; big?: boolean; trunk?: boolean; tail?: number;
+  /** Cats are round, deer are tall, an elephant is mostly ear. */
+  ear?: 'round' | 'tall' | 'flap';
+} = {}): Figure => (g) => {
   const s = opts.big ? 1.25 : 1;
   const dark = new Color(body).multiplyScalar(0.72);
-  const b = put(g, new Mesh(new SphereGeometry(0.26 * s, 26, 18), std(body)), 0, 0.34 * s);
+  /**
+   * The animal stands on its legs instead of sitting on them.
+   *
+   * The torso's underside was at y 0.127 and the legs ran from 0.04, so nine
+   * hundredths of a unit of leg showed below the belly - about a tenth of the
+   * animal's height. Every mammal here read as a dachshund, or worse as a
+   * cushion with hooves, and no amount of detail on the head was going to fix
+   * a stance that wrong. Everything above the knees moves up together and the
+   * legs grow by the same amount, so the feet stay on the floor and every
+   * offset inside the body keeps the proportions it was drawn with.
+   */
+  const lift = 0.12 * s;
+  const up = new Group(); up.position.y = lift; g.add(up);
+  const b = put(up, new Mesh(new SphereGeometry(0.26 * s, 26, 18), std(body)), 0, 0.34 * s);
   b.scale.set(1.55, 0.82, 0.86);
+  /**
+   * A pale underside.
+   *
+   * Almost every land mammal is lighter underneath than on top - the shading
+   * that cancels the sun and is the reason a real animal reads as solid rather
+   * than as a cut-out. Without it a one-colour torso lit from above goes dark
+   * along the belly, which is exactly backwards, and the animal looks like a
+   * painted wooden block. Slightly inside the torso so it never pokes through
+   * the flanks.
+   */
+  const pale = new Color(body).lerp(new Color('#fdfaf4'), 0.42);
+  const belly = put(up, new Mesh(new SphereGeometry(0.26 * s, 22, 14), std(pale)), 0, 0.3 * s);
+  belly.scale.set(1.5, 0.62, 0.8);
   // shoulder and haunch: an animal is thicker at both ends than in the middle
-  ball(g, body, 0.17 * s, 0.2 * s, 0.38 * s).scale.set(1, 0.95, 1.02);
-  ball(g, body, 0.16 * s, -0.22 * s, 0.37 * s).scale.set(1, 1, 1.04);
+  ball(up, body, 0.17 * s, 0.2 * s, 0.38 * s).scale.set(1, 0.95, 1.02);
+  ball(up, body, 0.16 * s, -0.22 * s, 0.37 * s).scale.set(1, 1, 1.04);
   // neck, from the shoulder up to the head
-  const neck = taper(g, body, 0.085 * s, 0.13 * s, 0.22 * s, 0.32 * s, 0.42 * s, 0, -0.55);
+  const neck = taper(up, body, 0.085 * s, 0.13 * s, 0.22 * s, 0.32 * s, 0.42 * s, 0, -0.55);
   void neck;
-  const head = ball(g, body, 0.15 * s, 0.42 * s, 0.5 * s); head.scale.set(1.05, 1, 0.92);
+  const head = ball(up, body, 0.15 * s, 0.42 * s, 0.5 * s); head.scale.set(1.05, 1, 0.92);
   // muzzle: the single feature that turns a ball into an animal's face
-  const snout = put(g, new Mesh(new CylinderGeometry(0.07 * s, 0.095 * s, 0.15 * s, 16), std(body)), 0.55 * s, 0.46 * s, 0, 0, 0, -Math.PI / 2);
+  const snout = put(up, new Mesh(new CylinderGeometry(0.07 * s, 0.095 * s, 0.15 * s, 16), std(body)), 0.55 * s, 0.46 * s, 0, 0, 0, -Math.PI / 2);
   void snout;
-  ball(g, dark, 0.055 * s, 0.62 * s, 0.46 * s).scale.set(0.7, 1, 1);
-  for (const z of [1, -1]) ball(g, '#17120e', 0.024 * s, 0.5 * s, 0.545 * s, z * 0.085 * s);
+  ball(up, dark, 0.055 * s, 0.62 * s, 0.46 * s).scale.set(0.7, 1, 1);
+  for (const z of [1, -1]) ball(up, '#17120e', 0.024 * s, 0.5 * s, 0.545 * s, z * 0.085 * s);
+  /**
+   * Ears, which this animal did not have.
+   *
+   * Every mammal in the site was a body, a head, a muzzle and four legs, and
+   * read as a toy from across the room for one reason: the silhouette of a
+   * mammal's head is its ears. They are the third thing an eye uses to tell a
+   * cat from a dog from a deer, after size and stance, and they cost six
+   * triangles. The inner surface is the pale of the belly, because an ear lit
+   * from above is bright inside and that is most of what makes it read as an
+   * ear rather than a fin.
+   */
+  {
+    const kind = opts.ear ?? (opts.trunk ? 'flap' : 'round');
+    for (const z of [1, -1]) {
+      const e = new Group();
+      e.position.set(0.36 * s, 0.6 * s, z * 0.085 * s);
+      e.rotation.set(z * (kind === 'flap' ? 0.5 : 0.34), 0, kind === 'tall' ? -0.15 : 0.18);
+      up.add(e);
+      const w = kind === 'flap' ? 0.15 : kind === 'tall' ? 0.055 : 0.075;
+      const h = kind === 'flap' ? 0.17 : kind === 'tall' ? 0.16 : 0.085;
+      const shell = put(e, new Mesh(new SphereGeometry(1, 14, 10), std(body)), 0, h * 0.5 * s, 0);
+      shell.scale.set(w * 0.55 * s, h * s, w * s);
+      const inner = put(e, new Mesh(new SphereGeometry(1, 12, 8), std(pale)), 0.012 * s, h * 0.5 * s, 0);
+      inner.scale.set(w * 0.3 * s, h * 0.74 * s, w * 0.72 * s);
+    }
+  }
   // legs: tapered, with a darker hoof
   for (const [dx, dz] of [[0.24, 0.13], [0.24, -0.13], [-0.24, 0.13], [-0.24, -0.13]] as const) {
-    taper(g, body, 0.042 * s, 0.062 * s, 0.3 * s, dx * s, 0.19 * s, dz * s);
+    taper(g, body, 0.042 * s, 0.062 * s, 0.3 * s + lift, dx * s, 0.19 * s + lift / 2, dz * s);
     put(g, new Mesh(new CylinderGeometry(0.05 * s, 0.045 * s, 0.06 * s, 14), std(dark)), dx * s, 0.03 * s, dz * s);
   }
   if (opts.tail) {
@@ -351,10 +446,10 @@ const quadruped = (body: string, opts: { stripe?: string; spot?: string; big?: b
      */
     const L = opts.tail, rz = 2.4, ax = -Math.sin(rz), ay = Math.cos(rz);
     const cx = -0.3 * s + ax * L / 2, cy = 0.46 * s + ay * L / 2;
-    rod(g, body, 0.022 * s, L, cx, cy, 0, rz);
-    ball(g, dark, 0.035 * s, cx + ax * L / 2, cy + ay * L / 2, 0);
+    rod(up, body, 0.022 * s, L, cx, cy, 0, rz);
+    ball(up, dark, 0.035 * s, cx + ax * L / 2, cy + ay * L / 2, 0);
   }
-  if (opts.trunk) { taper(g, body, 0.03, 0.05, 0.32, 0.62 * s, 0.36 * s, 0, 0.35); }
+  if (opts.trunk) { taper(up, body, 0.03, 0.05, 0.32, 0.62 * s, 0.36 * s, 0, 0.35); }
   /**
    * Stripes that wrap the animal instead of standing off it.
    *
@@ -370,7 +465,7 @@ const quadruped = (body: string, opts: { stripe?: string; spot?: string; big?: b
       const dx = (i - 2) * 0.11 * s;
       const k = Math.sqrt(Math.max(0.15, 1 - (dx / halfLen) ** 2));
       const band = new Mesh(new TorusGeometry(0.216 * s * k, 0.016 * s, 8, 20, Math.PI), std(opts.stripe));
-      put(g, band, dx, 0.34 * s, 0, 0, Math.PI / 2, 0);
+      put(up, band, dx, 0.34 * s, 0, 0, Math.PI / 2, 0);
     }
   }
   /**
@@ -394,7 +489,7 @@ const quadruped = (body: string, opts: { stripe?: string; spot?: string; big?: b
       // so it has to happen while the mesh is still parentless
       sp.lookAt(px + n.x, py + n.y, pz + n.z);
       sp.scale.set(1, 0.74, 0.26);
-      g.add(sp);
+      up.add(sp);
     };
     // the torso ellipsoid, whose semi-axes are the sphere radius times its scale
     const ax = 0.26 * 1.55 * s, ay = 0.26 * 0.82 * s, az = 0.26 * 0.86 * s, cy = 0.34 * s;
@@ -2328,9 +2423,9 @@ export const FIGURES: Record<string, Figure> = {
   herbGreen: herb('#4b8f4f'), herbDark: herb('#2f6b3f'), herbPale: herb('#8fae5a'),
   shrubGreen: shrub('#3f7a42'), shrubPale: shrub('#8fae5a'),
   // animals
-  tiger: quadruped('#e08a2b', { stripe: '#2a2118', tail: 0.34 }),
-  elephant: quadruped('#9aa0a8', { big: true, trunk: true, tail: 0.2 }),
-  leopardCat: quadruped('#d8b070', { spot: '#5b4630', tail: 0.32 }),
+  tiger: quadruped('#e08a2b', { stripe: '#2a2118', tail: 0.34, ear: 'round' }),
+  elephant: quadruped('#9aa0a8', { big: true, trunk: true, tail: 0.2, ear: 'flap' }),
+  leopardCat: quadruped('#d8b070', { spot: '#5b4630', tail: 0.32, ear: 'round' }),
   hilsa: fish('#c9d3dc', '#9fb0c0'), fishSmall: fish('#8fae5a'), doel: bird('#1d232b', '#f4f8fc'),
   kingfisher: bird('#2f6b9e', '#e8a33d'), vulture,
   dolphin, croc, turtle, bee, monkey,

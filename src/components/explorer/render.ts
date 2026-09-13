@@ -69,6 +69,64 @@ function skyEnvironment(renderer: WebGLRenderer): Texture {
   return env;
 }
 
+/**
+ * What actually makes a primitive stop looking like a toy.
+ *
+ * Every figure on this site is flat-coloured: one hex per part, roughness
+ * 0.75, no textures. Correct geometry, and still read as moulded plastic,
+ * because a real object is never one colour - it is darker and cooler where it
+ * faces the ground, warmer where it faces the sky, and edged with light where
+ * it turns away from you. Those three cues are what a painter puts in by hand
+ * and what a flat fill leaves out, and no amount of extra polygons substitutes
+ * for them.
+ *
+ * So two terms are injected into the standard material, once, for every
+ * figure and every scene:
+ *
+ *   1. A world-space vertical ramp on the diffuse: cool and down about a
+ *      quarter at the base, warm and slightly up at the top. This is the whole
+ *      difference between a shape and a painted shape.
+ *   2. A fresnel rim added to the emissive, in the cool of the sky. On a dark
+ *      stage a matte object's silhouette dissolves into the background; the
+ *      rim draws the edge back and is the single cue that reads as "lit on
+ *      purpose" rather than "rendered".
+ *
+ * `customProgramCacheKey` is what keeps this from being expensive: without it
+ * three compiles a separate program per material instance, which for a grove
+ * of fourteen figures is dozens of shader compiles on a phone.
+ */
+export function stylise<T extends MeshStandardMaterial>(m: T): T {
+  m.onBeforeCompile = (s) => {
+    s.vertexShader = s.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPosW_;\nvarying vec3 vNrmW_;')
+      .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvNrmW_ = normalize(mat3(modelMatrix) * objectNormal);')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPosW_ = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    s.fragmentShader = s.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPosW_;\nvarying vec3 vNrmW_;')
+      // after <color_fragment>, so a vertex-coloured mesh is tinted too
+      .replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+        float upW_ = clamp(vPosW_.y * 0.5 + 0.5, 0.0, 1.0);
+        diffuseColor.rgb *= mix(vec3(0.76, 0.79, 0.88), vec3(1.05, 1.03, 0.98), upW_);`,
+      )
+      // Scaled by how dark the surface already is. A rim exists to pull a
+      // silhouette off the background; a pale figure on this near-black stage
+      // is already separated, and giving it the same rim only blows its edge
+      // out to white.
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        vec3 vDir_ = normalize(cameraPosition - vPosW_);
+        float rim_ = pow(1.0 - clamp(dot(normalize(vNrmW_), vDir_), 0.0, 1.0), 3.0);
+        float lum_ = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+        totalEmissiveRadiance += rim_ * mix(0.20, 0.05, clamp(lum_, 0.0, 1.0)) * vec3(0.60, 0.73, 0.96);`,
+      );
+  };
+  m.customProgramCacheKey = () => 'posora-stylise-1';
+  return m;
+}
+
 export type Stage = {
   /** Drop this under the scene to catch the key light's shadow. */
   ground: Mesh;

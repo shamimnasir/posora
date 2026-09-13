@@ -12,7 +12,7 @@ import {
   DoubleSide, BackSide, InstancedMesh, Matrix4,
 } from 'three';
 import { FIGURES, arc, arcPerRow } from './figures';
-import { dressScene, castShadows } from './render';
+import { dressScene, castShadows, stylise } from './render';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
   /** For the `collection` scene: item label -> figure name, in order. */
@@ -102,7 +102,7 @@ const darken = (c: Color, k: number) => c.clone().lerp(BLACK, k);
  * looking like toys mis-moulded from the same shiny polymer - a wooden plank, a
  * cloth shirt and a clay pot all catching the same glint.
  */
-const std = (color: Color | string, o: Record<string, unknown> = {}) => new MeshStandardMaterial({ color: color as Color, roughness: 0.78, metalness: 0, ...o });
+const std = (color: Color | string, o: Record<string, unknown> = {}) => stylise(new MeshStandardMaterial({ color: color as Color, roughness: 0.78, metalness: 0, ...o }));
 /** Things that genuinely are metal now have to say so, which is the point. */
 const metal = (color: Color | string, o: Record<string, unknown> = {}) => new MeshStandardMaterial({ color: color as Color, roughness: 0.28, metalness: 0.85, ...o });
 /**
