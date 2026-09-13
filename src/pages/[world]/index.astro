@@ -889,6 +889,22 @@ const schema = [
 
   /* info rail */
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
+  /**
+   * The two columns finish level.
+   *
+   * Their heights are content, not design: the rail is as tall as the reading
+   * plus the missions plus the awards, and the middle is as tall as the model
+   * plus the chart. They were never going to agree, and whichever came up
+   * short left its column ending on a few hundred pixels of nothing. এরপর
+   * কোথায় took most of that out of the middle; this takes the rest out of the
+   * rail. It stretches to whichever column is taller and its last card - the
+   * spec table, which is rows and therefore has somewhere to put slack - opens
+   * up to fill what is left. Below 1080 the columns are a stack and there is
+   * nothing to level.
+   */
+  .info { align-self: stretch; }
+  .info > :last-child { flex-grow: 1; }
+  .info > :last-child .spec { height: 100%; display: flex; flex-direction: column; justify-content: space-evenly; }
   .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 2px; }
   .seg button { padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; font-size: 12px; color: var(--muted); display: flex; gap: 0.25rem; align-items: baseline; }
   .seg button small { font-size: 9.5px; }
@@ -1130,12 +1146,30 @@ const schema = [
     ctlLabel.textContent = hero.set(cats[curCat].hero);
     ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
     hero.setItems(heroItems(cats[curCat]), curItem);
+    syncGrove(curItem);
     syncSpin(hero.isAuto());
     host.addEventListener('pointerdown', () => { $('#hero-hint').style.opacity = '0'; }, { once: true });
   });
   spinBtn.addEventListener('click', () => { if (!hero) return; const on = !hero.isAuto(); hero.setAuto(on); syncSpin(on); });
   resetBtn.addEventListener('click', () => hero?.resetView());
   ctl.addEventListener('input', () => { hero?.setParam(+ctl.value / 100); countPlay(); });
+  /**
+   * On a crowd scene the slider IS the item picker, so clicking a name has to
+   * move it.
+   *
+   * The grove brings whichever item the slider points at to the front, and the
+   * slider opened in the middle while the heading and the reading were on item
+   * one. That was survivable while every figure was the same forty pixels; now
+   * that the chosen one comes forward and fills half the frame, the biggest
+   * thing on screen was flatly contradicting the name above it.
+   */
+  function syncGrove(ii: number) {
+    const c = cats[curCat];
+    if (c.hero.type !== 'collection' || c.items.length < 2) return;
+    const v = Math.round((ii / (c.items.length - 1)) * 100);
+    ctl.value = String(v);
+    hero?.setParam(v / 100);
+  }
   ctlX.addEventListener('input', () => { hero?.setExplode(+ctlX.value / 100); countPlay(); });
   host.addEventListener('pointerdown', countPlay);
 
@@ -1436,6 +1470,50 @@ const schema = [
     setSay(true);
     track('read_aloud', { world: slug, level });
   });
+  /**
+   * The reading card stops changing size under the reader.
+   *
+   * Its height is whatever this item's text happens to need, and on গণিত that
+   * swings between 322 and 442 pixels: every click moved the missions card,
+   * the awards grid and the whole rail below it by up to a hundred and twenty
+   * pixels, under a hand that was aiming at something. It was also why গণিত's
+   * middle column ran two hundred pixels past its rail - the rail was short
+   * because the first item's reading is short, not because গণিত has less in it.
+   *
+   * So the card is pinned to the tallest reading this world has at the depth
+   * on show. Measured, not guessed: the eight longest candidates are written
+   * into the real card and the real height read back, because a character
+   * count cannot know where Bangla wraps. Only above the point where the rail
+   * is a column - on a phone it is one block in a stack and a floor under it
+   * would be dead space.
+   */
+  const readCard = $('.read');
+  const wideRail = matchMedia('(min-width: 1081px)');
+  function pinRead() {
+    if (!wideRail.matches) { readCard.style.minHeight = ''; return; }
+    const all = cats.flatMap((c) => (readable(c) ? c.detail! : []));
+    if (!all.length) return;
+    const weight = (d: ItemDetail) => d[level].length + d.fun.length + d.chips.join('').length;
+    const top = all.slice().sort((a, b) => weight(b) - weight(a)).slice(0, 8);
+    const keepText = itemText.textContent, keepFun = itemFun.textContent;
+    const keepChips = [...itemChips.children];
+    const keepName = itemName.hidden, keepFunWrap = funWrap.hidden;
+    itemName.hidden = false; funWrap.hidden = false;
+    readCard.style.minHeight = '';
+    let tallest = 0;
+    for (const d of top) {
+      itemText.textContent = d[level];
+      itemFun.textContent = d.fun;
+      itemChips.replaceChildren(...d.chips.map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
+      tallest = Math.max(tallest, readCard.getBoundingClientRect().height);
+    }
+    itemText.textContent = keepText; itemFun.textContent = keepFun;
+    itemChips.replaceChildren(...keepChips);
+    itemName.hidden = keepName; funWrap.hidden = keepFunWrap;
+    readCard.style.minHeight = `${Math.round(tallest)}px`;
+  }
+  wideRail.addEventListener('change', pinRead);
+
   function renderRead() {
     const c = cats[curCat];
     seg.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.l === level)));
@@ -1472,6 +1550,7 @@ const schema = [
     level = b.dataset.l as typeof level;
     localStorage.setItem('posora:level', level);
     renderRead();
+    pinRead();
     trackDepth(slug, level);
   }));
 
@@ -1671,6 +1750,7 @@ const schema = [
     rememberSpot(curCat, ii);
     chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
     hero?.focus(ii);
+    syncGrove(ii);
     renderRead(); renderCrumbs();
     // the reading arrives, it does not just swap
     if (!reduced) $('#read').animate([{ opacity: 0.2, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
@@ -1722,6 +1802,10 @@ const schema = [
       // a new model starts whole, however the last one was left
       ctlX.value = '0'; hero.setExplode(0);
       hero.setItems(heroItems(c), curItem);
+      syncGrove(curItem);
+      // Some scenes turn on their own and some hold still. The button has to
+      // say which, or it offers to stop something that was never moving.
+      syncSpin(hero.isAuto());
     }
     renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
     if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); noteItem(slug); renderProgress(); renderGlance(); renderRecords(); renderChips(); checkGoal(); } }
@@ -1956,7 +2040,7 @@ const schema = [
     $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   });
 
-  renderChips(); renderRead(); renderCrumbs(); renderGlance(); renderRecords();
+  renderChips(); renderRead(); pinRead(); renderCrumbs(); renderGlance(); renderRecords();
   if (readable(cats[0]) && markSeen(slug, keyOf(0, 0))) { noteItem(slug); if (childId) pushSeen(slug, keyOf(0, 0)); }
   renderProgress();
   renderChips();

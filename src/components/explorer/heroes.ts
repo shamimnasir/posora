@@ -11,7 +11,7 @@ import {
   MeshStandardMaterial, MeshBasicMaterial, PointLight, CanvasTexture, Sprite, SpriteMaterial,
   DoubleSide, BackSide, InstancedMesh, Matrix4,
 } from 'three';
-import { FIGURES, arc } from './figures';
+import { FIGURES, arc, arcPerRow } from './figures';
 import { dressScene, castShadows } from './render';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
@@ -55,6 +55,36 @@ type SceneObj = {
      * landscape does.
      */
     wide?: boolean };
+  /**
+   * How much of me has to be in the frame.
+   *
+   * The camera fit measures the whole built model and backs off until all of
+   * it is inside the picture. For most scenes that is exactly right. For a
+   * scene that is deliberately larger than its frame - a crowd the camera
+   * stands at the front of, where the ones at the back are meant to run off
+   * the edges - it is ruinous: twelve little figures on a three-row grid gave
+   * the fit a footprint four units across and three deep, it retreated past
+   * fifteen units to hold all of it, and every figure came out forty pixels
+   * tall in a stage six hundred pixels high. That is the whole reason the
+   * শব্দভাণ্ডার scene read as toys dropped on a plate.
+   *
+   * A scene that says `fit` is framed on this half-extent in x and z instead
+   * of on all of it. The vertical is still measured, because cropping a head
+   * or a floating badge is always a bug.
+   */
+  fit?: { x: number; z: number };
+  /**
+   * Do not put me on a turntable.
+   *
+   * A slow idle spin is life on a single object - a planet, a molecule, a
+   * clock. On a composed crowd it is the opposite: the camera now stands close
+   * enough that a turn walks half the cast out through the side of the frame
+   * and brings the back row round into the front, and the shot that was
+   * arranged falls apart within a few seconds of loading. The life in a crowd
+   * scene is the chosen one stepping forward, which does not need the room to
+   * rotate. Dragging still turns it, and ঘোরাও still starts it.
+   */
+  still?: boolean;
 };
 type Builder = (c: Ctx) => SceneObj;
 
@@ -405,20 +435,21 @@ const SCENES: Record<string, Builder> = {
    */
   collection({ root, figures }) {
     const anchors: Record<string, Object3D> = {};
-    const made: { g: Group; home: Vector3 }[] = [];
+    const made: { g: Group; home: Vector3; row: number }[] = [];
     let firstDone = false;
     // the figures stand around eye level rather than at the bottom of the stage
     root.position.y = 0.55;
+    const narrow = matchMedia('(max-width: 640px)').matches;
+    const perRow = arcPerRow(figures.length, narrow);
     for (let i = 0; i < figures.length; i++) {
       const spec = figures[i]!;
       const build = FIGURES[spec.figure] ?? FIGURES[Object.keys(FIGURES)[0]!]!;
       const g = new Group();
       build(g);
-      const home = arc(figures.length, i);
+      const home = arc(figures.length, i, narrow);
       g.position.copy(home);
-      g.scale.setScalar(figures.length > 10 ? 1.0 : 1.2);
       root.add(g);
-      made.push({ g, home: home.clone() });
+      made.push({ g, home: home.clone(), row: Math.floor(i / perRow) });
       const m = new Object3D(); m.position.set(0, 0.55, 0); g.add(m);
       anchors[spec.label] = m;
     }
@@ -442,11 +473,26 @@ const SCENES: Record<string, Builder> = {
     // sits at about the height of a crown rather than looking down on a
     // diorama. Without this the subject sat in the top corner of the frame with
     // the bottom third empty ground.
-    return { label: 'সামনে আনো', anchors, groundY: 0, aim: { y: 0.55, z: -0.9, eye: 1.0, dolly: 0.46 }, update(t, _dt, p) {
+    /**
+     * The camera stands in the crowd, not across the room from it.
+     *
+     * It used to be fitted to the whole grove, which meant backing off until
+     * all twelve fitted the frame - about fifteen units for a figure barely
+     * one unit tall. Everything came out the size of a thumbnail on an ocean
+     * of empty ground, which is the toys-on-a-plate look. `fit` now says only
+     * the front of the crowd has to be in shot, so the camera can come in to
+     * where the chosen one fills nearly half the height, and the back rows are
+     * allowed to run off the sides the way a crowd does.
+     */
+    return { label: 'সামনে আনো', anchors, groundY: 0, still: true,
+      // The pocket the camera must hold. Narrower on a phone, where the frame
+      // is taller than it is wide and insisting on a laptop's width would push
+      // the camera back until the subject was a thumbnail again.
+      fit: { x: narrow ? 1.05 : 1.5, z: 1.15 },
+      aim: { y: 0.34, z: 0.3, eye: 0.74, dolly: 0.74 }, update(t, _dt, p) {
       const n = made.length;
       if (!n) return;
       const pick = Math.min(n - 1, Math.round(p * (n - 1)));
-      const base = n > 10 ? 1.05 : 1.25;
       const settled = firstDone; firstDone = true;
       made.forEach((m, i) => {
         const on = i === pick;
@@ -454,11 +500,28 @@ const SCENES: Record<string, Builder> = {
         // Snap on the first frame, ease after: same reason as the badges.
         m.g.userData.k = settled ? (m.g.userData.k ?? 0) + (want - (m.g.userData.k ?? 0)) * 0.1 : want;
         const k = m.g.userData.k as number;
-        m.g.position.set(m.home.x * (1 - k * 0.92), m.home.y + k * 0.06, m.home.z + k * 1.55);
+        /**
+         * The chosen one gets a clear stage, not an elbow in the ribs.
+         *
+         * Everything used to stand on its own spot whoever was chosen, so the
+         * subject came forward into a wall of its own neighbours and the shot
+         * read as clutter. The others now fan outward and step back while it
+         * comes in, which costs nothing - they are already allowed off the
+         * sides - and leaves a pocket of ground around the thing being looked
+         * at. Distance does most of the shrinking; the back rows take a small
+         * nudge on top so the front row is unmistakably the front row.
+         */
+        const out = 1 + (1 - k) * 0.42;
+        const back = 1 - Math.min(0.3, m.row * 0.11);
+        m.g.position.set(
+          m.home.x * out * (1 - k * 0.9),
+          m.home.y + k * 0.05,
+          m.home.z - (1 - k) * 0.55 + k * (1.4 + m.row * 1.95),
+        );
         // The chosen one turns slowly so its whole silhouette is read; the
         // others breathe rather than spin, which would make the grove jitter.
         m.g.rotation.y = on ? t * 0.45 : Math.sin(t * 0.35 + i * 1.7) * 0.12;
-        m.g.scale.setScalar(base * (1 + k * 1.05));
+        m.g.scale.setScalar(back * (0.92 + k * (0.5 + m.row * 0.26)));
       });
     } };
   },
@@ -1464,6 +1527,21 @@ export function mountHero(
   // ring, and a scene without one should not be framed as if it had one.
   let aimY = 0.1, aimZ = 0, eyeY = 1.35, dolly = 1, wide = false;
   /**
+   * How much sky to keep above the model for a pinned badge, as a share of the
+   * badge's own size.
+   *
+   * A full badge of clearance is right when the pins hover over the top of a
+   * model - a planet's, a minar's. In a crowd scene the anchors are inside the
+   * figures, at about their waists, so a whole badge reserved above the tallest
+   * head was a third of the picture left empty for nothing: measured on
+   * শব্দভাণ্ডার it was a hundred and twenty pixels of black sky over a subject
+   * a hundred and eighty tall. A scene that declares its own `fit` has composed
+   * itself and pays the small version.
+   */
+  let topPad = 1.05;
+  /** Set from the scene's `still`, read back when the turntable is (re)armed. */
+  let wantsStill = false;
+  /**
    * Badges and labels are sprites measured in world units, so pulling the
    * camera in for a close scene magnifies them along with everything else -
    * and a name tag is not part of the scenery, it should hold the same size
@@ -1692,6 +1770,14 @@ export function mountHero(
       if (!boxTmp.isEmpty()) { fitMin.min(boxTmp.min); fitMax.max(boxTmp.max); }
     }
     if (!Number.isFinite(fitMin.x)) { fitMin.set(-1, -1, -1); fitMax.set(1, 1, 1); }
+    // A scene that knows it is bigger than its frame says how much of itself
+    // must be in it. Height stays measured: a cropped head is always a bug.
+    if (cur.fit) {
+      fitMin.x = -cur.fit.x; fitMax.x = cur.fit.x;
+      fitMin.z = -cur.fit.z; fitMax.z = cur.fit.z;
+    }
+    topPad = cur.fit ? 0.28 : 1.05;
+    wantsStill = cur.still === true;
     wide = cur.aim?.wide === true;
     // The ground belongs to the world, not to the model, so it sits outside
     // the turntable group: the figures turn on it and their shadows sweep
@@ -1708,7 +1794,7 @@ export function mountHero(
   let dragging = false, lx = 0, ly = 0, vx = 0, vy = 0, yaw = 0, pitch = 0;
   // The turntable is a switchable camera behaviour, not decoration: visitors who
   // ask for reduced motion start still, and anyone can pause or reset it.
-  let auto = !reduced, yawTo: number | null = null;
+  let auto = !reduced && !wantsStill, yawTo: number | null = null;
   const yawDeg = () => { const d = ((yaw * 180) / Math.PI) % 360; return d < 0 ? d + 360 : d; };
   let downX = 0, downY = 0;
   host.addEventListener('pointerdown', (e) => { beckonWant = 0; dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; downX = e.clientX; downY = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
@@ -1755,7 +1841,7 @@ export function mountHero(
     // a pinned badge hovers over its part and the chosen one carries a name
     // tag, so a model that reaches the top of the frame pushes its own label
     // off the top of it
-    const padTop = anchoredCount ? pinScale * 1.05 : 0;
+    const padTop = anchoredCount ? pinScale * topPad : 0;
     return (wide || rxz <= near * halfH)
       && fitMax.y * s + padTop - axisY <= halfAt
       && axisY - fitMin.y * s <= halfAt;
@@ -1886,7 +1972,10 @@ export function mountHero(
   document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); }); start();
   void firstLabel;
   return {
-    set: (s) => { const l = build(s); start(); return l; },
+    // A new scene decides for itself whether it turns, the way it decides its
+    // own camera: switching from a planet to a crowd must not leave the crowd
+    // spinning because the planet was.
+    set: (s) => { const l = build(s); auto = !reduced && !wantsStill; start(); return l; },
     setItems: (items, act) => { setItems(items, act); resize(); start(); },
     focus: (i) => { focus(i); start(); },
     setParam: (v) => { param = v; start(); },

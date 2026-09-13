@@ -2370,19 +2370,48 @@ export const FIGURES: Record<string, Figure> = {
  * ones in front, pushed further apart in depth, and lifted slightly toward the
  * back so the whole group reads as receding ground rather than a flat wall.
  */
-export function arc(n: number, i: number): Vector3 {
-  const perRow = n <= 5 ? n : n <= 8 ? Math.ceil(n / 2) : 5;
+/**
+ * How many stand shoulder to shoulder before a new row starts behind them.
+ *
+ * Four, not five. The camera now stands at the front of the crowd rather than
+ * far enough back to hold all of it, so a wide row puts its ends outside the
+ * picture; a narrower, deeper arrangement keeps the front row whole and turns
+ * the rest into depth, which is the thing worth having.
+ *
+ * Three on a phone. A portrait frame is about a third as wide for its height,
+ * and a row that reads comfortably on a laptop has both its ends outside a
+ * phone's frame - which is not only an ugly picture but an unwinnable round of
+ * খোঁজার খেলা, since the badge it asks you to find is off the screen. The
+ * crowd goes deeper instead of wider, which a narrow frame has room for.
+ */
+export const arcPerRow = (n: number, narrow = false): number =>
+  (narrow ? (n <= 3 ? n : 3) : n <= 4 ? n : n <= 9 ? Math.ceil(n / 2) : 4);
+
+export function arc(n: number, i: number, narrow = false): Vector3 {
+  const perRow = arcPerRow(n, narrow);
   const rows = Math.ceil(n / perRow);
   const row = Math.floor(i / perRow);
   const inRow = Math.min(perRow, n - row * perRow);
   const k = i - row * perRow;
-  const spanX = Math.max(2.4, (perRow - 1) * 1.02);
+  /**
+   * Capped, because খোঁজার খেলা has to be winnable.
+   *
+   * The crowd is now allowed to run off the sides of the frame, which is right
+   * for the picture and wrong for the game: the find-it round names an item and
+   * waits for its badge to be clicked, and a badge outside the frame cannot be.
+   * Five to a row at full spacing put the end of a nine-item row just past the
+   * edge. 3.6 keeps the widest row inside the shot even when the cast fans out
+   * to make room for the chosen one.
+   */
+  const spanX = Math.min(3.6, Math.max(2.2, (perRow - 1) * 1.16));
   // Half-step stagger on alternate rows: the single change that turns a grid
   // into something that looks grown rather than planted by a machine.
   const offset = row % 2 ? spanX / (perRow - 1 || 1) * 0.5 : 0;
   const x = inRow === 1 && rows === 1 ? 0 : (k / Math.max(1, perRow - 1) - 0.5) * spanX + offset;
-  const z = -row * 1.55;
-  const y = -0.55 + row * 0.07;
+  // 1.95 rather than 1.55: with the camera close, the gap between rows is what
+  // separates the subject from the crowd, and it has to be felt.
+  const z = -row * 1.95;
+  const y = -0.55 + row * 0.05;
   // A gentle bow, so the ends of a row turn toward the camera instead of
   // trailing off sideways.
   return new Vector3(x, y, z + Math.abs(x) * 0.22);
