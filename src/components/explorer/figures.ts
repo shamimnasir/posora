@@ -318,7 +318,7 @@ const herb = (leaf: string, pot = '#a8643c'): Figure => (g) => {
  * **muzzle** on the front of the head, and legs that **taper into a hoof**
  * rather than ending in a flat disc in the grass.
  */
-const quadruped = (body: string, opts: { stripe?: string; big?: boolean; trunk?: boolean; tail?: number } = {}): Figure => (g) => {
+const quadruped = (body: string, opts: { stripe?: string; spot?: string; big?: boolean; trunk?: boolean; tail?: number } = {}): Figure => (g) => {
   const s = opts.big ? 1.25 : 1;
   const dark = new Color(body).multiplyScalar(0.72);
   const b = put(g, new Mesh(new SphereGeometry(0.26 * s, 26, 18), std(body)), 0, 0.34 * s);
@@ -373,8 +373,93 @@ const quadruped = (body: string, opts: { stripe?: string; big?: boolean; trunk?:
       put(g, band, dx, 0.34 * s, 0, 0, Math.PI / 2, 0);
     }
   }
+  /**
+   * Rosettes seated on the animal's own surface.
+   *
+   * চিতা বিড়াল was wearing the tiger's five bands, so the only difference
+   * between the two cats in this world was how tan the tan was. A spot placed
+   * *near* a curved surface either sinks into it or breaks through it in a
+   * crescent, the same trap the fruit's highlight fell into; each one is
+   * centred exactly on the surface, turned to face along the normal and then
+   * squashed flat against it, so it reads as a mark rather than a pebble.
+   */
+  if (opts.spot) {
+    const rr = rng(0xc1a7);
+    const n = new Vector3();
+    const mark = (px: number, py: number, pz: number, nx: number, ny: number, nz: number, rad: number) => {
+      const sp = new Mesh(new SphereGeometry(rad, 10, 8), std(opts.spot as string));
+      sp.position.set(px, py, pz);
+      n.set(nx, ny, nz).normalize();
+      // lookAt points local +z along the normal, and it reads the world matrix,
+      // so it has to happen while the mesh is still parentless
+      sp.lookAt(px + n.x, py + n.y, pz + n.z);
+      sp.scale.set(1, 0.74, 0.26);
+      g.add(sp);
+    };
+    // the torso ellipsoid, whose semi-axes are the sphere radius times its scale
+    const ax = 0.26 * 1.55 * s, ay = 0.26 * 0.82 * s, az = 0.26 * 0.86 * s, cy = 0.34 * s;
+    for (let i = 0; i < 17; i++) {
+      const th = rr() * Math.PI * 2, ph = -0.3 + rr() * 1.2;
+      const px = ax * Math.sin(th) * Math.cos(ph), py = ay * Math.sin(ph), pz = az * Math.cos(th) * Math.cos(ph);
+      mark(px, cy + py, pz, px / (ax * ax), py / (ay * ay), pz / (az * az), 0.026 * s + rr() * 0.016 * s);
+    }
+    // and on the shoulder, haunch and head, so the pattern does not stop at the ribs
+    for (const [hx, hy, hr] of [[0.2 * s, 0.38 * s, 0.17 * s], [-0.22 * s, 0.37 * s, 0.16 * s], [0.42 * s, 0.5 * s, 0.15 * s]] as const) {
+      for (let i = 0; i < 4; i++) {
+        const th = rr() * Math.PI * 2, ph = -0.15 + rr() * 1.0;
+        const ux = Math.sin(th) * Math.cos(ph), uy = Math.sin(ph), uz = Math.cos(th) * Math.cos(ph);
+        mark(hx + hr * ux, hy + hr * uy, hr * uz, ux, uy, uz, 0.02 * s + rr() * 0.01 * s);
+      }
+    }
+  }
   // ears, set on the head rather than floating behind it
   for (const z of [1, -1]) { const e = ball(g, body, 0.055 * s, 0.37 * s, 0.6 * s, z * 0.1 * s); e.scale.set(0.7, 1.1, 0.9); }
+};
+/**
+ * A vulture (শকুন), which the generic `bird` cannot be.
+ *
+ * `bird()` builds a songbird: a round body, a short neck, a small cone beak.
+ * Painted brown it is a pigeon, and a child looking for a শকুন would not find
+ * one on the shelf. Four things make a vulture, and none of them are colour:
+ * the folded wings hunch *above* the head, a bare neck rises out of a ruff of
+ * feathers, the beak is heavy and hooked rather than pointed, and the bird's
+ * weight is carried forward over thick legs.
+ */
+const vulture: Figure = (g) => {
+  const feath = '#6b6257', dark = '#4a443c', bare = '#b9a898', horn = '#3c362f';
+  const b = put(g, new Mesh(new SphereGeometry(0.24, 24, 18), std(feath)), -0.02, 0.42);
+  b.scale.set(1.2, 1.05, 0.95);
+  for (const s of [1, -1]) {
+    const w = put(g, new Mesh(new SphereGeometry(0.2, 20, 14), std(dark)), -0.05, 0.5, s * 0.12);
+    w.scale.set(1.15, 0.78, 0.55); w.rotation.set(0, -s * 0.18, s * 0.1);
+  }
+  const tail = put(g, new Mesh(new ConeGeometry(0.11, 0.26, 4), std(dark)), -0.32, 0.36, 0, 0, 0, Math.PI / 2 + 0.35);
+  tail.scale.set(1, 1, 0.35);
+  const ruff = put(g, new Mesh(new SphereGeometry(0.135, 18, 12), std(dark)), 0.14, 0.55, 0);
+  ruff.scale.set(0.85, 0.8, 1);
+  // the bare neck, up out of the ruff and then down: nothing on a songbird
+  // does this, and it is the line the whole bird is recognised by
+  let nx = 0.15, ny = 0.6;
+  for (let i = 0; i < 4; i++) {
+    const a = [1.0, 0.4, -0.3, -0.9][i]!, len = 0.08, rad = 0.05 - i * 0.005;
+    nx += Math.cos(a) * len / 2; ny += Math.sin(a) * len / 2;
+    taper(g, bare, rad * 0.9, rad, len + 0.012, nx, ny, 0, a - Math.PI / 2);
+    nx += Math.cos(a) * len / 2; ny += Math.sin(a) * len / 2;
+  }
+  const head = ball(g, bare, 0.072, nx + 0.01, ny); head.scale.set(1.1, 0.95, 0.9);
+  const upper = put(g, new Mesh(new ConeGeometry(0.055, 0.15, 12), std(horn)), nx + 0.1, ny, 0, 0, 0, -Math.PI / 2);
+  upper.scale.set(1, 1, 0.85);
+  const hook = put(g, new Mesh(new ConeGeometry(0.038, 0.09, 10), std(horn)), nx + 0.165, ny - 0.03, 0, 0, 0, -2.5);
+  hook.scale.set(1, 1, 0.85);
+  ball(g, '#8d8377', 0.031, nx + 0.065, ny + 0.022, 0).scale.set(0.9, 0.7, 0.9);
+  for (const s of [1, -1]) {
+    ball(g, '#f0eae0', 0.024, nx + 0.035, ny + 0.03, s * 0.052).scale.set(1, 1, 0.5);
+    disc(g, '#17120e', 0.013, nx + 0.042, ny + 0.03, s * 0.064, 0).rotation.y = s > 0 ? 0.4 : Math.PI - 0.4;
+  }
+  for (const s of [1, -1]) {
+    taper(g, '#b0a494', 0.021, 0.031, 0.24, 0.02, 0.13, s * 0.075);
+    for (let t = -1; t <= 1; t++) box(g, '#b0a494', 0.08, 0.022, 0.03, 0.05, 0.012, s * 0.075 + t * 0.032);
+  }
 };
 /** A streamlined body with fins and a forked tail. */
 const fish = (body: string, fin?: string): Figure => (g) => {
@@ -1698,6 +1783,57 @@ const dish = (main: string, side: string, extra?: string): Figure => (g) => {
   for (let i = 0; i < 3; i++) ball(g, new Color(side).multiplyScalar(0.88), 0.03, 0.19 + (r() - 0.5) * 0.12, 0.165, 0.05 + (r() - 0.5) * 0.12);
   if (extra) ball(g, extra, 0.062, 0.12, 0.13, -0.17);
 };
+/** A fried fish on a plate: মাছ ভাজা. */
+const fishDish = (skin = '#c98a3e'): Figure => (g) => {
+  /**
+   * The fish itself, not a mound of colour.
+   *
+   * মাছ ভাজা was the generic `dish()`, which is a dome with grains scattered
+   * over it: on a white plate that is mashed potato, and it was the one item
+   * in the food world whose figure said nothing at all about what it was. A
+   * fried fish reads from three things, and the plate is none of them: the
+   * body curls as it fries, the tail fin lifts clear of the plate, and the
+   * cook's scores are cut across the flank before it goes into the oil.
+   */
+  put(g, new Mesh(new CylinderGeometry(0.22, 0.26, 0.03, 28), std('#e2e7ec')), 0, 0.015);
+  put(g, new Mesh(new CylinderGeometry(0.4, 0.34, 0.06, 32), std('#f4f7fa')), 0, 0.055);
+  ring(g, std('#e6ebf0'), 0.4, 0.016, 0, 0.08, 0, 34);
+  const base = new Color(skin), crust = new Color(skin).multiplyScalar(0.7);
+  const A = 0.3, dir = 0.32, dx = Math.cos(dir), dz = -Math.sin(dir);
+  const cx = -0.02, cy = 0.168, cz = 0.03;
+  const body = put(g, new Mesh(new SphereGeometry(0.2, 24, 16), std(base)), cx, cy, cz, 0, dir, 0.1);
+  body.scale.set(1.5, 0.44, 0.62);
+  // the head end tapers and the belly is paler where it sat in the pan
+  const head = put(g, new Mesh(new SphereGeometry(0.12, 18, 12), std(base)), cx + dx * 0.24, cy - 0.004, cz + dz * 0.24, 0, dir, 0.1);
+  head.scale.set(1.05, 0.42, 0.52);
+  const gill = box(g, crust, 0.022, 0.03, 0.13, cx + dx * 0.16, cy + 0.055, cz + dz * 0.16);
+  gill.rotation.set(0, dir, 0);
+  // the tail, lifted off the plate the way a fried fish curls
+  const tail = put(g, new Mesh(new ConeGeometry(0.09, 0.17, 3), std(base.clone().multiplyScalar(0.84))), cx - dx * 0.3, cy + 0.03, cz - dz * 0.3, 0, dir, -Math.PI / 2 - 0.5);
+  tail.scale.set(1, 1, 0.2);
+  // three scores across the flank, each sat on the body's own curve
+  for (let i = 0; i < 3; i++) {
+    const t = (i - 1) * 0.115;
+    const k = Math.sqrt(Math.max(0.08, 1 - (t / (A * 0.92)) ** 2));
+    const sc = box(g, crust, 0.022, 0.026, 0.13 * k + 0.03, cx + dx * t, cy + 0.088 * k, cz + dz * t);
+    sc.rotation.set(0, dir, 0);
+  }
+  ball(g, '#f6f2e8', 0.026, cx + dx * 0.27, cy + 0.06, cz + dz * 0.27).scale.set(1, 0.5, 1);
+  ball(g, '#1d1710', 0.014, cx + dx * 0.272, cy + 0.078, cz + dz * 0.272).scale.set(1, 0.5, 1);
+  // a wedge of lemon, a chilli and rings of onion, which is how it is served
+  // the wedge is the flesh only: a separate rind shell wrapped the curved half
+  // in near-white and, seen edge on, the lemon read as a slab of butter
+  const lem = put(g, new Mesh(new CylinderGeometry(0.088, 0.088, 0.05, 16, 1, false, 0, Math.PI), std('#f0cd2e')), 0.19, 0.11, 0.2, 0, 1.35, 0);
+  void lem;
+  for (let i = 0; i < 4; i++) {
+    const a = -Math.PI / 2 + 0.3 + (i / 3) * (Math.PI - 0.6);
+    box(g, '#f9ecac', 0.055, 0.052, 0.01, 0.19 + Math.cos(a + 1.35) * 0.04, 0.112, 0.2 - Math.sin(a + 1.35) * 0.04).rotation.set(0, -(a + 1.35), 0);
+  }
+  const ch = put(g, new Mesh(new ConeGeometry(0.023, 0.17, 10), std('#4f8f3f')), -0.14, 0.104, 0.23, 0, 0, Math.PI / 2 + 0.35);
+  ch.scale.set(1, 1, 0.9);
+  ball(g, '#3f7a32', 0.016, -0.215, 0.112, 0.225);
+  for (let i = 0; i < 2; i++) ring(g, std('#efe9f2'), 0.052 + i * 0.014, 0.011, 0.14 - i * 0.05, 0.097, -0.24 - i * 0.03, 18);
+};
 /** A bowl of something thick. */
 const bowlDish = (color: string): Figure => (g) => {
   // a foot, a rim and a spoon: a bowl of dal is not a cylinder with a dome
@@ -2170,7 +2306,7 @@ export const FIGURES: Record<string, Figure> = {
   // places
   mangrove, beach, island, wetland, teaGarden, hills, forest, bridge,
   // dishes
-  riceDal: dish('#fbfbf6', '#e8c05a'), friedFish: dish('#d8b070', '#e8c05a'),
+  riceDal: dish('#fbfbf6', '#e8c05a'), friedFish: fishDish(),
   bhorta: dish('#b5762f', '#4f8f4a', '#c0392b'), khichuri: bowlDish('#e2c05a'),
   pitha, payesh: bowlDish('#f2e6d0'), sweet, haleem: bowlDish('#8a5a33'),
   panta: bowlDish('#eef2f6'), dateBowl: bowlDish('#7a4a2a'),
@@ -2194,9 +2330,9 @@ export const FIGURES: Record<string, Figure> = {
   // animals
   tiger: quadruped('#e08a2b', { stripe: '#2a2118', tail: 0.34 }),
   elephant: quadruped('#9aa0a8', { big: true, trunk: true, tail: 0.2 }),
-  leopardCat: quadruped('#d8b070', { stripe: '#6b5136', tail: 0.3 }),
+  leopardCat: quadruped('#d8b070', { spot: '#5b4630', tail: 0.32 }),
   hilsa: fish('#c9d3dc', '#9fb0c0'), fishSmall: fish('#8fae5a'), doel: bird('#1d232b', '#f4f8fc'),
-  kingfisher: bird('#2f6b9e', '#e8a33d'), vulture: bird('#6b6257', '#4a443c', '#c9c2b6'),
+  kingfisher: bird('#2f6b9e', '#e8a33d'), vulture,
   dolphin, croc, turtle, bee, monkey,
   flyingBird: flyingBird(), coral: coral(),
   // food and kitchen
