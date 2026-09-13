@@ -3,7 +3,18 @@
  * Admin chrome. Deliberately does not extend Base: no analytics, no public
  * header/footer, and noindex so the panel never reaches a search engine.
  */
-import { Font } from 'astro:assets';
+/**
+ * The font is preloaded the way Base does it, from the one self-hosted woff2
+ * `scripts/make-font.py` builds, and the @font-face comes in with admin.css.
+ *
+ * This used to be `<Font cssVariable="--font-body" />` from astro:assets,
+ * which needs a `fonts` entry in astro.config to have declared that family.
+ * There is none, and there never was: the component threw FontFamilyNotFound
+ * *during* the streamed render, after the 200 and the headers had already
+ * gone out, so every page in the admin panel answered with a valid response
+ * and an empty body. Login included. Nobody could get in.
+ */
+import { FONT_URL } from '../data/font';
 import '../styles/admin.css';
 
 interface Props {
@@ -32,7 +43,7 @@ const nav = [
     <meta name="robots" content="noindex, nofollow" />
     <title>{title} · পসরা অ্যাডমিন</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <Font cssVariable="--font-body" preload={[{ subset: 'bengali', weight: 400 }]} />
+    <link rel="preload" href={FONT_URL} as="font" type="font/woff2" crossorigin />
   </head>
   <body class="admin">
     {

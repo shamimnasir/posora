@@ -1,5 +1,10 @@
 // @ts-check
-import { defineConfig, fontProviders } from 'astro/config';
+// No `fonts` entry: the one Bengali face is self-hosted, built by
+// scripts/make-font.py and declared in src/styles/font.css. The import of
+// `fontProviders` that used to sit here implied otherwise, which is half of
+// how the admin layout came to call a <Font> component for a family nothing
+// had ever defined.
+import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({

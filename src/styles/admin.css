@@ -1,7 +1,13 @@
 /* পসরা admin panel - deliberately plain, dense and fast. Separate from the
    public site's styles so editorial UI never leaks into the product. */
 
+/* the one @font-face, the same file the public site serves */
+@import './font.css';
+
 :root {
+  /* named here rather than by the astro:assets <Font> component, which was
+     never configured: see the note in layouts/Admin.astro */
+  --font-body: "Noto Sans Bengali", system-ui, sans-serif;
   --a-bg: #f4f6f8;
   --a-panel: #ffffff;
   --a-line: #dde3ea;
