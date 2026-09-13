@@ -150,7 +150,8 @@ const payload = { seasons: SEASONS, months: MONTHS };
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, aroundCentre, dragTrack, useItem } from '../../lib/handson';
+  import { svgEl as el, aroundCentre, dragTrack, creditSet } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   type Season = { n: string; slug: string; months: number[]; hue: string };
   type Month = { n: string; slug: string; from: number[]; span: string };
@@ -159,7 +160,10 @@ const payload = { seasons: SEASONS, months: MONTHS };
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
   const WORLD = 'nature', CAT = 'ছয় ঋতু ও বারো মাস';
-  const credit = (item: string) => { useItem(WORLD, CAT, item); };
+  const ITEMS = [...data.seasons.map((s) => s.n), ...data.months.map((m) => m.n)];
+  const credit = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.getElementById('wheel') ?? undefined, big: true, say: '🌾 পুরো বছর ঘোরা হয়ে গেছে - ছয় ঋতু, বারো মাস!' });
+  });
 
   /** What the month is actually like here, which is the whole reason to look. */
   const NOTE: string[] = [

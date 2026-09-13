@@ -243,7 +243,8 @@ const items = [
 
 <script>
   import { bn, bnNum } from '../../lib/bn';
-  import { svgEl as el, clamp, scaleTicks, dialTicks, fillGauge, dragTrack, alongX, aroundCentre, fitScene, useItem, rewardCorrect } from '../../lib/handson';
+  import { svgEl as el, clamp, scaleTicks, dialTicks, fillGauge, dragTrack, alongX, aroundCentre, fitScene, creditSet, rewardCorrect } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
 
@@ -257,7 +258,10 @@ const items = [
     length: 'দৈর্ঘ্য', weight: 'ওজন', volume: 'আয়তন', clock: 'সময় ও ঘড়ি',
     calendar: 'ক্যালেন্ডার', temperature: 'তাপমাত্রা', convert: 'একক রূপান্তর', estimate: 'আন্দাজ করা',
   };
-  const used = (id: string) => { useItem(WORLD, CAT, ITEM[id]!); };
+  const mark = creditSet(WORLD, CAT, Object.values(ITEM), () => {
+    praise({ at: document.querySelector('#length h2') ?? undefined, big: true, say: '📏 আটটা মাপার যন্ত্রই ব্যবহার করা হয়ে গেছে!' });
+  });
+  const used = (id: string) => { mark(ITEM[id]!); };
 
   /* ---------- 1. ruler ---------- */
   (function ruler() {
@@ -489,7 +493,8 @@ const items = [
       if (first) paid.add(cur.q);
       out.innerHTML = `আসল উত্তর: <b>${bnNum(cur.answer)} ${cur.unit}</b> - তোমার আন্দাজ থেকে পার্থক্য <b>${bnNum(Number(diff.toFixed(1)))} ${cur.unit}</b>। ${tier}!`
         + (first && points ? ` <b class="won">+${bn(points)} জ্ঞানবিন্দু</b>` : '');
-      if (first && points) rewardCorrect(points);
+      if (first && points) { rewardCorrect(points); praise({ at: out, xp: points, big: points >= 10 }); }
+      else if (points) praise({ at: out, sound: 'ok' });
       used('estimate');
     });
     $('#est-next').addEventListener('click', pick);

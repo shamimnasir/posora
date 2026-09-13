@@ -212,7 +212,8 @@ const HUE = '#7E56C2';
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, alongX, fitScene, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, alongX, fitScene, creditSet } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
@@ -220,8 +221,13 @@ const HUE = '#7E56C2';
 
   const WORLD = 'chemistry', CAT = 'পদার্থের অবস্থা';
   /** Credit follows use, not arrival. See the flag flipped at the end. */
+  const ITEMS = ['কঠিন', 'তরল', 'গ্যাস', 'প্লাজমা', 'গলন', 'স্ফুটন',
+    'বাষ্পীভবন', 'ঘনীভবন', 'ঊর্ধ্বপাতন', 'ঘনত্ব'];
   let live = false;
-  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const mark = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.querySelector('#state h2') ?? undefined, big: true, say: '🧊 কঠিন থেকে প্লাজমা - দশটাই দেখা হয়ে গেছে!' });
+  });
+  const credit = (item: string) => { if (live) mark(item); };
   const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 2 : 0));
 
   const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)';
@@ -447,6 +453,7 @@ const HUE = '#7E56C2';
     const svg = $<SVGSVGElement>('#plasma-svg');
     const { w: W, h: H, narrow } = fitScene(svg, [620, 210], [340, 280]);
     const dots = el('g'); svg.appendChild(dots);
+    let sawPlasma = false;
     const heatIn = $<HTMLInputElement>('#heat'), heatV = $('#heat-v'), out = $('#plasma-out');
     // A tidy grid rather than a scatter, so the same eighteen atoms fit
     // whichever shape the box is.
@@ -474,7 +481,11 @@ const HUE = '#7E56C2';
         ? `এখন এটা <b>গ্যাস</b> - কণারা ছুটছে, কিন্তু আস্ত আছে। তাপ আরও বাড়াও।`
         : `কণারা ভেঙে গেছে: লাল টুকরোগুলো ধনাত্মক, নীলগুলো ছিটকে যাওয়া ইলেকট্রন। এই চার্জওয়ালা গ্যাসই <b>প্লাজমা</b>, পদার্থের চতুর্থ অবস্থা।`
           + `<span class="cost">মহাবিশ্বের বেশিরভাগ দৃশ্যমান পদার্থই প্লাজমা - প্রতিটা তারা। কাছেপিঠে বজ্রপাত আর নিয়ন সাইন।</span>`;
-      if (ion > 0.3) credit('প্লাজমা');
+      if (ion > 0.3) {
+        credit('প্লাজমা');
+        // Pushing a gas far enough to break the atoms is worth noticing once.
+        if (!sawPlasma) { sawPlasma = true; praise({ at: svg, say: 'পদার্থের চতুর্থ অবস্থা বানিয়ে ফেললে - প্লাজমা!' }); }
+      }
     }
     heatIn.addEventListener('input', render);
     render();

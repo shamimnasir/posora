@@ -201,7 +201,8 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
 </style>
 
 <script>
-  import { svgEl as el, dragTrack, alongX, useItem, rewardCorrect } from '../../lib/handson';
+  import { svgEl as el, dragTrack, alongX, creditSet, rewardCorrect } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   type Kar = { sign: string; name: string; roman: string; word: string; emoji: string };
   type Fola = { sign: string; name: string; base: string; word: string; emoji: string };
@@ -227,8 +228,12 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
     * the page is being set up, and that first pass must not tick anything off:
     * opening a page is not the same as having done what is on it.
     */
+  const ITEMS = [KAR_ITEM, ...FOLA_ITEMS, ...CONJ_ITEMS];
   let live = false;
-  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const mark = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.querySelector('#kar h2') ?? undefined, big: true, say: '🔤 চোদ্দটাই দেখা হয়ে গেছে - কার, ফলা আর যুক্তবর্ণ সব!' });
+  });
+  const credit = (item: string) => { if (live) mark(item); };
 
   const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', W = 'var(--w)';
   const glyph = (parent: SVGElement, x: number, y: number, size: number, fill = INK) => {
@@ -479,7 +484,9 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
       out.innerHTML = right
         ? `ঠিক! <b>${answer.ch}</b> = <b>${answer.parts.join('</b> + <b>')}</b>।${first ? ' <b class="won">+৫ জ্ঞানবিন্দু</b>' : ''}`
         : `না, <b>${answer.ch}</b> = <b>${answer.parts.join('</b> + <b>')}</b>। আরেকটা দেখি?`;
-      if (right && first) rewardCorrect(5);
+      if (right && first) { rewardCorrect(5); praise({ at: btn, xp: 5 }); }
+      else if (right) praise({ at: btn, sound: 'ok' });
+      else praise({ at: btn, sound: 'no' });
       if (CONJ_ITEMS.has(answer.ch)) credit(answer.ch);
     }
 

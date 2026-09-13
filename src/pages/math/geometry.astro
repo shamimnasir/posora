@@ -173,13 +173,19 @@ const HUE = '#C0473E';
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, fitScene, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, fitScene, creditSet, rewardCorrect } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
   const WORLD = 'math', CAT = 'জ্যামিতি';
+  const ITEMS = ['বিন্দু', 'রেখা', 'কোণ', 'ত্রিভুজ', 'চতুর্ভুজ', 'বৃত্ত', 'বহুভুজ', 'প্রতিসাম্য',
+    'ঘনক', 'গোলক', 'সিলিন্ডার', 'ক্ষেত্রফল', 'পরিসীমা', 'আয়তন'];
   let live = false;
-  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const mark = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.querySelector('#bindu h2') ?? undefined, big: true, say: '📐 চোদ্দটাই টেনে দেখা হয়ে গেছে!' });
+  });
+  const credit = (item: string) => { if (live) mark(item); };
   const num = (n: number) => bn(n.toFixed(Math.abs(n) < 100 ? 1 : 0));
 
   const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
@@ -340,6 +346,7 @@ const HUE = '#C0473E';
     const out = $('#sym-out');
     const jumps = [...root.querySelectorAll<HTMLButtonElement>('#protisammo .jump')];
     let sides = 4, ang = 20;
+    const found = new Set<number>();
 
     /** A regular shape, or a butterfly that has exactly one mirror line. */
     function points(): { x: number; y: number }[] {
@@ -387,7 +394,12 @@ const HUE = '#C0473E';
           + `<span class="cost">${sides === 0 ? 'প্রজাপতির প্রতিসাম্যের রেখা মাত্র একটাই, মাঝ বরাবর।' : `${bn(sides)} বাহুর নিয়মিত আকৃতির প্রতিসাম্যের রেখা ঠিক ${bn(lines)}টা - প্রতি ${num(180 / lines)}° পর পর একটা।`}</span>`
         : `এখনো মেলেনি - ছায়া-রেখাটা আকৃতির উপর পড়ছে না। ঘোরাতে থাকো।`
           + `<span class="cost">${sides === 0 ? 'প্রজাপতির একটাই প্রতিসাম্যের রেখা - খুঁজে বের করো।' : `${bn(sides)} বাহুর আকৃতির ${bn(lines)}টা প্রতিসাম্যের রেখা আছে।`}</span>`;
-      if (fits) credit('প্রতিসাম্য');
+      // Landing the mirror on a line of symmetry is a hunt that ends: mark it
+      // once per shape, and again if they go looking on a different one.
+      if (fits) {
+        credit('প্রতিসাম্য');
+        if (!found.has(sides)) { found.add(sides); rewardCorrect(5); praise({ at: svg, xp: 5, say: 'প্রতিসাম্যের রেখা পেয়ে গেছো!' }); }
+      }
     }
     jumps.forEach((b) => b.addEventListener('click', () => {
       sides = +b.dataset.n!;

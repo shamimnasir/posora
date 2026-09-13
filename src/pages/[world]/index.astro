@@ -881,6 +881,7 @@ const schema = [
 <script>
   import { toggleStar, isStarred, getProgress, markSeen, addXp, grantAward, setBest, setMission, finishTask, todayState, freezeCount } from '../../lib/progress';
   import { levelOf, AWARDS, awardKey, starsFor, starText, secText, confetti, chime, soundOn, setSound } from '../../lib/game';
+  import { praise } from '../../lib/praise';
   import { goalParts, goalDone, goalMet } from '../../lib/daily';
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
   import { makeSpeaker, type Speaker } from '../../lib/speak';
@@ -1466,11 +1467,26 @@ const schema = [
     if (!reduced) $('#read').animate([{ opacity: 0.2, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
     trackItem(slug, c.n, c.items[ii]);
     if (mark && markSeen(slug, keyOf(curCat, ii))) {
-      chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`)?.classList.add('done');
+      const chip = chips.querySelector<HTMLElement>(`.chip[data-di="${ii}"]`);
+      chip?.classList.add('done');
       if (childId) pushSeen(slug, keyOf(curCat, ii));
       noteItem(slug);
       renderProgress(); renderGlance(); renderRecords();
+      /**
+       * Reading something new is the commonest good thing that happens here,
+       * and it used to happen in silence: the points floated up by the pill in
+       * the header, a long way from the chip the child just pressed. Now the
+       * chip itself answers - a soft tick, a tick mark that pops, and the ten
+       * points leaving the place they were earned.
+       */
       floatXp(10);
+      if (chip) {
+        praise({ at: chip, sound: 'tick', xp: 10 });
+        if (!reduced) chip.animate(
+          [{ transform: 'scale(1)' }, { transform: 'scale(1.09)' }, { transform: 'scale(1)' }],
+          { duration: 280, easing: 'ease-out' },
+        );
+      }
       checkGoal();
       if (readCount(curCat) === c.items.length) {
         // the whole category has been opened: that is worth a moment

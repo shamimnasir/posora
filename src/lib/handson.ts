@@ -12,7 +12,7 @@
  * accessibility is fixed once rather than per widget. Nothing in this file
  * knows what it is measuring.
  */
-import { markSeen, addXp } from './progress';
+import { markSeen, addXp, getProgress } from './progress';
 
 export const SVGNS = 'http://www.w3.org/2000/svg';
 
@@ -580,4 +580,28 @@ export function useItem(world: string, cat: string, item: string): boolean {
 /** XP for getting something right. Fiddling earns nothing; being right does. */
 export function rewardCorrect(points: number): void {
   if (points > 0) addXp(points);
+}
+
+/**
+ * Credit items, and notice when the last one lands.
+ *
+ * Finishing everything a lab has to offer is the one achievement every lab
+ * shares, and it was going unmarked. The check runs once at the start too: a
+ * child who finished the category last week should not be congratulated for
+ * touching one slider today.
+ */
+export function creditSet(
+  world: string, cat: string, items: readonly string[], onComplete?: () => void,
+): (item: string) => void {
+  const key = (i: string) => `${cat}:${i}`;
+  const all = () => {
+    const seen = new Set(getProgress().seen[world] ?? []);
+    return items.every((i) => seen.has(key(i)));
+  };
+  let done = !onComplete || all();
+  return (item: string) => {
+    markSeen(world, key(item));
+    if (done) return;
+    if (all()) { done = true; onComplete!(); }
+  };
 }

@@ -214,7 +214,8 @@ const payload = { letters: [...vowels, ...consonants], kars };
 </style>
 
 <script>
-  import { traceBoard, useItem, type Trace } from '../../lib/handson';
+  import { traceBoard, creditSet, type Trace } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   type Letter = { ch: string; name: string; roman: string; word: string; emoji: string };
   type Kar = { sign: string; name: string; roman: string; word: string; emoji: string };
@@ -223,8 +224,12 @@ const payload = { letters: [...vowels, ...consonants], kars };
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
   const WORLD = 'language', CAT = 'হাতের লেখা';
+  const ITEMS = ['মাত্রা টানা', 'বর্ণের স্ট্রোক ক্রম', 'কার বসানো', 'শব্দ লেখা', 'বাক্য লেখা', 'ছাপার যোগ্য পাতা'];
   let live = false;
-  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const mark = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.querySelector('#matra h2') ?? undefined, big: true, say: '✍️ ছয়টাই লেখা হয়ে গেছে। হাত তৈরি!' });
+  });
+  const credit = (item: string) => { if (live) mark(item); };
   const pc = (v: number) => `${new Intl.NumberFormat('bn-BD').format(Math.round(v * 100))}%`;
 
   /** Every board on the page, so the clear buttons can find their own. */
@@ -267,6 +272,17 @@ const payload = { letters: [...vowels, ...consonants], kars };
    * box covers the letter completely, and calling that "নিচে কিছু বাকি আছে"
    * would be both wrong and the opposite of the lesson.
    */
+  /**
+   * Neat enough to be worth marking, on the board it was written on. Once per
+   * attempt: wiping the board starts a new one, which can earn its own.
+   */
+  const praised = new Set<string>();
+  const cheer = (c: HTMLCanvasElement, covered: number, accurate: number) => {
+    if (covered > 0.8 && accurate > 0.65 && !praised.has(c.id)) {
+      praised.add(c.id);
+      praise({ at: c, xp: 5, say: 'সুন্দর হয়েছে!' });
+    }
+  };
   const verdict = (covered: number, accurate: number) => {
     if (covered < 0.12) return { s: 'শুরু করো - ফিকে দাগের উপর দিয়ে টানো।', ok: false };
     if (accurate < 0.4) return { s: 'দাগের বাইরে অনেকটা চলে যাচ্ছে - ধীরে, দাগ ধরে টানো।', ok: false };
@@ -300,6 +316,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
         const v = verdict(covered, accurate);
         out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> দাগের <b>${pc(covered)}</b> ঢেকেছে, আর তোমার টানের <b>${pc(accurate)}</b> দাগের উপরেই ছিল।`
           + (strokes > 1 && covered > 0.7 ? ' মাত্রা একটানে টানার চেষ্টা করো - তাতে দাগটা সোজা থাকে।' : '');
+        cheer(c, covered, accurate);
         if (covered > 0.3) credit('মাত্রা টানা');
       },
     });
@@ -310,7 +327,10 @@ const payload = { letters: [...vowels, ...consonants], kars };
   /* ---------- shared: the clear buttons ---------- */
   function wireClear() {
     for (const b of root.querySelectorAll<HTMLButtonElement>('[data-clear]')) {
-      b.addEventListener('click', () => boards.get(b.dataset.clear!)?.clear());
+      b.addEventListener('click', () => {
+        boards.get(b.dataset.clear!)?.clear();
+        praised.delete(b.dataset.clear!);
+      });
     }
   }
 
@@ -360,6 +380,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
       onScore: ({ covered, accurate }) => {
         const v = verdict(covered, accurate);
         out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> বর্ণের <b>${pc(covered)}</b> ঢেকেছে, তোমার লেখার <b>${pc(accurate)}</b> বর্ণের উপরে।`;
+        cheer(c, covered, accurate);
         if (covered > 0.3) credit('বর্ণের স্ট্রোক ক্রম');
       },
     });
@@ -440,6 +461,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
       onScore: ({ covered, accurate }) => {
         const v = verdict(covered, accurate);
         out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> <b>${cur.name}</b> - যেমন ${cur.emoji} ${cur.word}। কারের <b>${pc(covered)}</b> ঢেকেছে।`;
+        cheer(c, covered, accurate);
         if (covered > 0.3) credit('কার বসানো');
       },
     });
@@ -482,6 +504,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
       onScore: ({ covered, accurate }) => {
         const v = verdict(covered, accurate);
         out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> শব্দের <b>${pc(covered)}</b> ঢেকেছে।`;
+        cheer(c, covered, accurate);
         if (covered > 0.3) credit('শব্দ লেখা');
       },
     });
@@ -526,6 +549,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
         const v = verdict(covered, accurate);
         const where = narrow ? ` (${LINES[i]!.split(' ').length > 1 ? `শব্দ ${new Intl.NumberFormat('bn-BD').format(w + 1)} / ${new Intl.NumberFormat('bn-BD').format(words().length)}` : 'একটাই শব্দ'})` : '';
         out.innerHTML = `<b class="${v.ok ? 'ok' : ''}">${v.s}</b> ${narrow ? 'শব্দের' : 'বাক্যের'} <b>${pc(covered)}</b> ঢেকেছে।${where}`;
+        cheer(c, covered, accurate);
         if (covered > 0.3) credit('বাক্য লেখা');
       },
     });

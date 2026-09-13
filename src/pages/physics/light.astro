@@ -203,13 +203,19 @@ const HUE = '#2E7EA8';
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, aroundCentre, fitScene, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, aroundCentre, fitScene, creditSet } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
   const WORLD = 'physics', CAT = 'আলো';
+  const ITEMS = ['সরলরেখায় চলা', 'ছায়া', 'প্রতিফলন', 'সমতল আয়না', 'গোলীয় আয়না', 'প্রতিসরণ',
+    'লেন্স', 'রংধনু', 'রঙের মিশ্রণ', 'চোখ কীভাবে দেখে', 'বর্ণান্ধতা'];
   let live = false;
-  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const mark = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.querySelector('#chhaya h2') ?? undefined, big: true, say: '💡 আলোর এগারোটা কথাই দেখা হয়ে গেছে!' });
+  });
+  const credit = (item: string) => { if (live) mark(item); };
   const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 1 : 0));
 
   const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)';
@@ -520,6 +526,7 @@ const HUE = '#2E7EA8';
     svg.appendChild(el('polygon', { points: `${AX},${AY} ${BX},${BY} ${CXp},${CYp}`, fill: '#9fb8d4', 'fill-opacity': 0.35, stroke: '#9fb8d4', 'stroke-width': 2 }));
     text(svg, AX, CYp + 20, 'প্রিজম', { 'font-size': 11 });
 
+    let madeWhite = false;
     const rIn = $<HTMLInputElement>('#r'), gIn = $<HTMLInputElement>('#g'), bIn = $<HTMLInputElement>('#b');
     const rV = $('#r-v'), gV = $('#g-v'), bV = $('#b-v'), out = $('#mix-out');
     const SWX = narrow ? 54 : 90, SWY = narrow ? H - 58 : 196;
@@ -541,6 +548,11 @@ const HUE = '#2E7EA8';
         + ` নিচের মিশেলটা এখন <b>${name}</b>।`
         + `<span class="cost">আলোর রং মেশানো আর রঙের কৌটা মেশানো এক নয়। আলোয় লাল-সবুজ-নীল তিনটে একসাথে দিলে সাদা হয়; রঙে তিনটে মেশালে কালোর দিকে যায়। তোমার ফোনের পর্দাও এই তিনটে রং দিয়েই সব রং বানায়।</span>`;
       credit('রংধনু'); credit('রঙের মিশ্রণ');
+      // Three colours back into white is the card's own trick, once.
+      if (r > 240 && g > 240 && b > 240 && !madeWhite) {
+        madeWhite = true;
+        praise({ at: swatch, say: 'তিন রং মিলে সাদা - প্রিজমের উল্টো কাজটা করে ফেললে!' });
+      }
     }
     [rIn, gIn, bIn].forEach((x) => x.addEventListener('input', render));
     render();

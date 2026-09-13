@@ -217,7 +217,9 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, alongX, fitScene, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, alongX, fitScene, creditSet } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
+  import { rewardCorrect } from '../../lib/handson';
 
   type Group = { k: string; n: string; hue: string };
   type Food = { n: string; e: string; g: string };
@@ -228,8 +230,12 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
   const WORLD = 'food', CAT = 'আমার থালা';
+  const ITEMS = ['সুষম খাবার', 'সকালের নাশতা', 'দুপুরের খাবার', 'রাতের খাবার', 'টিফিন', 'পরিমাণ', 'দিনে কয়বার', 'পানি কতটুকু'];
   let live = false;
-  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const mark = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.querySelector('#sushom h2') ?? undefined, big: true, say: '🍽️ পুরো থালা শেখা হয়ে গেছে - আটটাই!' });
+  });
+  const credit = (item: string) => { if (live) mark(item); };
 
   const MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)', INK = 'var(--ink)';
   const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
@@ -262,6 +268,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
     };
     let meal = data.meals[0]!;
     const count = new Map<string, number>();
+    const cheered = new Set<string>();
 
     pantry.replaceChildren(...data.foods.map((f) => {
       const b = document.createElement('button');
@@ -329,7 +336,16 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
             + `<span class="cost">${meal.note}</span>`
           : `এখনো বাদ আছে <b>${missing.map((g) => g.n).join(', ')}</b>।<span class="cost">${meal.note}</span>`;
       credit(MEAL_ITEM[meal.k]!);
-      if (missing.length === 0 && items.length) credit('সুষম খাবার');
+      if (missing.length === 0 && items.length) {
+        credit('সুষম খাবার');
+        // A balanced plate is the whole point of the card, so it gets marked
+        // once per meal rather than every time a food is added to a full one.
+        if (!cheered.has(meal.k)) {
+          cheered.add(meal.k);
+          praise({ at: svg, xp: 10, say: `${meal.n} মিলে গেছে - পাঁচ ভাগের সবই আছে!` });
+          rewardCorrect(10);
+        }
+      } else if (missing.length) cheered.delete(meal.k);
     }
 
     pantry.addEventListener('click', (e) => {

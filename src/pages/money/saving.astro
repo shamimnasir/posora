@@ -201,14 +201,20 @@ const HUE = '#6E8C2F';
 
 <script>
   import { bn, bnNum } from '../../lib/bn';
-  import { svgEl as el, clamp, fillGauge, dragTrack, alongX, fitScene, useItem } from '../../lib/handson';
+  import { svgEl as el, clamp, fillGauge, dragTrack, alongX, fitScene, creditSet } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   const root = document.getElementById('lab')!;
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
   const WORLD = 'money', CAT = 'সঞ্চয় ও লক্ষ্য';
   /** Credit follows use, not arrival. See the flag flipped at the end. */
+  const ITEMS = ['কেন জমাতে হয়', 'মাটির ব্যাংক', 'সঞ্চয়ী হিসাব', 'ছোট লক্ষ্য', 'বড় লক্ষ্য',
+    'জরুরি তহবিল', 'বিলম্বিত তৃপ্তি', 'প্রতিদিন অল্প', 'লক্ষ্য ভাগ করা'];
   let live = false;
-  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const mark = creditSet(WORLD, CAT, ITEMS, () => {
+    praise({ at: document.querySelector('#keno h2') ?? undefined, big: true, say: '🪙 জমানোর নয়টা হিসাবই কষা হয়ে গেছে!' });
+  });
+  const credit = (item: string) => { if (live) mark(item); };
   const taka = (n: number) => bnNum(Math.round(n));
 
   const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', HUE = 'var(--w)';
@@ -278,6 +284,7 @@ const HUE = '#6E8C2F';
     const dailyIn = $<HTMLInputElement>('#daily'), dailyV = $('#daily-v');
     const out = $('#goal-out'), split = $('#bhag');
     const jumps = [...root.querySelectorAll<HTMLButtonElement>('#lokkho .jump')];
+    let filled = false;
     // A day's saving is shown as progress after one month, so the jar always
     // says something true rather than sitting empty until the very last day.
     function render() {
@@ -296,6 +303,9 @@ const HUE = '#6E8C2F';
       split.innerHTML = `<b>লক্ষ্যটা ভাগ করে নাও।</b> ${taka(g)} টাকা একসাথে ভাবলে বিরাট লাগে। ভাগ করলে দাঁড়ায় সপ্তাহে <b>${taka(d * 7)} টাকা</b>, মাসে <b>${taka(d * 30)} টাকা</b>।`
         + `<span class="cost">বড় লক্ষ্য ছোট ছোট ভাগে ভাগ করলে প্রতিটা ভাগ সহজ হয়ে যায়, আর প্রতিটা ভাগ শেষ হলে বোঝা যায় এগোচ্ছো।</span>`;
       credit(g <= 2000 ? 'ছোট লক্ষ্য' : 'বড় লক্ষ্য');
+      // The jar filling inside a month is the moment a goal stops being an idea.
+      if (after30 >= 100 && !filled) { filled = true; praise({ at: svg, say: 'এক মাসেই বয়াম ভরে যাবে - লক্ষ্যটা নাগালের মধ্যে!' }); }
+      else if (after30 < 100) filled = false;
       credit('প্রতিদিন অল্প');
       credit('লক্ষ্য ভাগ করা');
     }

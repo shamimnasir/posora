@@ -235,7 +235,8 @@ const items = [
 
 <script>
   import { bn } from '../../lib/bn';
-  import { svgEl as el, clamp, dragTrack, alongX, alongY, aroundCentre, fitScene, useItem, rewardCorrect } from '../../lib/handson';
+  import { svgEl as el, clamp, dragTrack, alongX, alongY, aroundCentre, fitScene, creditSet, rewardCorrect } from '../../lib/handson';
+  import { praise } from '../../lib/praise';
 
   const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
 
@@ -248,7 +249,10 @@ const items = [
     lever: 'লিভার', pulley: 'কপিকল', ramp: 'ঢালু তল', screw: 'স্ক্রু',
     wedge: 'কীলক', wheel: 'চাকা ও অক্ষ', gears: 'গিয়ার', advantage: 'যান্ত্রিক সুবিধা',
   };
-  const used = (id: string) => { useItem(WORLD, CAT, ITEM[id]!); };
+  const mark = creditSet(WORLD, CAT, Object.values(ITEM), () => {
+    praise({ at: document.querySelector('#lever h2') ?? undefined, big: true, say: '⚙️ আটটা যন্ত্রই নেড়ে দেখা হয়ে গেছে!' });
+  });
+  const used = (id: string) => { mark(ITEM[id]!); };
 
   /** One decimal while the number is small, none once it is not. */
   const num = (n: number) => bn(n.toFixed(Math.abs(n) < 10 ? 1 : 0));
@@ -824,7 +828,8 @@ const items = [
       if (first) paid.add(cur.q);
       out.innerHTML = `ঠিক উত্তর <b>${num(cur.answer)} ${cur.unit}</b>। ${word}।`
         + (first && points ? ` <b class="won">+${bn(points)} জ্ঞানবিন্দু</b>` : '');
-      if (first && points) rewardCorrect(points);
+      if (first && points) { rewardCorrect(points); praise({ at: out, xp: points, big: points >= 10 }); }
+      else if (points) praise({ at: out, sound: 'ok' });
       used('advantage');
     });
     $('#ma-next').addEventListener('click', pick);
