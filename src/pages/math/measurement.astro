@@ -225,47 +225,49 @@ const items = [
     .scale-wrap, .vol-wrap, .temp-wrap { grid-template-columns: 1fr; }
     .vol-wrap svg, .temp-wrap svg { justify-self: start; }
   }
+  .won { color: var(--ok); }
 </style>
 
 <script>
   import { bn, bnNum } from '../../lib/bn';
+  import { svgEl as el, clamp, scaleTicks, dialTicks, fillGauge, dragTrack, alongX, aroundCentre, useItem, rewardCorrect } from '../../lib/handson';
 
   const $ = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
-  const SVGNS = 'http://www.w3.org/2000/svg';
-  const el = (tag: string, attrs: Record<string, string | number>) => {
-    const n = document.createElementNS(SVGNS, tag);
-    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
-    return n;
+
+  /**
+   * This page is গণিত's পরিমাপ category, not a toy beside it, so using a tool
+   * has to count exactly as reading an item counts. Credit lands the first
+   * time a tool is genuinely moved, never on arrival.
+   */
+  const WORLD = 'math', CAT = 'পরিমাপ';
+  const ITEM: Record<string, string> = {
+    length: 'দৈর্ঘ্য', weight: 'ওজন', volume: 'আয়তন', clock: 'সময় ও ঘড়ি',
+    calendar: 'ক্যালেন্ডার', temperature: 'তাপমাত্রা', convert: 'একক রূপান্তর', estimate: 'আন্দাজ করা',
   };
-  const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+  const used = (id: string) => { useItem(WORLD, CAT, ITEM[id]!); };
 
   /* ---------- 1. ruler ---------- */
   (function ruler() {
     const svg = $<SVGSVGElement>('#ruler-svg');
-    const PAD = 20, W = 600, H = 92, PXCM = W / 30;
+    const PAD = 20, W = 600, PXCM = W / 30;
     svg.appendChild(el('rect', { x: PAD, y: 10, width: W, height: 40, rx: 4, fill: 'var(--panel-2)', stroke: 'var(--line)' }));
-    for (let cm = 0; cm <= 30; cm++) {
-      const x = PAD + cm * PXCM;
-      const tall = cm % 5 === 0;
-      svg.appendChild(el('line', { x1: x, y1: 10, x2: x, y2: 10 + (tall ? 24 : 14), stroke: '#333', 'stroke-width': tall ? 1.4 : 0.8 }));
-      if (tall) {
-        const t = el('text', { x, y: 62, 'font-size': 11, 'text-anchor': 'middle', fill: 'var(--ink-2)' });
-        t.textContent = bn(cm); svg.appendChild(t);
-      }
-    }
-    const marker = el('g', { style: 'cursor:grab' });
-    const tri = el('polygon', { points: '0,72 10,88 -10,88', fill: 'var(--w)' });
-    const line = el('line', { x1: 0, y1: 10, x2: 0, y2: 72, stroke: 'var(--w)', 'stroke-width': 2 });
-    marker.append(line, tri); svg.appendChild(marker);
+    scaleTicks(svg, { x: PAD, y: 10, len: W, from: 0, to: 30, step: 1, big: 5, short: 14, long: 24, labelOffset: 28, label: (v) => bn(v) });
+    const marker = el('g');
+    marker.append(
+      el('line', { x1: 0, y1: 10, x2: 0, y2: 72, stroke: 'var(--w)', 'stroke-width': 2 }),
+      el('polygon', { points: '0,72 10,88 -10,88', fill: 'var(--w)' }),
+    );
+    svg.appendChild(marker);
     const out = $('#ruler-val');
-    let cm = 12.5;
-    const place = () => { const x = PAD + cm * PXCM; marker.setAttribute('transform', `translate(${x},0)`); out.textContent = bn(cm.toFixed(1)); };
-    place();
-    let dragging = false;
-    const toCm = (clientX: number) => { const r = svg.getBoundingClientRect(); const x = ((clientX - r.left) / r.width) * W - PAD; return clamp(Math.round((x / PXCM) * 10) / 10, 0, 30); };
-    svg.addEventListener('pointerdown', (e) => { dragging = true; cm = toCm(e.clientX); place(); svg.setPointerCapture(e.pointerId); });
-    svg.addEventListener('pointermove', (e) => { if (dragging) { cm = toCm(e.clientX); place(); } });
-    svg.addEventListener('pointerup', () => { dragging = false; });
+    const place = (cm: number) => { marker.setAttribute('transform', `translate(${PAD + cm * PXCM},0)`); out.textContent = bn(cm.toFixed(1)); };
+    const toCm = alongX(svg, W, PAD, PXCM);
+    const track = dragTrack({
+      surface: svg, min: 0, max: 30, step: 0.1, value: 12.5,
+      toValue: (x) => toCm(x),
+      onChange: (cm) => { place(cm); used('length'); },
+      label: 'স্কেলের দাগ, সেন্টিমিটারে', text: (cm) => `${bn(cm.toFixed(1))} সেন্টিমিটার`,
+    });
+    place(track.get());
   })();
 
   /* ---------- 2. scale ---------- */
@@ -298,7 +300,8 @@ const items = [
       if (L === R) out.innerHTML = `<b>সমান!</b> দুই পাশে ঠিক ${bn(L)} গ্রাম করে।`;
       else out.innerHTML = `<b>${L > R ? 'বাম' : 'ডান'} পাশ ভারী</b> - পার্থক্য ${bn(Math.abs(R - L))} গ্রাম।`;
     }
-    lIn.addEventListener('input', update); rIn.addEventListener('input', update); update();
+    const changed = () => { update(); used('weight'); };
+    lIn.addEventListener('input', changed); rIn.addEventListener('input', changed); update();
   })();
 
   /* ---------- 3. volume ---------- */
@@ -312,27 +315,21 @@ const items = [
       const t = el('text', { x: X - 6, y: y + 4, 'font-size': 10, 'text-anchor': 'end', fill: 'var(--muted)' }); t.textContent = bn(m); svg.appendChild(t);
     }
     const water = el('rect', { x: X + 2, y: BOTTOM, width: W - 4, height: 0, fill: 'var(--w)', 'fill-opacity': 0.75 }); svg.appendChild(water);
+    const pour = fillGauge(water, { min: 0, max: MAXML, top: TOP, bottom: BOTTOM });
     const slider = $<HTMLInputElement>('#vol-slider'), val = $('#vol-val'), lit = $('#vol-l');
     function update() {
-      const ml = +slider.value; const h = (ml / MAXML) * (BOTTOM - TOP);
-      water.setAttribute('y', String(BOTTOM - h)); water.setAttribute('height', String(h));
+      const ml = +slider.value;
+      pour(ml);
       val.textContent = bn(ml); lit.textContent = bn((ml / 1000).toFixed(2));
     }
-    slider.addEventListener('input', update); update();
+    slider.addEventListener('input', () => { update(); used('volume'); }); update();
   })();
 
   /* ---------- 4. clock ---------- */
   (function clockTool() {
     const svg = $<SVGSVGElement>('#clock-svg'); const C = 130, R = 110;
     svg.appendChild(el('circle', { cx: C, cy: C, r: R, fill: 'var(--panel-2)', stroke: 'var(--line)', 'stroke-width': 2 }));
-    for (let i = 0; i < 12; i++) {
-      const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
-      const x1 = C + Math.cos(a) * (R - 10), y1 = C + Math.sin(a) * (R - 10);
-      const x2 = C + Math.cos(a) * (R - 20), y2 = C + Math.sin(a) * (R - 20);
-      svg.appendChild(el('line', { x1, y1, x2, y2, stroke: '#556', 'stroke-width': 2 }));
-      const lx = C + Math.cos(a) * (R - 32), ly = C + Math.sin(a) * (R - 32);
-      const t = el('text', { x: lx, y: ly + 4, 'font-size': 12, 'text-anchor': 'middle', fill: 'var(--ink-2)' }); t.textContent = bn(i === 0 ? 12 : i); svg.appendChild(t);
-    }
+    dialTicks(svg, { cx: C, cy: C, r: R, count: 12, label: (i) => bn(i === 0 ? 12 : i) });
     const hourHand = el('line', { x1: C, y1: C, x2: C, y2: C - 50, stroke: 'var(--ink)', 'stroke-width': 5, 'stroke-linecap': 'round' });
     const minHand = el('line', { x1: C, y1: C, x2: C, y2: C - 78, stroke: 'var(--w)', 'stroke-width': 3.5, 'stroke-linecap': 'round' });
     const hub = el('circle', { cx: C, cy: C, r: 5, fill: 'var(--ink)' });
@@ -340,40 +337,35 @@ const items = [
     const minGrab = el('circle', { cx: C, cy: C - 78, r: 12, fill: 'transparent', style: 'cursor:grab' });
     svg.append(hourHand, minHand, hub, hourGrab, minGrab);
 
-    let hour = 10, minute = 35;
     const out = $('#clock-val');
+    // The two hands are two tracks round one dial, so each one gets its own
+    // grab circle, its own place in the tab order and its own read-out.
+    const angleAt = aroundCentre(svg, 260, C, C);
+    // The hands' own numbers live here rather than being read back out of the
+    // tracks: a track announces itself while it is being built, so anything it
+    // asks for has to already exist.
+    let hour = 10, minute = 35;
     function render() {
-      const hAngle = (hour % 12) * 30 + minute * 0.5 - 90;
-      const mAngle = minute * 6 - 90;
+      const hAngle = (hour % 12) * 30 + minute * 0.5 - 90, mAngle = minute * 6 - 90;
       hourHand.setAttribute('transform', `rotate(${hAngle + 90} ${C} ${C})`);
       minHand.setAttribute('transform', `rotate(${mAngle + 90} ${C} ${C})`);
-      const hx = C + Math.cos((hAngle * Math.PI) / 180) * 50, hy = C + Math.sin((hAngle * Math.PI) / 180) * 50;
-      const mx = C + Math.cos((mAngle * Math.PI) / 180) * 78, my = C + Math.sin((mAngle * Math.PI) / 180) * 78;
-      hourGrab.setAttribute('cx', String(hx)); hourGrab.setAttribute('cy', String(hy));
-      minGrab.setAttribute('cx', String(mx)); minGrab.setAttribute('cy', String(my));
+      hourGrab.setAttribute('cx', String(C + Math.cos((hAngle * Math.PI) / 180) * 50));
+      hourGrab.setAttribute('cy', String(C + Math.sin((hAngle * Math.PI) / 180) * 50));
+      minGrab.setAttribute('cx', String(C + Math.cos((mAngle * Math.PI) / 180) * 78));
+      minGrab.setAttribute('cy', String(C + Math.sin((mAngle * Math.PI) / 180) * 78));
       out.textContent = `${bn(hour === 0 ? 12 : hour)}:${bn(String(minute).padStart(2, '0'))}`;
     }
-    function angleFromEvent(clientX: number, clientY: number) {
-      const r = svg.getBoundingClientRect();
-      const scale = 260 / r.width;
-      const x = (clientX - r.left) * scale, y = (clientY - r.top) * scale;
-      let a = (Math.atan2(y - C, x - C) * 180) / Math.PI + 90;
-      if (a < 0) a += 360;
-      return a;
-    }
-    let dragTarget: 'hour' | 'minute' | null = null;
-    function bind(handle: SVGCircleElement, which: 'hour' | 'minute') {
-      handle.addEventListener('pointerdown', (e) => { dragTarget = which; svg.setPointerCapture(e.pointerId); });
-    }
-    bind(hourGrab as SVGCircleElement, 'hour'); bind(minGrab as SVGCircleElement, 'minute');
-    svg.addEventListener('pointermove', (e) => {
-      if (!dragTarget) return;
-      const a = angleFromEvent(e.clientX, e.clientY);
-      if (dragTarget === 'minute') minute = Math.round(a / 6) % 60;
-      else hour = Math.round(a / 30) % 12;
-      render();
+    const spoken = () => `${bn(hour === 0 ? 12 : hour)}টা ${bn(minute)} মিনিট`;
+    dragTrack({
+      surface: svg, handle: hourGrab, min: 0, max: 11, step: 1, value: hour, wrap: true,
+      toValue: (x, y) => angleAt(x, y) / 30,
+      onChange: (v) => { hour = v; render(); used('clock'); }, label: 'ঘণ্টার কাঁটা', text: spoken,
     });
-    svg.addEventListener('pointerup', () => { dragTarget = null; });
+    dragTrack({
+      surface: svg, handle: minGrab, min: 0, max: 59, step: 1, value: minute, wrap: true,
+      toValue: (x, y) => angleAt(x, y) / 6,
+      onChange: (v) => { minute = v; render(); used('clock'); }, label: 'মিনিটের কাঁটা', text: spoken,
+    });
     render();
   })();
 
@@ -398,8 +390,8 @@ const items = [
       title.textContent = `${MONTHS[m]} ${bn(y)}`;
       info.innerHTML = `এই মাসে <b>${bn(daysInMonth)}</b> দিন আছে - ১ তারিখ পড়েছে <b>${WD[startDow]}বার</b>।`;
     }
-    $('#cal-prev').addEventListener('click', () => { m--; if (m < 0) { m = 11; y--; } render(); });
-    $('#cal-next').addEventListener('click', () => { m++; if (m > 11) { m = 0; y++; } render(); });
+    $('#cal-prev').addEventListener('click', () => { m--; if (m < 0) { m = 11; y--; } render(); used('calendar'); });
+    $('#cal-next').addEventListener('click', () => { m++; if (m > 11) { m = 0; y++; } render(); used('calendar'); });
     render();
   })();
 
@@ -418,13 +410,14 @@ const items = [
     const mercury = el('rect', { x: 49, y: BOTTOM, width: 8, height: 0, fill: 'var(--w)' });
     const bulb = el('circle', { cx: 53, cy: 238, r: 13, fill: 'var(--w)' });
     svg.append(mercury, bulb);
+    const rise = fillGauge(mercury, { min: MINC, max: MAXC, top: TOP, bottom: BOTTOM });
     const slider = $<HTMLInputElement>('#temp-slider'), cOut = $('#temp-c'), fOut = $('#temp-f');
     function update() {
-      const c = +slider.value; const h = ((c - MINC) / (MAXC - MINC)) * (BOTTOM - TOP);
-      mercury.setAttribute('y', String(BOTTOM - h)); mercury.setAttribute('height', String(h));
+      const c = +slider.value;
+      rise(c);
       cOut.textContent = bn(c); fOut.textContent = bn(((c * 9) / 5 + 32).toFixed(1));
     }
-    slider.addEventListener('input', update); update();
+    slider.addEventListener('input', () => { update(); used('temperature'); }); update();
   })();
 
   /* ---------- 7. unit convert ---------- */
@@ -447,8 +440,8 @@ const items = [
       const val = +n.value || 0; const result = (val * from.factor) / to.factor;
       out.innerHTML = `<b>${bnNum(Number(result.toPrecision(6)))}</b> ${to.label.split(' ')[0]}`;
     }
-    kindSel.addEventListener('change', () => { fillUnits(); update(); });
-    [fromSel, toSel, n].forEach((x) => x.addEventListener('input', update));
+    kindSel.addEventListener('change', () => { fillUnits(); update(); used('convert'); });
+    [fromSel, toSel, n].forEach((x) => x.addEventListener('input', () => { update(); used('convert'); }));
     fillUnits(); update();
   })();
 
@@ -464,12 +457,22 @@ const items = [
     ];
     const qEl = $('#est-q'), unitEl = $('#est-unit'), guess = $<HTMLInputElement>('#est-guess'), out = $('#est-out');
     let cur = Q[0];
+    // A guess pays once. Checking the same question again shows the answer
+    // again, which is fine, but it does not pay again: the points are for
+    // getting close, not for pressing the button.
+    const paid = new Set<string>();
     function pick() { cur = Q[Math.floor(Math.random() * Q.length)]; qEl.textContent = cur.q; unitEl.textContent = cur.unit; guess.value = ''; out.textContent = ''; }
     $('#est-check').addEventListener('click', () => {
       const g = +guess.value; if (!guess.value) { out.textContent = 'আগে একটা সংখ্যা লেখো।'; return; }
       const diff = Math.abs(g - cur.answer); const pct = (diff / cur.answer) * 100;
       const tier = pct < 5 ? 'দারুণ! প্রায় ঠিক ধরেছ' : pct < 20 ? 'বেশ কাছাকাছি' : pct < 50 ? 'কাছাকাছি, আরেকটু চেষ্টা করো' : 'অনেক দূরে, আবার আন্দাজ করো';
-      out.innerHTML = `আসল উত্তর: <b>${bnNum(cur.answer)} ${cur.unit}</b> - তোমার আন্দাজ থেকে পার্থক্য <b>${bnNum(Number(diff.toFixed(1)))} ${cur.unit}</b>। ${tier}!`;
+      const points = pct < 5 ? 10 : pct < 20 ? 6 : pct < 50 ? 3 : 0;
+      const first = !paid.has(cur.q);
+      if (first) paid.add(cur.q);
+      out.innerHTML = `আসল উত্তর: <b>${bnNum(cur.answer)} ${cur.unit}</b> - তোমার আন্দাজ থেকে পার্থক্য <b>${bnNum(Number(diff.toFixed(1)))} ${cur.unit}</b>। ${tier}!`
+        + (first && points ? ` <b class="won">+${bn(points)} জ্ঞানবিন্দু</b>` : '');
+      if (first && points) rewardCorrect(points);
+      used('estimate');
     });
     $('#est-next').addEventListener('click', pick);
     pick();
