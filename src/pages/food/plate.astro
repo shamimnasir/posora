@@ -1,0 +1,463 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#CE7529';
+
+/** Everyday food here, grouped the way a balanced plate is counted. */
+const GROUPS = [
+  { k: 'carb', n: 'শর্করা', hue: '#d9a441' },
+  { k: 'protein', n: 'আমিষ', hue: '#c4564f' },
+  { k: 'veg', n: 'শাকসবজি', hue: '#5a9a4f' },
+  { k: 'fruit', n: 'ফল', hue: '#d4676f' },
+  { k: 'dairy', n: 'দুধজাত', hue: '#7d9fc4' },
+];
+const FOODS = [
+  { n: 'ভাত', e: '🍚', g: 'carb' }, { n: 'রুটি', e: '🫓', g: 'carb' },
+  { n: 'আলু', e: '🥔', g: 'carb' }, { n: 'চিড়া', e: '🥣', g: 'carb' },
+  { n: 'মাছ', e: '🐟', g: 'protein' }, { n: 'ডিম', e: '🥚', g: 'protein' },
+  { n: 'মুরগি', e: '🍗', g: 'protein' }, { n: 'ডাল', e: '🥘', g: 'protein' },
+  { n: 'ছোলা', e: '🫘', g: 'protein' },
+  { n: 'শাক', e: '🥬', g: 'veg' }, { n: 'লাউ', e: '🥒', g: 'veg' },
+  { n: 'টমেটো', e: '🍅', g: 'veg' }, { n: 'গাজর', e: '🥕', g: 'veg' },
+  { n: 'ফুলকপি', e: '🥦', g: 'veg' },
+  { n: 'কলা', e: '🍌', g: 'fruit' }, { n: 'আম', e: '🥭', g: 'fruit' },
+  { n: 'পেয়ারা', e: '🍐', g: 'fruit' }, { n: 'কমলা', e: '🍊', g: 'fruit' },
+  { n: 'দুধ', e: '🥛', g: 'dairy' }, { n: 'দই', e: '🍶', g: 'dairy' },
+];
+const MEALS = [
+  { k: 'sushom', n: 'সারা দিনের থালা', want: { carb: 2, protein: 2, veg: 2, fruit: 1, dairy: 1 }, note: 'দিনে সব মিলিয়ে পাঁচ ভাগের খাবারই কিছু না কিছু থাকা চাই।' },
+  { k: 'nashta', n: 'সকালের নাশতা', want: { carb: 1, protein: 1, veg: 0, fruit: 1, dairy: 1 }, note: 'নাশতা বাদ দিলে সারা সকাল মাথা কাজ করে না। ভারী হওয়ার দরকার নেই, কিন্তু আমিষ একটা থাকা চাই।' },
+  { k: 'dupur', n: 'দুপুরের খাবার', want: { carb: 2, protein: 1, veg: 2, fruit: 0, dairy: 0 }, note: 'দিনের সবচেয়ে বড় খাবার। অর্ধেক থালা শাকসবজি হলে সবচেয়ে ভালো।' },
+  { k: 'raat', n: 'রাতের খাবার', want: { carb: 1, protein: 1, veg: 2, fruit: 0, dairy: 0 }, note: 'রাতে হালকা - ঘুমানোর অন্তত দুই ঘণ্টা আগে খেয়ে নেওয়া ভালো।' },
+  { k: 'tiffin', n: 'টিফিন', want: { carb: 1, protein: 0, veg: 0, fruit: 1, dairy: 1 }, note: 'টিফিন ছোট খাবার। একটা ফল আর একটা কিছু - ভাজাপোড়া নয়।' },
+];
+const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
+---
+<Base
+  title="আমার থালা"
+  description="থালায় খাবার সাজাও আর দেখো কী কী বাদ পড়ল। নাশতা, দুপুর, রাত, টিফিন - প্রতিটার জন্য আলাদা হিসাব। সঙ্গে পরিমাণ, দিনে কয়বার আর পানির হিসাব।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/food/">খাদ্য ও পুষ্টি</a> <span>/</span> আমার থালা</p>
+
+    <header class="head">
+      <p class="eyebrow">খাদ্য ও পুষ্টি ভুবন · বিভাগ পরিচিতি</p>
+      <h1>আমার থালা</h1>
+      <p class="lede">
+        ভালো খাওয়া মানে দামি খাওয়া নয়, মিলিয়ে খাওয়া। ভাত-ডাল-মাছ-শাক - সস্তা জিনিস দিয়েই
+        থালা পুরো হয়। নিচে নিজের থালা সাজাও, থালাটাই বলে দেবে কী বাদ পড়েছে।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#sushom" class="pill pill-w">থালা সাজাও</a>
+        <a href="#porimaan" class="pill pill-w">পরিমাণ</a>
+        <a href="#koybar" class="pill pill-w">দিনে কয়বার</a>
+        <a href="#pani" class="pill pill-w">পানি</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- ১. থালা -->
+      <section class="tool card" id="sushom">
+        <h2><span class="no">০১</span> থালা সাজাও</h2>
+        <p class="how">কোন বেলার থালা সাজাচ্ছো বাছো, তারপর নিচের খাবারে চাপো - থালায় উঠে যাবে। থালার জিনিসে আবার চাপলে নেমে যাবে।</p>
+        <div class="jumps" role="group" aria-label="কোন বেলা">
+          {MEALS.map((m) => <button type="button" class="jump" id={m.k} data-k={m.k}>{m.n}</button>)}
+        </div>
+        <div class="two">
+          <svg id="plate-svg" viewBox="0 0 300 300" role="img" aria-label="থালা"></svg>
+          <div class="side">
+            <div class="meters" id="meters"></div>
+            <p class="readout" id="plate-out"></p>
+          </div>
+        </div>
+        <p class="strip-h">খাবার</p>
+        <div class="pantry" id="pantry" role="group" aria-label="খাবার বাছো"></div>
+      </section>
+
+      <!-- ২. পরিমাণ -->
+      <section class="tool card" id="porimaan">
+        <h2><span class="no">০২</span> পরিমাণ</h2>
+        <p class="how">
+          কতটা খাবে সেটা মাপার জন্য কোনো যন্ত্র লাগে না - নিজের হাতটাই মাপ। হাত যত বড়,
+          মাপও তত বড়, তাই এক মাপ সবার জন্য খাটে।
+        </p>
+        <div class="wide">
+          <svg id="hand-svg" viewBox="0 0 620 210" role="img" aria-label="হাত দিয়ে মাপ"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>কয়জন খাবে <input type="range" id="people" min="1" max="8" step="1" value="1" aria-label="কয়জন খাবে" /> <b id="people-v" class="num">১</b> জন</label>
+        </div>
+        <p class="readout" id="hand-out"></p>
+      </section>
+
+      <!-- ৩. দিনে কয়বার -->
+      <section class="tool card" id="koybar">
+        <h2><span class="no">০৩</span> দিনে কয়বার</h2>
+        <p class="how">
+          দিনে তিনবেলা বড় খাবার আর মাঝে দুবার ছোট কিছু - এই ছন্দে পেট আর মাথা দুটোই ভালো
+          থাকে। হাতলটা টেনে দেখো, দুই খাবারের মাঝে কত ঘণ্টা ফাঁক পড়ছে।
+        </p>
+        <div class="wide">
+          <svg id="day-svg" viewBox="0 0 620 200" role="img" aria-label="সারা দিনের খাবারের সময়"></svg>
+        </div>
+        <p class="readout" id="day-out"></p>
+      </section>
+
+      <!-- ৪. পানি -->
+      <section class="tool card" id="pani">
+        <h2><span class="no">০৪</span> পানি কতটুকু</h2>
+        <p class="how">
+          পানি কম পড়লে মাথা ধরে, ক্লান্ত লাগে, মন দিতে কষ্ট হয়। ওজন বসাও - কতটুকু লাগবে
+          গ্লাসে গ্লাসে দেখাবে। গরমের দিনে বা খেলাধুলা করলে আরও বেশি।
+        </p>
+        <div class="wide">
+          <svg id="water-svg" viewBox="0 0 620 180" role="img" aria-label="দিনে কত গ্লাস পানি"></svg>
+        </div>
+        <div class="ctl-row">
+          <label>ওজন <input type="range" id="kg" min="12" max="70" step="1" value="25" aria-label="ওজন, কেজি" /> <b id="kg-v" class="num">২৫</b> কেজি</label>
+          <label>আজ খেয়েছি <input type="range" id="drunk" min="0" max="14" step="1" value="3" aria-label="আজ কত গ্লাস খেয়েছি" /> <b id="drunk-v" class="num">৩</b> গ্লাস</label>
+        </div>
+        <p class="readout" id="water-out"></p>
+      </section>
+    </div>
+
+    <p class="back"><a href="/food/">← খাদ্য ও পুষ্টি ভুবনে ফিরে যাও</a></p>
+  </div>
+  <script is:inline type="application/json" id="food-data" set:html={JSON.stringify(payload)}></script>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); line-height: 1.8; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(.cost) { color: var(--muted); font-size: 13.5px; display: block; margin-top: 0.15rem; }
+
+  .wide { overflow-x: auto; padding-bottom: 4px; }
+  .wide svg { width: 100%; min-width: 440px; height: auto; display: block; touch-action: none; }
+  .two { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 1.6rem; align-items: center; margin-top: 1.1rem; }
+  .two svg { width: 100%; height: auto; display: block; }
+  .side { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .strip-h { font-size: 12px; color: var(--muted); margin: 1.2rem 0 0.5rem; font-weight: 600; }
+  .jumps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .jump {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 0.35rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-2);
+  }
+  .jump:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); color: var(--ink); }
+  .jump[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+
+  .pantry { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* the food buttons and the meters are built by the script, so :global() */
+  .pantry :global(button) {
+    font: inherit; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+    padding: 0.35rem 0.7rem; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+  }
+  .pantry :global(button:hover) { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); }
+  .pantry :global(button .e) { font-size: 16px; }
+  .pantry :global(button .c) { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .pantry :global(button[data-on="1"]) { border-color: var(--w); background: color-mix(in oklab, var(--w) 18%, var(--panel-2)); }
+
+  .meters { display: flex; flex-direction: column; gap: 6px; }
+  .meters :global(.m) { display: grid; grid-template-columns: 5.5rem 1fr auto; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-2); }
+  .meters :global(.t) { height: 9px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+  .meters :global(.t i) { display: block; height: 100%; border-radius: 999px; }
+  .meters :global(.n) { font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--muted); }
+
+  .ctl-row { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 1rem; }
+  label { font-size: 13.5px; color: var(--ink-2); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  input[type="range"] { accent-color: var(--w); min-width: 8rem; flex: 1; }
+  .tool :global([role="slider"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { bn } from '../../lib/bn';
+  import { svgEl as el, clamp, dragTrack, alongX, useItem } from '../../lib/handson';
+
+  type Group = { k: string; n: string; hue: string };
+  type Food = { n: string; e: string; g: string };
+  type Meal = { k: string; n: string; want: Record<string, number>; note: string };
+  const data: { groups: Group[]; foods: Food[]; meals: Meal[] } =
+    JSON.parse(document.getElementById('food-data')!.textContent!);
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const WORLD = 'food', CAT = 'আমার থালা';
+  let live = false;
+  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+
+  const MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)', INK = 'var(--ink)';
+  const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
+    const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
+    t.textContent = s; p.appendChild(t); return t;
+  };
+  const grip = () => {
+    const g = el('g');
+    g.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    return g;
+  };
+
+  /* ---------- ১. থালা ---------- */
+  (function plate() {
+    const svg = $<SVGSVGElement>('#plate-svg');
+    const C = 150, R = 118;
+    svg.appendChild(el('circle', { cx: C, cy: C, r: R, fill: SOFT, stroke: LINE, 'stroke-width': 3 }));
+    svg.appendChild(el('circle', { cx: C, cy: C, r: R - 16, fill: 'none', stroke: LINE, 'stroke-width': 1.5 }));
+    const onPlate = el('g'); svg.appendChild(onPlate);
+    const empty = text(svg, C, C + 5, 'থালা খালি', { 'font-size': 14 });
+
+    const pantry = $<HTMLElement>('#pantry'), meters = $<HTMLElement>('#meters'), out = $('#plate-out');
+    const mealBtns = [...root.querySelectorAll<HTMLButtonElement>('#sushom .jump')];
+    const MEAL_ITEM: Record<string, string> = {
+      sushom: 'সুষম খাবার', nashta: 'সকালের নাশতা', dupur: 'দুপুরের খাবার', raat: 'রাতের খাবার', tiffin: 'টিফিন',
+    };
+    let meal = data.meals[0]!;
+    const count = new Map<string, number>();
+
+    pantry.replaceChildren(...data.foods.map((f) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.n = f.n;
+      b.innerHTML = `<span class="e">${f.e}</span>`;
+      b.append(f.n);
+      const c = document.createElement('span'); c.className = 'c'; b.append(c);
+      return b;
+    }));
+
+    const groupOf = (n: string) => data.foods.find((f) => f.n === n)!.g;
+    const hueOf = (k: string) => data.groups.find((g) => g.k === k)!.hue;
+
+    function render() {
+      // what is on the plate, laid out in rings from the middle
+      const items: Food[] = [];
+      for (const [n, c] of count) for (let i = 0; i < c; i++) items.push(data.foods.find((f) => f.n === n)!);
+      onPlate.replaceChildren();
+      empty.style.display = items.length ? 'none' : '';
+      items.forEach((f, i) => {
+        const ring = i < 1 ? 0 : i < 7 ? 1 : 2;
+        const inRing = ring === 0 ? 1 : ring === 1 ? 6 : 12;
+        const idx = ring === 0 ? 0 : ring === 1 ? i - 1 : i - 7;
+        const a = (idx / inRing) * Math.PI * 2 - Math.PI / 2;
+        const rr = ring * 36;
+        const t = el('text', {
+          x: C + Math.cos(a) * rr, y: C + Math.sin(a) * rr + 10,
+          'font-size': 28, 'text-anchor': 'middle',
+        });
+        t.textContent = f.e;
+        onPlate.appendChild(t);
+      });
+
+      // one meter per group, against what this meal asks for
+      const have: Record<string, number> = {};
+      for (const [n, c] of count) have[groupOf(n)] = (have[groupOf(n)] ?? 0) + c;
+      meters.replaceChildren(...data.groups.map((g) => {
+        const want = meal.want[g.k] ?? 0, got = have[g.k] ?? 0;
+        const row = document.createElement('div'); row.className = 'm';
+        const name = document.createElement('span'); name.textContent = g.n;
+        const track = document.createElement('span'); track.className = 't';
+        const bar = document.createElement('i');
+        bar.style.width = `${want ? clamp(got / want, 0, 1) * 100 : got ? 100 : 0}%`;
+        bar.style.background = g.hue;
+        track.append(bar);
+        const num = document.createElement('span'); num.className = 'n';
+        num.textContent = want ? `${bn(got)} / ${bn(want)}` : got ? `${bn(got)}` : '-';
+        row.append(name, track, num);
+        return row;
+      }));
+
+      for (const b of pantry.querySelectorAll<HTMLButtonElement>('button')) {
+        const c = count.get(b.dataset.n!) ?? 0;
+        b.dataset.on = c ? '1' : '';
+        b.querySelector('.c')!.textContent = c ? `×${bn(c)}` : '';
+      }
+
+      const missing = data.groups.filter((g) => (meal.want[g.k] ?? 0) > (have[g.k] ?? 0));
+      const extra = data.groups.filter((g) => (have[g.k] ?? 0) > (meal.want[g.k] ?? 0) + 1);
+      out.innerHTML = items.length === 0
+        ? `<b>${meal.n}</b> সাজাও - নিচের খাবারে চাপো।<span class="cost">${meal.note}</span>`
+        : missing.length === 0
+          ? `<b>থালা পুরো!</b> ${meal.n} হিসেবে এতে সবই আছে।`
+            + (extra.length ? ` তবে ${extra.map((g) => g.n).join(' আর ')} একটু বেশি হয়ে গেছে।` : '')
+            + `<span class="cost">${meal.note}</span>`
+          : `এখনো বাদ আছে <b>${missing.map((g) => g.n).join(', ')}</b>।<span class="cost">${meal.note}</span>`;
+      credit(MEAL_ITEM[meal.k]!);
+      if (missing.length === 0 && items.length) credit('সুষম খাবার');
+    }
+
+    pantry.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+      if (!b) return;
+      const n = b.dataset.n!;
+      count.set(n, (count.get(n) ?? 0) + 1);
+      render();
+    });
+    onPlate.addEventListener('click', (e) => {
+      const t = e.target as SVGTextElement;
+      const f = data.foods.find((x) => x.e === t.textContent);
+      if (!f) return;
+      const c = (count.get(f.n) ?? 0) - 1;
+      if (c > 0) count.set(f.n, c); else count.delete(f.n);
+      render();
+    });
+    mealBtns.forEach((b) => b.addEventListener('click', () => {
+      meal = data.meals.find((m) => m.k === b.dataset.k) ?? meal;
+      mealBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      render();
+    }));
+    mealBtns[0]!.setAttribute('aria-pressed', 'true');
+    render();
+  })();
+
+  /* ---------- ২. পরিমাণ ---------- */
+  (function portions() {
+    const svg = $<SVGSVGElement>('#hand-svg');
+    const RULES = [
+      { e: '✊', n: 'এক মুঠি', what: 'ভাত বা রুটি', why: 'শর্করার এক ভাগ' },
+      { e: '🤚', n: 'হাতের তালু', what: 'মাছ বা মাংস', why: 'আমিষের এক ভাগ' },
+      { e: '🙌', n: 'দুই হাতের কোষ', what: 'শাকসবজি', why: 'সবজির এক ভাগ' },
+      { e: '👍', n: 'বুড়ো আঙুল', what: 'তেল বা ঘি', why: 'চর্বির এক ভাগ' },
+    ];
+    const cols = el('g'); svg.appendChild(cols);
+    const peopleIn = $<HTMLInputElement>('#people'), peopleV = $('#people-v'), out = $('#hand-out');
+
+    function render() {
+      const p = +peopleIn.value;
+      peopleV.textContent = bn(p);
+      cols.replaceChildren();
+      RULES.forEach((r, i) => {
+        const x = 90 + i * 150;
+        const t = el('text', { x, y: 66, 'font-size': 42, 'text-anchor': 'middle' });
+        t.textContent = r.e; cols.appendChild(t);
+        text(cols, x, 96, r.n, { fill: INK, 'font-size': 13, 'font-weight': 700 });
+        text(cols, x, 116, r.what);
+        text(cols, x, 134, r.why, { 'font-size': 11 });
+        // the same measure, once for each person eating
+        for (let k = 0; k < p; k++) {
+          cols.appendChild(el('circle', { cx: x - (p - 1) * 7 + k * 14, cy: 158, r: 5, fill: W, 'fill-opacity': 0.8 }));
+        }
+      });
+      text(cols, 310, 190, 'প্রতিজনের জন্য একটা করে মাপ');
+      out.innerHTML = `${bn(p)} জনের জন্য রান্না মানে প্রতিটা মাপ <b>${bn(p)} গুণ</b> - ${bn(p)} মুঠি ভাত, ${bn(p)} তালু মাছ, ${bn(p)} কোষ সবজি।`
+        + `<span class="cost">নিজের হাত দিয়ে মাপার সুবিধা হলো হাত বড় হলে মাপও বড় হয়, তাই বড়দের আর ছোটদের জন্য আলাদা হিসাব লাগে না।</span>`;
+      credit('পরিমাণ');
+    }
+    peopleIn.addEventListener('input', render);
+    render();
+  })();
+
+  /* ---------- ৩. দিনে কয়বার ---------- */
+  (function howOften() {
+    const svg = $<SVGSVGElement>('#day-svg');
+    const X0 = 50, X1 = 570, Y = 90;
+    svg.appendChild(el('line', { x1: X0, y1: Y, x2: X1, y2: Y, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    for (let h = 6; h <= 22; h += 2) {
+      const x = X0 + ((h - 6) / 16) * (X1 - X0);
+      svg.appendChild(el('line', { x1: x, y1: Y - 6, x2: x, y2: Y + 6, stroke: LINE }));
+      text(svg, x, Y + 24, `${bn(h)}টা`, { 'font-size': 10.5 });
+    }
+    const marks = el('g'); svg.appendChild(marks);
+    svg.appendChild(el('line', { x1: 120, y1: 168, x2: 500, y2: 168, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    const out = $('#day-out');
+    let n = 5;   // how many times the day is broken up
+
+    function render() {
+      handle.setAttribute('transform', `translate(${120 + ((n - 2) / 4) * 380},168)`);
+      // the waking day is spread evenly, which is what a rhythm actually means
+      const times: number[] = [];
+      for (let i = 0; i < n; i++) times.push(7 + (i / Math.max(1, n - 1)) * 14);
+      marks.replaceChildren();
+      const big = n <= 3 ? times.map((_, i) => i) : [0, Math.floor((n - 1) / 2), n - 1];
+      times.forEach((t, i) => {
+        const x = X0 + ((t - 6) / 16) * (X1 - X0);
+        const isBig = big.includes(i);
+        marks.appendChild(el('circle', { cx: x, cy: Y, r: isBig ? 13 : 8, fill: W, 'fill-opacity': isBig ? 0.9 : 0.45 }));
+        const e = el('text', { x, y: Y + 5, 'font-size': isBig ? 14 : 10, 'text-anchor': 'middle' });
+        e.textContent = isBig ? '🍽️' : '🍎';
+        marks.appendChild(e);
+        text(marks, x, Y - 24, `${bn(Math.floor(t))}:${bn(String(Math.round((t % 1) * 60)).padStart(2, '0'))}`, { 'font-size': 10 });
+      });
+      const gap = 14 / Math.max(1, n - 1);
+      const h = Math.floor(gap), m = Math.round((gap - h) * 60);
+      out.innerHTML = `দিনে <b>${bn(n)} বার</b> খেলে দুই খাবারের মাঝে ফাঁক থাকে <b>${bn(h)} ঘণ্টা ${m ? bn(m) + ' মিনিট' : ''}</b>।`
+        + `<span class="cost">${n <= 2
+          ? 'দুবারে ফাঁক অনেক বড় হয়ে যায় - মাঝে খুব খিদে পায়, আর তখন একবারে বেশি খাওয়া হয়ে যায়।'
+          : n >= 6
+            ? 'এত ঘন ঘন খেলে পেট বিশ্রাম পায় না, আর দাঁতেরও ক্ষতি।'
+            : 'তিনবেলা বড় খাবার (🍽️) আর মাঝে ছোট কিছু (🍎) - এই ছন্দটাই বেশিরভাগের জন্য ভালো।'}</span>`;
+      credit('দিনে কয়বার');
+    }
+    const toN = alongX(svg, 620, 120, 95);
+    dragTrack({
+      surface: svg, handle, min: 2, max: 6, step: 1, value: n,
+      toValue: (x) => toN(x) + 2,
+      onChange: (v) => { n = v; render(); },
+      label: 'দিনে কয়বার', text: (v) => `${bn(v)} বার`,
+    });
+    render();
+  })();
+
+  /* ---------- ৪. পানি ---------- */
+  (function water() {
+    const svg = $<SVGSVGElement>('#water-svg');
+    const glasses = el('g'); svg.appendChild(glasses);
+    const kgIn = $<HTMLInputElement>('#kg'), kgV = $('#kg-v');
+    const drunkIn = $<HTMLInputElement>('#drunk'), drunkV = $('#drunk-v'), out = $('#water-out');
+
+    function render() {
+      const kg = +kgIn.value, had = +drunkIn.value;
+      kgV.textContent = bn(kg); drunkV.textContent = bn(had);
+      // about 35 ml per kilo, in 250 ml glasses
+      const ml = kg * 35;
+      const need = Math.max(4, Math.round(ml / 250));
+      glasses.replaceChildren();
+      const show = Math.max(need, had);
+      for (let i = 0; i < show; i++) {
+        const x = 40 + (i % 14) * 40, y = 40 + Math.floor(i / 14) * 78;
+        const full = i < had, over = i >= need;
+        glasses.appendChild(el('path', {
+          d: `M ${x} ${y} L ${x + 26} ${y} L ${x + 22} ${y + 52} L ${x + 4} ${y + 52} Z`,
+          fill: full ? (over ? MUTED : '#3f7fc4') : 'none', 'fill-opacity': full ? (over ? 0.35 : 0.7) : 0,
+          stroke: over ? LINE : '#3f7fc4', 'stroke-width': 2,
+        }));
+      }
+      const left = need - had;
+      out.innerHTML = `${bn(kg)} কেজি ওজনে দিনে পানি দরকার মোটামুটি <b>${bn(Math.round(ml / 50) * 50)} মিলি</b>, মানে ২৫০ মিলির <b>${bn(need)} গ্লাস</b>।`
+        + (left > 0 ? ` আজ খেয়েছো ${bn(had)} গ্লাস, আরও <b>${bn(left)} গ্লাস</b> বাকি।` : ` আজকের হিসাব পুরো হয়ে গেছে।`)
+        + `<span class="cost">এটা আন্দাজের হিসাব, নিয়ম নয় - খাবারের ভেতরেও অনেকটা পানি থাকে। গরমের দিনে, খেলাধুলার পরে বা জ্বর হলে বেশি লাগে। প্রস্রাবের রং হালকা হলুদ থাকলে বুঝবে পানি ঠিক আছে।</span>`;
+      credit('পানি কতটুকু');
+    }
+    kgIn.addEventListener('input', render);
+    drunkIn.addEventListener('input', render);
+    render();
+  })();
+
+  // Everything above has drawn its first frame; from here a change is a choice.
+  live = true;
+</script>

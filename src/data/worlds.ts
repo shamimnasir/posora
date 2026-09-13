@@ -343,7 +343,20 @@ export const worlds: World[] = [
      "ঊর্ধ্বপাতন",
      "ঘনত্ব"
     ],
-    "play": "তাপমাত্রার স্লাইডার টানো - কণাগুলো জমাট বাঁধা থেকে ভাসতে ভাসতে ছোটাছুটি শুরু করে, কঠিন-তরল-গ্যাস চোখের সামনে বদলায়।"
+    "play": "তাপমাত্রার স্লাইডার টানো - কণাগুলো জমাট বাঁধা থেকে ভাসতে ভাসতে ছোটাছুটি শুরু করে, কঠিন-তরল-গ্যাস চোখের সামনে বদলায়।",
+    "lab": "/chemistry/matter/",
+    "labAnchors": [
+     "kothin",
+     "toral",
+     "gas",
+     "plasma",
+     "golon",
+     "sphuton",
+     "bashpo",
+     "ghonibhobon",
+     "urdhopaton",
+     "ghonotto"
+    ]
    },
    {
     "n": "পরমাণু ও অণু",
@@ -715,7 +728,28 @@ export const worlds: World[] = [
      "ফাল্গুন",
      "চৈত্র"
     ],
-    "play": "চাকাটা স্লাইডারে ঘোরাও - ছয় ঋতুর একটিতে গিয়ে থামে।"
+    "play": "চাকাটা স্লাইডারে ঘোরাও - ছয় ঋতুর একটিতে গিয়ে থামে।",
+    "lab": "/nature/year/",
+    "labAnchors": [
+     "grishmo",
+     "borsha",
+     "shorot",
+     "hemonto",
+     "sheet",
+     "boshonto",
+     "boishakh",
+     "jyoistho",
+     "ashar",
+     "srabon",
+     "bhadro",
+     "ashwin",
+     "kartik",
+     "ogrohayon",
+     "poush",
+     "magh",
+     "falgun",
+     "choitro"
+    ]
    },
    {
     "n": "পানিচক্র ও নদী",
@@ -884,7 +918,18 @@ export const worlds: World[] = [
      "দিনে কয়বার",
      "পানি কতটুকু"
     ],
-    "play": "স্লাইডার টানলে থালার ভাগগুলো ছোট-বড় হয় - কোন খাবার বেশি না কম, চোখেই দেখা যায়।"
+    "play": "স্লাইডার টানলে থালার ভাগগুলো ছোট-বড় হয় - কোন খাবার বেশি না কম, চোখেই দেখা যায়।",
+    "lab": "/food/plate/",
+    "labAnchors": [
+     "sushom",
+     "nashta",
+     "dupur",
+     "raat",
+     "tiffin",
+     "porimaan",
+     "koybar",
+     "pani"
+    ]
    },
    {
     "n": "খাবার কোথা থেকে আসে",
@@ -1279,7 +1324,19 @@ export const worlds: World[] = [
      "প্রতিদিন অল্প",
      "লক্ষ্য ভাগ করা"
     ],
-    "play": "স্লাইডার টানলে বয়াম-জারে কয়েন জমতে থাকে।"
+    "play": "স্লাইডার টানলে বয়াম-জারে কয়েন জমতে থাকে।",
+    "lab": "/money/saving/",
+    "labAnchors": [
+     "keno",
+     "matir",
+     "hisab",
+     "chhoto",
+     "boro",
+     "jruri",
+     "bilombito",
+     "protidin",
+     "bhag"
+    ]
    },
    {
     "n": "ব্যাংক ও লেনদেন",
