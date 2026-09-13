@@ -1,10 +1,13 @@
 /**
  * পসরা পরিবার - member accounts.
  *
- * Only an adult has an account, and the account has no password: a one-time
- * link is emailed, clicking it creates the session. Children are a nickname
- * and a reading level under the member, nothing more. Entitlements are rows
- * granted from the admin panel until a payment rail exists.
+ * Only an adult has an account. There are two ways into one: a password, or a
+ * six digit code emailed on request. The code came first and stays, because it
+ * is also how a new address is proved and how somebody who has forgotten a
+ * password gets back in - so there is no separate reset flow to build wrong.
+ * Children are a nickname and a reading level under the member, nothing more.
+ * Entitlements are rows granted from the admin panel until a payment rail
+ * exists.
  *
  * Every function that needs the database throws when D1 is missing, the same
  * as the admin code, so a misconfigured deployment fails loudly rather than
@@ -15,6 +18,7 @@ import { env } from 'cloudflare:workers';
 import { requireDb, db } from './db';
 import { passMark } from './quiz';
 import { bn } from './bn';
+import { hashPassword, verifyPassword } from './auth';
 
 export const MEMBER_COOKIE = 'posora_member';
 export const CHILD_COOKIE = 'posora_child';
@@ -48,6 +52,8 @@ export type Member = {
   name: string | null;
   createdAt: number;
   lastLoginAt: number | null;
+  /** Whether a password is set. The hash itself never leaves this file. */
+  hasPassword: boolean;
   entitlements: Entitlement[];
   children: Child[];
 };
@@ -92,18 +98,46 @@ export const childCookieOptions = (secure: boolean) =>
 
 /* ---------- throttle ---------- */
 
-async function throttled(key: string): Promise<boolean> {
+/**
+ * Count this request and say whether the key is now over its limit.
+ *
+ * Every call counts, which is right for asking us to send an email: the cost
+ * is the email itself, so a successful send is exactly what we are rationing.
+ * It is wrong for a password form, where a parent signing in on the phone and
+ * the laptop would spend the allowance on nothing. That path uses the pair
+ * below instead.
+ */
+async function throttled(key: string, limit = LINK_LIMIT, windowMs = LINK_WINDOW_MS): Promise<boolean> {
   const d = requireDb();
   const now = Date.now();
   const row = await d.prepare('SELECT count, until FROM member_throttle WHERE key = ?').bind(key).first<{ count: number; until: number }>();
   if (!row || row.until < now) {
     await d.prepare('INSERT INTO member_throttle (key, count, until) VALUES (?1, 1, ?2) ON CONFLICT(key) DO UPDATE SET count = 1, until = ?2')
-      .bind(key, now + LINK_WINDOW_MS).run();
+      .bind(key, now + windowMs).run();
     return false;
   }
-  if (row.count >= LINK_LIMIT) return true;
+  if (row.count >= limit) return true;
   await d.prepare('UPDATE member_throttle SET count = count + 1 WHERE key = ?').bind(key).run();
   return false;
+}
+
+/** Read the counter without touching it. */
+async function atLimit(key: string, limit: number): Promise<boolean> {
+  const row = await requireDb().prepare('SELECT count, until FROM member_throttle WHERE key = ?')
+    .bind(key).first<{ count: number; until: number }>();
+  return !!row && row.until >= Date.now() && row.count >= limit;
+}
+
+/** Record one failure against a key, starting a fresh window if none is open. */
+async function noteFailure(key: string, windowMs: number): Promise<void> {
+  const d = requireDb();
+  const now = Date.now();
+  await d.prepare(
+    `INSERT INTO member_throttle (key, count, until) VALUES (?1, 1, ?2)
+     ON CONFLICT(key) DO UPDATE SET
+       count = CASE WHEN member_throttle.until < ?3 THEN 1 ELSE member_throttle.count + 1 END,
+       until = CASE WHEN member_throttle.until < ?3 THEN ?2 ELSE member_throttle.until END`,
+  ).bind(key, now + windowMs, now).run();
 }
 
 /* ---------- sign in ---------- */
@@ -214,6 +248,7 @@ export async function consumeMagicLink(token: string, ua: string | null): Promis
   const now = Date.now();
   if (!row || row.used_at || row.expires_at < now) return null;
   await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ?').bind(now, hash).run();
+  await d.prepare('UPDATE members SET email_verified = 1 WHERE email = ?').bind(row.email).run();
   return startSession(row.email, ua);
 }
 
@@ -249,7 +284,157 @@ export async function consumeCode(rawEmail: string, rawCode: string, ua: string 
   // One request, one sign-in: spending the code also kills the link in the
   // same email, so a scanner cannot follow it afterwards either.
   await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ?').bind(now, row.token_hash).run();
+  // entering the code is the proof that this address is theirs, which is what
+  // a password account is waiting for before it will let anybody in
+  await d.prepare('UPDATE members SET email_verified = 1 WHERE email = ?').bind(email).run();
   return { ok: true, session: await startSession(email, ua) };
+}
+
+/* ---------- email and password ---------- */
+
+/**
+ * Passwords for members, next to the emailed code rather than instead of it.
+ *
+ * Two rules do most of the work here. A password account is inert until the
+ * emailed code has proved the address, because otherwise anyone could register
+ * with an address that is not theirs, set a password, and be sitting inside
+ * the account when its real owner signs in. And there is no separate reset
+ * flow: the code that already exists *is* the way back in, so there is no
+ * second secret-bearing email to get wrong.
+ *
+ * The hashing is `lib/auth.ts`, the same PBKDF2-SHA256 the admin password
+ * uses. One implementation, one iteration count, one place to raise it.
+ */
+export const MIN_PASSWORD = 10;
+
+export type RegisterResult =
+  | { ok: true; needsCode: true }
+  | { ok: false; error: 'bad-email' | 'weak' | 'taken' | 'throttled' | 'email-unavailable' };
+
+/**
+ * Create an unverified account carrying a password, then send the code that
+ * proves the address. Answers 'taken' only for an account that is already
+ * verified: an unverified row is not evidence anybody owns the address, and
+ * letting a second attempt overwrite it means a typo does not lock the real
+ * owner out forever.
+ */
+export async function registerWithPassword(
+  rawEmail: string, password: string, rawName: string, origin: string, ip: string,
+): Promise<RegisterResult> {
+  const email = normalizeEmail(rawEmail);
+  if (!isEmail(email)) return { ok: false, error: 'bad-email' };
+  if (password.length < MIN_PASSWORD) return { ok: false, error: 'weak' };
+
+  const d = requireDb();
+  const existing = await d.prepare('SELECT id, email_verified FROM members WHERE email = ?')
+    .bind(email).first<{ id: string; email_verified: number }>();
+  if (existing?.email_verified) return { ok: false, error: 'taken' };
+
+  const hash = await hashPassword(password);
+  const name = rawName.trim().slice(0, 80) || null;
+  const now = Date.now();
+  if (existing) {
+    await d.prepare('UPDATE members SET password_hash = ?, name = COALESCE(?, name) WHERE id = ?')
+      .bind(hash, name, existing.id).run();
+  } else {
+    await d.prepare('INSERT INTO members (id, email, name, created_at, password_hash, email_verified) VALUES (?, ?, ?, ?, ?, 0)')
+      .bind(newId(), email, name, now, hash).run();
+  }
+
+  const sent = await requestMagicLink(email, origin, ip);
+  if (sent === 'sent') return { ok: true, needsCode: true };
+  return { ok: false, error: sent === 'throttled' ? 'throttled' : 'email-unavailable' };
+}
+
+export type PasswordResult =
+  | { ok: true; session: string }
+  | { ok: false; error: 'bad' | 'unverified' | 'throttled' };
+
+/**
+ * Only wrong answers count here, and the two keys are counted very
+ * differently. An address is one person, so ten misses in a quarter of an hour
+ * is already far more than someone reaching for a forgotten password. An IP is
+ * often a whole country: Bangladeshi mobile networks put enormous numbers of
+ * people behind a handful of addresses, so a tight per-IP limit does not stop
+ * an attacker with a botnet, it shuts out a city. It is set wide enough to be
+ * a backstop against one machine hammering many addresses, nothing more.
+ */
+const PW_WINDOW_MS = 15 * 60_000;
+const PW_TRIES = 10;
+const PW_IP_TRIES = 100;
+
+/**
+ * A real hash of a password nobody has, so that checking an address with no
+ * account takes the same time as checking one that has it. The value is a
+ * constant on purpose: it never matches, and it is never stored.
+ */
+const DECOY_HASH = 'pbkdf2$210000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+
+/**
+ * Sign in with a password. A wrong address and a wrong password answer
+ * identically, so the form cannot be used to find out who has an account.
+ */
+export async function signInWithPassword(
+  rawEmail: string, password: string, ua: string | null, ip: string,
+): Promise<PasswordResult> {
+  const email = normalizeEmail(rawEmail);
+  if (!isEmail(email) || !password) return { ok: false, error: 'bad' };
+  const byEmail = `pw:${await sha256Hex(email)}`, byIp = `pwip:${ip}`;
+  if (await atLimit(byEmail, PW_TRIES) || await atLimit(byIp, PW_IP_TRIES)) {
+    return { ok: false, error: 'throttled' };
+  }
+
+  const d = requireDb();
+  const row = await d.prepare('SELECT id, password_hash, email_verified FROM members WHERE email = ?')
+    .bind(email).first<{ id: string; password_hash: string | null; email_verified: number }>();
+  // An unknown address must cost the same hundred milliseconds as a known one.
+  // Skipping the hash when there is no row would let anyone time the form and
+  // read off who is a member, which is exactly what the identical wording of
+  // the two answers is there to prevent.
+  const wrong = !(await verifyPassword(password, row?.password_hash ?? DECOY_HASH));
+  if (wrong) {
+    await noteFailure(byEmail, PW_WINDOW_MS);
+    await noteFailure(byIp, PW_WINDOW_MS);
+    return { ok: false, error: 'bad' };
+  }
+  // Right password, wrong state: the address has never been proved. Not a
+  // failed attempt, so it does not count against either key.
+  if (!row!.email_verified) return { ok: false, error: 'unverified' };
+
+  return { ok: true, session: await startSession(email, ua) };
+}
+
+/** Set or change the password of the member who is already signed in. */
+export type SetPasswordResult = 'ok' | 'weak' | 'wrong' | 'not-found';
+
+/**
+ * Set or change the password of the member who is already signed in.
+ *
+ * Someone who already has a password has to type it. A live session on a
+ * borrowed or forgotten laptop should not be enough to take an account away
+ * from its owner, and a person who genuinely cannot remember theirs still has
+ * the emailed code, which is the way back in and always was.
+ *
+ * Changing it ends every other session, because the reason to change a
+ * password is usually that somebody else might have had it.
+ */
+export async function setMemberPassword(
+  memberId: string, password: string, current: string, keepToken: string | undefined,
+): Promise<SetPasswordResult> {
+  if (password.length < MIN_PASSWORD) return 'weak';
+  const d = requireDb();
+  const row = await d.prepare('SELECT password_hash FROM members WHERE id = ?')
+    .bind(memberId).first<{ password_hash: string | null }>();
+  if (!row) return 'not-found';
+  if (row.password_hash && !(await verifyPassword(current, row.password_hash))) return 'wrong';
+
+  await d.prepare('UPDATE members SET password_hash = ? WHERE id = ?')
+    .bind(await hashPassword(password), memberId).run();
+  if (keepToken) {
+    await d.prepare('DELETE FROM member_sessions WHERE member_id = ? AND id_hash != ?')
+      .bind(memberId, await sha256Hex(keepToken)).run();
+  }
+  return 'ok';
 }
 
 export async function destroyMemberSession(token: string | undefined): Promise<void> {
@@ -260,8 +445,8 @@ export async function destroyMemberSession(token: string | undefined): Promise<v
 /* ---------- reading a member ---------- */
 
 async function loadMember(d: D1Database, id: string): Promise<Member | null> {
-  const m = await d.prepare('SELECT id, email, name, created_at, last_login_at FROM members WHERE id = ?').bind(id)
-    .first<{ id: string; email: string; name: string | null; created_at: number; last_login_at: number | null }>();
+  const m = await d.prepare('SELECT id, email, name, created_at, last_login_at, password_hash IS NOT NULL AS has_pw FROM members WHERE id = ?').bind(id)
+    .first<{ id: string; email: string; name: string | null; created_at: number; last_login_at: number | null; has_pw: number }>();
   if (!m) return null;
   const { results: ents } = await d.prepare('SELECT id, plan, status, starts_at, ends_at, note, granted_by FROM entitlements WHERE member_id = ? ORDER BY created_at DESC')
     .bind(id).all<{ id: number; plan: string; status: 'active' | 'ended'; starts_at: number; ends_at: number | null; note: string | null; granted_by: string }>();
@@ -269,6 +454,7 @@ async function loadMember(d: D1Database, id: string): Promise<Member | null> {
     .bind(id).all<{ id: string; nickname: string; level: Level; sort: number; created_at: number }>();
   return {
     id: m.id, email: m.email, name: m.name, createdAt: m.created_at, lastLoginAt: m.last_login_at,
+    hasPassword: m.has_pw === 1,
     entitlements: ents.map((e) => ({ id: e.id, plan: e.plan, status: e.status, startsAt: e.starts_at, endsAt: e.ends_at, note: e.note, grantedBy: e.granted_by })),
     children: kids.map((k) => ({ id: k.id, nickname: k.nickname, level: k.level, sort: k.sort, createdAt: k.created_at })),
   };

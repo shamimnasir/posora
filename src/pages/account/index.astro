@@ -55,7 +55,7 @@ if (member && plan && child) {
   });
 }
 ---
-<Base title={member ? 'আমার পসরা' : 'ঢোকো'} description="পসরা পরিবার অ্যাকাউন্ট - সন্তানের প্রোফাইল, পড়ার হিসাব আর যাচাইয়ের ফল এক জায়গায়। পাসওয়ার্ড নেই, ইমেইলের লিংকেই ঢোকা যায়।" noindex>
+<Base title={member ? 'আমার পসরা' : 'ঢোকো'} description="পসরা পরিবার অ্যাকাউন্ট - সন্তানের প্রোফাইল, পড়ার হিসাব আর যাচাইয়ের ফল এক জায়গায়। পাসওয়ার্ড দিয়ে বা ইমেইলে পাঠানো কোড দিয়ে ঢোকা যায়।" noindex>
   <div class="wrap page">
     {!ready ? (
       <div class="card box">
@@ -66,17 +66,48 @@ if (member && plan && child) {
       <div class="signin">
         <div class="card box">
           <p class="eyebrow">পসরা পরিবার</p>
-          <h1>ইমেইলে একটা কোড পাঠাই</h1>
-          <p class="lede">
-            পাসওয়ার্ড নেই, মনে রাখারও কিছু নেই। ইমেইল দিন, ছয় সংখ্যার একটা কোড যাবে -
-            সেটা এখানেই বসিয়ে দিলে ঢুকে যাবেন। একই মেইলে একটা লিংকও থাকবে, চাইলে তাতেও
-            চাপতে পারেন। দুটোই বিশ মিনিট কাজ করে, একবারই।
-          </p>
-          <form id="lform" novalidate>
+          <h1 id="shead">পাসওয়ার্ড দিয়ে ঢুকুন</h1>
+
+          {/* Two ways in, and the emailed code is still one of them. A password
+              is what most people expect and reach for; the code is what works
+              when the password is forgotten, and it is also how a new account
+              proves its address. */}
+          <div class="tabs" role="tablist">
+            <button type="button" class="tab on" id="tab-in" role="tab" aria-selected="true">ঢুকি</button>
+            <button type="button" class="tab" id="tab-new" role="tab" aria-selected="false">নতুন অ্যাকাউন্ট</button>
+          </div>
+
+          <form id="pform" novalidate>
+            <label>ইমেইল <input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="আপনার ইমেইল" /></label>
+            <label>পাসওয়ার্ড <input name="password" type="password" required autocomplete="current-password" placeholder="পাসওয়ার্ড" /></label>
+            <button class="btn btn-primary" type="submit">ঢুকে পড়ো</button>
+            <p class="msg" id="pmsg" role="status" aria-live="polite"></p>
+            <button type="button" class="mini" id="usecode">পাসওয়ার্ড মনে নেই / কোড দিয়ে ঢুকি</button>
+          </form>
+
+          <form id="rform" novalidate hidden>
+            <p class="lede">
+              ইমেইল আর একটা পাসওয়ার্ড দিন। ঠিকানাটা আপনারই কি না দেখতে ছয় সংখ্যার একটা
+              কোড যাবে - সেটা বসালেই অ্যাকাউন্ট চালু। এই ফর্মটা অভিভাবকের।
+            </p>
+            <label>নাম (ঐচ্ছিক) <input name="name" type="text" autocomplete="name" placeholder="আপনার নাম" maxlength="80" /></label>
+            <label>ইমেইল <input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="আপনার ইমেইল" /></label>
+            <label>পাসওয়ার্ড <input name="password" type="password" required autocomplete="new-password" placeholder="অন্তত ১০ অক্ষর" /></label>
+            <div class="hp"><label for="website-hp2">Website</label><input id="website-hp2" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+            <button class="btn btn-primary" type="submit">অ্যাকাউন্ট খোলো</button>
+            <p class="msg" id="rmsg" role="status" aria-live="polite"></p>
+          </form>
+
+          <form id="lform" novalidate hidden>
+            <p class="lede">
+              ইমেইল দিন, ছয় সংখ্যার একটা কোড যাবে - সেটা এখানেই বসিয়ে দিলে ঢুকে যাবেন।
+              একই মেইলে একটা লিংকও থাকবে। দুটোই বিশ মিনিট কাজ করে, একবারই।
+            </p>
             <label>ইমেইল <input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="আপনার ইমেইল" /></label>
             <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
             <button class="btn btn-primary" type="submit">কোড পাঠাও</button>
             <p class="msg" id="lmsg" role="status" aria-live="polite"></p>
+            <button type="button" class="mini" id="usepw">পাসওয়ার্ড দিয়ে ঢুকি</button>
           </form>
 
           {/* The code is the path that works everywhere. The link in the same
@@ -207,6 +238,27 @@ if (member && plan && child) {
             </ul>
           </section>
         )}
+
+        {/* Without this the password only half exists: every member who got
+            here before today, and everyone who arrives by code, would have no
+            way to ever have one. It is the reset flow too - forget it, sign in
+            with a code, set a new one. */}
+        <section class="card box">
+          <div class="sh"><h2>পাসওয়ার্ড</h2><span class="lbl">{member.hasPassword ? 'দেওয়া আছে' : 'দেওয়া নেই'}</span></div>
+          <p class="note">
+            {member.hasPassword
+              ? 'বদলালে অন্য যেসব যন্ত্রে ঢোকা আছে, সব বেরিয়ে যাবে - এই ব্রাউজারটা থাকবে।'
+              : 'পাসওয়ার্ড দিলে প্রতিবার ইমেইলের কোডের অপেক্ষা করতে হবে না। না দিলেও অসুবিধা নেই, কোড দিয়ে ঢোকা চলতেই থাকবে।'}
+          </p>
+          <form id="sform" class="kform" novalidate data-has={member.hasPassword ? '1' : ''}>
+            {member.hasPassword && (
+              <label>এখনকার পাসওয়ার্ড <input name="current" type="password" autocomplete="current-password" required placeholder="এখনকারটা" /></label>
+            )}
+            <label>নতুন পাসওয়ার্ড <input name="password" type="password" autocomplete="new-password" required placeholder="অন্তত ১০ অক্ষর" /></label>
+            <button class="btn btn-primary" type="submit">{member.hasPassword ? 'বদলাও' : 'দাও'}</button>
+          </form>
+          <p class="msg" id="smsg" role="status" aria-live="polite"></p>
+        </section>
       </div>
     )}
   </div>
@@ -253,6 +305,15 @@ if (member && plan && child) {
   .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
   .kid.on .dot { background: var(--brand); border-color: var(--brand); }
   .kid select { font-size: 13px; padding: 0.3rem 0.5rem; }
+  .tabs { display: flex; gap: 0.4rem; margin: 0.2rem 0 1.1rem; }
+  .tab {
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    padding: 0.45rem 0.9rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+
   .mini { font-size: 12px; font-weight: 600; padding: 0.3rem 0.65rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink-2); }
   .mini:hover { background: var(--panel-2); }
   .mini.danger:hover { color: var(--danger); border-color: color-mix(in oklab, var(--danger) 45%, var(--line)); }
@@ -296,6 +357,93 @@ if (member && plan && child) {
 </style>
 
 <script>
+  /* ---- which way in is on screen ----
+     Four panes share one card: password, register, ask-for-a-code, type-the-code.
+     Registration hands off to the code pane, because a new account is inert
+     until the emailed code proves the address belongs to whoever typed it. */
+  type Pane = 'pw' | 'new' | 'code' | 'digits';
+  const pane = (n: Pane) => document.getElementById(n === 'pw' ? 'pform' : n === 'new' ? 'rform' : n === 'code' ? 'lform' : 'cform') as HTMLFormElement | null;
+  const tabIn = document.getElementById('tab-in');
+  const tabNew = document.getElementById('tab-new');
+  const tabs = document.querySelector('.tabs') as HTMLElement | null;
+  const head = document.getElementById('shead');
+  const HEADS: Record<Pane, string> = { pw: 'পাসওয়ার্ড দিয়ে ঢুকুন', new: 'অ্যাকাউন্ট খুলুন', code: 'ইমেইলে একটা কোড পাঠাই', digits: 'কোডটা বসান' };
+
+  function show(n: Pane) {
+    for (const p of ['pw', 'new', 'code', 'digits'] as Pane[]) { const f = pane(p); if (f) f.hidden = p !== n; }
+    if (head) head.textContent = HEADS[n];
+    if (tabs) tabs.hidden = n === 'digits';
+    tabIn?.classList.toggle('on', n !== 'new');
+    tabNew?.classList.toggle('on', n === 'new');
+    tabIn?.setAttribute('aria-selected', String(n !== 'new'));
+    tabNew?.setAttribute('aria-selected', String(n === 'new'));
+    const first = pane(n)?.querySelector('input:not([tabindex])') as HTMLInputElement | null;
+    first?.focus();
+  }
+  tabIn?.addEventListener('click', () => show('pw'));
+  tabNew?.addEventListener('click', () => show('new'));
+  document.getElementById('usecode')?.addEventListener('click', () => show('code'));
+  document.getElementById('usepw')?.addEventListener('click', () => show('pw'));
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const post = async (path: string, body: unknown): Promise<{ ok?: boolean; error?: string }> => {
+    const res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    return (await res.json()) as { ok?: boolean; error?: string };
+  };
+
+  /* ---- email and password ---- */
+  const pform = document.getElementById('pform') as HTMLFormElement | null;
+  if (pform) {
+    const msg = document.getElementById('pmsg')!, btn = pform.querySelector('button')!;
+    pform.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(pform);
+      const email = String(fd.get('email') ?? '').trim();
+      const password = String(fd.get('password') ?? '');
+      if (!EMAIL_RE.test(email) || !password) { msg.className = 'msg err'; msg.textContent = 'ইমেইল আর পাসওয়ার্ড দুটোই লাগবে।'; return; }
+      btn.disabled = true; msg.className = 'msg'; msg.textContent = 'দেখা হচ্ছে...';
+      try {
+        const data = await post('/api/account/password', { email, password });
+        if (data.ok) { msg.className = 'msg ok'; msg.textContent = 'ঢুকে পড়ছেন...'; location.href = '/account/?welcome=1'; return; }
+        msg.className = 'msg err';
+        msg.textContent = data.error === 'unverified' ? 'ঠিকানাটা এখনো যাচাই হয়নি। নিচের কোড দিয়ে একবার ঢুকলেই হয়ে যাবে।'
+          : data.error === 'throttled' ? 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার।'
+          : data.error === 'unavailable' ? 'অ্যাকাউন্টের ব্যবস্থা এই মুহূর্তে বন্ধ। একটু পরে দেখুন।'
+          : 'ইমেইল বা পাসওয়ার্ড মিলল না।';
+        if (data.error === 'unverified') show('code');
+      } catch { msg.className = 'msg err'; msg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না।'; }
+      finally { btn.disabled = false; }
+    });
+  }
+
+  /* ---- a new account ---- */
+  const rform = document.getElementById('rform') as HTMLFormElement | null;
+  if (rform) {
+    const msg = document.getElementById('rmsg')!, btn = rform.querySelector('button')!;
+    rform.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(rform);
+      const email = String(fd.get('email') ?? '').trim();
+      const password = String(fd.get('password') ?? '');
+      const name = String(fd.get('name') ?? '').trim();
+      if (!EMAIL_RE.test(email)) { msg.className = 'msg err'; msg.textContent = 'ইমেইলটা ঠিকমতো লিখুন।'; return; }
+      if (password.length < 10) { msg.className = 'msg err'; msg.textContent = 'পাসওয়ার্ডটা অন্তত ১০ অক্ষরের হোক।'; return; }
+      btn.disabled = true; msg.className = 'msg'; msg.textContent = 'খোলা হচ্ছে...';
+      try {
+        const data = await post('/api/account/register', { email, password, name, website: String(fd.get('website') ?? '') });
+        if (data.ok) { msg.className = 'msg'; msg.textContent = ''; rform.reset(); showCode(email); return; }
+        msg.className = 'msg err';
+        msg.textContent = data.error === 'taken' ? 'এই ইমেইলে অ্যাকাউন্ট আছে। ঢুকি ট্যাবে গিয়ে পাসওয়ার্ড দিন।'
+          : data.error === 'weak' ? 'পাসওয়ার্ডটা অন্তত ১০ অক্ষরের হোক।'
+          : data.error === 'bad-email' ? 'ইমেইলটা ঠিকমতো লিখুন।'
+          : data.error === 'throttled' ? 'একটু বেশি বার চাওয়া হয়ে গেছে। এক ঘণ্টা পরে আবার।'
+          : data.error === 'email-unavailable' ? 'ইমেইল পাঠানোর ব্যবস্থা এই মুহূর্তে বন্ধ। support@posora.com-এ লিখুন।'
+          : 'অ্যাকাউন্ট খোলা গেল না। আরেকবার চেষ্টা করুন।';
+      } catch { msg.className = 'msg err'; msg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না।'; }
+      finally { btn.disabled = false; }
+    });
+  }
+
   const lform = document.getElementById('lform') as HTMLFormElement | null;
   if (lform) {
     const msg = document.getElementById('lmsg')!, btn = lform.querySelector('button')!;
@@ -322,10 +470,9 @@ if (member && plan && child) {
   const cform = document.getElementById('cform') as HTMLFormElement | null;
   let codeFor = '';
   function showCode(email: string) {
-    if (!cform || !lform) return;
+    if (!cform) return;
     codeFor = email;
-    lform.hidden = true;
-    cform.hidden = false;
+    show('digits');
     document.getElementById('csent')!.textContent = `${email}-এ একটা কোড আর একটা লিংক পাঠানো হয়েছে। ইনবক্স দেখুন, স্প্যামেও একবার। কোডটা এখানে বসালেই হবে।`;
     (document.getElementById('cinput') as HTMLInputElement).focus();
   }
@@ -336,8 +483,8 @@ if (member && plan && child) {
     // Phones paste the code from the notification with spaces in it.
     cin.addEventListener('input', () => { cin.value = cin.value.replace(/\D/g, '').slice(0, 6); });
     document.getElementById('cback')?.addEventListener('click', () => {
-      cform.hidden = true;
-      if (lform) { lform.hidden = false; lform.reset(); }
+      lform?.reset();
+      show('code');
     });
     cform.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -355,6 +502,37 @@ if (member && plan && child) {
           : 'কোডটা মিলল না। আরেকবার দেখুন।';
       } catch { cmsg.className = 'msg err'; cmsg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না।'; }
       finally { cbtn.disabled = false; }
+    });
+  }
+
+  /* ---- set or change the password, from inside the account ---- */
+  const sform = document.getElementById('sform') as HTMLFormElement | null;
+  if (sform) {
+    const msg = document.getElementById('smsg')!, btn = sform.querySelector('button')!;
+    const had = sform.dataset.has === '1';
+    sform.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(sform);
+      const password = String(fd.get('password') ?? '');
+      const current = String(fd.get('current') ?? '');
+      if (password.length < 10) { msg.className = 'msg err'; msg.textContent = 'পাসওয়ার্ডটা অন্তত ১০ অক্ষরের হোক।'; return; }
+      btn.disabled = true; msg.className = 'msg'; msg.textContent = 'রাখা হচ্ছে...';
+      try {
+        const res = await fetch('/api/account/set-password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password, current }) });
+        const data = (await res.json()) as { ok?: boolean; error?: string };
+        if (data.ok) {
+          sform.reset();
+          msg.className = 'msg ok';
+          msg.textContent = had ? 'পাসওয়ার্ড বদলে গেছে। অন্য যন্ত্রগুলো বেরিয়ে গেছে।' : 'পাসওয়ার্ড রাখা হলো। পরেরবার এটা দিয়েই ঢুকতে পারবেন।';
+          return;
+        }
+        msg.className = 'msg err';
+        msg.textContent = data.error === 'wrong' ? 'এখনকার পাসওয়ার্ডটা মিলল না।'
+          : data.error === 'weak' ? 'পাসওয়ার্ডটা অন্তত ১০ অক্ষরের হোক।'
+          : data.error === 'signed-out' ? 'ঢোকা অবস্থাটা শেষ হয়ে গেছে। পাতাটা আবার খুলুন।'
+          : 'রাখা গেল না। আরেকবার চেষ্টা করুন।';
+      } catch { msg.className = 'msg err'; msg.textContent = 'ইন্টারনেট ধরা যাচ্ছে না।'; }
+      finally { btn.disabled = false; }
     });
   }
 
