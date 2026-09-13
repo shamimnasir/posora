@@ -184,7 +184,8 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
         hand.append(b);
       }
       body.append(chain, hand);
-      foot.textContent = fill(askFirst ?? 'প্রথমে কোনটা আসবে?', r.chain[0]!, r.chain[0]!);
+      // a round that orders things differently from the rest asks its own way
+      foot.textContent = fill(r.ask ?? askFirst ?? 'প্রথমে কোনটা আসবে?', r.chain[0]!, r.chain[0]!);
       stepStart = performance.now();
     };
     round();
@@ -196,7 +197,21 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
     let at = 0;
     body.replaceChildren();
     const track = el('div', 'mz-track');
-    const nodes = stops.map((s, i) => { const n = el('div', 'mz-stop'); n.append(el('span', 'mz-em', s.emoji), el('span', 'mz-stop-n', i === 0 ? s.name : '?')); if (i === 0) n.classList.add('here'); return n; });
+    /**
+     * A stop the token has not reached shows neither its name nor its picture.
+     *
+     * The name was hidden behind a `?` and the emoji left on, which hands the
+     * journey over: the six stops sat there in the right order with a picture
+     * on each, and for the water cycle the pictures are legible enough that a
+     * child could pick 🌊 as the next stop without knowing the word নদী. The
+     * `?` said the stop was unknown; the emoji said otherwise.
+     */
+    const nodes = stops.map((s, i) => {
+      const n = el('div', 'mz-stop');
+      n.append(el('span', 'mz-em', i === 0 ? s.emoji : '•'), el('span', 'mz-stop-n', i === 0 ? s.name : '?'));
+      if (i === 0) n.classList.add('here');
+      return n;
+    });
     nodes.forEach((n, i) => { track.append(n); if (i < nodes.length - 1) track.append(el('span', 'mz-link')); });
     const tok = el('span', 'mz-token', token); track.append(tok);
     const fact = el('p', 'mz-fact', stops[0]!.fact);
@@ -218,7 +233,9 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
           if (over) return;
           if (c === stops[at + 1]!.name) {
             correct(b); at++;
-            nodes[at - 1]!.classList.remove('here'); nodes[at]!.classList.add('here'); nodes[at]!.querySelector('.mz-stop-n')!.textContent = stops[at]!.name;
+            nodes[at - 1]!.classList.remove('here'); nodes[at]!.classList.add('here');
+            nodes[at]!.querySelector('.mz-stop-n')!.textContent = stops[at]!.name;
+            nodes[at]!.querySelector('.mz-em')!.textContent = stops[at]!.emoji;
             place(); fact.textContent = stops[at]!.fact;
             if (!reduced()) fact.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 300 });
             step();

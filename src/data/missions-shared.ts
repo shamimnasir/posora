@@ -3,7 +3,15 @@
  * drawing helpers several of them use. The missions themselves live one world
  * per file under `missions/`, so the browser can fetch just the world it needs.
  */
-export type OrderRound = { title: string; chain: string[]; emoji: string[]; note: string };
+/**
+ * `ask` overrides the mission's `askFirst` for this round alone.
+ *
+ * A mission's rounds do not always order things the same way. Space asks
+ * "{first}-এর সবচেয়ে কাছে কোনটা?", which is right for the planets and
+ * nonsense for the life of a star: a nebula is not *near* a red giant, it
+ * turns into one. The question belongs to the round when the round disagrees.
+ */
+export type OrderRound = { title: string; chain: string[]; emoji: string[]; note: string; ask?: string };
 export type PathStop = { name: string; emoji: string; fact: string; choices: string[] };
 /** Either a drawing (`art`, an SVG fragment) or one big glyph or word (`big`). `shadow` blacks the glyph out on a bright card. */
 export type IdRound = { answer: string; art?: string; big?: string; shadow?: boolean; clue: string; options: string[]; fact: string };
@@ -46,8 +54,16 @@ export const LEAF = {
     Array.from({ length: 11 }, (_v, i) => { const y = 14 + i * 7.4, w = 9 + Math.sin((i / 10) * Math.PI) * 26; return `<ellipse cx="${50 - w / 2 - 3}" cy="${y}" rx="${w / 2}" ry="2.6" transform="rotate(-18 ${50 - w / 2 - 3} ${y})"/><ellipse cx="${50 + w / 2 + 3}" cy="${y}" rx="${w / 2}" ry="2.6" transform="rotate(18 ${50 + w / 2 + 3} ${y})"/>`; }).join(''),
   // বাঁশ: three narrow grass blades from one node
   bansh: `<path d="M18 92 C26 58 40 32 80 10 C56 40 40 66 18 92Z"/><path d="M22 94 C36 70 56 50 92 40 C62 56 44 74 22 94Z"/><path d="M14 90 C12 60 20 34 46 8 C30 38 20 62 14 90Z"/>`,
-  // শাপলা: a round floating pad with a notch to the middle
-  shapla: `<path d="M50 50 L50 6 A44 44 0 1 1 20 18Z" transform="rotate(-20 50 50)"/>${midrib('M50 50 L50 92')}`,
+  /**
+   * শাপলা: a round floating pad with a narrow notch cut to the middle.
+   *
+   * The notch used to be a 43 degree wedge, which is not a lily pad's sinus
+   * but a slice out of a pie chart, and that is what it read as. A real pad is
+   * a near-complete circle with a slit, and the veins radiate out of that
+   * slit, so they start there rather than at the centre.
+   */
+  shapla: `<path d="M50 50 L50 6 A44 44 0 1 1 39.4 7.3Z" transform="rotate(187 50 50)"/>` +
+    midrib('M50 88 L50 22') + midrib('M50 87 L24 44') + midrib('M50 87 L76 44'),
 };
 
 export const pick4 = (answer: string, ...others: string[]) => [answer, ...others.slice(0, 3)];
