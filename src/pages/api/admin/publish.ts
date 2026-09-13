@@ -7,9 +7,11 @@ import { bustCache } from '../../../lib/content';
 export const prerender = false;
 
 export const POST: APIRoute = async (ctx) => {
-  const { request, url } = ctx;
+  const { request, url, redirect } = ctx;
   if (!sameOrigin(request, url)) return new Response('forbidden', { status: 403 });
-  if (!(await isLoggedIn(ctx))) return Response.redirect(new URL('/admin/login', url), 303);
+  // context redirect: a Response.redirect has immutable headers, which the
+  // security-headers middleware then fails to write to, answering 500
+  if (!(await isLoggedIn(ctx))) return redirect('/admin/login', 303);
 
   const form = await request.formData();
   const slug = String(form.get('slug') ?? '');
@@ -22,5 +24,5 @@ export const POST: APIRoute = async (ctx) => {
     bustCache();
   }
 
-  return Response.redirect(new URL(form.get('back')?.toString() || '/admin/worlds', url), 303);
+  return redirect(form.get('back')?.toString() || '/admin/worlds', 303);
 };
