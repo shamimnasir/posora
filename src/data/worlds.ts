@@ -1131,7 +1131,24 @@ export const worlds: World[] = [
      "পরিসীমা",
      "আয়তন"
     ],
-    "play": "স্লাইডার টানলে একেকটা থ্রিডি আকৃতি ঘুরে সামনে আসে - বাকিগুলো পাশে ভাসতে থাকে।"
+    "play": "স্লাইডার টানলে একেকটা থ্রিডি আকৃতি ঘুরে সামনে আসে - বাকিগুলো পাশে ভাসতে থাকে।",
+    "lab": "/math/geometry/",
+    "labAnchors": [
+     "bindu",
+     "rekha",
+     "kon",
+     "tribhuj",
+     "chaturbhuj",
+     "britto",
+     "bohubhuj",
+     "protisammo",
+     "ghonok",
+     "golok",
+     "silindar",
+     "kkhetrofol",
+     "porisima",
+     "aayoton"
+    ]
    },
    {
     "n": "পরিমাপ",

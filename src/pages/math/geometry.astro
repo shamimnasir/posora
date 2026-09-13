@@ -1,0 +1,492 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export const prerender = true;
+
+const HUE = '#C0473E';
+---
+<Base
+  title="জ্যামিতি"
+  description="বিন্দু টেনে সরাও আর কোণ বদলে যাক। বাহু বাড়িয়ে ত্রিভুজ থেকে বৃত্তে যাও, ভাঁজ করে প্রতিসাম্য খোঁজো, আর ক্ষেত্রফল-পরিসীমা-আয়তন নিজের হাতে মেপে দেখো।"
+  hue={HUE}
+>
+  <div class="wrap page" id="lab">
+    <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/math/">গণিত</a> <span>/</span> জ্যামিতি</p>
+
+    <header class="head">
+      <p class="eyebrow">গণিত ভুবন · বিভাগ পরিচিতি</p>
+      <h1>জ্যামিতি</h1>
+      <p class="lede">
+        জ্যামিতি মুখস্থ করার জিনিস নয়, নেড়েচেড়ে দেখার জিনিস। বিন্দুটা সরালে কোণ বদলায়,
+        বাহু বাড়ালে ত্রিভুজ একসময় বৃত্ত হয়ে যায়, কোনা টানলে ক্ষেত্রফল আর পরিসীমা
+        আলাদা আলাদা ভাবে বদলায়। নিচের সবগুলোই টেনে দেখা যায়।
+      </p>
+      <nav class="quicknav" aria-label="দ্রুত যাওয়ার তালিকা">
+        <a href="#bindu" class="pill pill-w">বিন্দু, রেখা, কোণ</a>
+        <a href="#tribhuj" class="pill pill-w">আকৃতি</a>
+        <a href="#protisammo" class="pill pill-w">প্রতিসাম্য</a>
+        <a href="#kkhetrofol" class="pill pill-w">ক্ষেত্রফল ও পরিসীমা</a>
+        <a href="#ghonok" class="pill pill-w">ঘন বস্তু</a>
+      </nav>
+    </header>
+
+    <div class="tools">
+      <!-- ১. বিন্দু, রেখা, কোণ -->
+      <section class="tool card" id="bindu">
+        <h2><span class="no">০১</span> <span id="rekha">বিন্দু, রেখা</span> ও <span id="kon">কোণ</span></h2>
+        <p class="how">
+          তিনটে বিন্দু আছে - ক, খ আর গ। যেকোনোটা ধরে টানো। দুই বিন্দু মিললে রেখাংশ হয়,
+          তিনটে মিললে কোণ। খ-এর কাছে কোণটা কত ডিগ্রি, নিচে সবসময় লেখা থাকবে।
+        </p>
+        <div class="wide">
+          <svg id="angle-svg" viewBox="0 0 620 330" role="img" aria-label="তিনটে বিন্দু, টেনে সরাও"></svg>
+        </div>
+        <p class="readout" id="angle-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ২. আকৃতি -->
+      <section class="tool card" id="tribhuj">
+        <h2><span class="no">০২</span> <span id="chaturbhuj">ত্রিভুজ থেকে</span> <span id="britto">বৃত্ত</span> <span id="bohubhuj">পর্যন্ত</span></h2>
+        <p class="how">
+          বাহুর সংখ্যা টেনে বাড়াও। তিনটে বাহু মানে ত্রিভুজ, চারটে মানে চতুর্ভুজ, তারপর
+          পঞ্চভুজ, ষড়ভুজ - বহুভুজ। বাড়াতে বাড়াতে দেখো একসময় সেটা বৃত্তের মতো হয়ে যায়।
+        </p>
+        <div class="wide">
+          <svg id="poly-svg" viewBox="0 0 620 300" role="img" aria-label="বহুভুজ, বাহুর সংখ্যা টেনে বদলাও"></svg>
+        </div>
+        <p class="readout" id="poly-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ৩. প্রতিসাম্য -->
+      <section class="tool card" id="protisammo">
+        <h2><span class="no">০৩</span> প্রতিসাম্য</h2>
+        <p class="how">
+          একটা আকৃতির মাঝ দিয়ে যদি এমন একটা রেখা টানা যায় যে দুই পাশ হুবহু এক, সেটাই
+          প্রতিসাম্যের রেখা। আয়নাটা ঘুরিয়ে দেখো কোন কোন কোণে দুই পাশ মিলে যায়।
+        </p>
+        <div class="jumps" role="group" aria-label="আকৃতি বাছো">
+          <button type="button" class="jump" data-n="3">ত্রিভুজ</button>
+          <button type="button" class="jump" data-n="4">বর্গ</button>
+          <button type="button" class="jump" data-n="5">পঞ্চভুজ</button>
+          <button type="button" class="jump" data-n="6">ষড়ভুজ</button>
+          <button type="button" class="jump" data-n="0">প্রজাপতি</button>
+        </div>
+        <div class="wide">
+          <svg id="sym-svg" viewBox="0 0 620 300" role="img" aria-label="প্রতিসাম্যের আয়না, ঘুরিয়ে দেখো"></svg>
+        </div>
+        <p class="readout" id="sym-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ৪. ক্ষেত্রফল ও পরিসীমা -->
+      <section class="tool card" id="kkhetrofol">
+        <h2><span class="no">০৪</span> ক্ষেত্রফল ও <span id="porisima">পরিসীমা</span></h2>
+        <p class="how">
+          কোনাটা ধরে টানো। ভেতরের ছোট ঘরগুলো গোনো - ওটাই ক্ষেত্রফল। আর চারপাশের দাগটা
+          হাঁটলে যতটা পথ, ওটা পরিসীমা। দুটো একসাথে বাড়ে না, সেটাই মজার।
+        </p>
+        <div class="wide">
+          <svg id="area-svg" viewBox="0 0 620 320" role="img" aria-label="আয়তক্ষেত্র, কোনা টেনে বদলাও"></svg>
+        </div>
+        <p class="readout" id="area-out" aria-live="polite"></p>
+      </section>
+
+      <!-- ৫. ঘন বস্তু -->
+      <section class="tool card" id="ghonok">
+        <h2><span class="no">০৫</span> <span id="golok">ঘনক, গোলক</span>, <span id="silindar">সিলিন্ডার</span> ও <span id="aayoton">আয়তন</span></h2>
+        <p class="how">
+          সমতল আকৃতির ক্ষেত্রফল থাকে, ঘন বস্তুর থাকে আয়তন - ভেতরে কতটুকু জায়গা।
+          একটা বস্তু বাছো, তারপর মাপটা টেনে বদলাও। সূত্রটা সংখ্যাসহ নিচে দেখাবে।
+        </p>
+        <div class="jumps" role="group" aria-label="বস্তু বাছো">
+          <button type="button" class="jump" data-s="cube">ঘনক</button>
+          <button type="button" class="jump" data-s="sphere">গোলক</button>
+          <button type="button" class="jump" data-s="cyl">সিলিন্ডার</button>
+        </div>
+        <div class="wide">
+          <svg id="solid-svg" viewBox="0 0 620 280" role="img" aria-label="ঘন বস্তু, মাপ টেনে বদলাও"></svg>
+        </div>
+        <p class="readout" id="solid-out" aria-live="polite"></p>
+      </section>
+    </div>
+
+    <p class="back"><a href="/math/">← গণিত ভুবনে ফিরে যাও</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.8; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { font-size: 20px; margin-bottom: 0.4rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; margin-right: 0.5rem; }
+  .how { color: var(--muted); font-size: 13.5px; margin-bottom: 1.1rem; max-width: 62ch; line-height: 1.75; }
+  .readout { margin-top: 0.9rem; font-size: 15px; color: var(--ink-2); line-height: 1.8; }
+  .readout :global(b) { color: var(--ink); font-family: var(--font-display); font-size: 17px; }
+  .readout :global(.cost) { color: var(--muted); font-size: 13.5px; display: block; margin-top: 0.15rem; }
+
+  .wide { overflow-x: auto; padding-bottom: 4px; }
+  .wide svg { width: 100%; min-width: 440px; height: auto; display: block; touch-action: none; }
+
+  .jumps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .jump {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 0.35rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-2);
+  }
+  .jump:hover { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); color: var(--ink); }
+  .jump[aria-pressed="true"] { background: var(--w); border-color: var(--w); color: var(--on-brand); }
+  .tool :global([role="slider"]:focus-visible),
+  .tool :global([role="button"]:focus-visible) { outline: 2px solid var(--w); outline-offset: 2px; }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+</style>
+
+<script>
+  import { bn } from '../../lib/bn';
+  import { svgEl as el, clamp, dragTrack, dragPoint, alongX, useItem } from '../../lib/handson';
+
+  const root = document.getElementById('lab')!;
+  const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+  const WORLD = 'math', CAT = 'জ্যামিতি';
+  let live = false;
+  const credit = (item: string) => { if (live) useItem(WORLD, CAT, item); };
+  const num = (n: number) => bn(n.toFixed(Math.abs(n) < 100 ? 1 : 0));
+
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
+    const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
+    t.textContent = s; p.appendChild(t); return t;
+  };
+  /** A grabbable dot, with an invisible pad round it so a fingertip can find it. */
+  const dot = (label: string) => {
+    const g = el('g');
+    g.append(
+      el('circle', { r: 22, fill: 'transparent' }),
+      el('circle', { r: 9, fill: W }),
+      el('circle', { r: 3.5, fill: 'var(--panel)' }),
+    );
+    const t = el('text', { x: 0, y: -16, 'font-size': 13, 'text-anchor': 'middle', fill: INK, 'font-weight': 700 });
+    t.textContent = label; g.appendChild(t);
+    return g;
+  };
+  const grip = () => {
+    const g = el('g');
+    g.append(
+      el('rect', { x: -24, y: -24, width: 48, height: 48, fill: 'transparent' }),
+      el('circle', { r: 12, fill: W }),
+      el('circle', { r: 4, fill: 'var(--panel)' }),
+    );
+    return g;
+  };
+
+  /* ---------- ১. বিন্দু, রেখা, কোণ ---------- */
+  (function angle() {
+    const svg = $<SVGSVGElement>('#angle-svg');
+    const arm1 = el('line', { stroke: W, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const arm2 = el('line', { stroke: W, 'stroke-width': 3, 'stroke-linecap': 'round' });
+    const wedge = el('path', { fill: W, 'fill-opacity': 0.16 });
+    const mark = el('path', { fill: 'none', stroke: INK, 'stroke-width': 2 });
+    const deg = el('text', { 'font-size': 15, 'text-anchor': 'middle', fill: INK, 'font-weight': 700 });
+    svg.append(wedge, arm1, arm2, mark, deg);
+    const A = dot('ক'), B = dot('খ'), C = dot('গ');
+    svg.append(A, B, C);
+    const out = $('#angle-out');
+    const P = { a: { x: 150, y: 90 }, b: { x: 250, y: 250 }, c: { x: 480, y: 150 } };
+
+    function render() {
+      A.setAttribute('transform', `translate(${P.a.x},${P.a.y})`);
+      B.setAttribute('transform', `translate(${P.b.x},${P.b.y})`);
+      C.setAttribute('transform', `translate(${P.c.x},${P.c.y})`);
+      arm1.setAttribute('x1', String(P.b.x)); arm1.setAttribute('y1', String(P.b.y));
+      arm1.setAttribute('x2', String(P.a.x)); arm1.setAttribute('y2', String(P.a.y));
+      arm2.setAttribute('x1', String(P.b.x)); arm2.setAttribute('y1', String(P.b.y));
+      arm2.setAttribute('x2', String(P.c.x)); arm2.setAttribute('y2', String(P.c.y));
+
+      const a1 = Math.atan2(P.a.y - P.b.y, P.a.x - P.b.x);
+      const a2 = Math.atan2(P.c.y - P.b.y, P.c.x - P.b.x);
+      let d = ((a2 - a1) * 180) / Math.PI;
+      while (d < 0) d += 360;
+      if (d > 180) d = 360 - d;
+      const r = 46;
+      const sweep = ((a2 - a1 + Math.PI * 2) % (Math.PI * 2)) > Math.PI ? 0 : 1;
+      const px = (ang: number, rr: number) => `${P.b.x + Math.cos(ang) * rr} ${P.b.y + Math.sin(ang) * rr}`;
+      wedge.setAttribute('d', `M ${P.b.x} ${P.b.y} L ${px(a1, r)} A ${r} ${r} 0 0 ${sweep} ${px(a2, r)} Z`);
+      mark.setAttribute('d', `M ${px(a1, r)} A ${r} ${r} 0 0 ${sweep} ${px(a2, r)}`);
+      const mid = a1 + ((sweep ? 1 : -1) * (d * Math.PI) / 180) / 2;
+      deg.setAttribute('x', String(P.b.x + Math.cos(mid) * (r + 22)));
+      deg.setAttribute('y', String(P.b.y + Math.sin(mid) * (r + 22) + 5));
+      deg.textContent = `${bn(Math.round(d))}°`;
+
+      const len = (p: { x: number; y: number }, q: { x: number; y: number }) => Math.hypot(p.x - q.x, p.y - q.y) / 20;
+      const kind = d < 89.5 ? 'সূক্ষ্মকোণ - ৯০°-র কম'
+        : d < 90.5 ? 'সমকোণ - ঠিক ৯০°'
+        : d < 179.5 ? 'স্থূলকোণ - ৯০°-র বেশি'
+        : 'সরলকোণ - তিনটে বিন্দু এক সরলরেখায়';
+      out.innerHTML = `ক, খ আর গ - তিনটে <b>বিন্দু</b>। খ থেকে ক পর্যন্ত <b>রেখাংশ</b> ${num(len(P.a, P.b))} সেমি, খ থেকে গ ${num(len(P.c, P.b))} সেমি।`
+        + ` খ-এর কাছে <b>কোণ ${bn(Math.round(d))}°</b> - ${kind}।`
+        + `<span class="cost">বিন্দুর নিজের কোনো মাপ নেই, শুধু জায়গা। দুই বিন্দু মেলালে রেখাংশ, আর দুই রেখাংশ এক বিন্দুতে মিললে কোণ।</span>`;
+      credit('বিন্দু'); credit('রেখা'); credit('কোণ');
+    }
+    const bounds = { x0: 40, y0: 40, x1: 580, y1: 290 };
+    const view = { w: 620, h: 330 };
+    dragPoint({ surface: svg, handle: A, view, bounds, x: P.a.x, y: P.a.y, label: 'বিন্দু ক', onChange: (x, y) => { P.a = { x, y }; render(); } });
+    dragPoint({ surface: svg, handle: B, view, bounds, x: P.b.x, y: P.b.y, label: 'বিন্দু খ', onChange: (x, y) => { P.b = { x, y }; render(); } });
+    dragPoint({ surface: svg, handle: C, view, bounds, x: P.c.x, y: P.c.y, label: 'বিন্দু গ', onChange: (x, y) => { P.c = { x, y }; render(); } });
+    render();
+  })();
+
+  /* ---------- ২. ত্রিভুজ থেকে বৃত্ত ---------- */
+  (function polygon() {
+    const svg = $<SVGSVGElement>('#poly-svg');
+    const CX = 310, CY = 120, R = 92;
+    const ring = el('circle', { cx: CX, cy: CY, r: R, fill: 'none', stroke: LINE, 'stroke-width': 1.5, 'stroke-dasharray': '4 5' });
+    const shape = el('polygon', { fill: W, 'fill-opacity': 0.2, stroke: W, 'stroke-width': 3, 'stroke-linejoin': 'round' });
+    const verts = el('g');
+    svg.append(ring, shape, verts);
+    svg.appendChild(el('line', { x1: 120, y1: 250, x2: 500, y2: 250, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    text(svg, CX, 282, 'বাহুর সংখ্যা টানো');
+    const out = $('#poly-out');
+    let n = 3;
+
+    const NAMES: Record<number, string> = { 3: 'ত্রিভুজ', 4: 'চতুর্ভুজ', 5: 'পঞ্চভুজ', 6: 'ষড়ভুজ', 7: 'সপ্তভুজ', 8: 'অষ্টভুজ' };
+
+    function render() {
+      handle.setAttribute('transform', `translate(${120 + ((n - 3) / 21) * 380},250)`);
+      const pts: string[] = [];
+      verts.replaceChildren();
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+        const x = CX + Math.cos(a) * R, y = CY + Math.sin(a) * R;
+        pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+        if (n <= 10) verts.appendChild(el('circle', { cx: x, cy: y, r: 4, fill: INK }));
+      }
+      shape.setAttribute('points', pts.join(' '));
+
+      const inner = ((n - 2) * 180) / n;
+      const side = 2 * R * Math.sin(Math.PI / n) / 20;
+      const peri = n * side;
+      const circle = (2 * Math.PI * R) / 20;
+      const name = NAMES[n] ?? `${bn(n)} বাহুর বহুভুজ`;
+      out.innerHTML = `<b>${name}</b> - ${bn(n)}টা বাহু, ${bn(n)}টা কোণ, প্রতিটা কোণ <b>${num(inner)}°</b>। ভেতরের কোণগুলোর যোগফল <b>${bn((n - 2) * 180)}°</b>।`
+        + `<span class="cost">${n >= 18
+          ? `পরিসীমা ${num(peri)} সেমি, আর ঠিক একই জায়গায় আঁকা বৃত্তের পরিধি ${num(circle)} সেমি - প্রায় মিলে গেছে। বাহু যত বাড়ে, বহুভুজ তত বৃত্তের কাছে চলে আসে; বৃত্ত হলো অসীম বাহুর বহুভুজ।`
+          : `প্রতিটা বাহু ${num(side)} সেমি, সব মিলিয়ে পরিসীমা ${num(peri)} সেমি। বাহু বাড়াতে থাকো - কোণ বড় হতে থাকবে আর আকারটা বৃত্তের দিকে যেতে থাকবে।`}</span>`;
+      credit(n === 3 ? 'ত্রিভুজ' : n === 4 ? 'চতুর্ভুজ' : 'বহুভুজ');
+      if (n >= 18) credit('বৃত্ত');
+    }
+    const toN = alongX(svg, 620, 120, 380 / 21);
+    dragTrack({
+      surface: svg, handle, min: 3, max: 24, step: 1, value: n,
+      toValue: (x) => toN(x) + 3,
+      // The card opens on a triangle, so moving the slider at all means the
+      // triangle has been looked at; without this it is the one shape a
+      // visitor can never tick off, because the slider only ever leaves it.
+      onChange: (v) => { n = v; render(); credit('ত্রিভুজ'); },
+      label: 'বাহুর সংখ্যা', text: (v) => `${bn(v)} বাহু`,
+    });
+    render();
+  })();
+
+  /* ---------- ৩. প্রতিসাম্য ---------- */
+  (function symmetry() {
+    const svg = $<SVGSVGElement>('#sym-svg');
+    const CX = 310, CY = 120, R = 86;
+    const shape = el('path', { fill: W, 'fill-opacity': 0.22, stroke: W, 'stroke-width': 2.5, 'stroke-linejoin': 'round' });
+    const mirrored = el('path', { fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-dasharray': '5 4', 'stroke-opacity': 0.75 });
+    const axis = el('line', { stroke: INK, 'stroke-width': 2.5, 'stroke-dasharray': '9 6' });
+    svg.append(shape, mirrored, axis);
+    svg.appendChild(el('line', { x1: 120, y1: 250, x2: 500, y2: 250, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    text(svg, CX, 282, 'আয়নাটা ঘোরাও');
+    const out = $('#sym-out');
+    const jumps = [...root.querySelectorAll<HTMLButtonElement>('#protisammo .jump')];
+    let sides = 4, ang = 20;
+
+    /** A regular shape, or a butterfly that has exactly one mirror line. */
+    function points(): { x: number; y: number }[] {
+      if (sides === 0) {
+        const p: { x: number; y: number }[] = [];
+        for (let i = 0; i <= 40; i++) {
+          const t = (i / 40) * Math.PI * 2;
+          // one wing fatter than the other would break it; this one is true
+          const r = R * (0.45 + 0.55 * Math.abs(Math.sin(t * 2)) ** 0.7);
+          p.push({ x: CX + Math.cos(t) * r, y: CY + Math.sin(t) * r * 0.8 });
+        }
+        return p;
+      }
+      return Array.from({ length: sides }, (_, i) => {
+        const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
+        return { x: CX + Math.cos(a) * R, y: CY + Math.sin(a) * R };
+      });
+    }
+    const path = (p: { x: number; y: number }[]) => `M ${p.map((q) => `${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' L ')} Z`;
+
+    function render() {
+      handle.setAttribute('transform', `translate(${120 + (ang / 180) * 380},250)`);
+      const p = points();
+      shape.setAttribute('d', path(p));
+      const rad = (ang * Math.PI) / 180;
+      const ux = Math.cos(rad), uy = Math.sin(rad);
+      axis.setAttribute('x1', String(CX - ux * 130)); axis.setAttribute('y1', String(CY - uy * 130));
+      axis.setAttribute('x2', String(CX + ux * 130)); axis.setAttribute('y2', String(CY + uy * 130));
+      // reflect every point across the line, then see how far the reflection
+      // sits from the shape it is supposed to land on
+      const flip = (q: { x: number; y: number }) => {
+        const dx = q.x - CX, dy = q.y - CY;
+        const d = dx * ux + dy * uy;
+        return { x: CX + 2 * d * ux - dx, y: CY + 2 * d * uy - dy };
+      };
+      const m = p.map(flip);
+      mirrored.setAttribute('d', path(m));
+      const off = m.reduce((worst, q) => Math.max(worst, Math.min(...p.map((s) => Math.hypot(s.x - q.x, s.y - q.y)))), 0);
+      const fits = off < 6;
+      mirrored.setAttribute('stroke', fits ? 'var(--ok)' : INK);
+      const lines = sides === 0 ? 1 : sides;
+      out.innerHTML = fits
+        ? `<b>মিলে গেছে!</b> এই কোণে আয়নাটা রাখলে দুই পাশ হুবহু এক - এটা একটা প্রতিসাম্যের রেখা।`
+          + `<span class="cost">${sides === 0 ? 'প্রজাপতির প্রতিসাম্যের রেখা মাত্র একটাই, মাঝ বরাবর।' : `${bn(sides)} বাহুর নিয়মিত আকৃতির প্রতিসাম্যের রেখা ঠিক ${bn(lines)}টা - প্রতি ${num(180 / lines)}° পর পর একটা।`}</span>`
+        : `এখনো মেলেনি - ছায়া-রেখাটা আকৃতির উপর পড়ছে না। ঘোরাতে থাকো।`
+          + `<span class="cost">${sides === 0 ? 'প্রজাপতির একটাই প্রতিসাম্যের রেখা - খুঁজে বের করো।' : `${bn(sides)} বাহুর আকৃতির ${bn(lines)}টা প্রতিসাম্যের রেখা আছে।`}</span>`;
+      if (fits) credit('প্রতিসাম্য');
+    }
+    jumps.forEach((b) => b.addEventListener('click', () => {
+      sides = +b.dataset.n!;
+      jumps.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      render();
+    }));
+    jumps[1]!.setAttribute('aria-pressed', 'true');
+    const toAng = alongX(svg, 620, 120, 380 / 180);
+    dragTrack({
+      surface: svg, handle, min: 0, max: 180, step: 1, value: ang,
+      toValue: (x) => toAng(x),
+      onChange: (v) => { ang = v; render(); },
+      label: 'আয়নার কোণ', text: (v) => `${bn(v)}°`,
+    });
+    render();
+  })();
+
+  /* ---------- ৪. ক্ষেত্রফল ও পরিসীমা ---------- */
+  (function area() {
+    const svg = $<SVGSVGElement>('#area-svg');
+    const X0 = 70, Y0 = 40, CELL = 26;
+    const grid = el('g'); const rect = el('rect', { x: X0, y: Y0, fill: W, 'fill-opacity': 0.13, stroke: W, 'stroke-width': 3 });
+    svg.append(rect, grid);
+    const corner = el('g');
+    corner.append(
+      el('rect', { x: -22, y: -22, width: 44, height: 44, fill: 'transparent' }),
+      el('rect', { x: -9, y: -9, width: 18, height: 18, rx: 3, fill: W }),
+    );
+    svg.appendChild(corner);
+    const out = $('#area-out');
+    let w = 8, h = 5;   // in cells
+
+    function render() {
+      rect.setAttribute('width', String(w * CELL));
+      rect.setAttribute('height', String(h * CELL));
+      corner.setAttribute('transform', `translate(${X0 + w * CELL},${Y0 + h * CELL})`);
+      grid.replaceChildren();
+      for (let i = 1; i < w; i++) grid.appendChild(el('line', { x1: X0 + i * CELL, y1: Y0, x2: X0 + i * CELL, y2: Y0 + h * CELL, stroke: W, 'stroke-opacity': 0.35 }));
+      for (let j = 1; j < h; j++) grid.appendChild(el('line', { x1: X0, y1: Y0 + j * CELL, x2: X0 + w * CELL, y2: Y0 + j * CELL, stroke: W, 'stroke-opacity': 0.35 }));
+      text(grid, X0 + (w * CELL) / 2, Y0 + h * CELL + 26, `${bn(w)} সেমি`);
+      text(grid, X0 - 26, Y0 + (h * CELL) / 2 + 4, `${bn(h)} সেমি`);
+      out.innerHTML = `<b>ক্ষেত্রফল</b> = ${bn(w)} × ${bn(h)} = <b>${bn(w * h)} বর্গ সেমি</b> - ভেতরে ঠিক এতগুলো ছোট ঘর আছে, গুনে দেখো।`
+        + ` <b>পরিসীমা</b> = ২ × (${bn(w)} + ${bn(h)}) = <b>${bn(2 * (w + h))} সেমি</b> - চারপাশে একবার হাঁটলে এতটা পথ।`
+        + `<span class="cost">দুটো এক জিনিস নয়। ${bn(w)}×${bn(h)} আর ${bn(h)}×${bn(w)} এক, কিন্তু ১×${bn(w * h)} ঘরের একটা লম্বা ফালিরও ক্ষেত্রফল ${bn(w * h)}, অথচ পরিসীমা অনেক বেশি - ${bn(2 * (1 + w * h))} সেমি।</span>`;
+      credit('ক্ষেত্রফল'); credit('পরিসীমা');
+    }
+    dragPoint({
+      surface: svg, handle: corner, view: { w: 620, h: 320 },
+      bounds: { x0: X0 + 2 * CELL, y0: Y0 + 2 * CELL, x1: X0 + 18 * CELL, y1: Y0 + 9 * CELL },
+      x: X0 + w * CELL, y: Y0 + h * CELL, step: CELL, label: 'কোনা',
+      onChange: (x, y) => {
+        w = Math.max(2, Math.round((x - X0) / CELL));
+        h = Math.max(2, Math.round((y - Y0) / CELL));
+        render();
+      },
+    });
+    render();
+  })();
+
+  /* ---------- ৫. ঘন বস্তু ---------- */
+  (function solids() {
+    const svg = $<SVGSVGElement>('#solid-svg');
+    const CX = 260, CY = 120;
+    const body = el('g'); svg.appendChild(body);
+    svg.appendChild(el('line', { x1: 120, y1: 218, x2: 500, y2: 218, stroke: LINE, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    const handle = grip(); svg.appendChild(handle);
+    text(svg, 310, 250, 'মাপ টানো');
+    const out = $('#solid-out');
+    const jumps = [...root.querySelectorAll<HTMLButtonElement>('#ghonok .jump')];
+    let kind = 'cube', size = 5;   // in cm
+
+    function render() {
+      handle.setAttribute('transform', `translate(${120 + ((size - 2) / 10) * 380},218)`);
+      const s = size * 9;
+      body.replaceChildren();
+      let vol = 0, area = 0, formula = '', name = '', item = '';
+      if (kind === 'cube') {
+        const d = s * 0.42;
+        const x = CX - s / 2, y = CY - s / 2 + d / 2;
+        body.append(
+          el('polygon', { points: `${x},${y} ${x + d},${y - d} ${x + s + d},${y - d} ${x + s},${y}`, fill: W, 'fill-opacity': 0.5, stroke: W, 'stroke-width': 2 }),
+          el('polygon', { points: `${x + s},${y} ${x + s + d},${y - d} ${x + s + d},${y + s - d} ${x + s},${y + s}`, fill: W, 'fill-opacity': 0.32, stroke: W, 'stroke-width': 2 }),
+          el('rect', { x, y, width: s, height: s, fill: W, 'fill-opacity': 0.18, stroke: W, 'stroke-width': 2 }),
+        );
+        vol = size ** 3; area = 6 * size ** 2;
+        formula = `বাহু × বাহু × বাহু = ${bn(size)} × ${bn(size)} × ${bn(size)}`;
+        name = 'ঘনক'; item = 'ঘনক';
+      } else if (kind === 'sphere') {
+        body.append(
+          el('circle', { cx: CX, cy: CY, r: s / 2, fill: W, 'fill-opacity': 0.25, stroke: W, 'stroke-width': 2 }),
+          el('ellipse', { cx: CX, cy: CY, rx: s / 2, ry: s / 6, fill: 'none', stroke: W, 'stroke-width': 1.5, 'stroke-opacity': 0.6 }),
+        );
+        vol = (4 / 3) * Math.PI * (size / 2) ** 3; area = 4 * Math.PI * (size / 2) ** 2;
+        formula = `৪/৩ × π × ব্যাসার্ধ³, ব্যাসার্ধ ${num(size / 2)}`;
+        name = 'গোলক'; item = 'গোলক';
+      } else {
+        const r = s / 2, hh = s * 0.95, ry = r * 0.3;
+        body.append(
+          el('rect', { x: CX - r, y: CY - hh / 2, width: r * 2, height: hh, fill: W, 'fill-opacity': 0.2, stroke: 'none' }),
+          el('line', { x1: CX - r, y1: CY - hh / 2, x2: CX - r, y2: CY + hh / 2, stroke: W, 'stroke-width': 2 }),
+          el('line', { x1: CX + r, y1: CY - hh / 2, x2: CX + r, y2: CY + hh / 2, stroke: W, 'stroke-width': 2 }),
+          el('ellipse', { cx: CX, cy: CY + hh / 2, rx: r, ry, fill: W, 'fill-opacity': 0.3, stroke: W, 'stroke-width': 2 }),
+          el('ellipse', { cx: CX, cy: CY - hh / 2, rx: r, ry, fill: W, 'fill-opacity': 0.5, stroke: W, 'stroke-width': 2 }),
+        );
+        const rad = size / 2, ht = size;
+        vol = Math.PI * rad ** 2 * ht; area = 2 * Math.PI * rad * (rad + ht);
+        formula = `π × ব্যাসার্ধ² × উচ্চতা, ব্যাসার্ধ ${num(rad)}, উচ্চতা ${bn(ht)}`;
+        name = 'সিলিন্ডার'; item = 'সিলিন্ডার';
+      }
+      out.innerHTML = `<b>${name}</b>, মাপ ${bn(size)} সেমি। <b>আয়তন</b> = ${formula} = <b>${num(vol)} ঘন সেমি</b>। উপরিতলের ক্ষেত্রফল <b>${num(area)} বর্গ সেমি</b>।`
+        + `<span class="cost">মাপ দ্বিগুণ করলে ক্ষেত্রফল চার গুণ হয়, কিন্তু আয়তন হয় আট গুণ। তাই বড় জিনিস দেখতে যতটা বড় লাগে, ভেতরে তার চেয়ে অনেক বেশি জায়গা ধরে।</span>`;
+      credit(item); credit('আয়তন');
+    }
+    jumps.forEach((b) => b.addEventListener('click', () => {
+      kind = b.dataset.s!;
+      jumps.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      render();
+    }));
+    jumps[0]!.setAttribute('aria-pressed', 'true');
+    const toSize = alongX(svg, 620, 120, 38);
+    dragTrack({
+      surface: svg, handle, min: 2, max: 12, step: 1, value: size,
+      toValue: (x) => toSize(x) + 2,
+      onChange: (v) => { size = v; render(); },
+      label: 'মাপ', text: (v) => `${bn(v)} সেন্টিমিটার`,
+    });
+    render();
+  })();
+
+  // Everything above has drawn its first frame; from here a change is a choice.
+  live = true;
+</script>

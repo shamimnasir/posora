@@ -225,6 +225,88 @@ export function dragTrack(o: TrackOpts): Track {
   return { set: (v) => apply(v, false), get: () => value };
 }
 
+export type PointOpts = {
+  surface: SVGSVGElement;
+  /** The thing being dragged. It takes focus and answers the arrow keys. */
+  handle: SVGElement;
+  /** The SVG's own width and height, for turning a client point into one of its own. */
+  view: { w: number; h: number };
+  x: number; y: number;
+  /** Where the point may go, in the SVG's units. */
+  bounds: { x0: number; y0: number; x1: number; y1: number };
+  /** How far one arrow key press moves it. */
+  step?: number;
+  onChange: (x: number, y: number) => void;
+  label: string;
+};
+
+export type Point = { set: (x: number, y: number) => void; get: () => { x: number; y: number } };
+
+/**
+ * A handle that moves in two directions rather than along a track.
+ *
+ * A slider announces itself with a single number, and a point has two, so this
+ * is not a slider and does not pretend to be one. What a person actually needs
+ * is not the coordinates but what the drawing now measures, so the handle is
+ * focusable and answers the arrow keys, and the card's read-out is the live
+ * region that speaks. Pair this with `aria-live="polite"` on that read-out.
+ */
+export function dragPoint(o: PointOpts): Point {
+  const { surface, handle, view, bounds } = o;
+  const step = o.step ?? 4;
+  let x = o.x, y = o.y;
+
+  const put = (nx: number, ny: number, tell = true) => {
+    x = clamp(nx, bounds.x0, bounds.x1);
+    y = clamp(ny, bounds.y0, bounds.y1);
+    handle.setAttribute('aria-label', `${o.label}: ${Math.round(x)}, ${Math.round(y)}`);
+    if (tell) o.onChange(x, y);
+  };
+
+  handle.setAttribute('tabindex', '0');
+  handle.setAttribute('role', 'button');
+  handle.setAttribute('aria-label', o.label);
+  if (!handle.getAttribute('style')?.includes('cursor')) {
+    handle.setAttribute('style', `${handle.getAttribute('style') ?? ''};cursor:grab`);
+  }
+
+  let dragging = false;
+  const stop = () => { dragging = false; handle.setAttribute('style', (handle.getAttribute('style') ?? '').replace('grabbing', 'grab')); };
+  const at = (clientX: number, clientY: number) => {
+    const r = surface.getBoundingClientRect();
+    return { x: ((clientX - r.left) / r.width) * view.w, y: ((clientY - r.top) / r.height) * view.h };
+  };
+
+  handle.addEventListener('pointerdown', (e) => {
+    const ev = e as PointerEvent;
+    dragging = true;
+    handle.setAttribute('style', (handle.getAttribute('style') ?? '').replace('grab', 'grabbing'));
+    handle.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+  });
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const ev = e as PointerEvent;
+    const p = at(ev.clientX, ev.clientY);
+    put(p.x, p.y);
+  });
+  handle.addEventListener('pointerup', stop);
+  handle.addEventListener('pointercancel', stop);
+  handle.addEventListener('lostpointercapture', stop);
+  handle.addEventListener('keydown', (e) => {
+    const ev = e as KeyboardEvent;
+    const d = ev.shiftKey ? step * 4 : step;
+    const moves: Record<string, [number, number]> = {
+      ArrowLeft: [-d, 0], ArrowRight: [d, 0], ArrowUp: [0, -d], ArrowDown: [0, d],
+    };
+    const m = moves[ev.key];
+    if (m) { put(x + m[0], y + m[1]); ev.preventDefault(); }
+  });
+
+  put(x, y, false);
+  return { set: (nx, ny) => put(nx, ny, false), get: () => ({ x, y }) };
+}
+
 /**
  * Turn a pointer position into a value along a straight track.
  *
