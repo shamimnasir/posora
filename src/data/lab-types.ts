@@ -135,7 +135,73 @@ export type ScrubCard = {
   source?: string;
 };
 
-export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard;
+
+/* ---------------- compare ---------------- */
+
+/** One measured column. `max` fixes the bar scale when the data has an outlier. */
+export type CompareStat = { k: string; n: string; unit?: string; max?: number; /** bigger is not always better; say nothing about that. */ fmt?: (v: number) => string };
+export type CompareItem = {
+  n: string;
+  /** The item in `worlds.ts` this stands for, when it is one. */
+  item?: string;
+  e?: string;
+  stats: Record<string, number>;
+  note: string;
+};
+
+/**
+ * Two things side by side.
+ *
+ * PLAN.md asked for this for planets, animals, elements and food, and it is
+ * the one component in that list that needs no new content: the figures are
+ * already written down, they are just never put next to each other. A number
+ * on its own is a fact to memorise; the same number beside another one is a
+ * question a child can answer.
+ */
+export type CompareCard = {
+  kind: 'compare';
+  item: string;
+  n: string;
+  how: string;
+  stats: CompareStat[];
+  items: CompareItem[];
+  /** Which two are shown before anything is touched. Defaults to the first two. */
+  start?: [number, number];
+  source?: string;
+  also?: string[];
+};
+
+/* ---------------- graph ---------------- */
+
+export type GraphAxis = { n: string; min: number; max: number; unit?: string };
+/** One plotted line: a name, a colour, and the function that draws it. */
+export type GraphLine = { n: string; hue: string; f: (x: number, v: Record<string, number>) => number };
+
+/**
+ * A curve you change by hand.
+ *
+ * পদার্থবিজ্ঞান has advertised গ্রাফ on its world card since the site went up
+ * and nothing has ever delivered it - the one outright false promise left.
+ * A graph is not a picture of data here: the line is computed from the same
+ * kind of real formula a `scrub` card uses, so dragging a slider bends the
+ * curve and the shape itself is the lesson.
+ */
+export type GraphCard = {
+  kind: 'graph';
+  item: string;
+  n: string;
+  how: string;
+  knobs: ScrubKnob[];
+  x: GraphAxis;
+  y: { n: string; unit?: string; /** Pin the top of the scale instead of fitting it to the data. */ max?: number };
+  lines: GraphLine[];
+  /** The sentence under the plot. Gets the knob values. */
+  read: (v: Record<string, number>) => string;
+  source?: string;
+  also?: string[];
+};
+
+export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard | CompareCard | GraphCard;
 
 export type Lab = {
   /** Which world and which category index in `worlds.ts` this lab is. */

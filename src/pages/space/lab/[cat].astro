@@ -1,0 +1,24 @@
+---
+/**
+ * /space/lab/<n>/.
+ *
+ * This file exists only to beat `space/[...item].astro`. Astro ranks a static
+ * segment above a dynamic one, so `space/[...item]` wins over
+ * `[world]/lab/[cat]` and swallowed the path; `space/lab/[cat]` has one more
+ * static segment than the catch-all and wins it back. The page itself is the
+ * same component every other world's lab uses.
+ */
+import LabPage from '../../../components/LabPage.astro';
+import { getWorld } from '../../../lib/content';
+import { labFor } from '../../../data/labs';
+
+export const prerender = false;
+
+const w = await getWorld('space');
+const cat = Number(Astro.params.cat);
+if (!w || !Number.isInteger(cat) || cat < 0 || cat >= w.cats.length) return Astro.rewrite('/404');
+if (!labFor('space', cat)) return Astro.rewrite('/404');
+
+Astro.response.headers.set('cache-control', 'public, s-maxage=300, stale-while-revalidate=3600');
+---
+<LabPage world={w} cat={cat} />

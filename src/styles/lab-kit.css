@@ -95,3 +95,44 @@
 @media (max-width: 760px) {
   .lk-cycle, .lk-place, .lk-bal { grid-template-columns: 1fr; }
 }
+
+/* ---- compare ---- */
+.lk-cmp-pick { display: grid; gap: 0.5rem; }
+.lk-cmp-side {
+  display: inline-block; font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem;
+}
+.lk-cmp { display: grid; gap: 0.3rem; margin: 0.8rem 0 0.7rem; }
+.lk-cmp-h {
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.6rem; align-items: baseline;
+  padding-bottom: 0.35rem; border-bottom: 1px solid var(--line);
+}
+.lk-cmp-h b { font-family: var(--font-display); font-size: 16px; color: var(--ink); }
+.lk-cmp-h b:last-of-type { text-align: right; }
+.lk-cmp-h span { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.lk-cmp-row {
+  display: grid; grid-template-columns: 4.6rem 1fr 7.5rem 1fr 4.6rem;
+  gap: 0.4rem; align-items: center; font-size: 12.5px;
+}
+.lk-cmp-n { text-align: center; color: var(--ink-2); font-size: 12px; }
+.lk-cmp-v { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.lk-cmp-row .lk-cmp-v:first-child { text-align: right; }
+.lk-cmp-bar { height: 9px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; display: block; }
+.lk-cmp-bar i { display: block; height: 100%; background: var(--w); border-radius: 999px; transition: width 0.25s ease; }
+/* the left bar grows from its right edge, so the two meet in the middle */
+.lk-cmp-l { display: flex; justify-content: flex-end; }
+.lk-cmp-l i { background: color-mix(in oklab, var(--w) 55%, #8a8f99); }
+
+/* ---- graph ---- */
+.lk svg { width: 100%; height: auto; display: block; }
+.lk-legend { display: flex; flex-wrap: wrap; gap: 0.7rem; margin: 0.2rem 0 0.6rem; }
+.lk-leg { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 12px; color: var(--ink-2); }
+.lk-leg i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+
+@media (max-width: 620px) {
+  .lk-cmp-row { grid-template-columns: 3.6rem 1fr 1fr 3.6rem; }
+  .lk-cmp-n { grid-column: 1 / -1; order: -1; text-align: left; font-weight: 600; }
+}
+
+/* A plot rendered at full card width is 650px tall and swallows the page. */
+.lk-plot { max-width: 640px; margin-inline: auto; }

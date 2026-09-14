@@ -341,7 +341,7 @@ export const worlds: World[] = [
    0,
    3,
    6,
-   null
+   0
   ],
   "missionCats": [
    0,

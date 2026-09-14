@@ -14,8 +14,8 @@
  * the same as reading the item it stands for, because the card IS that item's
  * content and not a toy beside it.
  */
-import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard } from '../data/lab-types';
-import { bn } from './bn';
+import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard, CompareCard, GraphCard, ScrubKnob } from '../data/lab-types';
+import { bn, bnOf } from './bn';
 import { svgEl, clamp } from './handson';
 import { praise } from './praise';
 import { rewardCorrect } from './handson';
@@ -376,6 +376,232 @@ function buildBalance(c: BalanceCard, credit: Credit): HTMLElement {
   return wrap;
 }
 
+/**
+ * One slider, its label and its live value.
+ *
+ * Shared by `scrub` and `graph`: both are "move a handle, watch real
+ * arithmetic answer", and the only difference is whether the answer is printed
+ * or plotted. Two copies of this would have drifted within a week.
+ */
+function knobRow(k: ScrubKnob, vals: Record<string, number>, onInput: () => void): HTMLElement {
+  const row = el('label', 'lk-knob');
+  const head = el('div', 'lk-kh');
+  const v = el('b');
+  head.append(el('span', '', k.n), v);
+  const input = el('input');
+  input.type = 'range';
+  input.min = String(k.min); input.max = String(k.max); input.step = String(k.step);
+  input.value = String(k.value);
+  input.setAttribute('aria-label', k.n);
+  const print = () => {
+    const t = k.text ? k.text(vals[k.k]!) : `${bn(vals[k.k]!)} ${k.unit}`.trim();
+    v.textContent = t;
+    input.setAttribute('aria-valuetext', t);
+  };
+  input.addEventListener('input', () => { vals[k.k] = +input.value; print(); onInput(); });
+  row.append(head, input);
+  print();
+  return row;
+}
+
+/* ---------------- compare ---------------- */
+
+/**
+ * Two things side by side, and the ratio between them.
+ *
+ * The ratio line is the point of the card. "বৃহস্পতির ব্যাস ১,৩৯,৮২০ কিলোমিটার"
+ * is a fact to be memorised and forgotten; "পৃথিবীর ১১ গুণ চওড়া" is a picture.
+ * Both numbers were already on the site - they were just never next to each
+ * other.
+ */
+function buildCompare(c: CompareCard, credit: Credit): HTMLElement {
+  const wrap = el('div', 'lk');
+  const [a0, b0] = c.start ?? [0, Math.min(1, c.items.length - 1)];
+  let ai = a0, bi = b0;
+
+  const rows = el('div', 'lk-cmp-pick');
+  const mk = (side: 'a' | 'b', label: string) => {
+    const box = el('div');
+    box.append(Object.assign(el('span', 'lk-cmp-side'), { textContent: label }));
+    const p = picker(c.items.map((i) => `${i.e ? `${i.e} ` : ''}${i.n}`), (i) => {
+      if (side === 'a') ai = i; else bi = i;
+      p.mark(i);
+      render();
+    });
+    box.append(p.host);
+    rows.append(box);
+    return p;
+  };
+  const pa = mk('a', 'বাঁয়ে');
+  const pb = mk('b', 'ডানে');
+
+  const table = el('div', 'lk-cmp');
+  const out = readout();
+
+  function render() {
+    const A = c.items[ai]!, B = c.items[bi]!;
+    table.replaceChildren();
+    const head = el('div', 'lk-cmp-h');
+    head.append(el('b', '', A.n), el('span', '', 'তুলনা'), el('b', '', B.n));
+    table.append(head);
+    for (const st of c.stats) {
+      const va = A.stats[st.k], vb = B.stats[st.k];
+      const row = el('div', 'lk-cmp-row');
+      const name = el('span', 'lk-cmp-n', st.n);
+      const show = (v: number | undefined) =>
+        v === undefined ? '-' : st.fmt ? st.fmt(v) : `${bn(v)}${st.unit ? ` ${st.unit}` : ''}`;
+      const top = st.max ?? (Math.max(va ?? 0, vb ?? 0) || 1);
+      const barA = el('span', 'lk-cmp-bar lk-cmp-l');
+      const ia = el('i'); ia.style.width = `${clamp((va ?? 0) / top, 0, 1) * 100}%`;
+      barA.append(ia);
+      const barB = el('span', 'lk-cmp-bar');
+      const ib = el('i'); ib.style.width = `${clamp((vb ?? 0) / top, 0, 1) * 100}%`;
+      barB.append(ib);
+      row.append(el('span', 'lk-cmp-v', show(va)), barA, name, barB, el('span', 'lk-cmp-v', show(vb)));
+      table.append(row);
+    }
+
+    // the ratio, on the first stat both of them have
+    const st = c.stats.find((x) => A.stats[x.k] !== undefined && B.stats[x.k] !== undefined && B.stats[x.k] !== 0);
+    let ratio = '';
+    if (st && ai !== bi) {
+      const va = A.stats[st.k]!, vb = B.stats[st.k]!;
+      const big = va >= vb ? A : B, small = va >= vb ? B : A;
+      const k = Math.max(va, vb) / Math.min(va, vb);
+      ratio = Number.isFinite(k)
+        ? ` <b>${bnOf(big.n)}</b> ${st.n} <b>${bnOf(small.n)}</b> <b>${bn(k >= 10 ? k.toFixed(0) : k.toFixed(1))} গুণ</b>।`
+        : '';
+    }
+    out.innerHTML = ai === bi
+      ? `<b>${A.n}</b> - ${A.note}<span class="lk-note">দুই পাশে আলাদা দুটো বাছলে তুলনাটা দেখা যাবে।</span>`
+      : `${ratio}<span class="lk-note"><b>${A.n}:</b> ${A.note}<br><b>${B.n}:</b> ${B.note}</span>`;
+    if (A.item) credit(A.item);
+    if (B.item) credit(B.item);
+    credit(c.item);
+  }
+
+  pa.mark(ai); pb.mark(bi);
+  render();
+  wrap.append(rows, table, out);
+  if (c.source) wrap.append(el('p', 'lk-src', c.source));
+  return wrap;
+}
+
+/* ---------------- graph ---------------- */
+
+/**
+ * A top-of-scale whose quarters are round numbers.
+ *
+ * Rounding the peak alone is not enough: a peak of 24 rounds to 25, and the
+ * four gridlines below it then read ০, ৬.৩, ১২.৫, ১৮.৮ - which is worse than
+ * no labels. Rounding the *step* instead and multiplying by four gives an axis
+ * a child can read off.
+ */
+function niceTop(peak: number): number {
+  if (peak <= 0) return 4;
+  const rough = peak / 4;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const n = rough / mag;
+  const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  return step * 4;
+}
+
+/** Whole numbers lose the decimal point; ০.০ on an axis is noise. */
+const axisNum = (v: number): string => bn(Number.isInteger(v) ? String(v) : v.toFixed(1));
+
+/**
+ * A curve that bends when you drag a handle.
+ *
+ * Plotted from the same kind of real formula a `scrub` card computes, sampled
+ * across the x range. The y scale refits itself to whatever the formula
+ * produces, because a fixed scale either flattens the interesting part or
+ * pushes it off the top the moment a slider moves.
+ */
+function buildGraph(c: GraphCard, credit: Credit): HTMLElement {
+  const wrap = el('div', 'lk');
+  const vals: Record<string, number> = {};
+  const knobs = el('div', 'lk-knobs');
+  const out = readout();
+
+  const VW = 460, VH = 280, L = 46, R = 12, T = 14, B = 34;
+  const svg = svgEl('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'lk-plot', role: 'img', 'aria-label': `${c.n}: লেখচিত্র` });
+  const plot = svgEl('g', {});
+  const axes = svgEl('g', {});
+  svg.append(axes, plot);
+
+  const legend = el('div', 'lk-legend');
+  for (const ln of c.lines) {
+    const chip = el('span', 'lk-leg');
+    const dot = el('i'); dot.style.background = ln.hue;
+    chip.append(dot, document.createTextNode(ln.n));
+    legend.append(chip);
+  }
+
+  for (const k of c.knobs) {
+    vals[k.k] = k.value;
+    knobs.append(knobRow(k, vals, () => render()));
+  }
+
+  const SAMPLES = 90;
+  const px = (x: number) => L + ((x - c.x.min) / (c.x.max - c.x.min || 1)) * (VW - L - R);
+  function render(mark = true) {
+    // sample every line first, so the y scale can fit all of them together
+    const series = c.lines.map((ln) => {
+      const pts: [number, number][] = [];
+      for (let i = 0; i <= SAMPLES; i++) {
+        const x = c.x.min + ((c.x.max - c.x.min) * i) / SAMPLES;
+        const y = ln.f(x, vals);
+        if (Number.isFinite(y)) pts.push([x, y]);
+      }
+      return { ln, pts };
+    });
+    const peak = Math.max(0, ...series.flatMap((s) => s.pts.map((p) => p[1])));
+    const top = c.y.max ?? niceTop(peak || 1);
+    const py = (y: number) => VH - B - (clamp(y / top, 0, 1)) * (VH - T - B);
+
+    axes.replaceChildren();
+    // gridlines and y labels
+    for (let i = 0; i <= 4; i++) {
+      const y = (top * i) / 4;
+      axes.append(svgEl('line', { x1: L, y1: py(y), x2: VW - R, y2: py(y), stroke: 'var(--line)', 'stroke-width': i === 0 ? 1.6 : 0.8, 'stroke-opacity': i === 0 ? 1 : 0.55 }));
+      const t = svgEl('text', { x: L - 6, y: py(y) + 4, 'font-size': 10.5, 'text-anchor': 'end', fill: 'var(--muted)' });
+      t.textContent = axisNum(y);
+      axes.append(t);
+    }
+    // x axis ticks
+    for (let i = 0; i <= 4; i++) {
+      const x = c.x.min + ((c.x.max - c.x.min) * i) / 4;
+      axes.append(svgEl('line', { x1: px(x), y1: py(0), x2: px(x), y2: py(0) + 5, stroke: 'var(--line)', 'stroke-width': 1.2 }));
+      const t = svgEl('text', { x: px(x), y: py(0) + 18, 'font-size': 10.5, 'text-anchor': 'middle', fill: 'var(--muted)' });
+      t.textContent = axisNum(x);
+      axes.append(t);
+    }
+    const xl = svgEl('text', { x: (L + VW - R) / 2, y: VH - 4, 'font-size': 11, 'text-anchor': 'middle', fill: 'var(--ink-2)' });
+    xl.textContent = `${c.x.n}${c.x.unit ? ` (${c.x.unit})` : ''}`;
+    axes.append(xl);
+    const yl = svgEl('text', { x: 12, y: (T + VH - B) / 2, 'font-size': 11, 'text-anchor': 'middle', fill: 'var(--ink-2)', transform: `rotate(-90 12 ${(T + VH - B) / 2})` });
+    yl.textContent = `${c.y.n}${c.y.unit ? ` (${c.y.unit})` : ''}`;
+    axes.append(yl);
+
+    plot.replaceChildren();
+    for (const { ln, pts } of series) {
+      if (!pts.length) continue;
+      plot.append(svgEl('polyline', {
+        points: pts.map(([x, y]) => `${px(x).toFixed(1)},${py(y).toFixed(1)}`).join(' '),
+        fill: 'none', stroke: ln.hue, 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'stroke-linecap': 'round',
+      }));
+    }
+    out.innerHTML = c.read(vals);
+    if (!mark) return;
+    credit(c.item);
+    for (const it of c.also ?? []) credit(it);
+  }
+
+  render(false);
+  wrap.append(knobs, svg, legend, out);
+  if (c.source) wrap.append(el('p', 'lk-src', c.source));
+  return wrap;
+}
 /* ---------------- scrub ---------------- */
 
 /**
@@ -396,29 +622,9 @@ function buildScrub(c: ScrubCard, credit: Credit): HTMLElement {
   const bars = el('div', 'lk-meters');
   const out = readout();
 
-  const shown: HTMLElement[] = [];
   for (const k of c.knobs) {
     vals[k.k] = k.value;
-    const row = el('label', 'lk-knob');
-    const head = el('div', 'lk-kh');
-    const name = el('span', '', k.n);
-    const v = el('b');
-    head.append(name, v);
-    const input = el('input');
-    input.type = 'range';
-    input.min = String(k.min); input.max = String(k.max); input.step = String(k.step);
-    input.value = String(k.value);
-    input.setAttribute('aria-label', k.n);
-    const print = () => {
-      const t = k.text ? k.text(vals[k.k]!) : `${bn(vals[k.k]!)} ${k.unit}`.trim();
-      v.textContent = t;
-      input.setAttribute('aria-valuetext', t);
-    };
-    input.addEventListener('input', () => { vals[k.k] = +input.value; print(); render(); });
-    row.append(head, input);
-    knobs.append(row);
-    shown.push(row);
-    print();
+    knobs.append(knobRow(k, vals, () => render()));
   }
 
   function render(mark = true) {
@@ -464,6 +670,8 @@ export function buildCard(host: HTMLElement, card: LabCard, credit: Credit): voi
     card.kind === 'cycle' ? buildCycle(card, credit)
       : card.kind === 'place' ? buildPlace(card, credit)
         : card.kind === 'balance' ? buildBalance(card, credit)
-          : buildScrub(card, credit),
+          : card.kind === 'compare' ? buildCompare(card, credit)
+            : card.kind === 'graph' ? buildGraph(card, credit)
+              : buildScrub(card, credit),
   );
 }
