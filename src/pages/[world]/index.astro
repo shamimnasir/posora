@@ -51,12 +51,28 @@ const explorer = EXPLORERS[w.slug] ?? null;
 const charsOf = (d: ItemDetail[] | null) =>
   d ? d.reduce((s, it) => s + it.l1.length + it.l2.length + it.l3.length + it.fun.length, 0) : 0;
 
+/**
+ * Which mission, if any, was built for each category.
+ *
+ * `missionCats` already records this, but the arrow only ever pointed one way:
+ * playing a mission moves the model to the category it teaches, while a child
+ * standing in that category was never told a game had been built for it.
+ * Twenty-three of the eighty-seven categories had a mission and no door into
+ * it from the one place a child is guaranteed to be looking.
+ *
+ * A mission with no data behind it yet is not a door, so it is not offered.
+ */
+const catMission = w.cats.map((_c, i) => {
+  const mi = w.missionCats.findIndex((mc) => mc === i);
+  return mi >= 0 && missionSpec(w.slug, mi) ? mi : null;
+});
+
 const payload = w.cats.map((c, i) => {
   const detail = explorer?.[i] ?? null;
   return {
     n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i, c.n),
     lab: c.lab, labAnchors: c.labAnchors, detail, chars: charsOf(detail),
-    emoji: c.items.map((it) => emojiFor(w.slug, it)),
+    emoji: c.items.map((it) => emojiFor(w.slug, it)), mission: catMission[i] ?? null,
   };
 });
 
@@ -300,10 +316,11 @@ const schema = [
               <span class="cat-prog" id="cat-prog"><b id="cat-prog-n">০</b> / {bn(first.items.length)} দেখা</span>
             </div>
             <p class="items-h-s" id="items-h-s">নিচের যেকোনোটিতে ক্লিক করো - ডানে তার পুরো কথা খুলবে</p>
-            <div class="extras" id="extras" hidden={!firstReadable && !first.lab}>
+            <div class="extras" id="extras" hidden={!firstReadable && !first.lab && catMission[0] === null}>
               <a class="xbtn" id="x-quiz" href={`/${w.slug}/quiz/0/`} hidden={!firstReadable}>যাচাই দাও{plan ? '' : ' · পরিবার'}</a>
               <a class="xbtn" id="x-ws" href={`/${w.slug}/worksheet/0/`} hidden={!firstReadable}>অনুশীলনী ছাপাও{plan ? '' : ' · পরিবার'}</a>
               <a class="xbtn" id="x-lab" href={first.lab ?? '/'} hidden={!first.lab}>হাতে-কলমে টুল</a>
+              <button type="button" class="xbtn xbtn-play" id="x-mission" data-mi={catMission[0] ?? ''} hidden={catMission[0] === null}>এই বিভাগের মিশন ▶</button>
               {child && <span class="xwho">পড়ছে: <b>{child.nickname}</b> <a href="/account/">বদলাও</a></span>}
             </div>
             {/* Reading comes first when there is writing. A category can have
@@ -833,6 +850,8 @@ const schema = [
   .extras[hidden] { display: none; }
   .xbtn { font-size: 12.5px; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); background: color-mix(in oklab, var(--w) 10%, var(--panel)); color: var(--ink); transition: background 0.15s ease, transform 0.15s ease; }
   .xbtn:hover { transform: translateY(-1px); background: color-mix(in oklab, var(--w) 20%, var(--panel)); }
+  /* A button, not a link, so it needs the family and the pointer said out loud. */
+  .xbtn-play { font-family: inherit; cursor: pointer; line-height: inherit; }
   .xwho { margin-left: auto; font-size: 12.5px; color: var(--muted); }
   .xwho a { margin-left: 0.3rem; color: var(--brand-ink); font-weight: 600; }
   /* NOTE: the chips are rebuilt by the script on every category change, so their
@@ -1139,6 +1158,8 @@ const schema = [
     n: string; items: string[]; play: string; hero: HeroSpec;
     lab?: string; labAnchors?: string[]; detail: ItemDetail[] | null; chars: number;
     emoji: (string | undefined)[];
+    /** Index into this world's missions, when one was built for this category. */
+    mission: number | null;
   };
 
   const root = document.getElementById('world')!;
@@ -1435,6 +1456,14 @@ const schema = [
       onClose() { renderMissions(); renderPlayer(); },
     });
   }));
+
+  // The category's own way into its mission. It delegates to the mission
+  // card's button rather than repeating the load-play-score sequence, so there
+  // is still exactly one place a mission can be started from.
+  $('#x-mission').addEventListener('click', () => {
+    const mi = $<HTMLButtonElement>('#x-mission').dataset.mi;
+    missionBtns.find((m) => m.dataset.mi === mi)?.click();
+  });
 
   /* ---- খোঁজার খেলা: find each item on the model ---- */
   const quest = { on: false, order: [] as number[], i: 0, mistakes: 0, wrongHere: 0, t0: 0, timer: 0 };
@@ -1899,13 +1928,16 @@ const schema = [
     renderNext();
     // the gated features follow the category
     const extras = $('#extras');
-    extras.hidden = !readable(c) && !c.lab;
+    extras.hidden = !readable(c) && !c.lab && c.mission === null;
     const quiz = $<HTMLAnchorElement>('#x-quiz'), ws = $<HTMLAnchorElement>('#x-ws'), lab = $<HTMLAnchorElement>('#x-lab');
     quiz.hidden = ws.hidden = !readable(c);
     quiz.href = `/${slug}/quiz/${i}/`;
     ws.href = `/${slug}/worksheet/${i}/`;
     lab.hidden = !c.lab;
     if (c.lab) lab.href = c.lab;
+    const play = $<HTMLButtonElement>('#x-mission');
+    play.hidden = c.mission === null;
+    if (c.mission !== null) play.dataset.mi = String(c.mission);
     renderQuestBtn();
     rail[i]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
     if (!reduced) $('.items-h').animate([{ opacity: 0.3, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
