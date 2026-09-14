@@ -1,6 +1,7 @@
 ---
 /**
  * Google Analytics (GA4), property G-H4ESLZMRCW.
+ *
  * Two external scripts only - no inline script anywhere (the site's CSP is
  * `script-src 'self' https://www.googletagmanager.com`, no 'unsafe-inline'):
  * gtag.js itself, and this component's own <script> body, which Astro
@@ -10,9 +11,26 @@
 ---
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-H4ESLZMRCW"></script>
 <script>
-  declare global { interface Window { dataLayer: unknown[][]; gtag?: (...args: unknown[]) => void } }
+  /**
+   * `arguments`, not a rest array. This is the whole bug.
+   *
+   * The snippet was written as `function gtag(...args: unknown[]) {
+   * dataLayer.push(args) }`, which is the obvious modern spelling and is
+   * silently broken: gtag.js walks the dataLayer and only processes entries
+   * that are real `arguments` objects - it checks the internal class - and
+   * skips plain arrays. So gtag.js loaded, the queue filled up, the `config`
+   * command was never executed and not one `/g/collect` beacon was ever sent.
+   * The site looked instrumented and recorded nothing, for as long as it has
+   * been live.
+   *
+   * Written as a typed function expression with no declared parameters, so
+   * neither TypeScript nor esbuild has a reason to rewrite the body and
+   * `arguments` survives to the browser.
+   */
+  type Gtag = (...args: unknown[]) => void;
+  declare global { interface Window { dataLayer: IArguments[]; gtag?: Gtag } }
   window.dataLayer = window.dataLayer || [];
-  function gtag(...args: unknown[]) { window.dataLayer.push(args); }
+  const gtag: Gtag = function () { window.dataLayer.push(arguments); };
   // Exposed so src/lib/track.ts can count which worlds and items get opened.
   // That helper is a no-op whenever this is missing, so a blocked or failed
   // Analytics load never changes how a page behaves.
