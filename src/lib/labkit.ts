@@ -73,11 +73,22 @@ function buildCycle(c: CycleCard, credit: Credit): HTMLElement {
   const n = c.stages.length;
   const loop = c.loop !== false;
 
-  const V = 300, C = V / 2, R = 104;
-  const svg = svgEl('svg', { viewBox: `0 0 ${V} ${V}`, role: 'img', 'aria-label': `${c.n}: ${bn(n)}টি ধাপ` });
+  /**
+   * Wide rather than square, because the captions are Bangla words and they
+   * sit outside the ring.
+   *
+   * The first version was a 300 square with every caption centred at 1.46 R.
+   * "বাষ্পীভবন" at the top was cut off by the viewBox, "ঘনীভবন" ran off the
+   * right edge and "নদী হয়ে সাগরে" off the left - three of five labels
+   * unreadable. Side captions now hang outward from their node and are
+   * anchored away from it, so a long name grows into the empty half of the box
+   * instead of over the edge.
+   */
+  const VW = 420, VH = 320, CX = VW / 2, CY = 155, R = 100, NODE = 30;
+  const svg = svgEl('svg', { viewBox: `0 0 ${VW} ${VH}`, role: 'img', 'aria-label': `${c.n}: ${bn(n)}টি ধাপ` });
   const at = (i: number) => {
     const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-    return { x: C + Math.cos(a) * R, y: C + Math.sin(a) * R, a };
+    return { x: CX + Math.cos(a) * R, y: CY + Math.sin(a) * R, a };
   };
 
   // the path between the stages, drawn before the stages so it sits under them
@@ -86,7 +97,7 @@ function buildCycle(c: CycleCard, credit: Credit): HTMLElement {
     const mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
     const pull = 1.18;
     svg.append(svgEl('path', {
-      d: `M ${p0.x} ${p0.y} Q ${C + (mid.x - C) * pull} ${C + (mid.y - C) * pull} ${p1.x} ${p1.y}`,
+      d: `M ${p0.x} ${p0.y} Q ${CX + (mid.x - CX) * pull} ${CY + (mid.y - CY) * pull} ${p1.x} ${p1.y}`,
       fill: 'none', stroke: 'var(--line)', 'stroke-width': 2,
     }));
   }
@@ -94,12 +105,19 @@ function buildCycle(c: CycleCard, credit: Credit): HTMLElement {
   const nodes = c.stages.map((s, i) => {
     const p = at(i);
     const g = svgEl('g', { role: 'button', tabindex: '0', 'aria-label': s.n });
-    const ring = svgEl('circle', { cx: p.x, cy: p.y, r: 30, fill: 'var(--panel-2)', stroke: 'var(--line)', 'stroke-width': 2 });
+    const ring = svgEl('circle', { cx: p.x, cy: p.y, r: NODE, fill: 'var(--panel-2)', stroke: 'var(--line)', 'stroke-width': 2 });
     const glyph = svgEl('text', { x: p.x, y: p.y + 9, 'font-size': 25, 'text-anchor': 'middle' });
     glyph.textContent = s.e;
+    // A node near the top or bottom of the ring gets its caption above or
+    // below; everything else gets it hanging outward to the side, anchored so
+    // the text grows away from the drawing rather than across it.
+    const side = Math.cos(p.a);
+    const vertical = Math.abs(side) < 0.35;
     const cap = svgEl('text', {
-      x: C + (p.x - C) * 1.46, y: C + (p.y - C) * 1.46 + 4,
-      'font-size': 11.5, 'text-anchor': 'middle', fill: 'var(--ink-2)',
+      x: vertical ? p.x : p.x + (side > 0 ? NODE + 10 : -(NODE + 10)),
+      y: vertical ? p.y + (Math.sin(p.a) < 0 ? -(NODE + 14) : NODE + 22) : p.y + 4,
+      'font-size': 11.5, fill: 'var(--ink-2)',
+      'text-anchor': vertical ? 'middle' : side > 0 ? 'start' : 'end',
     });
     cap.textContent = s.n;
     g.append(ring, glyph);
@@ -132,7 +150,7 @@ function buildCycle(c: CycleCard, credit: Credit): HTMLElement {
       const on = j === cur;
       x.ring.setAttribute('fill', on ? 'color-mix(in oklab, var(--w) 30%, var(--panel))' : 'var(--panel-2)');
       x.ring.setAttribute('stroke', on ? 'var(--w)' : 'var(--line)');
-      x.ring.setAttribute('r', on ? '34' : '30');
+      x.ring.setAttribute('r', on ? String(NODE + 4) : String(NODE));
       x.cap.setAttribute('fill', on ? 'var(--ink)' : 'var(--ink-2)');
       x.cap.setAttribute('font-weight', on ? '700' : '400');
       x.g.setAttribute('aria-current', String(on));

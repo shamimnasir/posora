@@ -81,10 +81,14 @@ const labs: Lab[] = [
           ${leaf(196, 148, 168)}
           ${leaf(216, 100, -18)}
           ${leaf(214, 180, -6)}
-          <path d="M282 158 C288 144 282 132 288 120 M300 162 C306 148 300 136 306 124" stroke="#8fc2e8" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          <g stroke="#7ab4e0" stroke-width="2.6" fill="none" stroke-linecap="round">
+            <path d="M284 156 C290 142 282 132 288 118"/><path d="M300 160 C306 146 298 136 304 122"/><path d="M316 158 C322 144 314 134 320 120"/>
+            <path d="M288 118 l-4 7 M288 118 l5 6 M304 122 l-4 7 M304 122 l5 6 M320 120 l-4 7 M320 120 l5 6"/>
+          </g>
+          <circle cx="294" cy="168" r="2.6" fill="#7ab4e0"/><circle cx="310" cy="172" r="2.2" fill="#7ab4e0"/>
           <path d="M206 132 L206 200" stroke="#c98f1f" stroke-width="2" stroke-dasharray="4 4" fill="none"/>
           <path d="M206 200 l-4 -8 l8 0 Z" fill="#c98f1f"/>
-          <text x="60" y="300" font-size="10.5" fill="var(--muted)">মাটি</text>
+          <text x="14" y="308" font-size="10.5" fill="var(--muted)">মাটি</text>
         `,
         zones: [
           { n: 'পানি টানা', item: 'পানি টানা', x: 106, y: 278, r: 20, note: 'মূলের সরু লোমগুলো মাটি থেকে পানি চুষে নেয়, আর সেই পানি কাণ্ড বেয়ে উপরে ওঠে।' },
