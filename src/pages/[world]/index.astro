@@ -21,6 +21,7 @@ import { catEmoji } from '../../data/cat-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
 import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
 import { sheets } from '../../data/printables';
+import MissionRow from '../../components/explorer/MissionRow.astro';
 
 export const prerender = false;
 
@@ -62,6 +63,10 @@ const charsOf = (d: ItemDetail[] | null) =>
  *
  * A mission with no data behind it yet is not a door, so it is not offered.
  */
+/** How many missions stay open before the rest fold away. */
+const MISS_SHOWN = 4;
+const missionRows = w.missions.map((m, i) => ({ m, i, cat: w.missionCats[i] ?? null }));
+
 const catMission = w.cats.map((_c, i) => {
   const mi = w.missionCats.findIndex((mc) => mc === i);
   return mi >= 0 && missionSpec(w.slug, mi) ? mi : null;
@@ -462,36 +467,22 @@ const schema = [
             <span class="lbl">মিশন</span>
             <span class="lbl num" id="miss-count">০ / {bn(playableMissions)}</span>
           </div>
+          {/* The first few, then the rest behind a fold.
+              A world used to have three missions and now has up to eleven, and
+              eleven full-height rows push everything under them off the page.
+              `details` rather than a script, so the fold works before any
+              JavaScript runs and a keyboard opens it the usual way. */}
           <div class="miss">
-            {w.missions.map((m, i) => {
-              const spec = missionSpec(w.slug, i);
-              return spec ? (
-                <button type="button" class="m mission-play" data-mi={i} data-cat={w.missionCats[i] ?? ''}>
-                  <span class="mb">{pad2(i + 1)}</span>
-                  <div class="m-t">
-                    <b>{m.n}</b>
-                    <p>{m.d}</p>
-                    <span class="m-meta">
-                      <span class="m-kind">{missionKind(spec)}</span>
-                      <span class="m-len">{`${bn(missionLength(spec)[0])} ${missionLength(spec)[1]}`}</span>
-                      <span class="m-hearts" aria-hidden="true">♥♥♥</span>
-                      {varies(spec) && <span class="m-vary" title={`${varies(spec)}, তাই প্রতিবার নতুন খেলা`}>🎲 নতুন</span>}
-                    </span>
-                  </div>
-                  <span class="m-go">
-                    <span class="m-stars" data-mk={`${w.slug}:${i}`} aria-hidden="true">☆☆☆</span>
-                    <span class="m-play">খেলো ▶</span>
-                  </span>
-                </button>
-              ) : (
-                <div class="m m-soon">
-                  <span class="mb">{pad2(i + 1)}</span>
-                  <div class="m-t"><b>{m.n}</b><p>{m.d}</p></div>
-                  <span class="try soon">শীঘ্রই আসছে</span>
-                </div>
-              );
-            })}
+            {missionRows.slice(0, MISS_SHOWN).map((r) => <MissionRow world={w.slug} i={r.i} n={r.m.n} d={r.m.d} cat={r.cat} />)}
           </div>
+          {missionRows.length > MISS_SHOWN && (
+            <details class="miss-more" id="miss-more">
+              <summary>আরও {bn(missionRows.length - MISS_SHOWN)}টি মিশন</summary>
+              <div class="miss">
+                {missionRows.slice(MISS_SHOWN).map((r) => <MissionRow world={w.slug} i={r.i} n={r.m.n} d={r.m.d} cat={r.cat} />)}
+              </div>
+            </details>
+          )}
           {playableMissions > 0 && <p class="miss-foot" id="miss-foot"></p>}
         </section>
 
@@ -1028,6 +1019,18 @@ const schema = [
   .m-stars { font-size: 13px; letter-spacing: 0.06em; color: var(--sun); }
   .m-play { font-size: 11.5px; font-weight: 800; padding: 0.22rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); color: var(--w); transition: background 0.18s ease, color 0.18s ease; }
   .miss-foot { padding: 0 0.95rem 0.9rem; font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .miss-more > summary {
+    cursor: pointer; list-style: none; margin: 0 0.7rem 0.5rem; padding: 0.4rem 0.7rem;
+    border-radius: 999px; border: 1px dashed color-mix(in oklab, var(--w) 42%, var(--line));
+    font-size: 12.5px; font-weight: 700; color: var(--brand-ink); text-align: center;
+    background: color-mix(in oklab, var(--w) 7%, var(--panel));
+  }
+  .miss-more > summary::-webkit-details-marker { display: none; }
+  .miss-more > summary:hover { background: color-mix(in oklab, var(--w) 16%, var(--panel)); }
+  .miss-more[open] > summary { margin-bottom: 0; border-style: solid; }
+  .miss-more > summary::after { content: ' ▾'; }
+  .miss-more[open] > summary::after { content: ' ▴'; }
+  .miss-more .miss { padding-top: 0.3rem; }
   .try { display: inline-block; margin-top: 0.3rem; font-size: 11.5px; font-weight: 700; color: var(--w); }
   .try.soon { flex: none; font-weight: 500; color: var(--muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; margin: 0; }
   .mini { font-size: 11.5px; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--panel); transition: background 0.15s ease, transform 0.15s ease; }
@@ -1462,7 +1465,12 @@ const schema = [
   // is still exactly one place a mission can be started from.
   $('#x-mission').addEventListener('click', () => {
     const mi = $<HTMLButtonElement>('#x-mission').dataset.mi;
-    missionBtns.find((m) => m.dataset.mi === mi)?.click();
+    const target = missionBtns.find((m) => m.dataset.mi === mi);
+    if (!target) return;
+    // The mission may be one of the folded ones. Open the fold first, so
+    // closing the game leaves the child looking at the row they started from.
+    target.closest('details')?.setAttribute('open', '');
+    target.click();
   });
 
   /* ---- খোঁজার খেলা: find each item on the model ---- */

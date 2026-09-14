@@ -1,0 +1,48 @@
+---
+/**
+ * One row of the missions card.
+ *
+ * Pulled out of the world page when a world went from three missions to
+ * eleven: the list now folds after the first few, which means the same row has
+ * to be rendered in two places. Duplicating the markup is how the two copies
+ * quietly drift apart.
+ */
+import { bn, pad2 } from '../../lib/bn';
+import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
+
+interface Props {
+  world: string;
+  /** Index into this world's missions - the mission's identity everywhere. */
+  i: number;
+  n: string;
+  d: string;
+  cat: number | null;
+}
+const { world, i, n, d, cat } = Astro.props;
+const spec = missionSpec(world, i);
+---
+{spec ? (
+  <button type="button" class="m mission-play" data-mi={i} data-cat={cat ?? ''}>
+    <span class="mb">{pad2(i + 1)}</span>
+    <div class="m-t">
+      <b>{n}</b>
+      <p>{d}</p>
+      <span class="m-meta">
+        <span class="m-kind">{missionKind(spec)}</span>
+        <span class="m-len">{`${bn(missionLength(spec)[0])} ${missionLength(spec)[1]}`}</span>
+        <span class="m-hearts" aria-hidden="true">♥♥♥</span>
+        {varies(spec) && <span class="m-vary" title={`${varies(spec)}, তাই প্রতিবার নতুন খেলা`}>🎲 নতুন</span>}
+      </span>
+    </div>
+    <span class="m-go">
+      <span class="m-stars" data-mk={`${world}:${i}`} aria-hidden="true">☆☆☆</span>
+      <span class="m-play">খেলো ▶</span>
+    </span>
+  </button>
+) : (
+  <div class="m m-soon">
+    <span class="mb">{pad2(i + 1)}</span>
+    <div class="m-t"><b>{n}</b><p>{d}</p></div>
+    <span class="try soon">শীঘ্রই আসছে</span>
+  </div>
+)}
