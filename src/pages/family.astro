@@ -17,7 +17,7 @@
  */
 import Base from '../layouts/Base.astro';
 import { totals } from '../data/worlds';
-import { bn } from '../lib/bn';
+import { bn, bnNum } from '../lib/bn';
 import { COVERAGE } from '../lib/coverage';
 import { sheets } from '../data/printables';
 
@@ -27,25 +27,50 @@ Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, st
 const FOUNDING_SEATS = 100;
 const KIDS = 6;
 
-/** The stack. `have` means it works on posora.com right now. */
-const stack: { t: string; d: string; have: boolean }[] = [
+/**
+ * One membership, two ways to pay. Kept as constants because the price is the
+ * most likely thing to change and it must change in exactly one place.
+ *
+ * The annual price is ten months of the monthly one, so "দুই মাস ফ্রি" is a
+ * fact rather than a slogan. Anything steeper would tell the reader the
+ * monthly price is decoration.
+ */
+const MONTHLY_BDT = 120;
+const YEARLY_BDT = 1200;
+const YEARLY_USD = 39;
+const perDay = (yearly: number) => (yearly / 365).toFixed(1);
+const monthsFree = Math.round(12 - YEARLY_BDT / MONTHLY_BDT);
+
+/**
+ * The stack.
+ *
+ * `have` is three-valued on purpose. The weekly letter is written, scheduled
+ * and deployed, but no letter has ever actually reached an inbox, because
+ * production had no paying family until now. Calling that "আজই চালু" would be
+ * a claim the logs do not support, and calling it "বানানো হয়নি" is simply
+ * false. On the page that asks for money, the honest answer is the third one.
+ */
+type Have = true | false | 'testing';
+const stack: { t: string; d: string; have: Have; annual?: boolean }[] = [
   { have: true,  t: `${bn(COVERAGE.covered)}টি বিষয়ের পুরো পাঠ, তিন গভীরতায়`, d: 'মহাকাশ, পদার্থ, রসায়ন, প্রাণিজগৎ, প্রকৃতি, খাদ্য, গণিত, টাকা, ভাষা, সামাজিক দক্ষতা, আবিষ্কার। একই লেখা ছোট, মাঝারি আর বড় - তাই পাঁচ বছরের আর তেরো বছরের সন্তান একই পাতায় বসতে পারে।' },
   { have: true,  t: `${bn(COVERAGE.cats)}টি বিভাগে জীবন্ত থ্রিডি মডেল`, d: 'ঢালু তল, দোলক, কেলাস, ঋতুচক্র, বর্ণমালা - টেনে ঘোরানো যায়, স্লাইডারে বদলায়। ভিডিও নয়, সত্যিকারের চালু মডেল।' },
   { have: true,  t: 'যেকোনো বিভাগ এক চাপে ছেপে নেওয়া', d: '“ছাপাও” চাপলেই পুরো বিভাগ কাগজে নেমে আসে - মডেল আর মেনু বাদ দিয়ে, আপনার বেছে নেওয়া গভীরতায়।' },
   { have: true,  t: `${bn(sheets.length)}টি ছাপার শিট`, d: 'বর্ণমালার হাতের লেখা, যুক্তবর্ণ ভাঙা চার্ট, কার চিহ্ন, সংখ্যা ১-১০০, সৌরজগৎ তথ্যপত্র, টাকা চেনা।' },
   { have: true,  t: `${bn(KIDS)} জন সন্তান পর্যন্ত, প্রত্যেকের নিজের প্রোফাইল`, d: 'নিজের নাম, নিজের বয়স, নিজের গভীরতা। ভাইবোন আর যে কাজিন ট্যাবটা ভাগ করে নেয় - সবার জায়গা হবে।' },
   { have: true,  t: 'যেকোনো ডিভাইসে অগ্রগতি', d: 'বাসার ফোন, স্কুলের ল্যাপটপ, দাদুর বাড়ির ট্যাব - একই সন্তানের হিসাব সব জায়গায় মিলে যায়। প্ল্যান ছাড়া হিসাবটা এক ব্রাউজারেই থাকে।' },
-  { have: false, t: 'প্রতি সপ্তাহে অভিভাবকের ইমেইল', d: 'কে কত দিন এসেছে, কী কী খুলেছে, কটা যাচাই দিয়েছে - আর রাতের খাবারে জিজ্ঞেস করার মতো কয়েকটা প্রশ্ন। যে সপ্তাহে কিছুই হয়নি, সে সপ্তাহে কোনো চিঠি যায় না।' },
-  { have: true,  t: 'যাচাই ও সার্টিফিকেট', d: 'প্রতি বিভাগের শেষে আটটি প্রশ্ন, পড়ার লেখা থেকেই বানানো, ফল সন্তানের নামে জমা থাকে। সব বিষয় দেখা আর সব যাচাই পাশ হলে ভুবনের সার্টিফিকেট, নাম-তারিখ সহ, ছাপার মতো।' },
-  { have: true,  t: 'অনুশীলনী প্যাক', d: 'প্রতিটি বিভাগের জন্য ছাপার অনুশীলনী - শূন্যস্থান পূরণ, শব্দভাণ্ডার, মিলানো, আর আলাদা পাতায় উত্তরপত্র।' },
+  { have: 'testing', t: 'প্রতি সপ্তাহে অভিভাবকের ইমেইল', d: 'কে কত দিন এসেছে, কী কী খুলেছে, কটা যাচাই দিয়েছে - আর রাতের খাবারে জিজ্ঞেস করার মতো কয়েকটা প্রশ্ন। যে সপ্তাহে কিছুই হয়নি, সে সপ্তাহে কোনো চিঠি যায় না।' },
+  { have: true,  annual: true, t: 'যাচাই ও সার্টিফিকেট', d: 'প্রতি বিভাগের শেষে আটটি প্রশ্ন, পড়ার লেখা থেকেই বানানো, ফল সন্তানের নামে জমা থাকে। সব বিষয় দেখা আর সব যাচাই পাশ হলে ভুবনের সার্টিফিকেট, নাম-তারিখ সহ, ছাপার মতো।' },
+  { have: true,  annual: true, t: 'অনুশীলনী প্যাক', d: 'প্রতিটি বিভাগের জন্য ছাপার অনুশীলনী - শূন্যস্থান পূরণ, শব্দভাণ্ডার, মিলানো, আর আলাদা পাতায় উত্তরপত্র।' },
   { have: false, t: 'পর্দা ছাড়া কার্ড', d: 'প্রতি বিষয়ে একটা কাজ যা পর্দা ছাড়াই করা যায় - ছায়া মাপা, ডিম ভাসানো, গাছের বয়স গোনা।' },
   { have: false, t: 'অফলাইন প্যাক', d: 'ইন্টারনেট দুর্বল হলেও মডেলগুলো চলবে। গ্রামের স্কুল আর যাত্রাপথের জন্য।' },
   { have: false, t: 'দাদু-দিদার সঙ্গে', d: 'প্রতি বিষয়ে একটা প্রশ্ন, যেটা সন্তান বাংলায় দাদু-দিদাকে জিজ্ঞেস করবে। দেশের বাইরের পরিবারের জন্য এটাই আসল কারণ।' },
 ];
 
-const haveCount = stack.filter((s) => s.have).length;
+const haveCount = stack.filter((s) => s.have === true).length;
+const annualOnly = stack.filter((s) => s.annual);
 
 const faqs = [
+  { q: 'মাসিক না বার্ষিক, কোনটা নেব?', a: `যদি আগে দেখে নিতে চান, মাসিক নিন - এক মাস পরেই থামিয়ে দিতে পারবেন, কিছু জিজ্ঞেস করা হবে না। যদি জানেন সন্তান সারা বছর ব্যবহার করবে, বার্ষিকটাই সস্তা: ${bn(monthsFree)} মাসের টাকা বেঁচে যায়, আর ছাপার অনুশীলনী প্যাক আর সার্টিফিকেট বার্ষিকের সঙ্গেই আসে।` },
   { q: 'এখন টাকা দিতে হবে?', a: 'না। পেমেন্ট গেটওয়ে এখনো বসানো হয়নি, তাই কেনার ব্যবস্থা নেই। অ্যাকাউন্ট আছে - ইমেইলের লিংকে ঢোকা যায় - আর প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিই। নিচের তালিকায় নাম লেখালে কার্ড লাগে না, টাকাও কাটা যায় না।' },
   { q: 'তাহলে তালিকায় নাম লিখে লাভ কী?', a: 'দুটো। এক, প্রতিষ্ঠাতা দামটা আপনার জন্য আজীবন একই থাকবে। দুই, আমরা আগে আপনার কথা শুনে তারপর বানাবো - কোন জিনিসটা আগে দরকার, সেটা আপনিই বলবেন।' },
   { q: 'যেগুলো এখন ফ্রি, সেগুলো কি পরে টাকার পেছনে চলে যাবে?', a: `না, কখনো না। আজ যে ${bn(COVERAGE.total)}টি বিষয়, থ্রিডি মডেল আর ছাপার শিট ফ্রি, সেগুলো ফ্রিই থাকবে। পরিবার প্ল্যান বিক্রি করে সেগুলোর চারপাশের জিনিস - প্রোফাইল, রিপোর্ট, অনুশীলনী। পুরোনো জিনিসের চারপাশে বেড়া দেওয়া হবে না।` },
@@ -70,11 +95,11 @@ const schema = [
 ---
 <Base
   schema={schema}
-  title="পসরা পরিবার"
-  description={`পসরা পরিবার - প্রতি সন্তানের নিজের প্রোফাইল, সাপ্তাহিক অভিভাবক রিপোর্ট, অনুশীলনী প্যাক। ${bn(COVERAGE.total)}টি বিষয় ফ্রিই থাকবে। প্রতিষ্ঠাতা পরিবারের তালিকায় নাম লেখান, এখন টাকা লাগবে না।`}
+  title="পসরা সদস্যপদ"
+  description={`পসরা সদস্যপদ - একটাই প্ল্যান, মাসে ৳${bn(MONTHLY_BDT)} বা বছরে ৳${bnNum(YEARLY_BDT)}, ${bn(KIDS)} জন সন্তান পর্যন্ত। ${bn(COVERAGE.total)}টি বিষয় ফ্রিই থাকবে। এখন টাকা লাগবে না, তালিকায় নাম লেখালেই হয়।`}
 >
   <div class="wrap page">
-    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> পসরা পরিবার</p>
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> পসরা সদস্যপদ</p>
 
     <header class="hero">
       <p class="eyebrow">পসরা পরিবার · প্রতিষ্ঠাতা তালিকা</p>
@@ -123,21 +148,25 @@ const schema = [
 
     <section class="sec">
       <div class="sec-h">
-        <h2>পরিবার প্ল্যানে কী কী থাকবে</h2>
+        <h2>সদস্যপদে কী কী আছে</h2>
         <p class="sec-note">
-          {bn(stack.length)}টি জিনিস। সবুজ মানে আজই চালু আছে, ধূসর মানে এখনো বানানো হয়নি।
-          প্রতিষ্ঠাতা পরিবারগুলোই ঠিক করবে কোনটা আগে বানানো হবে।
+          {bn(stack.length)}টি জিনিস, তার {bn(haveCount)}টি আজই চালু। সবুজ মানে এখন কাজ করছে,
+          হলুদ মানে বানানো হয়ে গেছে কিন্তু এখনো পরীক্ষা চলছে, ধূসর মানে এখনো বানানো হয়নি।
+          প্রতিষ্ঠাতা পরিবারগুলোই ঠিক করবে ধূসরগুলোর কোনটা আগে বানানো হবে।
         </p>
       </div>
       <ol class="stack">
         {stack.map((s, i) => (
-          <li class={s.have ? 'on' : 'off'}>
+          <li class={s.have === true ? 'on' : s.have === 'testing' ? 'mid' : 'off'}>
             <span class="sn">{bn(i + 1)}</span>
-            <span class="sicon" aria-hidden="true">{s.have ? '✓' : '○'}</span>
+            <span class="sicon" aria-hidden="true">{s.have === true ? '✓' : s.have === 'testing' ? '◐' : '○'}</span>
             <div>
               <b>{s.t}</b>
               <p>{s.d}</p>
-              <span class={s.have ? 'badge yes' : 'badge no'}>{s.have ? 'আজই চালু' : 'এখনো বানানো হয়নি'}</span>
+              <span class={s.have === true ? 'badge yes' : s.have === 'testing' ? 'badge mid' : 'badge no'}>
+                {s.have === true ? 'আজই চালু' : s.have === 'testing' ? 'বানানো আছে, প্রথম চিঠি এখনো যায়নি' : 'এখনো বানানো হয়নি'}
+              </span>
+              {s.annual && <span class="badge ann">বার্ষিকের সঙ্গে</span>}
             </div>
           </li>
         ))}
@@ -148,33 +177,71 @@ const schema = [
       <div class="sec-h">
         <h2>দাম</h2>
         <p class="sec-note">
-          এক পরিবার, {bn(KIDS)} জন সন্তান পর্যন্ত, বছরে একবার। মাসিক কিস্তি রাখছি না -
-          একবার দেওয়া বারো বার দেওয়ার চেয়ে সহজ।
+          একটাই সদস্যপদ, দুইভাবে দেওয়া যায়। এক পরিবার, {bn(KIDS)} জন সন্তান পর্যন্ত -
+          আলাদা প্ল্যান, আলাদা স্তর, আলাদা প্যাকেজ কিছু নেই।
         </p>
       </div>
+
       <div class="prices">
         <div class="price">
-          <span class="where">বাংলাদেশে</span>
-          <span class="big">৳১,২০০</span>
-          <span class="per">বছরে, পুরো পরিবারের জন্য</span>
-          <span class="unit">সন্তানপ্রতি মাসে প্রায় ৳১৭</span>
+          <span class="where">মাসিক</span>
+          <span class="big">৳{bn(MONTHLY_BDT)}</span>
+          <span class="per">মাসে, পুরো পরিবারের জন্য</span>
+          <span class="unit">দিনে ৳{bn((MONTHLY_BDT / 30).toFixed(1))}</span>
           <ul>
+            <li>যেকোনো মাসে থামিয়ে দিতে পারবেন</li>
             <li>বিকাশ, নগদ, রকেট বা কার্ড</li>
+            <li>আগে দেখে নিতে চাইলে এটাই</li>
+          </ul>
+        </div>
+        <div class="price best">
+          <span class="tagbest">{bn(monthsFree)} মাস ফ্রি</span>
+          <span class="where">বার্ষিক</span>
+          <span class="big">৳{bnNum(YEARLY_BDT)}</span>
+          <span class="per">বছরে, পুরো পরিবারের জন্য</span>
+          <span class="unit">দিনে ৳{bn(perDay(YEARLY_BDT))}, সন্তানপ্রতি মাসে প্রায় ৳{bn(Math.round(YEARLY_BDT / 12 / KIDS))}</span>
+          <ul>
+            <li>৳{bn(MONTHLY_BDT)} × ১২ = ৳{bnNum(MONTHLY_BDT * 12)}, বার্ষিকে ৳{bnNum(MONTHLY_BDT * 12 - YEARLY_BDT)} বেঁচে যায়</li>
             <li>একজন গৃহশিক্ষকের এক দিনের বেতনেরও কম</li>
             <li>অনলাইন কোচিংয়ের বছরে ২০-২৫ হাজারের তুলনায় বিশ ভাগের এক ভাগ</li>
           </ul>
         </div>
-        <div class="price intl">
-          <span class="where">দেশের বাইরে</span>
-          <span class="big">$৩৯</span>
-          <span class="per">বছরে, পুরো পরিবারের জন্য</span>
-          <span class="unit">সন্তানপ্রতি মাসে প্রায় $০.৫৪</span>
-          <ul>
-            <li>কার্ডে, ডলারে</li>
-            <li>অনলাইন বাংলা ক্লাসের মাসিক $২৫-এর সাত ভাগের এক ভাগ, বছরে</li>
-            <li>ডুয়োলিঙ্গোর পরিবার প্ল্যানের ($১১৯.৯৯) তিন ভাগের এক ভাগ</li>
-          </ul>
+      </div>
+
+      <div class="bonus">
+        <div class="bonus-h">
+          <span class="bemoji" aria-hidden="true">🎁</span>
+          <div>
+            <b>বার্ষিকের সঙ্গে যা এমনিতেই আসে</b>
+            <p>
+              মাসিকে সন্তানের প্রোফাইল, যেকোনো ডিভাইসে অগ্রগতি আর সাপ্তাহিক চিঠি -
+              সবই থাকে। নিচের দুটো জিনিস বছরের হিসাবের, তাই বার্ষিকের সঙ্গেই।
+            </p>
+          </div>
         </div>
+        <ul class="bonus-list">
+          {annualOnly.map((s) => (
+            <li>
+              <b>{s.t}</b>
+              <p>{s.d}</p>
+            </li>
+          ))}
+        </ul>
+        <p class="sec-note">
+          কোনোটাই আজ ফ্রি নয় আর কোনোটাই ফ্রি থেকে তুলে নেওয়া হয়নি - দুটোই
+          সদস্যদের জন্য বানানো, আর বার্ষিকের সঙ্গে দাম ছাড়াই যাচ্ছে।
+        </p>
+      </div>
+
+      <div class="intlbox">
+        <div>
+          <b>দেশের বাইরে থাকলে</b>
+          <p>কার্ডে, ডলারে। বছরে <b>${bn(YEARLY_USD)}</b>, পুরো পরিবারের জন্য - বার্ষিকের সব কিছুসহ।</p>
+        </div>
+        <ul>
+          <li>অনলাইন বাংলা ক্লাসের মাসিক $২৫-এর সাত ভাগের এক ভাগ, বছরে</li>
+          <li>ডুয়োলিঙ্গোর পরিবার প্ল্যানের ($১১৯.৯৯) তিন ভাগের এক ভাগ</li>
+        </ul>
       </div>
 
       <div class="guards">
@@ -193,7 +260,7 @@ const schema = [
           </div>
         </div>
         <div class="guard">
-          <span class="gemoji" aria-hidden="true">🎁</span>
+          <span class="gemoji" aria-hidden="true">🎈</span>
           <div>
             <b>ফ্রি জিনিস ফ্রিই থাকবে</b>
             <p>আজ যা বিনামূল্যে আছে তার একটাও কোনোদিন টাকার পেছনে যাবে না। এটা লিখিত কথা।</p>
@@ -294,6 +361,39 @@ const schema = [
   .prices { display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: 0.9rem; }
   .price { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 1.3rem 1.4rem 1.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
   .price.intl { border-color: var(--brand); box-shadow: var(--shadow); }
+
+  /* the annual card is the one being recommended, so it is the one that is lifted */
+  .price.best { border-color: var(--brand); box-shadow: var(--shadow); position: relative; }
+  .tagbest { position: absolute; top: -0.62rem; left: 1.3rem; background: var(--brand); color: #fff;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    padding: 0.22rem 0.6rem; border-radius: 999px; }
+
+  .bonus { margin-top: 1rem; border: 1px solid var(--line-soft); border-radius: var(--r);
+    background: color-mix(in oklab, var(--brand) 5%, var(--panel)); padding: 1.2rem 1.3rem; }
+  .bonus-h { display: flex; gap: 0.8rem; align-items: flex-start; }
+  .bemoji { font-size: 26px; line-height: 1; }
+  .bonus-h b { display: block; font-size: 15.5px; }
+  .bonus-h p { margin: 0.25rem 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.65; }
+  .bonus-list { list-style: none; margin: 0.9rem 0 0.5rem; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.7rem; }
+  .bonus-list li { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 10px; padding: 0.8rem 0.9rem; }
+  .bonus-list b { font-size: 14px; }
+  .bonus-list p { margin: 0.3rem 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+
+  .intlbox { margin-top: 0.9rem; border: 1px solid var(--line-soft); border-radius: var(--r);
+    background: var(--panel); padding: 1.1rem 1.3rem; display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.9rem 1.4rem; align-items: center; }
+  .intlbox b { font-size: 15px; }
+  .intlbox p { margin: 0.3rem 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.65; }
+  .intlbox ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .intlbox li { font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+  .intlbox li::marker { color: var(--brand); }
+  @media (max-width: 620px) { .intlbox { grid-template-columns: 1fr; } }
+
+  .stack li.mid { background: color-mix(in oklab, var(--warn, #c9822f) 6%, transparent); }
+  .mid .sicon { background: color-mix(in oklab, var(--warn, #c9822f) 17%, var(--panel)); color: var(--warn, #c9822f); }
+  .badge.mid { background: color-mix(in oklab, var(--warn, #c9822f) 15%, var(--panel)); color: var(--warn, #c9822f); }
+  .badge.ann { background: color-mix(in oklab, var(--brand) 13%, var(--panel)); color: var(--brand-ink, var(--brand)); margin-left: 0.35rem; }
   .where { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .big { font-family: var(--font-display); font-size: 2.6rem; font-weight: 800; line-height: 1.05; color: var(--brand-ink); }
   .per { font-size: 14px; color: var(--ink-2); }

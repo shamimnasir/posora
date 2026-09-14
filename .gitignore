@@ -6,3 +6,6 @@ dist/
 .env*
 .DS_Store
 .commandcode/
+
+# one-off D1 sync, kept until the write lands
+sync_missions.sql
