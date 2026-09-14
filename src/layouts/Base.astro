@@ -47,6 +47,29 @@ const ogImage = new URL('/og.png', Astro.site ?? 'https://posora.com').href;
  * space so no conjunct is severed. The full text stays in the JSON-LD, which
  * has no such limit.
  */
+/**
+ * Google Search Console ownership token, when verifying by meta tag.
+ *
+ * Search Console will not accept a sitemap for a property nobody has proved
+ * they own, and posora.com has no proof on it: no meta tag, no HTML file, and
+ * no `google-site-verification` TXT record on the domain. Of the four ways to
+ * prove it, two need a change here and two do not:
+ *
+ *   - Google Analytics: nothing to change. The gtag.js snippet is already on
+ *     every page, and Search Console accepts it as proof when the same Google
+ *     account has edit access to the GA property. Easiest, and worth trying
+ *     first - it only started being a real option today, because until the
+ *     `arguments` fix the tag was loading but never firing.
+ *   - DNS TXT record: nothing to change here either; add it at the registrar.
+ *     This one verifies the whole domain including subdomains.
+ *   - Meta tag: paste the token below and deploy.
+ *   - HTML file: drop it in `public/` and deploy.
+ *
+ * Empty means no tag is rendered at all, which is the right default: an empty
+ * or stale verification tag is worse than none.
+ */
+const GSC_VERIFICATION = '';
+
 const META_MAX = 155;
 const metaDescription = description.length <= META_MAX
   ? description
@@ -113,6 +136,7 @@ const graph = [
     <title>{fullTitle}</title>
     <meta name="description" content={metaDescription} />
     <link rel="canonical" href={canonical} />
+    {GSC_VERIFICATION && <meta name="google-site-verification" content={GSC_VERIFICATION} />}
     {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="alternate" hreflang="bn" href={canonical} />
     <link rel="alternate" hreflang="x-default" href={canonical} />
