@@ -1,4 +1,5 @@
 import type { Lab } from '../lab-types';
+import { body } from './life-body';
 
 /** A leaf drawn once, used by the plant scenes. */
 const leaf = (cx: number, cy: number, rot: number, fill = '#5aa356') =>
@@ -146,5 +147,7 @@ const labs: Lab[] = [
     ],
   },
 ];
+
+labs.push(body);
 
 export default labs;

@@ -16,7 +16,7 @@ export function cardItems(c: LabCard): string[] {
   if (c.kind === 'cycle') return [...new Set([...(c.stages.map((s) => s.item).filter(Boolean) as string[]), ...own])];
   if (c.kind === 'place') return [...new Set([...(c.zones.map((z) => z.item).filter(Boolean) as string[]), ...own])];
   if (c.kind === 'balance') return [...new Set([...(c.rounds.map((r) => r.item).filter(Boolean) as string[]), ...own])];
-  return own;
+  return [...new Set([...own, ...(c.also ?? [])])];
 }
 
 /** Every item the whole lab covers. */

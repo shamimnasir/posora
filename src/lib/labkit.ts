@@ -422,7 +422,9 @@ function buildScrub(c: ScrubCard, credit: Credit): HTMLElement {
     }));
     bars.hidden = !(r.bars ?? []).length;
     out.innerHTML = r.say;
-    if (mark) credit(c.item);
+    if (!mark) return;
+    credit(c.item);
+    for (const it of c.also ?? []) credit(it);
   }
 
   render(false);

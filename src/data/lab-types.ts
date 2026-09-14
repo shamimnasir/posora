@@ -120,6 +120,17 @@ export type ScrubCard = {
   knobs: ScrubKnob[];
   /** The real arithmetic. Everything on screen comes out of here. */
   compute: (v: Record<string, number>) => ScrubOut;
+  /**
+   * The other items this one card genuinely IS.
+   *
+   * A cycle or a place card credits per stage or per zone, because the child
+   * touches each one separately. A scrub has no such parts: the atom builder's
+   * three knobs ARE প্রোটন, নিউট্রন and ইলেকট্রন, and moving any of them is
+   * the পারমাণবিক সংখ্যা lesson. Credit lands only once a knob has actually
+   * moved, never on arrival, so this stays a record of use rather than of
+   * having loaded the page.
+   */
+  also?: string[];
   /** Where the figures come from, said plainly. A number with no source is a decoration. */
   source?: string;
 };
