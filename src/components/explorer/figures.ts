@@ -422,8 +422,10 @@ const quadruped = (body: string, opts: {
       e.position.set(0.36 * s, 0.6 * s, z * 0.085 * s);
       e.rotation.set(z * (kind === 'flap' ? 0.5 : 0.34), 0, kind === 'tall' ? -0.15 : 0.18);
       up.add(e);
-      const w = kind === 'flap' ? 0.15 : kind === 'tall' ? 0.055 : 0.075;
-      const h = kind === 'flap' ? 0.17 : kind === 'tall' ? 0.16 : 0.085;
+      // An elephant is mostly ear, and 0.15 by 0.17 is a dog's. Big enough to
+      // break the head's outline is the whole point of the feature.
+      const w = kind === 'flap' ? 0.25 : kind === 'tall' ? 0.055 : 0.075;
+      const h = kind === 'flap' ? 0.24 : kind === 'tall' ? 0.16 : 0.085;
       const shell = put(e, new Mesh(new SphereGeometry(1, 14, 10), std(body)), 0, h * 0.5 * s, 0);
       shell.scale.set(w * 0.55 * s, h * s, w * s);
       const inner = put(e, new Mesh(new SphereGeometry(1, 12, 8), std(pale)), 0.012 * s, h * 0.5 * s, 0);
@@ -449,7 +451,29 @@ const quadruped = (body: string, opts: {
     rod(up, body, 0.022 * s, L, cx, cy, 0, rz);
     ball(up, dark, 0.035 * s, cx + ax * L / 2, cy + ay * L / 2, 0);
   }
-  if (opts.trunk) { taper(up, body, 0.03, 0.05, 0.32, 0.62 * s, 0.36 * s, 0, 0.35); }
+  if (opts.trunk) {
+    /**
+     * A trunk hangs and curls; a single leaning cone is a snout.
+     *
+     * The old one was 0.32 long at a fixed 0.35 lean and did not scale with
+     * the animal, so on the elephant - the only figure that has one - it came
+     * out as a short thick nose. Three segments, each thinner than the last
+     * and each turned a little further, give the hang and the curl at the tip
+     * that the silhouette is recognised by.
+     */
+    const seg: [number, number, number, number, number][] = [
+      [0.05, 0.042, 0.2, 0.62, 0.42],
+      [0.042, 0.03, 0.18, 0.7, 0.26],
+      [0.03, 0.02, 0.13, 0.76, 0.12],
+    ];
+    for (const [rt, rb, len, x, y] of seg) taper(up, body, rt * s, rb * s, len * s, x * s, y * s, 0, 0.12);
+    ball(up, dark, 0.022 * s, 0.79 * s, 0.06 * s, 0);
+    // tusks, which no other quadruped here has
+    for (const z of [1, -1]) {
+      const t = taper(up, '#efe6d2', 0.012 * s, 0.022 * s, 0.16 * s, 0.6 * s, 0.4 * s, z * 0.06 * s, 0.7);
+      t.rotation.z = 0.95;
+    }
+  }
   /**
    * Stripes that wrap the animal instead of standing off it.
    *
@@ -567,10 +591,23 @@ const fish = (body: string, fin?: string): Figure => (g) => {
   belly.scale.set(1.45, 0.5, 0.47);
   // a forked tail: two blades off the peduncle, not one flat triangle
   for (const s of [1, -1]) {
-    const t = put(g, new Mesh(new ConeGeometry(0.15, 0.3, 3), std(finC)), -0.52, 0.32 + s * 0.06, 0, 0, 0, Math.PI / 2 + s * 0.32);
-    t.scale.set(1, 1, 0.26);
+    const t = put(g, new Mesh(new ConeGeometry(0.16, 0.36, 3), std(finC)), -0.57, 0.32 + s * 0.075, 0, 0, 0, Math.PI / 2 + s * 0.36);
+    t.scale.set(1, 1, 0.24);
   }
-  put(g, new Mesh(new ConeGeometry(0.1, 0.2, 3), std(finC)), 0, 0.52, 0).scale.set(1, 1, 0.25);
+  /**
+   * The dorsal has to clear the back.
+   *
+   * It was a 0.2 cone centred at y 0.52 on a body whose top is 0.536, so four
+   * fifths of the fin was inside the animal and what showed was a bump. A fish
+   * with no fin above the waterline of its own body is a torpedo - which is
+   * exactly what হিলসা and the small fish read as on the shelf. Sitting the
+   * fin on the back and stretching it along the spine is the whole difference.
+   */
+  const dorsal = put(g, new Mesh(new ConeGeometry(0.11, 0.26, 3), std(finC)), -0.02, 0.62, 0);
+  dorsal.scale.set(1.7, 1, 0.22);
+  // an anal fin under the tail-stock, the small second thing that says fish
+  const anal = put(g, new Mesh(new ConeGeometry(0.07, 0.15, 3), std(finC)), -0.24, 0.16, 0, Math.PI, 0, 0);
+  anal.scale.set(1.5, 1, 0.22);
   // pectoral fins, swept back along the flanks
   for (const s of [1, -1]) {
     const p = put(g, new Mesh(new ConeGeometry(0.07, 0.16, 3), std(finC)), 0.08, 0.29, s * 0.13, 0, 0, Math.PI / 2 + 0.5);
@@ -643,17 +680,20 @@ const turtle: Figure = (g) => {
   const shell = '#5d6b3e', skin = '#7d8a55';
   // a dome over a flat plastron, rather than a whole squashed sphere: the
   // underside of a turtle is flat, and that is half of its silhouette
-  const sh = put(g, new Mesh(new SphereGeometry(0.28, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.55), std(shell)), 0, 0.12);
-  sh.scale.set(1, 0.62, 0.85);
+  // Tall enough to be a dome. At 0.62 it was 0.17 high against a 0.28 radius,
+  // which from the side is a lozenge lying on the ground - a pea pod, not a
+  // shell. A turtle is read from the height of its carapace.
+  const sh = put(g, new Mesh(new SphereGeometry(0.28, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.55), std(shell)), 0, 0.115);
+  sh.scale.set(1, 0.95, 0.85);
   const plate = put(g, new Mesh(new CylinderGeometry(0.278, 0.26, 0.06, 30), std('#cbbf94')), 0, 0.11);
   plate.scale.set(1, 1, 0.85);
   // scutes: a ring of low plates on the dome, which is what a shell is
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
-    const s = ball(g, new Color(shell).multiplyScalar(1.16), 0.072, Math.cos(a) * 0.165, 0.2, Math.sin(a) * 0.14);
-    s.scale.set(1, 0.45, 1);
+    const s = ball(g, new Color(shell).multiplyScalar(1.2), 0.078, Math.cos(a) * 0.17, 0.28, Math.sin(a) * 0.145);
+    s.scale.set(1, 0.5, 1);
   }
-  ball(g, new Color(shell).multiplyScalar(1.16), 0.08, 0, 0.255, 0).scale.set(1, 0.4, 1);
+  ball(g, new Color(shell).multiplyScalar(1.2), 0.085, 0, 0.37, 0).scale.set(1, 0.45, 1);
   const head = ball(g, skin, 0.095, 0.3, 0.16, 0); head.scale.set(1.2, 1, 0.95);
   for (const s of [1, -1]) ball(g, '#1a1712', 0.018, 0.36, 0.185, s * 0.055);
   for (const [dx, dz] of [[0.18, 0.2], [0.18, -0.2], [-0.2, 0.2], [-0.2, -0.2]] as const) {
@@ -693,63 +733,60 @@ const bee: Figure = (g) => {
  * separate it from the ইলিশ two shelves along.
  */
 const dolphin: Figure = (g) => {
-  const skin = '#8e9bab', pale = '#b9c4d0';
+  const skin = '#8e9bab', pale = '#c3cdd8';
   /**
-   * The silhouette, not just the parts.
+   * One lathed body, not a stack of spheres.
    *
-   * The body was one even ellipsoid 0.99 long and 0.36 deep, and the three
-   * things that say dolphin were all inside it: the ridge sat at y 0.5 where
-   * the back is at 0.52, the flippers sat at z 0.14 where the body is 0.147
-   * wide, and the fluke is horizontal, which from the side is a line with no
-   * thickness. An even tube with no appendages showing is a torpedo, which is
-   * what it read as. What separates a dolphin from a fish is the *melon*, the
-   * rounded forehead over the beak, and a body that is fat at the shoulder and
-   * narrows to a thin stock at the tail.
-   */
-  // three overlapping sections, each a little smaller: two sections leave a
-  // visible step at the joint and the animal reads as a missile with fins
-  const sect = (x: number, y: number, rx: number, ry: number, rz: number, c: string) => {
-    const m = put(g, new Mesh(new SphereGeometry(1, 24, 16), std(c)), x, y);
-    m.scale.set(rx, ry, rz);
-    return m;
-  };
-  /**
-   * The back has to *arch*.
+   * This figure has been rewritten three times by adding parts - sections,
+   * a melon, a pale belly - and every version read as a lumpy grey bag, for a
+   * reason no amount of extra parts could fix: overlapping ellipsoids leave a
+   * visible step wherever two surfaces cross, and a dolphin is the one animal
+   * here whose whole identity is an unbroken curve from nose to fluke.
    *
-   * With every section at the same height the top line is straight, and a
-   * straight tube with a point at one end and fins at the other is a rocket,
-   * which is what this read as through two rewrites. A dolphin's back rises
-   * from the head, crests at the dorsal and falls away to a tail held lower
-   * than the shoulder; that curve is the animal.
+   * A lathe turns a single profile into a single surface, so there is nothing
+   * to step. The profile carries the shape that matters: thin at the tail
+   * stock, thickest a third back from the head, then the melon's bulge and a
+   * quick narrowing into the beak. Everything else hangs off it.
    */
-  sect(0.12, 0.335, 0.35, 0.195, 0.185, skin);
-  sect(-0.14, 0.365, 0.29, 0.165, 0.15, skin);
-  sect(-0.38, 0.325, 0.21, 0.082, 0.076, skin);
-  sect(0.09, 0.29, 0.3, 0.125, 0.15, pale);
-  // the melon, the rounded forehead over the beak: it is the one feature that
-  // separates a dolphin from a fish at this size, and a short thick beak reads
-  // as a dolphin where a long thin one reads as a marlin
-  const melon = ball(g, skin, 0.15, 0.3, 0.41); melon.scale.set(1.1, 0.86, 0.95);
-  void melon;
-  taper(g, skin, 0.045, 0.085, 0.2, 0.5, 0.345, 0, -Math.PI / 2);
-  ball(g, skin, 0.05, 0.59, 0.345).scale.set(0.7, 0.8, 0.9);
-  box(g, '#707d8c', 0.2, 0.011, 0.05, 0.52, 0.328, 0);
-  // the fluke keeps its true horizontal set, with a few degrees of dihedral so
-  // it is not perfectly edge on from the side
-  const t = put(g, new Mesh(new ConeGeometry(0.17, 0.24, 3), std(skin)), -0.55, 0.325, 0, 0.26, 0, Math.PI / 2);
-  t.scale.set(0.2, 1, 1);
-  // a falcate dorsal: two overlapping blades swept back, because a single
-  // upright triangle on a tube is a tail fin and belongs on a missile
-  const ridge = put(g, new Mesh(new ConeGeometry(0.09, 0.2, 3), std(skin)), -0.08, 0.57, 0, 0, 0, -0.75);
-  ridge.scale.set(1.4, 1, 0.3);
-  const ridge2 = put(g, new Mesh(new ConeGeometry(0.06, 0.13, 3), std(skin)), -0.02, 0.55, 0, 0, 0, -0.35);
-  ridge2.scale.set(1.4, 1, 0.3);
-  for (const s of [1, -1]) {
-    const fl = put(g, new Mesh(new ConeGeometry(0.062, 0.24, 3), std(skin)), 0.11, 0.25, s * 0.15, 0, 0, Math.PI / 2 + 1.25);
-    fl.scale.set(1, 1, 0.2); fl.rotation.y = s * 1.3;
+  const P: [number, number][] = [
+    [0.014, 0.00], [0.034, 0.08], [0.062, 0.18], [0.096, 0.30], [0.126, 0.42],
+    [0.146, 0.54], [0.152, 0.64], [0.148, 0.72], [0.132, 0.80], [0.106, 0.87],
+    [0.074, 0.92], [0.044, 0.955], [0.026, 0.98], [0.012, 1.0],
+  ];
+  const LEN = 1.06;
+  const body = new Mesh(new LatheGeometry(P.map(([r, t]) => new Vector2(r, t * LEN)), 30), std(skin));
+  // the lathe turns about Y; the animal lies along X, nose to +X
+  body.rotation.z = -Math.PI / 2;
+  body.position.set(-0.52, 0.34, 0);
+  body.scale.set(1, 1, 0.88);
+  g.add(body);
+  // countershading: a slimmer copy of the same profile, dropped just enough to
+  // show only from below, so the belly is pale without a seam on the flank
+  const belly = new Mesh(new LatheGeometry(P.map(([r, t]) => new Vector2(r * 0.9, t * LEN)), 24), std(pale));
+  belly.rotation.z = -Math.PI / 2;
+  belly.position.set(-0.52, 0.305, 0);
+  belly.scale.set(1, 1, 0.86);
+  g.add(belly);
+
+  // a falcate dorsal, swept back, sitting on the crest of the profile
+  const fin = put(g, new Mesh(new ConeGeometry(0.1, 0.3, 3), std(skin)), 0.02, 0.63, 0, 0, 0, -0.45);
+  fin.scale.set(1.25, 1, 0.24);
+  // flippers, low on the shoulder and angled down and back
+  for (const z of [1, -1]) {
+    const fl = put(g, new Mesh(new ConeGeometry(0.062, 0.25, 3), std(skin)), 0.2, 0.26, z * 0.1, 0, 0, 1.9);
+    fl.scale.set(1, 1, 0.22); fl.rotation.y = z * 0.45;
   }
-  for (const s of [1, -1]) ball(g, '#1b2029', 0.019, 0.29, 0.395, s * 0.115).scale.set(1, 1, 0.6);
-  ball(g, '#5d6874', 0.022, 0.15, 0.545, 0).scale.set(1.3, 0.5, 1);
+  // the fluke is horizontal, because this is a mammal and that is the whole
+  // difference between it and the ইলিশ two shelves along
+  const fluke = put(g, new Mesh(new ConeGeometry(0.17, 0.26, 3), std(skin)), -0.58, 0.34, 0, 0.3, 0, Math.PI / 2);
+  fluke.scale.set(0.18, 1, 1);
+  // the long narrow beak, and the crease where it meets the melon
+  const crease = put(g, new Mesh(new TorusGeometry(0.062, 0.008, 6, 16), std(new Color(skin).multiplyScalar(0.82))), 0.33, 0.335, 0, 0, Math.PI / 2, 0);
+  crease.scale.set(1, 0.85, 1);
+  ball(g, '#6f7b8a', 0.016, 0.5, 0.352, 0).scale.set(1.6, 0.5, 1);
+  // eye and blowhole
+  for (const z of [1, -1]) ball(g, '#14191f', 0.019, 0.3, 0.36, z * 0.085);
+  ball(g, '#6f7b8a', 0.022, 0.13, 0.455, 0).scale.set(1.3, 0.4, 1);
 };
 /** A sitting primate: rounded body, long tail, pale face. */
 const monkey: Figure = (g) => {
@@ -807,6 +844,33 @@ const bowl = (powder: string, vessel = '#cfd6de'): Figure => (g) => {
   heap.scale.set(1, 0.45, 1);
 };
 /** A few dried sticks or pods lying together. */
+/**
+ * দারুচিনি: bark rolled into quills.
+ *
+ * It was `sticks()` with a fat radius, which on the shelf came out as a bundle
+ * of planks - firewood. Cinnamon is a *tube*: bark that curled as it dried,
+ * and the rolled end is the whole tell. A ring at each visible end and a seam
+ * line along the length is enough to say tube rather than dowel.
+ */
+const quills = (color: string): Figure => (g) => {
+  const dark = new Color(color).multiplyScalar(0.72);
+  const lay = (x: number, z: number, rz: number, len: number) => {
+    const r = 0.05;
+    rod(g, color, r, len, x, 0.055, z, Math.PI / 2 + rz);
+    // the rolled ends, which is what separates a quill from a stick
+    for (const e of [1, -1]) {
+      const ex = x + Math.cos(rz) * (len / 2) * e, ez = z - Math.sin(rz) * (len / 2) * e;
+      const ring = put(g, new Mesh(new TorusGeometry(r * 0.66, r * 0.3, 8, 16), std(dark)), ex, 0.055, ez, 0, 0, 0);
+      ring.rotation.y = -rz; ring.rotation.x = 0; ring.rotation.z = 0;
+      ring.rotateY(Math.PI / 2);
+    }
+    rod(g, dark, 0.006, len * 0.96, x, 0.102, z, Math.PI / 2 + rz);
+  };
+  lay(-0.06, 0.07, 0.06, 0.4);
+  lay(0.03, -0.02, -0.1, 0.36);
+  lay(-0.02, -0.11, 0.14, 0.32);
+};
+
 const sticks = (color: string, n = 4, bent = false): Figure => (g) => {
   for (let i = 0; i < n; i++) {
     const a = (i / n) * 0.9 - 0.45;
@@ -1465,11 +1529,31 @@ const sunDisc: Figure = (g) => {
 };
 /** A bird in flight, for migration. */
 const flyingBird = (color = '#5b6b7d'): Figure => (g) => {
+  /**
+   * A body and two swept cones is a paper dart.
+   *
+   * What was missing is everything that points: no head, so there was no front
+   * and no back, and no tail, so the wings sat on nothing. A bird in flight is
+   * read from its silhouette - head out front, wings out to the sides, tail
+   * fanned behind - and two of those three were absent.
+   */
+  const pale = new Color(color).lerp(new Color('#ffffff'), 0.3);
   const b = ball(g, color, 0.1, 0, 0.5);
-  b.scale.set(1.6, 0.7, 0.7);
+  b.scale.set(1.7, 0.66, 0.62);
+  const head = ball(g, color, 0.062, 0.19, 0.525);
+  head.scale.set(1, 0.95, 0.95);
+  cone(g, '#e8a63a', 0.028, 0.075, 0.265, 0.522, 0, -Math.PI / 2);
+  for (const z of [1, -1]) ball(g, '#12181f', 0.014, 0.215, 0.545, z * 0.038);
+  // a fanned tail behind, which is what the wings are balanced against
+  const tail = put(g, new Mesh(new ConeGeometry(0.085, 0.2, 3), std(color)), -0.24, 0.495, 0, 0, 0, -Math.PI / 2);
+  tail.scale.set(1, 1, 0.2);
   for (const s of [1, -1]) {
-    const w = put(g, new Mesh(new ConeGeometry(0.1, 0.42, 3), std(color)), 0, 0.54, s * 0.24, 0, 0, s * 0.5);
-    w.scale.set(1, 1, 0.3); w.rotation.x = s * 0.3;
+    // each wing is two blades: a broad inner and a swept outer, so the
+    // trailing edge bends the way a real wing does
+    const inner = put(g, new Mesh(new ConeGeometry(0.105, 0.3, 3), std(color)), -0.01, 0.545, s * 0.19, 0, 0, s * 0.62);
+    inner.scale.set(1, 1, 0.26); inner.rotation.x = s * 0.22;
+    const outer = put(g, new Mesh(new ConeGeometry(0.07, 0.28, 3), std(pale)), -0.05, 0.6, s * 0.4, 0, 0, s * 0.95);
+    outer.scale.set(1, 1, 0.2); outer.rotation.x = s * 0.3;
   }
 };
 /** A branching coral. */
@@ -2436,7 +2520,7 @@ export const FIGURES: Record<string, Figure> = {
   greenFruit: fruit('#5f9e4a'), redFruit: fruit('#c0392b'),
   turmeric: bowl('#e8a33d'), chilliPowder: bowl('#c0392b'), cumin: seeds('#8a6a44'),
   coriander: seeds('#c9b98f'), mustard: seeds('#d9b44a'), fenugreek: seeds('#c8a24a'),
-  cinnamon: sticks('#8a5a33', 4, true), bayLeaf: leaves('#4b7a3a'),
+  cinnamon: quills('#8a5a33'), bayLeaf: leaves('#4b7a3a'),
   cardamom: seeds('#9fb06a'), chilliPod: chilli('#c0392b'), garamMasala: bowl('#7a4a2a'),
   tap, flask: flask(),
   // money and market
