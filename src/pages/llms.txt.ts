@@ -14,6 +14,7 @@ import type { APIRoute } from 'astro';
 import { worlds } from '../data/worlds';
 import { bodies } from '../data/space';
 import { sheets } from '../data/printables';
+import { CLUSTERS, postsIn } from '../data/blog';
 import { COVERAGE } from '../lib/coverage';
 import { MISSIONS } from '../data/missions';
 
@@ -105,6 +106,14 @@ because an English voice reading Bangla produces confident nonsense.
 ## Worlds
 
 ${worldLines}
+
+## Written answers
+
+Each piece answers one question in Bangla and then links to the page where the
+thing can be handled. Grouped into clusters rather than dated, because a
+question does not get less useful because it was written first.
+
+${CLUSTERS.map((c) => `### ${c.n}\n${postsIn(c.id).map((p) => `- [${p.title}](${origin}/blog/${p.slug}/): ${p.description}`).join('\n')}`).join('\n\n')}
 
 ## Free printable sheets
 
