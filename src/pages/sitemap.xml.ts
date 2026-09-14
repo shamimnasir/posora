@@ -10,6 +10,7 @@
 import type { APIRoute } from 'astro';
 import { getWorlds, getBodies } from '../lib/content';
 import { sheets } from '../data/printables';
+import { POSTS } from '../data/blog';
 
 export const prerender = false;
 
@@ -27,6 +28,7 @@ export const GET: APIRoute = async ({ site }) => {
     { loc: '/ladder/', priority: '0.8' },
     { loc: '/printables/', priority: '0.9' },
     { loc: '/schools/', priority: '0.8' },
+    { loc: '/blog/', priority: '0.8' },
     { loc: '/contact/', priority: '0.5' },
   ];
 
@@ -39,6 +41,7 @@ export const GET: APIRoute = async ({ site }) => {
     for (const b of bodies) entries.push({ loc: `/space/${b.id}/`, priority: '0.7' });
 
     for (const s of sheets) entries.push({ loc: `/printables/${s.slug}/`, priority: '0.7' });
+    for (const p of POSTS) entries.push({ loc: `/blog/${p.slug}/`, priority: '0.7' });
 
     /**
      * Every hands-on lab, derived rather than listed.

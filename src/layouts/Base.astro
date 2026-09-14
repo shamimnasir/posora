@@ -23,11 +23,34 @@ interface Props {
   noindex?: boolean;
   /** Extra schema.org objects for this page, appended to the site-wide graph. */
   schema?: Record<string, unknown>[];
+  /**
+   * The trail this page sits at the end of, for a BreadcrumbList.
+   *
+   * Only pass what the page actually shows: structured data that disagrees
+   * with the page is worse than none, and Google treats it as a reason to stop
+   * trusting the rest. The page itself is not included - it is added here.
+   */
+  crumbs?: { name: string; url: string }[];
 }
-const { title, description, hue, bare = false, noindex = false, schema = [] } = Astro.props;
+const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [] } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হোক খেলার মতো' : `${title} · পসরা`;
 const ogImage = new URL('/og.png', Astro.site ?? 'https://posora.com').href;
+
+/**
+ * Meta descriptions, cut where a search engine would cut them.
+ *
+ * Google shows about 155 characters and drops the rest mid-word. Several
+ * pages ran to 197, so what a searcher saw ended in a broken Bangla word and
+ * no full stop. Clamping here rather than at each page means a long
+ * description written later cannot reintroduce it, and the cut lands on a
+ * space so no conjunct is severed. The full text stays in the JSON-LD, which
+ * has no such limit.
+ */
+const META_MAX = 155;
+const metaDescription = description.length <= META_MAX
+  ? description
+  : `${description.slice(0, META_MAX).replace(/\s+\S*$/, '')}…`;
 
 /**
  * One linked graph rather than a pile of loose blocks, so a crawler reading
@@ -70,6 +93,15 @@ const graph = [
     isPartOf: { '@id': 'https://posora.com/#site' },
     primaryImageOfPage: ogImage,
   },
+  ...(crumbs.length
+    ? [{
+      '@type': 'BreadcrumbList',
+      '@id': `${canonical.href}#crumbs`,
+      itemListElement: [...crumbs, { name: title, url: canonical.href }].map((c, i) => ({
+        '@type': 'ListItem', position: i + 1, name: c.name, item: c.url,
+      })),
+    }]
+    : []),
   ...schema,
 ];
 ---
@@ -79,7 +111,7 @@ const graph = [
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={metaDescription} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="alternate" hreflang="bn" href={canonical} />
@@ -93,7 +125,7 @@ const graph = [
     <meta name="theme-color" content="#e9edf2" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0c1116" media="(prefers-color-scheme: dark)" />
     <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDescription} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="bn_BD" />
@@ -104,7 +136,7 @@ const graph = [
     <meta property="og:image:alt" content="পসরা - বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:description" content={metaDescription} />
     <meta name="twitter:image" content={ogImage} />
     {/* Not executed, so the CSP's script-src does not apply to it. Describes
         only what the site actually is; no ratings, no prices, nothing unearned. */}

@@ -195,7 +195,7 @@ const schema = [
   },
 ];
 ---
-<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare schema={schema}>
+<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare schema={schema} crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }]}>
   <div class="wrap page" id="world" data-slug={w.slug} data-total={total} data-child={child?.id} data-plan={plan ? '1' : '0'}>
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> {w.bn}</p>
 

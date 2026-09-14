@@ -60,7 +60,7 @@ const schema = [
 // A tracing row: the solid letter, then hollow copies to go over.
 const TRACE_COPIES = 5;
 ---
-<Base title={sheet.bn} description={`${sheet.tag} পসরার ফ্রি ছাপার প্যাক - ডাউনলোড বা প্রিন্ট করুন, কোনো অ্যাকাউন্ট লাগে না।`} schema={schema}>
+<Base title={sheet.bn} description={`${sheet.tag} পসরার ফ্রি ছাপার প্যাক - ডাউনলোড বা প্রিন্ট করুন, কোনো অ্যাকাউন্ট লাগে না।`} schema={schema} crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }, { name: 'ছাপার প্যাক', url: 'https://posora.com/printables/' }]}>
   <div class="wrap page">
     <p class="crumbs no-print"><a href="/">পসরা</a> <span>/</span> <a href="/printables/">ছাপার প্যাক</a> <span>/</span> {sheet.bn}</p>
 

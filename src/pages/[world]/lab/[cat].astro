@@ -31,11 +31,41 @@ Astro.response.headers.set('cache-control', 'public, s-maxage=300, stale-while-r
 
 const title = lab.n ?? c.n;
 const covered = labItems(lab);
+
+/**
+ * What this page is, in the one vocabulary a search engine has for it.
+ *
+ * `teaches` lists the items a child can actually work with here, taken from
+ * the lab itself rather than typed, so it cannot claim more than the page
+ * holds. Nothing about ratings, duration or difficulty: none of that is
+ * measured, so none of it is asserted.
+ */
+const schema = [{
+  '@type': 'LearningResource',
+  '@id': `${new URL(Astro.url.pathname, Astro.site).href}#lab`,
+  name: title,
+  description: lab.lede,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  inLanguage: 'bn',
+  isAccessibleForFree: true,
+  learningResourceType: 'Interactive activity',
+  educationalUse: 'interaction',
+  interactivityType: 'active',
+  teaches: covered,
+  about: { '@type': 'Thing', name: c.n },
+  isPartOf: { '@id': 'https://posora.com/#site' },
+  provider: { '@id': 'https://posora.com/#org' },
+}];
 ---
 <Base
   title={title}
   description={`${w.bn} - ${c.n}: ${bn(lab.cards.length)}টি কার্ডে নিজের হাতে নেড়ে দেখার জিনিস। ${lab.lede.slice(0, 110)}`}
   hue={w.hue}
+  schema={schema}
+  crumbs={[
+    { name: 'পসরা', url: 'https://posora.com/' },
+    { name: w.bn, url: new URL(`/${w.slug}/`, Astro.site).href },
+  ]}
 >
   <div class="wrap page" id="lab" data-world={w.slug} data-cat={cat} data-name={c.n}>
     <p class="crumbs">

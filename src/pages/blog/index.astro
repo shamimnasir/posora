@@ -1,0 +1,104 @@
+---
+/**
+ * The writing index, grouped by cluster.
+ *
+ * Not a reverse-chronological feed: these pieces answer questions, and a
+ * question does not get less useful because it was written first. The pillar
+ * of each cluster is listed first because it is the one that answers the broad
+ * question, and the rest go deeper.
+ */
+import Base from '../../layouts/Base.astro';
+import { CLUSTERS, POSTS, postsIn, clusterHue, readMinutes } from '../../data/blog';
+import { bn, pad2 } from '../../lib/bn';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'public, s-maxage=600, stale-while-revalidate=86400');
+
+const schema = [{
+  '@type': 'Blog',
+  '@id': 'https://posora.com/blog/#blog',
+  name: 'পসরার লেখা',
+  inLanguage: 'bn',
+  isPartOf: { '@id': 'https://posora.com/#site' },
+  publisher: { '@id': 'https://posora.com/#org' },
+  blogPost: POSTS.map((p) => ({
+    '@type': 'BlogPosting',
+    headline: p.title,
+    url: `https://posora.com/blog/${p.slug}/`,
+    datePublished: p.updated,
+    dateModified: p.updated,
+    inLanguage: 'bn',
+  })),
+}];
+---
+<Base
+  title="লেখা"
+  description={`বাংলায় ${bn(POSTS.length)}টি লেখা - সরল যন্ত্র, ছয় ঋতু, বাংলা বর্ণমালা আর টাকার হিসাব। প্রশ্নের উত্তর, তারপর নিজে নেড়ে দেখার জায়গা।`}
+  schema={schema}
+  crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }]}
+>
+  <div class="wrap page">
+    <header class="head">
+      <p class="eyebrow">পসরার লেখা</p>
+      <h1>প্রশ্নের উত্তর, তারপর নেড়ে দেখার জায়গা</h1>
+      <p class="lede">
+        পসরা মূলত একগুচ্ছ টুল, কিন্তু টুল কোনো প্রশ্নের উত্তর নয়। কেউ যখন খোঁজে
+        "সরল যন্ত্র কাকে বলে", তার আগে দরকার সংজ্ঞাটা, উদাহরণগুলো আর একটা কষে দেখা হিসাব।
+        এই লেখাগুলো সেই কাজটা করে, আর ঠিক যেখানে হাতে নেড়ে দেখা কাজে লাগে,
+        সেখানে টুলটার লিংক দেয়।
+      </p>
+    </header>
+
+    {CLUSTERS.map((c, ci) => {
+      const list = postsIn(c.id);
+      return (
+        <section class="cluster" style={`--w:${clusterHue(c)}`}>
+          <div class="c-h">
+            <span class="lbl">গুচ্ছ {pad2(ci + 1)}</span>
+            <h2>{c.n}</h2>
+            <span class="lbl num">{bn(list.length)}টি লেখা</span>
+          </div>
+          <p class="c-blurb">{c.blurb}</p>
+          <div class="posts">
+            {list.map((p) => (
+              <a class="post" href={`/blog/${p.slug}/`}>
+                <span class="p-t">
+                  <b>{p.title}</b>
+                  {p.pillar && <span class="pill pill-w">মূল লেখা</span>}
+                </span>
+                <p>{p.description}</p>
+                <span class="p-meta">{bn(readMinutes(p))} মিনিট পড়া</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+
+    <p class="back"><a href="/#worlds">← সব ভুবন</a> · <a href="/printables/">ফ্রি ছাপার প্যাক</a></p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(1.9rem, 4vw, 2.7rem); margin: 0.2rem 0 0.7rem; }
+  .lede { color: var(--ink-2); max-width: 64ch; font-size: 15.5px; line-height: 1.8; }
+  .cluster { margin-bottom: 2.2rem; }
+  .c-h { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
+  .c-h h2 { font-size: 21px; margin: 0; }
+  .c-blurb { color: var(--muted); font-size: 14px; max-width: 68ch; margin: 0.35rem 0 0.9rem; line-height: 1.7; }
+  .posts { display: grid; gap: 0.6rem; }
+  .post {
+    display: block; padding: 0.9rem 1.1rem; border-radius: 14px;
+    border: 1px solid var(--line-soft); background: var(--panel);
+    border-left: 3px solid color-mix(in oklab, var(--w) 60%, var(--line));
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .post:hover { transform: translateY(-2px); background: color-mix(in oklab, var(--w) 6%, var(--panel)); }
+  .p-t { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .p-t b { font-size: 16.5px; font-family: var(--font-display); color: var(--ink); }
+  .post p { margin: 0.3rem 0 0.4rem; font-size: 14px; color: var(--ink-2); line-height: 1.7; max-width: 72ch; }
+  .p-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .back { margin-top: 1.5rem; font-size: 14px; color: var(--muted); }
+</style>

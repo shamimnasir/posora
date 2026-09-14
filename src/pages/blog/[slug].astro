@@ -1,0 +1,155 @@
+---
+/**
+ * One written piece.
+ *
+ * Article schema plus, where the piece has one, an FAQPage - and the FAQ
+ * markup is only emitted because the questions and answers are visible on the
+ * page in the same words. Structured data that disagrees with the page is
+ * worse than none.
+ */
+import Base from '../../layouts/Base.astro';
+import { postBySlug, postsIn, clusterOf, clusterHue, readMinutes } from '../../data/blog';
+import { bn } from '../../lib/bn';
+
+export const prerender = false;
+
+const p = postBySlug(Astro.params.slug!);
+if (!p) return Astro.rewrite('/404');
+const c = clusterOf(p.cluster);
+if (!c) return Astro.rewrite('/404');
+
+Astro.response.headers.set('cache-control', 'public, s-maxage=600, stale-while-revalidate=86400');
+
+const url = new URL(Astro.url.pathname, Astro.site).href;
+const siblings = postsIn(p.cluster).filter((x) => x.slug !== p.slug);
+const words = p.intro.join('').length + p.sections.reduce((s, x) => s + x.p.join('').length, 0);
+
+const schema: Record<string, unknown>[] = [
+  {
+    '@type': 'Article',
+    '@id': `${url}#article`,
+    headline: p.title,
+    description: p.description,
+    url,
+    inLanguage: 'bn',
+    datePublished: p.updated,
+    dateModified: p.updated,
+    author: { '@id': 'https://posora.com/#org' },
+    publisher: { '@id': 'https://posora.com/#org' },
+    isPartOf: { '@id': 'https://posora.com/blog/#blog' },
+    isAccessibleForFree: true,
+    articleSection: c.n,
+    wordCount: Math.round(words / 5.5),
+  },
+];
+if (p.faq?.length) {
+  schema.push({
+    '@type': 'FAQPage',
+    '@id': `${url}#faq`,
+    mainEntity: p.faq.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  });
+}
+---
+<Base
+  title={p.title}
+  description={p.description}
+  hue={clusterHue(c)}
+  schema={schema}
+  crumbs={[
+    { name: 'পসরা', url: 'https://posora.com/' },
+    { name: 'লেখা', url: 'https://posora.com/blog/' },
+  ]}
+>
+  <article class="wrap page">
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> <a href="/blog/">লেখা</a> <span>/</span> {c.n}</p>
+
+    <header class="head">
+      <p class="eyebrow">{c.n}</p>
+      <h1>{p.title}</h1>
+      <p class="meta">
+        <span>{bn(readMinutes(p))} মিনিট পড়া</span>
+        <span>·</span>
+        <span>হালনাগাদ <time datetime={p.updated}>{p.updated}</time></span>
+      </p>
+      {p.intro.map((t) => <p class="lede">{t}</p>)}
+    </header>
+
+    {p.sections.map((s) => (
+      <section class="sec">
+        <h2>{s.h}</h2>
+        {s.p.map((t) => <p>{t}</p>)}
+      </section>
+    ))}
+
+    {p.faq && p.faq.length > 0 && (
+      <section class="sec faq">
+        <h2>সংক্ষেপে কিছু প্রশ্ন</h2>
+        {p.faq.map((f) => (
+          <div class="q">
+            <h3>{f.q}</h3>
+            <p>{f.a}</p>
+          </div>
+        ))}
+      </section>
+    )}
+
+    <section class="sec refs">
+      <h2>এবার নিজে নেড়ে দেখো</h2>
+      <div class="ref-list">
+        {p.refs.map((r) => (
+          <a class="ref" href={r.href}>
+            <b>{r.label}</b>
+            <span>{r.note}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    {siblings.length > 0 && (
+      <section class="sec">
+        <h2>একই গুচ্ছের বাকি লেখা</h2>
+        <ul class="more">
+          {siblings.map((s) => <li><a href={`/blog/${s.slug}/`}>{s.title}</a></li>)}
+        </ul>
+      </section>
+    )}
+
+    <p class="back"><a href="/blog/">← সব লেখা</a> · <a href={`/${c.world}/`}>{c.n} ভুবনে যাও</a></p>
+  </article>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; max-width: 74ch; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.3rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.6rem; }
+  .head h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin: 0.2rem 0 0.5rem; line-height: 1.35; }
+  .meta { display: flex; gap: 0.5rem; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-bottom: 1rem; }
+  .lede { color: var(--ink-2); font-size: 16px; line-height: 1.9; margin-bottom: 0.8rem; }
+  .sec { margin-bottom: 1.9rem; }
+  .sec h2 {
+    font-size: 20px; margin: 0 0 0.7rem; padding-left: 0.7rem;
+    border-left: 3px solid color-mix(in oklab, var(--w) 65%, var(--line));
+  }
+  .sec p { font-size: 15.5px; line-height: 1.95; color: var(--ink-2); margin-bottom: 0.75rem; }
+  .faq .q { padding: 0.7rem 0; border-bottom: 1px solid var(--line-soft); }
+  .faq h3 { font-size: 16px; margin: 0 0 0.3rem; color: var(--ink); }
+  .faq p { margin: 0; }
+  .ref-list { display: grid; gap: 0.5rem; }
+  .ref {
+    display: block; padding: 0.75rem 1rem; border-radius: 12px;
+    border: 1px solid color-mix(in oklab, var(--w) 30%, var(--line));
+    background: color-mix(in oklab, var(--w) 7%, var(--panel));
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .ref:hover { background: color-mix(in oklab, var(--w) 15%, var(--panel)); transform: translateY(-1px); }
+  .ref b { display: block; font-size: 15.5px; color: var(--brand-ink); }
+  .ref span { font-size: 13.5px; color: var(--ink-2); line-height: 1.7; }
+  .more { margin: 0; padding-left: 1.1rem; }
+  .more li { margin-bottom: 0.35rem; font-size: 15px; }
+  .back { margin-top: 1.6rem; font-size: 14px; color: var(--muted); }
+</style>
