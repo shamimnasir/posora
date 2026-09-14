@@ -14,7 +14,7 @@
  * the same as reading the item it stands for, because the card IS that item's
  * content and not a toy beside it.
  */
-import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard, CompareCard, GraphCard, ScrubKnob } from '../data/lab-types';
+import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard, CompareCard, GraphCard, GridCard, ScrubKnob } from '../data/lab-types';
 import { bn, bnOf } from './bn';
 import { svgEl, clamp } from './handson';
 import { praise } from './praise';
@@ -660,6 +660,75 @@ function buildScrub(c: ScrubCard, credit: Credit): HTMLElement {
   return wrap;
 }
 
+
+/* ---------------- grid ---------------- */
+
+/**
+ * A big table you click around in.
+ *
+ * The holes matter. A periodic table drawn as a dense list of 118 boxes
+ * teaches nothing; drawn in its real shape, with the gaps where they belong,
+ * the arrangement itself is the lesson - and a child can see that the columns
+ * are families long before anyone says the word.
+ *
+ * Cells with nothing written about them stay in the grid and stay unclickable,
+ * because leaving them out would misrepresent the table and making them
+ * clickable would promise something that is not there.
+ */
+function buildGrid(c: GridCard, credit: Credit): HTMLElement {
+  const wrap = el('div', 'lk');
+  const hue = new Map((c.bands ?? []).map((b) => [b.k, b.hue]));
+
+  const board = el('div', 'lk-grid');
+  board.style.setProperty('--cols', String(c.cols));
+  board.setAttribute('role', 'group');
+  board.setAttribute('aria-label', c.n);
+
+  const out = readout();
+  const said = new Set<string>();
+
+  const cells = c.cells.map((cell) => {
+    const live = !!cell.note;
+    const b = el(live ? 'button' : 'span', `lk-cell${live ? '' : ' lk-cell-off'}`);
+    b.style.gridRow = String(cell.row);
+    b.style.gridColumn = String(cell.col);
+    if (cell.band && hue.has(cell.band)) b.style.setProperty('--cell', hue.get(cell.band)!);
+    if (cell.no !== undefined) b.append(el('span', 'lk-cell-no', String(cell.no)));
+    b.append(el('b', '', cell.k));
+    if (live) {
+      (b as HTMLButtonElement).type = 'button';
+      b.setAttribute('aria-label', cell.n ?? cell.k);
+      b.addEventListener('click', () => {
+        for (const x of cells) x.el.setAttribute('aria-pressed', String(x.el === b));
+        out.innerHTML = `<b>${cell.n ?? cell.k}</b>${cell.no !== undefined ? ` · ${cell.no}` : ''}<span class="lk-note">${cell.note}</span>`;
+        if (cell.item) credit(cell.item);
+        credit(c.item);
+        if (!said.has(cell.k)) { said.add(cell.k); praise({ at: b, sound: 'tick' }); }
+      });
+    }
+    board.append(b);
+    return { el: b };
+  });
+
+  const legend = el('div', 'lk-legend');
+  for (const b of c.bands ?? []) {
+    const chip = el('span', 'lk-leg');
+    const dot = el('i'); dot.style.background = b.hue; dot.style.height = '10px'; dot.style.width = '10px'; dot.style.borderRadius = '3px';
+    chip.append(dot, document.createTextNode(b.n));
+    legend.append(chip);
+  }
+
+  out.innerHTML = c.intro;
+  // eighteen columns on a phone is a nineteen-pixel cell. Scroll it instead.
+  const scroller = el('div', 'lk-gridwrap');
+  scroller.append(board);
+  wrap.append(scroller);
+  if ((c.bands ?? []).length) wrap.append(legend);
+  wrap.append(out);
+  if (c.source) wrap.append(el('p', 'lk-src', c.source));
+  return wrap;
+}
+
 /* ---------------- the card ---------------- */
 
 /** Build one card's body into `host`. The heading and number are the page's. */
@@ -672,6 +741,7 @@ export function buildCard(host: HTMLElement, card: LabCard, credit: Credit): voi
         : card.kind === 'balance' ? buildBalance(card, credit)
           : card.kind === 'compare' ? buildCompare(card, credit)
             : card.kind === 'graph' ? buildGraph(card, credit)
-              : buildScrub(card, credit),
+              : card.kind === 'grid' ? buildGrid(card, credit)
+                : buildScrub(card, credit),
   );
 }

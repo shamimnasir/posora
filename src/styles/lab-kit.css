@@ -136,3 +136,26 @@
 
 /* A plot rendered at full card width is 650px tall and swallows the page. */
 .lk-plot { max-width: 640px; margin-inline: auto; }
+
+/* ---- grid ---- */
+.lk-grid {
+  display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: 2px; margin-bottom: 0.8rem; overflow-x: auto;
+}
+.lk-cell {
+  --cell: var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  aspect-ratio: 1; min-width: 0; padding: 1px; border-radius: 4px;
+  border: 1px solid color-mix(in oklab, var(--cell) 55%, var(--line));
+  background: color-mix(in oklab, var(--cell) 16%, var(--panel));
+  font: inherit; color: var(--ink); cursor: pointer; overflow: hidden;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.lk-cell b { font-size: clamp(7px, 1.1vw, 12px); line-height: 1; font-weight: 700; }
+.lk-cell-no { font-family: var(--font-mono); font-size: clamp(5px, 0.75vw, 8px); color: var(--muted); line-height: 1; }
+.lk-cell:hover { transform: scale(1.14); background: color-mix(in oklab, var(--cell) 38%, var(--panel)); z-index: 2; }
+.lk-cell[aria-pressed='true'] { background: color-mix(in oklab, var(--cell) 55%, var(--panel)); border-color: var(--cell); z-index: 2; }
+.lk-cell-off { cursor: default; opacity: 0.42; background: var(--panel-2); }
+.lk-cell-off:hover { transform: none; background: var(--panel-2); }
+.lk-gridwrap { overflow-x: auto; padding-bottom: 4px; }
+.lk-gridwrap .lk-grid { min-width: 460px; }

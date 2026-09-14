@@ -1,4 +1,5 @@
 import type { Lab } from '../lab-types';
+import { periodicTable } from './chemistry-table';
 import { bn } from '../../lib/bn';
 
 /**
@@ -17,6 +18,12 @@ const ELEMENTS: [string, string][] = [
 ];
 
 const labs: Lab[] = [
+  {
+    world: 'chemistry', cat: 2,
+    n: 'পর্যায় সারণি',
+    lede: 'পর্যায় সারণি মুখস্থ করার তালিকা নয়, একটা মানচিত্র। কোন মৌল কোথায় বসে আছে সেটাই বলে দেয় সে কেমন আচরণ করবে - আর সেই কারণেই সারণিটার আকার এমন অদ্ভুত।',
+    cards: [periodicTable],
+  },
   {
     world: 'chemistry', cat: 1,
     n: 'পরমাণু বানাও',

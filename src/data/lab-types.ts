@@ -201,7 +201,48 @@ export type GraphCard = {
   also?: string[];
 };
 
-export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard | CompareCard | GraphCard;
+
+/* ---------------- grid ---------------- */
+
+/**
+ * One cell of a big clickable table.
+ *
+ * `row` and `col` are one-based positions in the grid, because the tables this
+ * is for are not dense: a periodic table has holes in it, and the holes are
+ * part of what it teaches. A cell with no `note` is a position that exists but
+ * has nothing written about it yet, and it renders as unclickable rather than
+ * as a button that apologises.
+ */
+export type GridCell = {
+  row: number; col: number;
+  /** The short label, usually a symbol or a numeral. */
+  k: string;
+  /** The small number above it, if the table has one. */
+  no?: string | number;
+  /** The full name, shown when the cell is chosen. */
+  n?: string;
+  item?: string;
+  note?: string;
+  /** Which legend band this belongs to. */
+  band?: string;
+};
+
+export type GridCard = {
+  kind: 'grid';
+  item: string;
+  n: string;
+  how: string;
+  rows: number;
+  cols: number;
+  cells: GridCell[];
+  bands?: { k: string; n: string; hue: string }[];
+  /** Said under the grid before anything is chosen. */
+  intro: string;
+  source?: string;
+  also?: string[];
+};
+
+export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard | CompareCard | GraphCard | GridCard;
 
 export type Lab = {
   /** Which world and which category index in `worlds.ts` this lab is. */
