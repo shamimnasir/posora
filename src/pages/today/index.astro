@@ -68,7 +68,7 @@ const schema = [
           <span class="flame" id="flame">🔥</span>
           <b class="num" id="st-n">১</b>
           <span class="lbl">দিন টানা</span>
-          <span class="frz" id="frz" hidden><span aria-hidden="true">❄️</span> <b id="frz-n">০</b> বরফ</span>
+          <span class="frz" id="frz" hidden><span aria-hidden="true">❄</span> <b id="frz-n">০</b> বরফ</span>
         </div>
       </div>
 
@@ -493,7 +493,7 @@ const schema = [
 
   // A streak that ended says so plainly, once, and then moves on.
   if (day.broke && day.brokeAt >= 3) toast(`ধারা ভেঙেছে ${bn(day.brokeAt)} দিনে। আজ থেকে আবার শুরু।`);
-  if (day.froze) toast('❄️ একটা বরফ খরচ হলো, ধারা টিকে গেছে।');
+  if (day.froze) toast('❄ একটা বরফ খরচ হলো, ধারা টিকে গেছে।');
 
   const mile = reachedMilestone(day.streak);
   if (mile) {

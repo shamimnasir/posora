@@ -169,9 +169,16 @@ const homeSchema = [
       itself. A short answer that stands on its own is what a search result or
       an assistant can quote, and what a hurried parent can read in one go. */}
   <section class="sec wrap" id="faq">
+    {/* The eyebrow belongs above its heading, not beside it: .sec-h is a
+        space-between row whose two children are the title and the lede, so an
+        eyebrow left loose as the first child pushed this heading to the far
+        right edge with nothing under it. */}
     <div class="sec-h">
-      <p class="eyebrow">সাধারণ প্রশ্ন</p>
-      <h2>পসরা জিনিসটা আসলে কী</h2>
+      <div class="sec-t">
+        <p class="eyebrow">সাধারণ প্রশ্ন</p>
+        <h2>পসরা জিনিসটা আসলে কী</h2>
+      </div>
+      <p>যেগুলো সবচেয়ে বেশি জিজ্ঞেস করা হয়। উত্তর না পেলে নিচের ফর্মে লিখে পাঠাও।</p>
     </div>
     <div class="faq">
       {faqs.map((f) => (

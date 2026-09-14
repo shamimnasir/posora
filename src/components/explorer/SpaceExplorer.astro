@@ -1173,7 +1173,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
         finishTask('play'); noteAct();
         renderMissions(); renderPlayer(); checkAwards();
         track('mission_done', { world: WORLD, mission: mi, stars: r.stars, points: r.points, seconds: r.seconds });
-        if (improved && r.stars === 3) toast('🎖️ তিন তারা! নিখুঁত মিশন');
+        if (improved && r.stars === 3) toast('🎖 তিন তারা! নিখুঁত মিশন');
         checkGoal();
       },
       onClose() { renderMissions(); renderPlayer(); },
@@ -1259,7 +1259,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   trackItem(WORLD, 'সৌরজগৎ', cur.bn);
 
   /* ---- what today did to the streak ---- */
-  if (day.froze) toast(`❄️ একটা বরফ খরচ হলো, ${bn(streakDays)} দিনের ধারা টিকে গেছে`);
+  if (day.froze) toast(`❄ একটা বরফ খরচ হলো, ${bn(streakDays)} দিনের ধারা টিকে গেছে`);
   else if (day.broke && day.brokeAt >= 3) toast(`ধারা ভেঙেছে ${bn(day.brokeAt)} দিনে। আজ থেকে আবার শুরু।`);
   const mile = reachedMilestone(streakDays);
   if (mile) {

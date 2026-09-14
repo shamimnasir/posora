@@ -22,6 +22,7 @@ import {
 } from 'three';
 import { FIGURES } from './figures';
 import { dressScene, castShadows } from './render';
+import { iconFont, withIconFont } from '../../lib/icon-font';
 
 export type ShelfSlot = {
   label: string;
@@ -75,11 +76,16 @@ function emojiTile(emoji: string, hue: Color): Group {
   const c = document.createElement('canvas');
   c.width = c.height = 256;      // 128 was visibly soft on a retina screen
   const x = c.getContext('2d')!;
-  x.font = '188px "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Emoji", sans-serif';
-  x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(emoji, 128, 140);
+  const strike = () => {
+    x.font = iconFont(188);
+    x.fillStyle = '#211a38';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(emoji, 128, 140);
+  };
+  strike();
   const tex = new CanvasTexture(c);
   tex.anisotropy = 4;
+  withIconFont(() => { x.clearRect(0, 0, 256, 256); strike(); tex.needsUpdate = true; });
 
   const R = 0.47, D = 0.13, Y = 0.55;
   const body = new Mesh(

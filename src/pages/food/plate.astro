@@ -233,7 +233,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
   const ITEMS = ['সুষম খাবার', 'সকালের নাশতা', 'দুপুরের খাবার', 'রাতের খাবার', 'টিফিন', 'পরিমাণ', 'দিনে কয়বার', 'পানি কতটুকু'];
   let live = false;
   const mark = creditSet(WORLD, CAT, ITEMS, () => {
-    praise({ at: document.querySelector('#sushom h2') ?? undefined, big: true, say: '🍽️ পুরো থালা শেখা হয়ে গেছে - আটটাই!' });
+    praise({ at: document.querySelector('#sushom h2') ?? undefined, big: true, say: '🍽 পুরো থালা শেখা হয়ে গেছে - আটটাই!' });
   });
   const credit = (item: string) => { if (live) mark(item); };
 
@@ -443,7 +443,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
         const isBig = big.includes(i);
         marks.appendChild(el('circle', { cx: x, cy: Y, r: isBig ? 13 : 8, fill: HUE, 'fill-opacity': isBig ? 0.9 : 0.45 }));
         const e = el('text', { x, y: Y + 5, 'font-size': isBig ? 14 : 10, 'text-anchor': 'middle' });
-        e.textContent = isBig ? '🍽️' : '🍎';
+        e.textContent = isBig ? '🍽' : '🍎';
         marks.appendChild(e);
         if (!narrow || isBig) text(marks, x, Y - 24, `${bn(Math.floor(t))}:${bn(String(Math.round((t % 1) * 60)).padStart(2, '0'))}`, { 'font-size': 10 });
       });
@@ -454,7 +454,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
           ? 'দুবারে ফাঁক অনেক বড় হয়ে যায় - মাঝে খুব খিদে পায়, আর তখন একবারে বেশি খাওয়া হয়ে যায়।'
           : n >= 6
             ? 'এত ঘন ঘন খেলে পেট বিশ্রাম পায় না, আর দাঁতেরও ক্ষতি।'
-            : 'তিনবেলা বড় খাবার (🍽️) আর মাঝে ছোট কিছু (🍎) - এই ছন্দটাই বেশিরভাগের জন্য ভালো।'}</span>`;
+            : 'তিনবেলা বড় খাবার (🍽) আর মাঝে ছোট কিছু (🍎) - এই ছন্দটাই বেশিরভাগের জন্য ভালো।'}</span>`;
       credit('দিনে কয়বার');
     }
     const toN = alongX(svg, W, TRACK.x0, (TRACK.x1 - TRACK.x0) / 4);

@@ -13,6 +13,7 @@ import {
 } from 'three';
 import { FIGURES, arc, arcPerRow } from './figures';
 import { dressScene, castShadows, stylise } from './render';
+import { iconFont, withIconFont } from '../../lib/icon-font';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
   /** For the `collection` scene: item label -> figure name, in order. */
@@ -177,20 +178,27 @@ function textSprite(text: string, font: string, color: string, size = 1): Sprite
   g.font = `700 ${text.length > 2 ? 64 : 120}px ${font}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = color; g.fillText(text, 96, 104);
   const tex = new CanvasTexture(c); const s = new Sprite(new SpriteMaterial({ map: tex, transparent: true })); s.scale.setScalar(size); return s;
 }
-const emojiSprite = (e: string, size = 0.8) => textSprite(e, 'system-ui', '#000', size);
+const emojiSprite = (e: string, size = 0.8) => textSprite(e, '"Noto Emoji", sans-serif', '#1d1630', size);
 /** A round badge carrying an emoji, or the first letter of the label when there is none. */
 function badgeSprite(item: HeroItem, hue: Color, font: string): Sprite {
   const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d')!;
   const cx = 128, r = 112;
-  g.beginPath(); g.arc(cx, cx, r, 0, Math.PI * 2);
-  const grad = g.createRadialGradient(cx - 30, cx - 36, 10, cx, cx, r);
-  grad.addColorStop(0, '#' + lighten(hue, 0.55).getHexString()); grad.addColorStop(1, '#' + hue.getHexString());
-  g.fillStyle = grad; g.fill();
-  g.lineWidth = 8; g.strokeStyle = 'rgba(255,255,255,0.85)'; g.stroke();
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  if (item.emoji) { g.font = '120px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'; g.fillStyle = '#000'; g.fillText(item.emoji, cx, cx + 8); }
-  else { const ch = Array.from(item.label.trim())[0] ?? '?'; g.font = `800 130px ${font}`; g.fillStyle = '#ffffff'; g.fillText(ch, cx, cx + 14); }
+  const disc = () => {
+    g.beginPath(); g.arc(cx, cx, r, 0, Math.PI * 2);
+    const grad = g.createRadialGradient(cx - 30, cx - 36, 10, cx, cx, r);
+    grad.addColorStop(0, '#' + lighten(hue, 0.55).getHexString()); grad.addColorStop(1, '#' + hue.getHexString());
+    g.fillStyle = grad; g.fill();
+    g.lineWidth = 8; g.strokeStyle = 'rgba(255,255,255,0.85)'; g.stroke();
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+  };
+  disc();
+  const mark = () => {
+    if (item.emoji) { g.font = iconFont(120); g.fillStyle = '#1d1630'; g.fillText(item.emoji, cx, cx + 8); }
+    else { const ch = Array.from(item.label.trim())[0] ?? '?'; g.font = `800 130px ${font}`; g.fillStyle = '#ffffff'; g.fillText(ch, cx, cx + 14); }
+  };
+  mark();
   const tex = new CanvasTexture(c); const sp = new Sprite(new SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  if (item.emoji) withIconFont(() => { g.clearRect(0, 0, 256, 256); disc(); mark(); tex.needsUpdate = true; });
   sp.renderOrder = 10; return sp;
 }
 /** A pill with the item's name, sized to the text. */

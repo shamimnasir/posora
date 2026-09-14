@@ -7,5 +7,5 @@ dist/
 .DS_Store
 .commandcode/
 
-# one-off D1 sync, kept until the write lands
-sync_missions.sql
+# the Python venv scripts/make-font.py and scripts/make-emoji-font.py run in
+.venv/

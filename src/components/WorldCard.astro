@@ -2,10 +2,11 @@
 import type { World } from '../data/worlds';
 import { itemCount } from '../data/worlds';
 import { bn, pad2 } from '../lib/bn';
-import { coverageFor } from '../lib/coverage';
+import { coverageFor, doableFor } from '../lib/coverage';
 interface Props { w: World; i: number }
 const { w, i } = Astro.props;
 const { items, covered } = coverageFor(w.slug);
+const { labs, missions } = doableFor(w.slug);
 ---
 <a class="wcard" href={`/${w.slug}/`} style={`--w:${w.hue}`} data-tilt>
   <span class="orb" style="width:52px;height:52px"></span>
@@ -18,7 +19,7 @@ const { items, covered } = coverageFor(w.slug);
         solar system but reading for only 11 of its 49 planned items, so it says
         so rather than borrowing the other worlds' claim. */}
     {covered >= items
-      ? <span class="pill open">{w.open ? 'থ্রিডি সৌরজগৎ · পুরো পাঠ' : 'পুরো পাঠ · থ্রিডি মডেল'}</span>
+      ? <span class="pill open">{bn(labs)}টি হাতে-কলমে · {bn(missions)}টি মিশন</span>
       : <span class="pill part">{w.open ? 'থ্রিডি সৌরজগৎ' : 'থ্রিডি মডেল'} · {bn(covered)}টির পাঠ</span>}
   </span>
 </a>

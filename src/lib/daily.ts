@@ -91,8 +91,8 @@ export type Milestone = { at: number; name: string; note: string; emoji: string;
  */
 export const MILESTONES: Milestone[] = [
   { at: 3, name: 'তিন দিন', note: 'একটা বরফ পেলে - একদিন না এলেও ধারা টিকবে', emoji: '🔥', freeze: true },
-  { at: 7, name: 'সাত দিন', note: 'পুরো এক সপ্তাহ। বাড়ির বড়দের দেখাও।', emoji: '🗓️', freeze: true },
-  { at: 14, name: 'চোদ্দ দিন', note: 'দুই সপ্তাহ টানা। আরেকটা বরফ।', emoji: '❄️', freeze: true },
+  { at: 7, name: 'সাত দিন', note: 'পুরো এক সপ্তাহ। বাড়ির বড়দের দেখাও।', emoji: '🗓', freeze: true },
+  { at: 14, name: 'চোদ্দ দিন', note: 'দুই সপ্তাহ টানা। আরেকটা বরফ।', emoji: '❄', freeze: true },
   { at: 30, name: 'ত্রিশ দিন', note: 'এক মাস। এটা আর অভ্যাস নয়, এটা তুমি।', emoji: '🏅', freeze: true },
 ];
 export const milestoneAt = (n: number): Milestone | undefined => MILESTONES.find((m) => m.at === n);

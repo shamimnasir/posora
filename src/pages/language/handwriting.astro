@@ -227,7 +227,7 @@ const payload = { letters: [...vowels, ...consonants], kars };
   const ITEMS = ['মাত্রা টানা', 'বর্ণের স্ট্রোক ক্রম', 'কার বসানো', 'শব্দ লেখা', 'বাক্য লেখা', 'ছাপার যোগ্য পাতা'];
   let live = false;
   const mark = creditSet(WORLD, CAT, ITEMS, () => {
-    praise({ at: document.querySelector('#matra h2') ?? undefined, big: true, say: '✍️ ছয়টাই লেখা হয়ে গেছে। হাত তৈরি!' });
+    praise({ at: document.querySelector('#matra h2') ?? undefined, big: true, say: '✍ ছয়টাই লেখা হয়ে গেছে। হাত তৈরি!' });
   });
   const credit = (item: string) => { if (live) mark(item); };
   const pc = (v: number) => `${new Intl.NumberFormat('bn-BD').format(Math.round(v * 100))}%`;

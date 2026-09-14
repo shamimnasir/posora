@@ -250,7 +250,7 @@ const items = [
     wedge: 'কীলক', wheel: 'চাকা ও অক্ষ', gears: 'গিয়ার', advantage: 'যান্ত্রিক সুবিধা',
   };
   const mark = creditSet(WORLD, CAT, Object.values(ITEM), () => {
-    praise({ at: document.querySelector('#lever h2') ?? undefined, big: true, say: '⚙️ আটটা যন্ত্রই নেড়ে দেখা হয়ে গেছে!' });
+    praise({ at: document.querySelector('#lever h2') ?? undefined, big: true, say: '⚙ আটটা যন্ত্রই নেড়ে দেখা হয়ে গেছে!' });
   });
   const used = (id: string) => { mark(ITEM[id]!); };
 

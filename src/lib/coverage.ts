@@ -126,6 +126,25 @@ function compute(): Coverage {
 
 export const COVERAGE: Coverage = compute();
 
+/**
+ * How much of a world there is to DO, by the same rules as the site-wide count.
+ *
+ * The world cards carried "পুরো পাঠ · থ্রিডি মডেল" and ten of the eleven said
+ * exactly that, because it is now true of all of them - a badge that reads the
+ * same on every card in a grid has stopped being information. The claim is
+ * still made, once, in the section's own lede; the cards say what differs.
+ */
+export function doableFor(slug: string): { labs: number; missions: number } {
+  const w = worlds.find((x) => x.slug === slug);
+  if (!w) return { labs: 0, missions: 0 };
+  const specs = MISSIONS[slug] ?? [];
+  const kit = new Set((LABS[slug] ?? []).map((l) => l.cat));
+  return {
+    labs: w.cats.filter((c, i) => !!c.lab || kit.has(i)).length,
+    missions: specs.filter(Boolean).length,
+  };
+}
+
 /** Items a given world can genuinely show, used for the world cards. */
 export function coverageFor(slug: string): { items: number; covered: number } {
   const w = worlds.find((x) => x.slug === slug);

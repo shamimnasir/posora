@@ -30,7 +30,7 @@ export const denominations = [
 ] as const;
 
 export const shopItems = [
-  { name: 'পেন্সিল', emoji: '✏️', price: 8 }, { name: 'খাতা', emoji: '📓', price: 25 }, { name: 'কলা', emoji: '🍌', price: 12 },
+  { name: 'পেন্সিল', emoji: '✏', price: 8 }, { name: 'খাতা', emoji: '📓', price: 25 }, { name: 'কলা', emoji: '🍌', price: 12 },
   { name: 'ঝালমুড়ি', emoji: '🥜', price: 15 }, { name: 'বল', emoji: '⚽', price: 120 }, { name: 'গল্পের বই', emoji: '📚', price: 180 },
   { name: 'ঘুড়ি', emoji: '🪁', price: 35 }, { name: 'আইসক্রিম', emoji: '🍦', price: 40 },
 ];

@@ -17,6 +17,7 @@ import { discoveryExplorer } from '../../data/discovery-explorer';
 import type { ItemDetail } from '../../data/explorer-types';
 import { getMember, hasPlan, activeChild, familyWeekIn } from '../../lib/members';
 import { emojiFor } from '../../data/item-emoji';
+import { chipsFor } from '../../lib/chips';
 import { catEmoji } from '../../data/cat-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
 import { missionSpec } from '../../data/missions';
@@ -398,7 +399,7 @@ const schema = [
           <div class="ow-grid">
             {labCats.map((c) => (
               <a class="ow ow-lab" href={c.lab}>
-                <span class="ow-e" aria-hidden="true">🛠️</span>
+                <span class="ow-e" aria-hidden="true">🛠</span>
                 <span class="ow-t"><b>{c.n} - হাতে-কলমে</b><small>{bn(c.items.length)}টি জিনিস নিজে টেনে চালিয়ে দেখো</small></span>
               </a>
             ))}
@@ -407,7 +408,7 @@ const schema = [
               <span class="ow-t"><b>আজকের পসরা</b><small>রোজ নতুন - দিনের একটা জিনিস, তিনটা কাজ</small></span>
             </a>
             <a class="ow" href="/collection/">
-              <span class="ow-e" aria-hidden="true">🗄️</span>
+              <span class="ow-e" aria-hidden="true">🗄</span>
               <span class="ow-t"><b>সংগ্রহশালা</b><small id="ow-coll">তুমি যা যা খুলেছ, সব এক তাকে সাজানো</small></span>
             </a>
             <a class="ow" href="/ladder/">
@@ -415,7 +416,7 @@ const schema = [
               <span class="ow-t"><b>পড়ার সিঁড়ি</b><small>সহজ থেকে কঠিন - মেপে সাজানো পথ</small></span>
             </a>
             <a class="ow" href="/printables/">
-              <span class="ow-e" aria-hidden="true">🖨️</span>
+              <span class="ow-e" aria-hidden="true">🖨</span>
               <span class="ow-t"><b>ছাপার প্যাক</b><small>{bn(sheets.length)}টি শিট, ফ্রি - অ্যাকাউন্ট লাগে না</small></span>
             </a>
           </div>
@@ -453,7 +454,7 @@ const schema = [
               for why an English voice reading Bangla is worse than silence. */}
           <button type="button" class="say" id="say" hidden>🔊 শুনে নাও</button>
           <div class="item-chips" id="item-chips">
-            {firstItem?.chips.map((c) => <span class="pill">{c}</span>)}
+            {firstItem && chipsFor(firstItem.chips, first.items[0]!).map((c) => <span class="pill">{c}</span>)}
           </div>
           <p class="text" id="item-text">{firstItem?.l1 ?? ''}</p>
           <p class="fun" id="item-fun-wrap"><span class="lbl">মজার তথ্য</span><span id="item-fun">{firstItem?.fun ?? ''}</span></p>
@@ -610,7 +611,7 @@ const schema = [
                     {/* Name and tags wrap inside their own box, so the chevron
                         stays on the first line instead of being pushed onto a
                         second one by a long name. */}
-                    <span class="ix-t"><b>{it}</b>{c.detail![ii].chips.slice(0, 2).map((ch) => <span class="pill">{ch}</span>)}</span>
+                    <span class="ix-t"><b>{it}</b>{chipsFor(c.detail![ii].chips, it, 2).map((ch) => <span class="pill">{ch}</span>)}</span>
                   </summary>
                   <p>{c.detail![ii].l1}</p>
                   <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{c.detail![ii].fun}</p>
@@ -665,7 +666,10 @@ const schema = [
   .rail-list button[aria-current="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
   /* the subject of the row, not another identical bead */
   .rorb { width: 32px; height: 32px; border-radius: 11px; flex: none; display: grid; place-items: center; font-size: 17px; line-height: 1;
-    background: color-mix(in oklab, var(--o) 18%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 38%, var(--line)); transition: transform 0.2s ease, background 0.2s ease; }
+    background: color-mix(in oklab, var(--o) 18%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 38%, var(--line)); transition: transform 0.2s ease, background 0.2s ease;
+    /* The icon font is monochrome, so the mark takes the row's own colour
+       instead of arriving in whatever hue the phone's emoji artist chose. */
+    color: color-mix(in oklab, var(--o) 72%, var(--ink)); }
   .rail-list button:hover .rorb { transform: scale(1.1); }
   .rail-list button.done .rorb { border-color: var(--ok); box-shadow: 0 0 0 2px color-mix(in oklab, var(--ok) 28%, transparent); }
   .rt { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
@@ -1064,10 +1068,13 @@ const schema = [
      a list you can scan without reading. */
   .ix-i { width: 30px; height: 30px; flex: none; display: grid; place-items: center; font-size: 15px; line-height: 1; border-radius: 9px;
     background: color-mix(in oklab, var(--o) 14%, var(--panel-2)); border: 1px solid color-mix(in oklab, var(--o) 26%, var(--line-soft));
+    color: color-mix(in oklab, var(--o) 70%, var(--ink));
     transition: transform 0.2s ease; }
-  .ix summary:hover .ix-i { transform: scale(1.12) rotate(-5deg); }
+  /* A tilt reads as playful on one tile and as a wobble on a list of nineteen. */
+  .ix summary:hover .ix-i { transform: scale(1.1); }
   .ix-e { width: 30px; height: 30px; display: inline-grid; place-items: center; font-size: 16px; line-height: 1; border-radius: 10px;
-    background: color-mix(in oklab, var(--o) 16%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 34%, var(--line)); }
+    background: color-mix(in oklab, var(--o) 16%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 34%, var(--line));
+    color: color-mix(in oklab, var(--o) 72%, var(--ink)); }
   .ix-n { margin-left: auto; }
   .ix { border: 1px solid var(--line-soft); border-radius: 12px; background: var(--panel); overflow: hidden; align-self: start;
     transition: border-color 0.15s ease, box-shadow 0.15s ease; }
@@ -1151,6 +1158,7 @@ const schema = [
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
   import { makeSpeaker, type Speaker } from '../../lib/speak';
   import { bn, pad2, bnOf, bnAt } from '../../lib/bn';
+  import { chipsFor } from '../../lib/chips';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import { setProgressScope } from '../../lib/progress';
   import { syncWorld, pushSeen } from '../../lib/sync';
@@ -1453,7 +1461,7 @@ const schema = [
         noteAct();
         renderMissions(); renderPlayer(); checkAwards();
         track('mission_done', { world: slug, mission: mi, stars: r.stars, points: r.points, seconds: r.seconds });
-        if (improved && r.stars === 3) toast('🎖️ তিন তারা! নিখুঁত মিশন');
+        if (improved && r.stars === 3) toast('🎖 তিন তারা! নিখুঁত মিশন');
         checkGoal();
       },
       onClose() { renderMissions(); renderPlayer(); },
@@ -1613,20 +1621,23 @@ const schema = [
   const wideRail = matchMedia('(min-width: 1081px)');
   function pinRead() {
     if (!wideRail.matches) { readCard.style.minHeight = ''; return; }
-    const all = cats.flatMap((c) => (readable(c) ? c.detail! : []));
+    // Carried with its own name, because a chip that repeats the name is not
+    // shown, and measuring a card with one chip more than it will ever have
+    // pins the panel taller than anything in it.
+    const all = cats.flatMap((c) => (readable(c) ? c.detail!.map((d, i) => ({ d, n: c.items[i] ?? '' })) : []));
     if (!all.length) return;
     const weight = (d: ItemDetail) => d[level].length + d.fun.length + d.chips.join('').length;
-    const top = all.slice().sort((a, b) => weight(b) - weight(a)).slice(0, 8);
+    const top = all.slice().sort((a, b) => weight(b.d) - weight(a.d)).slice(0, 8);
     const keepText = itemText.textContent, keepFun = itemFun.textContent;
     const keepChips = [...itemChips.children];
     const keepName = itemName.hidden, keepFunWrap = funWrap.hidden;
     itemName.hidden = false; funWrap.hidden = false;
     readCard.style.minHeight = '';
     let tallest = 0;
-    for (const d of top) {
+    for (const { d, n } of top) {
       itemText.textContent = d[level];
       itemFun.textContent = d.fun;
-      itemChips.replaceChildren(...d.chips.map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
+      itemChips.replaceChildren(...chipsFor(d.chips, n).map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
       tallest = Math.max(tallest, readCard.getBoundingClientRect().height);
     }
     itemText.textContent = keepText; itemFun.textContent = keepFun;
@@ -1643,8 +1654,8 @@ const schema = [
     if (saying) { speaker?.stop(); setSay(false); }
     if (readable(c)) {
       const d = c.detail![curItem];
-      itemName.hidden = false; itemName.textContent = c.items[curItem];
-      itemChips.replaceChildren(...d.chips.map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
+      itemName.hidden = false; itemName.textContent = c.items[curItem]!;
+      itemChips.replaceChildren(...chipsFor(d.chips, c.items[curItem]!).map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
       itemText.textContent = d[level];
       funWrap.hidden = false; itemFun.textContent = d.fun;
       // When the category also has a lab, the way in is per item: read about
@@ -2234,7 +2245,7 @@ const schema = [
   if (readable(cats[0])) trackItem(slug, cats[0].n, cats[0].items[0]);
 
   /* ---- what today did to the streak ---- */
-  if (day.froze) toast(`❄️ একটা বরফ খরচ হলো, ${bn(streakDays)} দিনের ধারা টিকে গেছে`);
+  if (day.froze) toast(`❄ একটা বরফ খরচ হলো, ${bn(streakDays)} দিনের ধারা টিকে গেছে`);
   else if (day.broke && day.brokeAt >= 3) toast(`ধারা ভেঙেছে ${bn(day.brokeAt)} দিনে। আজ থেকে আবার শুরু।`);
   const mile = reachedMilestone(streakDays);
   if (mile) {

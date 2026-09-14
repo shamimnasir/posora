@@ -42,13 +42,13 @@ export const AWARDS: Award[] = [
   { id: 'cat', name: 'একটা বিভাগ সম্পূর্ণ', desc: 'একটা বিভাগের সব আইটেম দেখা', emoji: '🧩', test: (c) => c.catsDone >= 1, near: (c) => ({ have: c.catsDone, need: 1, unit: 'বিভাগ' }) },
   { id: 'half', name: 'অর্ধেক পথ', desc: 'ভুবনের অর্ধেক আইটেম দেখা', emoji: '🌗', test: (c) => c.total > 0 && c.seen * 2 >= c.total, near: (c) => ({ have: c.seen, need: Math.ceil(c.total / 2), unit: 'টা' }) },
   { id: 'world', name: 'পুরো ভুবন', desc: 'এই ভুবনের সবকিছু দেখা', emoji: '🏆', test: (c) => c.total > 0 && c.seen >= c.total, near: (c) => ({ have: c.seen, need: c.total, unit: 'টা' }) },
-  { id: 'play', name: 'হাতে-কলমে', desc: 'মডেল ঘুরিয়ে বা স্লাইডার টেনে দেখা', emoji: '🎛️', test: (c) => c.played, near: (c) => ({ have: c.played ? 1 : 0, need: 1, unit: 'বার' }) },
+  { id: 'play', name: 'হাতে-কলমে', desc: 'মডেল ঘুরিয়ে বা স্লাইডার টেনে দেখা', emoji: '🎛', test: (c) => c.played, near: (c) => ({ have: c.played ? 1 : 0, need: 1, unit: 'বার' }) },
   { id: 'quest', name: 'খোঁজার খেলা', desc: 'একটা খোঁজার খেলা শেষ করা', emoji: '🎯', test: (c) => c.questsDone >= 1, near: (c) => ({ have: c.questsDone, need: 1, unit: 'খেলা' }) },
   { id: 'perfect', name: 'নিখুঁত খোঁজ', desc: 'একটাও ভুল না করে খেলা শেষ', emoji: '💯', test: (c) => c.perfect, near: (c) => ({ have: c.perfect ? 1 : 0, need: 1, unit: 'খেলা' }) },
   { id: 'mission', name: 'প্রথম মিশন', desc: 'একটা মিশন শেষ করা', emoji: '🚀', test: (c) => c.missionsDone >= 1, near: (c) => ({ have: c.missionsDone, need: 1, unit: 'মিশন' }) },
-  { id: 'missions', name: 'মিশন মাস্টার', desc: 'এই ভুবনের সব মিশন শেষ করা', emoji: '🎖️', test: (c) => c.missionsTotal > 0 && c.missionsDone >= c.missionsTotal, near: (c) => ({ have: c.missionsDone, need: Math.max(1, c.missionsTotal), unit: 'মিশন' }) },
+  { id: 'missions', name: 'মিশন মাস্টার', desc: 'এই ভুবনের সব মিশন শেষ করা', emoji: '🎖', test: (c) => c.missionsTotal > 0 && c.missionsDone >= c.missionsTotal, near: (c) => ({ have: c.missionsDone, need: Math.max(1, c.missionsTotal), unit: 'মিশন' }) },
   { id: 'streak3', name: 'টানা তিন দিন', desc: 'পরপর তিন দিন ফিরে আসা', emoji: '🔥', global: true, test: (c) => c.streak >= 3, near: (c) => ({ have: c.streak, need: 3, unit: 'দিন' }) },
-  { id: 'streak7', name: 'টানা সাত দিন', desc: 'পরপর সাত দিন ফিরে আসা', emoji: '🗓️', global: true, test: (c) => c.streak >= 7, near: (c) => ({ have: c.streak, need: 7, unit: 'দিন' }) },
+  { id: 'streak7', name: 'টানা সাত দিন', desc: 'পরপর সাত দিন ফিরে আসা', emoji: '🗓', global: true, test: (c) => c.streak >= 7, near: (c) => ({ have: c.streak, need: 7, unit: 'দিন' }) },
 ];
 
 /** The unearned award closest to being earned, if any is left. */
