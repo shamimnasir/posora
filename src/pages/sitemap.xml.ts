@@ -27,7 +27,6 @@ export const GET: APIRoute = async ({ site }) => {
     { loc: '/ladder/', priority: '0.8' },
     { loc: '/printables/', priority: '0.9' },
     { loc: '/schools/', priority: '0.8' },
-    { loc: '/math/measurement/', priority: '0.7' },
     { loc: '/contact/', priority: '0.5' },
   ];
 
@@ -40,6 +39,20 @@ export const GET: APIRoute = async ({ site }) => {
     for (const b of bodies) entries.push({ loc: `/space/${b.id}/`, priority: '0.7' });
 
     for (const s of sheets) entries.push({ loc: `/printables/${s.slug}/`, priority: '0.7' });
+
+    /**
+     * Every hands-on lab, derived rather than listed.
+     *
+     * Only /math/measurement/ used to be here, typed by hand, so the other
+     * nine hand-built labs and every lab rendered from data/labs were invisible
+     * to search. The content layer already attaches `lab` to a category for
+     * both kinds, so deriving it means a new lab cannot be forgotten. `open`
+     * worlds are included: they are skipped above because their hub has its own
+     * route, not because their categories have no labs.
+     */
+    const labs = new Set<string>();
+    for (const w of worlds) for (const c of w.cats) if (c.lab) labs.add(c.lab);
+    for (const loc of labs) entries.push({ loc, priority: '0.7' });
   } catch {
     // A content-layer failure must not take the sitemap down; the fixed pages
     // above are still worth serving.

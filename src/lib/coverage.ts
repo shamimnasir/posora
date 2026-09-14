@@ -27,6 +27,8 @@ import { languageExplorer } from '../data/language-explorer';
 import { socialExplorer } from '../data/social-explorer';
 import { discoveryExplorer } from '../data/discovery-explorer';
 import type { ItemDetail } from '../data/explorer-types';
+import { MISSIONS } from '../data/missions';
+import { LABS } from '../data/labs';
 
 const EXPLORERS: Record<string, (ItemDetail[] | null)[]> = {
   math: mathExplorer, physics: physicsExplorer, chemistry: chemistryExplorer,
@@ -53,6 +55,21 @@ export type Coverage = {
   uncovered: number;
   /** readable + tool: everything a visitor can genuinely do something with. */
   covered: number;
+  /**
+   * How many missions are actually playable, and how many categories have
+   * something to DO rather than only to read.
+   *
+   * The home page used to say "তিনটি করে মিশন" because that was true of every
+   * world on the day it was typed. It stopped being true the moment social got
+   * eleven, and a hand-typed count is right until exactly that moment. A
+   * mission listed in worlds.ts with no spec behind it is not playable and is
+   * not counted.
+   */
+  missions: number;
+  /** Categories with a hands-on lab - hand-built or described in data/labs. */
+  labs: number;
+  /** Categories with a mission, a lab, or both. */
+  interactive: number;
 };
 
 function compute(): Coverage {
@@ -85,10 +102,25 @@ function compute(): Coverage {
       else uncovered += c.items.length;
     });
   }
+  let missions = 0, labs = 0, interactive = 0;
+  for (const w of worlds) {
+    const specs = MISSIONS[w.slug] ?? [];
+    const playable = new Set<number>();
+    w.missionCats.forEach((c, i) => { if (c != null && specs[i]) playable.add(c); });
+    missions += specs.filter(Boolean).length;
+    const kit = new Set((LABS[w.slug] ?? []).map((l) => l.cat));
+    w.cats.forEach((c, i) => {
+      const hasLab = !!c.lab || kit.has(i);
+      if (hasLab) labs++;
+      if (hasLab || playable.has(i)) interactive++;
+    });
+  }
+
   return {
     worlds: worlds.length,
     cats: worlds.reduce((s, w) => s + w.cats.length, 0),
     total, readable, tool, uncovered, covered: readable + tool,
+    missions, labs, interactive,
   };
 }
 
