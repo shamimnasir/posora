@@ -12,6 +12,13 @@ import physics from './posts/physics';
 import nature from './posts/nature';
 import language from './posts/language';
 import money from './posts/money';
+import space from './posts/space';
+import chemistry from './posts/chemistry';
+import life from './posts/life';
+import food from './posts/food';
+import math from './posts/math';
+import social from './posts/social';
+import discovery from './posts/discovery';
 
 export * from './blog-types';
 
@@ -40,9 +47,54 @@ export const CLUSTERS: Cluster[] = [
     n: 'টাকা, বাজেট ও সুদ',
     blurb: 'কোন বয়সে টাকার কোন ধারণা, পরিবারের বাজেট, আর সরল ও চক্রবৃদ্ধি সুদের পার্থক্য সংখ্যাসহ।',
   },
+  {
+    id: 'space',
+    world: 'space',
+    n: 'গ্রহ, চাঁদ ও তারা',
+    blurb: 'সৌরজগতের আটটি গ্রহ, চাঁদের কলা আর গ্রহণ, আলোকবর্ষ কাকে বলে আর তারারা কীভাবে জন্মায় ও মরে।',
+  },
+  {
+    id: 'chemistry',
+    world: 'chemistry',
+    n: 'পদার্থ, পরমাণু ও বিক্রিয়া',
+    blurb: 'কঠিন-তরল-গ্যাসের পার্থক্য অণুর সাজানোয়, পরমাণুর ভেতরের তিন কণা, আর pH স্কেল ঘরে বসে পরীক্ষা করার উপায়।',
+  },
+  {
+    id: 'life',
+    world: 'life',
+    n: 'গাছ, প্রাণী ও শরীর',
+    blurb: 'সালোকসংশ্লেষণ কীভাবে হয়, গাছের কোন অংশের কী কাজ, আর প্রাণীর শ্রেণিবিভাগে শুশুক কেন মাছ নয়।',
+  },
+  {
+    id: 'food',
+    world: 'food',
+    n: 'খাদ্য, থালা ও নিরাপত্তা',
+    blurb: 'খাদ্যের ছয় উপাদান, সুষম থালা কীভাবে সাজাবেন, আর নিরাপদ খাবারের কয়েকটা ঘরোয়া অভ্যাস।',
+  },
+  {
+    id: 'math',
+    world: 'math',
+    n: 'ভগ্নাংশ, ক্ষেত্রফল ও একক',
+    blurb: 'ভগ্নাংশ-দশমিক-শতকরার যাতায়াত, ক্ষেত্রফল আর পরিসীমার পার্থক্য, আর মেট্রিক ও দেশি এককের হিসাব।',
+  },
+  {
+    id: 'social',
+    world: 'social',
+    n: 'আবেগ, নিরাপত্তা ও অনলাইন',
+    blurb: 'শিশুর রাগ সামলানোর কী কাজে দেয়, ভালো ও খারাপ স্পর্শ কীভাবে শেখাবেন, আর অনলাইনের পাঁচটা বিপদ।',
+  },
+  {
+    id: 'discovery',
+    world: 'discovery',
+    n: 'পরীক্ষা, পদ্ধতি ও যন্ত্র',
+    blurb: 'রান্নাঘরের জিনিসে ছয়টা পরীক্ষা, বিজ্ঞানের পদ্ধতির সাত ধাপ, আর পরিমাপের যন্ত্রগুলোর চেনা ভুল।',
+  },
 ];
 
-export const POSTS: Post[] = [...physics, ...nature, ...language, ...money];
+export const POSTS: Post[] = [
+  ...physics, ...nature, ...language, ...money,
+  ...space, ...chemistry, ...life, ...food, ...math, ...social, ...discovery,
+];
 
 {
   const seen = new Set<string>();
