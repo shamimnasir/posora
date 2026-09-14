@@ -18,12 +18,13 @@ import chemistry from './labs/chemistry';
 import discovery from './labs/discovery';
 import social from './labs/social';
 import space from './labs/space';
+import language from './labs/language';
 
 export * from './lab-types';
 export * from './lab-parts';
 
 export const LABS: Record<string, Lab[]> = {
-  life, nature, food, money, math, physics, chemistry, discovery, social, space,
+  life, nature, food, money, math, physics, chemistry, discovery, social, space, language,
 };
 
 export const labFor = (slug: string, cat: number): Lab | null =>

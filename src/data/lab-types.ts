@@ -242,7 +242,31 @@ export type GridCard = {
   also?: string[];
 };
 
-export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard | CompareCard | GraphCard | GridCard;
+
+/* ---------------- order ---------------- */
+
+/** One thing to put in sequence: the pieces, in their correct order. */
+export type OrderRound = { n: string; item?: string; parts: string[]; note: string };
+
+/**
+ * Put the pieces in the right order.
+ *
+ * PLAN.md's বাক্য builder. Bangla word order is the thing it exists for:
+ * কর্তা, কর্ম, ক্রিয়া - the verb goes last, which is the opposite of English
+ * and the single most useful rule a child can hold. Tapping rather than
+ * dragging, for the same reason `place` taps: a drag fights the page scroll on
+ * a phone and gives a keyboard nothing.
+ */
+export type OrderCard = {
+  kind: 'order';
+  item: string;
+  n: string;
+  how: string;
+  rounds: OrderRound[];
+  also?: string[];
+};
+
+export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard | CompareCard | GraphCard | GridCard | OrderCard;
 
 export type Lab = {
   /** Which world and which category index in `worlds.ts` this lab is. */

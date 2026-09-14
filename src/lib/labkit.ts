@@ -14,7 +14,7 @@
  * the same as reading the item it stands for, because the card IS that item's
  * content and not a toy beside it.
  */
-import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard, CompareCard, GraphCard, GridCard, ScrubKnob } from '../data/lab-types';
+import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard, CompareCard, GraphCard, GridCard, OrderCard, ScrubKnob } from '../data/lab-types';
 import { bn, bnOf } from './bn';
 import { svgEl, clamp } from './handson';
 import { praise } from './praise';
@@ -729,6 +729,83 @@ function buildGrid(c: GridCard, credit: Credit): HTMLElement {
   return wrap;
 }
 
+
+/* ---------------- order ---------------- */
+
+/**
+ * Tap the pieces into the right order.
+ *
+ * The shuffle is seeded off nothing in particular but is re-done per round, so
+ * a second go at the same sentence is not the same puzzle. A wrong tap says
+ * what should come next rather than only that it was wrong, because "no" on
+ * its own teaches nothing - the same rule the `place` card follows.
+ */
+function buildOrder(c: OrderCard, credit: Credit): HTMLElement {
+  const wrap = el('div', 'lk');
+  let ri = 0, placed: string[] = [];
+
+  const rounds = picker(c.rounds.map((r) => r.n), (i) => { ri = i; rounds.mark(i); reset(); });
+  const line = el('div', 'lk-line');
+  line.setAttribute('role', 'status');
+  line.setAttribute('aria-live', 'polite');
+  const bank = el('div', 'lk-pick lk-bank-row');
+  const out = readout();
+
+  const shuffled = (a: string[]) => {
+    const b = a.slice();
+    for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j]!, b[i]!]; }
+    // a shuffle that happens to be the answer is not a puzzle
+    return b.length > 1 && b.every((x, i) => x === a[i]) ? shuffled(a) : b;
+  };
+
+  function paint() {
+    const r = c.rounds[ri]!;
+    line.replaceChildren();
+    if (!placed.length) {
+      const hint = el('span', 'lk-line-empty', 'নিচের শব্দগুলোয় ক্রম অনুযায়ী চাপো');
+      line.append(hint);
+    }
+    placed.forEach((w) => line.append(el('span', 'lk-word', w)));
+    const done = placed.length === r.parts.length;
+    for (const b of bank.querySelectorAll('button')) {
+      b.disabled = placed.includes(b.textContent ?? '') || done;
+    }
+    if (done) {
+      out.innerHTML = `<b>${placed.join(' ')}</b><span class="lk-note">${r.note}</span>`;
+      praise({ at: line, xp: 8, say: 'ঠিক ক্রমে বসেছে!' });
+      rewardCorrect(8);
+      credit(r.item ?? c.item);
+      credit(c.item);
+    }
+  }
+
+  function reset() {
+    const r = c.rounds[ri]!;
+    placed = [];
+    bank.replaceChildren(...shuffled(r.parts).map((w) => {
+      const b = el('button', '', w);
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        const want = r.parts[placed.length];
+        if (w === want) { placed.push(w); paint(); return; }
+        b.classList.add('lk-shake');
+        setTimeout(() => b.classList.remove('lk-shake'), 340);
+        out.innerHTML = placed.length
+          ? `"${placed[placed.length - 1]}"-এর পরে <b>"${w}"</b> নয়।<span class="lk-note">ভেবে দেখো এই বাক্যে এরপর কোনটা আসা উচিত।</span>`
+          : `<b>"${w}"</b> দিয়ে শুরু নয়।<span class="lk-note">বাংলা বাক্য সাধারণত শুরু হয় কে কাজটা করছে তাকে দিয়ে।</span>`;
+      });
+      return b;
+    }));
+    out.innerHTML = `<b>${r.n}</b><span class="lk-note">শব্দগুলো এলোমেলো। ঠিক ক্রমে একটার পর একটা চাপো।</span>`;
+    paint();
+  }
+
+  rounds.mark(0);
+  reset();
+  wrap.append(rounds.host, line, bank, out);
+  return wrap;
+}
+
 /* ---------------- the card ---------------- */
 
 /** Build one card's body into `host`. The heading and number are the page's. */
@@ -742,6 +819,7 @@ export function buildCard(host: HTMLElement, card: LabCard, credit: Credit): voi
           : card.kind === 'compare' ? buildCompare(card, credit)
             : card.kind === 'graph' ? buildGraph(card, credit)
               : card.kind === 'grid' ? buildGrid(card, credit)
-                : buildScrub(card, credit),
+                : card.kind === 'order' ? buildOrder(card, credit)
+                  : buildScrub(card, credit),
   );
 }

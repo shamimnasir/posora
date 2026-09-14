@@ -159,3 +159,19 @@
 .lk-cell-off:hover { transform: none; background: var(--panel-2); }
 .lk-gridwrap { overflow-x: auto; padding-bottom: 4px; }
 .lk-gridwrap .lk-grid { min-width: 460px; }
+
+/* ---- order ---- */
+.lk-line {
+  min-height: 3rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
+  padding: 0.7rem 0.9rem; margin: 0.7rem 0; border-radius: 14px;
+  border: 1px dashed color-mix(in oklab, var(--w) 40%, var(--line));
+  background: color-mix(in oklab, var(--w) 6%, var(--panel-2));
+}
+.lk-line-empty { font-size: 13px; color: var(--muted); }
+.lk-word {
+  padding: 0.28rem 0.7rem; border-radius: 8px; font-size: 15.5px;
+  background: color-mix(in oklab, var(--w) 20%, var(--panel)); color: var(--ink);
+  border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line));
+}
+.lk-bank-row button:disabled { opacity: 0.3; cursor: default; transform: none; }
+.lk-bank-row button { font-size: 15px; }
