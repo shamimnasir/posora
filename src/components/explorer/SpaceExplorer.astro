@@ -5,6 +5,7 @@ import { worlds } from '../../data/worlds';
 import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
 import { AWARDS, awardKey } from '../../lib/game';
 import { bodyEmoji } from '../../data/cat-emoji';
+import { labFor } from '../../data/labs';
 interface Props { current: Body }
 const { current: cur } = Astro.props;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
@@ -29,6 +30,18 @@ const seedSize = facts ? (() => {
     smallPx: rel >= 1 ? Math.max(3, maxPx / rel) : maxPx,
   };
 })() : null;
+/**
+ * The hands-on lab for মহাকাশ, if one exists.
+ *
+ * Read from the lab registry rather than hard-coded, so adding a second space
+ * lab later needs no edit here and removing one cannot leave a dead link.
+ */
+const spaceLab = (() => {
+  const lab = labFor('space', 0);
+  const cat = worlds.find((w) => w.slug === 'space')?.cats[0];
+  return lab ? { href: '/space/lab/0/', n: lab.n ?? cat?.n ?? 'হাতে-কলমে', lede: lab.lede } : null;
+})();
+
 /** The five solar-system records, all read off the bodies themselves. */
 const seedRecords = (() => {
   const planets = bodies.filter((b) => b.id !== 'sun' && b.id !== 'moon' && b.id !== 'pluto');
@@ -192,6 +205,20 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
       <p class="text" id="b-text">{cur.l1}</p>
       <p class="fun"><span class="lbl">মজার তথ্য</span><span id="b-fun">{cur.fun}</span></p>
     </section>
+
+    {/* মহাকাশ got its first hands-on lab and nothing pointed at it. The other
+        ten worlds surface theirs from the category rail; this rail lists
+        bodies, not categories, so the link belongs here - directly under the
+        reading card, where a child has just finished reading about a planet
+        and can go put two of them side by side. */}
+    {spaceLab && (
+      <a class="card lab-link" href={spaceLab.href}>
+        <span class="lbl">হাতে-কলমে</span>
+        <b>{spaceLab.n}</b>
+        <p>{spaceLab.lede}</p>
+        <span class="lab-go">খুলে দেখো →</span>
+      </a>
+    )}
 
     {/* Missions sit directly under the reading card, exactly as on every other world. */}
     <section class="card miss-card" id="miss-card">
@@ -541,6 +568,17 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .q-btns button:hover { transform: translateY(-1px); }
   .q-btns .primary { background: var(--w); color: #fff; border-color: transparent; }
   @media (prefers-reduced-motion: reduce) { .q-card.shake, .qres-card { animation: none; } }
+
+  .lab-link {
+    display: block; padding: 0.9rem 1.1rem; text-decoration: none;
+    border-color: color-mix(in oklab, var(--w) 38%, var(--line));
+    background: color-mix(in oklab, var(--w) 8%, var(--panel));
+    transition: background 0.16s ease, transform 0.16s ease;
+  }
+  .lab-link:hover { background: color-mix(in oklab, var(--w) 16%, var(--panel)); transform: translateY(-2px); }
+  .lab-link b { display: block; font-size: 17px; font-family: var(--font-display); color: var(--ink); margin: 0.15rem 0 0.25rem; }
+  .lab-link p { margin: 0 0 0.5rem; font-size: 13.5px; color: var(--ink-2); line-height: 1.7; }
+  .lab-go { font-size: 13px; font-weight: 700; color: var(--brand-ink); }
 
   /* missions */
   .miss-card { border-color: color-mix(in oklab, var(--w) 30%, var(--line)); }
