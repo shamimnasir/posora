@@ -56,6 +56,39 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
       )
     }
 
+    {
+      /**
+       * Re-import, which the dashboard had no way to do.
+       *
+       * The first import skips any world already in D1, which is right for a
+       * button you might press twice. But it means content added in code after
+       * the first seed can never reach production: four missions written in
+       * `worlds.ts` stayed invisible on posora.com because D1 is the source of
+       * truth once seeded and nothing could refresh it. This is that operation,
+       * kept behind a typed confirmation because it does overwrite.
+       */
+      seeded && (
+        <div class="card">
+          <div class="spread" style="margin-bottom:10px">
+            <h2 style="margin:0">কোড থেকে আবার আমদানি</h2>
+          </div>
+          <p>
+            <code>src/data/worlds.ts</code>-এ যা আছে, D1-এ ঠিক তাই বসিয়ে দেবে। কোডে নতুন কিছু
+            যোগ হলে - নতুন মিশন, নতুন বিভাগ - এটা না চালালে সেটা লাইভ সাইটে দেখা যাবে না।
+          </p>
+          <p class="note">
+            সাবধান: অ্যাডমিন প্যানেল থেকে করা সম্পাদনা থাকলে সেগুলো মুছে গিয়ে কোডের লেখাটাই বসবে।
+            নিশ্চিত হতে নিচে <b>আমদানি</b> লিখুন।
+          </p>
+          <div class="spread" style="gap:10px; justify-content:flex-start; margin-top:10px">
+            <input id="force-word" type="text" autocomplete="off" placeholder="আমদানি" style="max-width:160px" />
+            <button class="btn" id="force" type="button">কোড থেকে বসাও</button>
+          </div>
+          <p class="note" id="force-out"></p>
+        </div>
+      )
+    }
+
     <div class="stat-row" style="margin-bottom:18px">
       <div class="s"><b>{bn(live.length)}</b><span>লাইভ ভুবন</span></div>
       <div class="s"><b>{bn(drafts.length)}</b><span>খসড়া</span></div>
@@ -175,6 +208,30 @@ const lastEdit = all.reduce((m, w) => Math.max(m, w.updatedAt), 0);
     } catch (e) {
       btn.disabled = false;
       if (out) out.textContent = `ব্যর্থ: ${(e as Error).message}`;
+    }
+  });
+
+  /* ---- re-import from code ---- */
+  const fBtn = document.getElementById('force') as HTMLButtonElement | null;
+  const fWord = document.getElementById('force-word') as HTMLInputElement | null;
+  const fOut = document.getElementById('force-out');
+  fBtn?.addEventListener('click', async () => {
+    if (fWord?.value.trim() !== 'আমদানি') {
+      if (fOut) fOut.textContent = 'নিশ্চিত হতে ঘরটিতে "আমদানি" লিখুন।';
+      fWord?.focus();
+      return;
+    }
+    fBtn.disabled = true;
+    if (fOut) fOut.textContent = 'বসানো হচ্ছে…';
+    try {
+      const res = await fetch('/api/admin/seed?force=1', { method: 'POST' });
+      const data = (await res.json()) as { ok?: boolean; created?: number; datasets?: number; error?: string };
+      if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      if (fOut) fOut.textContent = `${data.created}টি ভুবন কোড থেকে বসানো হয়েছে। পেজ রিলোড হচ্ছে…`;
+      location.reload();
+    } catch (e) {
+      fBtn.disabled = false;
+      if (fOut) fOut.textContent = `ব্যর্থ: ${(e as Error).message}`;
     }
   });
 

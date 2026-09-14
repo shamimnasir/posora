@@ -1,0 +1,201 @@
+---
+/**
+ * অনুশীলনী প্যাক - every worksheet in one world, as one print run.
+ *
+ * The per-category sheet at `/{world}/worksheet/{cat}/` already existed, but a
+ * parent who wants paper for the term had to open eight pages and print eight
+ * times. This is the same generator, run over the whole world, laid out so one
+ * press of ছাপাও produces the set: every sheet first, then every answer key,
+ * so the keys can be pulled off the back and kept.
+ *
+ * The answer keys are deliberately at the end rather than after each sheet. A
+ * key on the reverse of its own worksheet is visible through the paper and is
+ * handed to the child along with the questions.
+ */
+import Base from '../../layouts/Base.astro';
+import { getWorld } from '../../lib/content';
+import { bn, pad2 } from '../../lib/bn';
+import { catDetail, isReadable } from '../../lib/explorers';
+import { buildWorksheet, type Worksheet } from '../../lib/worksheet';
+import { getMember, hasPlan } from '../../lib/members';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'private, no-store');
+
+const w = await getWorld(Astro.params.world!);
+// space runs its own explorer and has no generated worksheets
+if (!w || w.open) return Astro.rewrite('/404');
+
+type Sheet = { cat: number; n: string; ws: Worksheet };
+const sheets: Sheet[] = [];
+w.cats.forEach((c, i) => {
+  if (!isReadable(w, i)) return;
+  const d = catDetail(w.slug, i);
+  if (!d) return;
+  const ws = buildWorksheet(w.slug, i, c.items, d);
+  if (ws) sheets.push({ cat: i, n: c.n, ws });
+});
+if (!sheets.length) return Astro.rewrite('/404');
+
+const member = await getMember(Astro);
+const unlocked = hasPlan(member);
+const blanks = sheets.reduce((s, x) => s + x.ws.blanks.length, 0);
+const matches = sheets.reduce((s, x) => s + x.ws.matchKey.length, 0);
+// one sheet page and one key page each, which is what a parent has to feed in
+const pages = sheets.length * 2;
+---
+<Base
+  title={`অনুশীলনী প্যাক · ${w.bn}`}
+  description={`${w.bn} ভুবনের ${bn(sheets.length)}টি বিভাগের পুরো ছাপার অনুশীলনী এক সঙ্গে, উত্তরপত্র আলাদা পাতায়।`}
+  hue={w.hue}
+  noindex
+>
+  <div class="wrap page">
+    <p class="crumbs no-print"><a href="/#worlds">ভুবন</a> <span>/</span> <a href={`/${w.slug}/`}>{w.bn}</a> <span>/</span> অনুশীলনী প্যাক</p>
+
+    <header class="wh no-print">
+      <div>
+        <p class="eyebrow">অনুশীলনী প্যাক</p>
+        <h1>{w.bn} ভুবনের পুরো প্যাক</h1>
+        <p class="lede">
+          {bn(sheets.length)}টি বিভাগ, {bn(blanks)}টি শূন্যস্থান আর {bn(matches)}টি মিলানো - সব একসঙ্গে।
+          একবার ছাপাও চাপলে প্রায় {bn(pages)} পাতা বেরোবে: আগে সব অনুশীলনী, তারপর সব উত্তরপত্র।
+          উত্তরপত্রগুলো শেষে রাখা হয়েছে যাতে সেগুলো আলাদা করে সরিয়ে রাখা যায়।
+        </p>
+      </div>
+      {unlocked && <button type="button" class="btn btn-primary" id="print">পুরো প্যাক ছাপাও</button>}
+    </header>
+
+    {unlocked && (
+      <nav class="toc no-print card">
+        <b>প্যাকে যা যা আছে</b>
+        <ol>
+          {sheets.map((s) => (
+            <li>
+              <a href={`/${w.slug}/worksheet/${s.cat}/`}>{s.n}</a>
+              <span>{bn(s.ws.blanks.length)} + {bn(s.ws.matchKey.length)}</span>
+            </li>
+          ))}
+        </ol>
+        <p class="fine">একটা বিভাগ আলাদা করে ছাপাতে চাইলে তার নামে চাপুন।</p>
+      </nav>
+    )}
+
+    {unlocked ? (
+      <>
+        {sheets.map((s, i) => (
+          <div class="paper sheet">
+            <header class="ph">
+              <h2>{w.bn} · {s.n}</h2>
+              <span>নাম: ____________________ &nbsp; তারিখ: __________</span>
+            </header>
+            <h3>১. শূন্যস্থান পূরণ করো</h3>
+            <p class="note">নিচের শব্দভাণ্ডার থেকে ঠিক শব্দটা বসাও।</p>
+            <p class="bank">{s.ws.bank.map((b) => <span>{b}</span>)}</p>
+            <ol class="blanks">
+              {s.ws.blanks.map((b) => <li><span class="n">{bn(b.n)}.</span> {b.prompt}</li>)}
+            </ol>
+            <h3 class="brk">২. মিলাও</h3>
+            <p class="note">বাঁ পাশের বিষয়ের সঙ্গে ডান পাশের কথাটা রেখা টেনে মেলাও।</p>
+            <div class="match">
+              <ol class="ml">{s.ws.matchLeft.map((l) => <li>{l}</li>)}</ol>
+              <ol class="mr" type="a">{s.ws.matchRight.map((r) => <li>{r}</li>)}</ol>
+            </div>
+            <footer class="pf">পসরা · posora.com · {w.bn} · {s.n} · পাতা {pad2(i + 1)}</footer>
+          </div>
+        ))}
+
+        <div class="paper keys">
+          <header class="ph">
+            <h2>উত্তরপত্র · {w.bn}</h2>
+            <span>অভিভাবক বা শিক্ষকের জন্য · {bn(sheets.length)}টি বিভাগ</span>
+          </header>
+          <p class="note">এই অংশটা সন্তানকে দেওয়ার আগে আলাদা করে সরিয়ে রাখুন।</p>
+          {sheets.map((s) => (
+            <section class="keyblock">
+              <h3>{s.n}</h3>
+              <ol class="klist">{s.ws.blanks.map((b) => <li><span class="n">{bn(b.n)}.</span> {b.answer}</li>)}</ol>
+              <ol class="klist mk">{s.ws.matchKey.map((m) => <li>{m.left} <span class="arrow">→</span> {m.right}</li>)}</ol>
+            </section>
+          ))}
+          <footer class="pf">পসরা · posora.com · {w.bn} · উত্তরপত্র</footer>
+        </div>
+      </>
+    ) : (
+      <section class="card gate no-print">
+        <p class="eyebrow">পসরা সদস্যপদ</p>
+        <h2>পুরো প্যাকটা বার্ষিক সদস্যপদের সঙ্গে আসে</h2>
+        <p>
+          {w.bn} ভুবনের {bn(sheets.length)}টি বিভাগের অনুশীলনী, {bn(blanks)}টি শূন্যস্থান আর
+          {' '}{bn(matches)}টি মিলানো, উত্তরপত্র সহ - এক চাপে {bn(pages)} পাতা। এই ভুবনের পড়া আর
+          মডেল আগের মতোই ফ্রি; ছাপার প্যাকটা তার চারপাশের জিনিস।
+        </p>
+        <div class="acts">
+          <a class="btn btn-primary" href="/family/">সদস্যপদ কী →</a>
+          {!member && <a class="btn" href="/account/">আগেই সদস্য? ঢোকো</a>}
+          <a class="btn" href="/printables/">ফ্রি ছাপার শিটগুলো</a>
+        </div>
+      </section>
+    )}
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 1.3rem; max-width: 900px; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 0.35rem; }
+  .wh { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+  h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; margin: 0.15rem 0 0.4rem; }
+  .lede { color: var(--ink-2); line-height: 1.7; max-width: 62ch; }
+
+  .toc { padding: 1.1rem 1.2rem; }
+  .toc b { font-size: 14px; }
+  .toc ol { margin: 0.6rem 0 0.5rem; padding-left: 1.3rem; columns: 2; column-gap: 2rem; }
+  .toc li { padding: 0.2rem 0; font-size: 13.5px; break-inside: avoid; }
+  .toc li span { color: var(--muted); font-family: var(--font-mono); font-size: 11px; margin-left: 0.4rem; }
+  .toc .fine { margin-top: 0.5rem; font-size: 12px; color: var(--muted); }
+
+  .paper { background: #fff; color: #111820; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 1.6rem 1.6rem 1.2rem; box-shadow: var(--shadow-sm); }
+  .ph { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; border-bottom: 2px solid #111820; padding-bottom: 0.4rem; margin-bottom: 0.9rem; }
+  .ph h2 { font-size: 1.2rem; font-weight: 800; }
+  .ph span { font-family: var(--font-mono); font-size: 10.5px; color: #555; letter-spacing: 0.06em; }
+  h3 { font-size: 1.05rem; font-weight: 800; margin: 0.9rem 0 0.3rem; }
+  .note { font-size: 12.5px; color: #444; margin-bottom: 0.6rem; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.8rem; }
+  .bank span { border: 1px solid #bbb; border-radius: 999px; padding: 0.15rem 0.7rem; font-size: 13px; font-weight: 600; }
+  .blanks { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+  .blanks li { font-size: 14px; line-height: 1.85; break-inside: avoid; }
+  .n { font-weight: 700; margin-right: 0.3rem; }
+  .match { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .ml, .mr { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; font-size: 14px; }
+  .ml li { font-weight: 700; }
+  .keyblock { break-inside: avoid; margin-bottom: 1rem; }
+  .keyblock h3 { border-bottom: 1px solid #ddd; padding-bottom: 0.2rem; }
+  .klist { margin: 0 0 0.4rem; padding-left: 0; list-style: none; columns: 2; column-gap: 2rem; font-size: 12.5px; }
+  .klist li { break-inside: avoid; padding: 0.12rem 0; }
+  .mk li { color: #333; }
+  .arrow { color: #777; }
+  .pf { margin-top: 1.1rem; padding-top: 0.5rem; border-top: 1px solid #ccc; font-size: 10px; color: #666; }
+
+  .gate { padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; background: color-mix(in oklab, var(--sun) 12%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); }
+  .gate h2 { font-size: 1.3rem; font-weight: 800; }
+  .gate p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
+  .acts { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+  @media (max-width: 640px) { .match { grid-template-columns: 1fr; } .klist, .toc ol { columns: 1; } }
+  @media print {
+    .no-print { display: none !important; }
+    .page { padding: 0; gap: 0; max-width: none; }
+    .paper { border: 0; box-shadow: none; padding: 0; border-radius: 0; }
+    /* every sheet starts its own page, and so does the whole key section */
+    .sheet + .sheet, .keys { break-before: page; page-break-before: always; }
+  }
+</style>
+
+<script>
+  import { track } from '../../lib/track';
+  document.getElementById('print')?.addEventListener('click', () => {
+    track('pack_print', { path: location.pathname });
+    window.print();
+  });
+</script>

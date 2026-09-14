@@ -252,6 +252,7 @@ function buildPlace(c: PlaceCard, credit: Credit): HTMLElement {
 
   const side = el('div');
   side.append(bank, out);
+  if (c.source) side.append(el('p', 'lk-src', c.source));
   wrap.append(svg, side);
   return wrap;
 }

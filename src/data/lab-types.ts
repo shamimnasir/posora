@@ -75,6 +75,14 @@ export type PlaceCard = {
   art: string;
   view: readonly [number, number];
   zones: PlaceZone[];
+  /**
+   * Where the drawing's positions come from, said plainly.
+   *
+   * A `place` card whose coordinates mean a value - a pH ladder, a temperature
+   * scale, a verified tangram - is making a measurement claim, and a
+   * measurement with no source is a decoration. Same rule as `scrub`.
+   */
+  source?: string;
 };
 
 export type BalanceGroup = { k: string; n: string; hue: string };
