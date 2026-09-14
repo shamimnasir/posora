@@ -1,0 +1,97 @@
+/**
+ * The hands-on cards build their own DOM, so Astro's scoped CSS never reaches
+ * them. Their styles live here and are imported by the kit itself, the same
+ * arrangement the mission panel uses.
+ */
+.lk { display: grid; gap: 1rem; }
+.lk-how { font-size: 14px; color: var(--ink-2); margin: 0; }
+.lk-src { font-size: 12px; color: var(--muted); margin: 0.2rem 0 0; }
+
+.lk-out {
+  margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--ink);
+  padding: 0.7rem 0.9rem; border-radius: 12px;
+  background: color-mix(in oklab, var(--w) 8%, var(--panel-2));
+  border: 1px solid color-mix(in oklab, var(--w) 22%, var(--line));
+}
+.lk-out b { color: var(--brand-ink); }
+.lk-out .lk-note { display: block; margin-top: 0.35rem; font-size: 13px; color: var(--muted); }
+
+/* ---- a row of picker buttons, shared by cycle / balance / place ---- */
+.lk-pick { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.lk-pick button {
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  padding: 0.32rem 0.75rem; border-radius: 999px; color: var(--ink);
+  border: 1px solid var(--line); background: var(--panel-2);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.lk-pick button:hover { transform: translateY(-1px); border-color: color-mix(in oklab, var(--w) 50%, var(--line)); }
+.lk-pick button[aria-pressed='true'] {
+  background: color-mix(in oklab, var(--w) 20%, var(--panel)); border-color: var(--w); color: var(--brand-ink);
+}
+.lk-pick button[data-done='1']::after { content: ' ✓'; color: var(--ok); }
+
+/* ---- cycle ---- */
+.lk-cycle { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 1.1rem; align-items: center; }
+.lk-cycle svg { width: 100%; height: auto; display: block; }
+.lk-stage h4 { margin: 0 0 0.3rem; font-size: 19px; font-family: var(--font-display); }
+.lk-stage .lk-span {
+  display: inline-block; margin-bottom: 0.45rem; font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.06em; color: var(--brand-ink);
+  padding: 0.14rem 0.5rem; border-radius: 999px;
+  background: color-mix(in oklab, var(--w) 14%, var(--panel-2));
+}
+.lk-stage p { margin: 0; font-size: 14.5px; line-height: 1.7; color: var(--ink-2); }
+.lk-step { display: flex; gap: 0.45rem; margin-top: 0.8rem; }
+.lk-step button {
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  padding: 0.34rem 0.85rem; border-radius: 999px; color: var(--ink);
+  border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line));
+  background: color-mix(in oklab, var(--w) 10%, var(--panel));
+}
+.lk-step button:hover { background: color-mix(in oklab, var(--w) 20%, var(--panel)); }
+
+/* ---- place ---- */
+.lk-place { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.1rem; align-items: start; }
+.lk-place svg { width: 100%; height: auto; display: block; }
+.lk-place .lk-zone { cursor: pointer; }
+.lk-place .lk-zone circle { transition: fill-opacity 0.15s ease; }
+.lk-place .lk-bank { display: grid; gap: 0.4rem; }
+.lk-shake { animation: lk-shake 0.32s ease; }
+@keyframes lk-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+/* ---- balance ---- */
+.lk-bal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.1rem; align-items: start; }
+.lk-tray {
+  min-height: 116px; display: flex; flex-wrap: wrap; gap: 0.35rem; align-content: flex-start;
+  padding: 0.7rem; border-radius: 14px; border: 1px dashed var(--line); background: var(--panel-2);
+}
+.lk-tray:empty::after { content: 'এখনো কিছু নেওয়া হয়নি'; font-size: 13px; color: var(--muted); }
+.lk-tray button, .lk-pantry button {
+  font: inherit; font-size: 12.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.28rem 0.6rem; border-radius: 999px; color: var(--ink);
+  border: 1px solid var(--line); background: var(--panel);
+}
+.lk-pantry { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+.lk-pantry button[data-on='1'] { border-color: var(--w); background: color-mix(in oklab, var(--w) 14%, var(--panel)); }
+.lk-meters { display: grid; gap: 0.4rem; margin-bottom: 0.7rem; }
+.lk-m { display: grid; grid-template-columns: 6.2rem 1fr auto; gap: 0.5rem; align-items: center; font-size: 13px; }
+.lk-m .lk-t { height: 9px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
+.lk-m .lk-t i { display: block; height: 100%; border-radius: 999px; transition: width 0.22s ease; }
+.lk-m .lk-n { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+
+/* ---- scrub ---- */
+.lk-knobs { display: grid; gap: 0.6rem; }
+.lk-knob { display: grid; gap: 0.2rem; font-size: 13px; color: var(--ink-2); }
+.lk-knob .lk-kh { display: flex; justify-content: space-between; gap: 0.6rem; }
+.lk-knob b { font-family: var(--font-mono); color: var(--brand-ink); font-size: 13px; }
+.lk-knob input[type='range'] { width: 100%; accent-color: var(--w); }
+.lk-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 0.5rem; margin-bottom: 0.7rem; }
+.lk-fig {
+  padding: 0.5rem 0.65rem; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line);
+}
+.lk-fig span { display: block; font-size: 11.5px; color: var(--muted); }
+.lk-fig b { font-size: 19px; font-family: var(--font-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  .lk-cycle, .lk-place, .lk-bal { grid-template-columns: 1fr; }
+}

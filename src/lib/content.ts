@@ -14,6 +14,8 @@ import { worlds as staticWorlds, type World } from '../data/worlds';
 import { bodies as staticBodies, type Body } from '../data/space';
 import { tools, numberWords, denominations, shopItems } from '../data/math';
 import { vowels, consonants, kars, folas, conjuncts } from '../data/language';
+import { LABS } from '../data/labs';
+import { labAnchors } from '../data/lab-parts';
 
 const CACHE_MS = 30_000;
 
@@ -34,7 +36,36 @@ export type WorldOpts = {
 
 export async function getWorlds({ includeDrafts = false, fresh = false }: WorldOpts = {}): Promise<AdminWorld[]> {
   const all = await loadAllWorlds(fresh || includeDrafts);
-  return includeDrafts ? all : all.filter((w) => w.status === 'published');
+  const list = includeDrafts ? all : all.filter((w) => w.status === 'published');
+  return list.map(withKitLabs);
+}
+
+/**
+ * Attach the labs that live in code rather than in the database.
+ *
+ * The ten hand-built labs are pages someone placed by hand and recorded in
+ * `worlds.ts` as a URL. The ones described in `data/labs/` are not URLs anyone
+ * typed - they are rendered by `/[world]/lab/[cat]/` from a spec - so the link
+ * is derived here instead of being stored, and cannot fall out of step with
+ * which labs actually exist. A hand-built lab always wins: where both exist,
+ * the bespoke page is the better one.
+ *
+ * `labAnchors` is only attached when the lab covers every item in the
+ * category, because that is what the world page's ticked chips claim.
+ */
+function withKitLabs(w: AdminWorld): AdminWorld {
+  const mine = LABS[w.slug];
+  if (!mine?.length) return w;
+  let touched = false;
+  const cats = w.cats.map((c, i) => {
+    if (c.lab) return c;
+    const lab = mine.find((l) => l.cat === i);
+    if (!lab) return c;
+    touched = true;
+    const anchors = labAnchors(lab, c.items);
+    return { ...c, lab: `/${w.slug}/lab/${i}/`, ...(anchors ? { labAnchors: anchors } : {}) };
+  });
+  return touched ? { ...w, cats } : w;
 }
 
 async function loadAllWorlds(fresh: boolean): Promise<AdminWorld[]> {

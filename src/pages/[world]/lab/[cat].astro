@@ -1,0 +1,140 @@
+---
+/**
+ * The generic hands-on page.
+ *
+ * The ten labs written before this one each got their own hand-placed URL and
+ * their own five hundred lines. This renders any lab described in
+ * `data/labs/`, so a new hands-on category is a content file - which is the
+ * only way the remaining fifty-odd categories were ever going to get one.
+ *
+ * The shell is server-rendered so the page has real headings, a real title and
+ * a usable table of contents before any script runs. The cards themselves are
+ * built by `lib/labkit.ts` in the browser, because they are interactive and
+ * there is nothing honest to show of them in HTML.
+ */
+import Base from '../../../layouts/Base.astro';
+import { getWorld } from '../../../lib/content';
+import { bn, pad2 } from '../../../lib/bn';
+import { labFor } from '../../../data/labs';
+import { cardId, labItems } from '../../../data/lab-parts';
+
+export const prerender = false;
+
+const w = await getWorld(Astro.params.world!);
+const cat = Number(Astro.params.cat);
+if (!w || w.open || !Number.isInteger(cat) || cat < 0 || cat >= w.cats.length) return Astro.rewrite('/404');
+const c = w.cats[cat]!;
+const lab = labFor(w.slug, cat);
+if (!lab) return Astro.rewrite('/404');
+
+Astro.response.headers.set('cache-control', 'public, s-maxage=300, stale-while-revalidate=3600');
+
+const title = lab.n ?? c.n;
+const covered = labItems(lab);
+---
+<Base
+  title={title}
+  description={`${w.bn} - ${c.n}: ${bn(lab.cards.length)}টি কার্ডে নিজের হাতে নেড়ে দেখার জিনিস। ${lab.lede.slice(0, 110)}`}
+  hue={w.hue}
+>
+  <div class="wrap page" id="lab" data-world={w.slug} data-cat={cat} data-name={c.n}>
+    <p class="crumbs">
+      <a href="/#worlds">ভুবন</a> <span>/</span> <a href={`/${w.slug}/`}>{w.bn}</a> <span>/</span> {title}
+    </p>
+
+    <header class="head">
+      <p class="eyebrow">{w.bn} ভুবন · হাতে-কলমে · বিভাগ {pad2(cat + 1)}</p>
+      <h1>{title}</h1>
+      <p class="lede">{lab.lede}</p>
+      <nav class="quicknav" aria-label="এই পাতার কার্ড">
+        {lab.cards.map((k, i) => <a href={`#${cardId(i)}`} class="pill pill-w">{k.n}</a>)}
+      </nav>
+      <p class="covers">
+        এই পাতা {bn(covered.length)}টি জিনিস নিজের হাতে নাড়তে দেয়:
+        <b>{covered.join(', ')}</b>
+      </p>
+    </header>
+
+    <div class="tools">
+      {lab.cards.map((k, i) => (
+        <section class="tool card" id={cardId(i)}>
+          <h2><span class="no">{pad2(i + 1)}</span> {k.n}</h2>
+          <div class="body" data-k={i}>
+            <p class="wait">তৈরি হচ্ছে…</p>
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <p class="back">
+      <a href={`/${w.slug}/`}>← {w.bn} ভুবনে ফিরে যাও</a> · <a href="/#worlds">সব ভুবন</a>
+    </p>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 0.75rem; }
+  .crumbs span { margin: 0 0.35rem; }
+  .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
+  .head h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0.2rem 0 0.6rem; }
+  .lede { color: var(--ink-2); max-width: 62ch; font-size: 15.5px; line-height: 1.75; }
+  .quicknav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1rem; }
+  .quicknav .pill { font-size: 13px; }
+  .covers { margin-top: 0.9rem; font-size: 13px; color: var(--muted); max-width: 70ch; line-height: 1.8; }
+  .covers b { color: var(--ink-2); font-weight: 600; }
+
+  .tools { display: flex; flex-direction: column; gap: 1rem; }
+  .tool { padding: 1.4rem 1.6rem 1.6rem; }
+  .tool h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 20px; margin-bottom: 0.7rem; }
+  .tool .no { font-family: var(--font-mono); font-size: 12px; color: var(--w); font-weight: 500; }
+  .wait { color: var(--muted); font-size: 13.5px; }
+
+  /* The cards are built at runtime, so the focus ring has to be reached with
+     :global - Astro's scope stamp never lands on a node made by a script. */
+  .tool :global(svg) { touch-action: manipulation; }
+  .tool :global([role='button']:focus-visible), .tool :global(button:focus-visible), .tool :global(input:focus-visible) {
+    outline: 2px solid var(--w); outline-offset: 2px;
+  }
+
+  .back { margin-top: 2rem; font-size: 14px; color: var(--muted); }
+  .back a:hover { color: var(--brand-ink); }
+</style>
+
+<script>
+  import { loadLab } from '../../../data/lab-loader';
+  import { buildCard } from '../../../lib/labkit';
+  import { creditSet } from '../../../lib/handson';
+  import { cardItems } from '../../../data/lab-parts';
+  import { praise } from '../../../lib/praise';
+  import { track } from '../../../lib/track';
+
+  const root = document.getElementById('lab')!;
+  const world = root.dataset.world!, cat = +root.dataset.cat!, name = root.dataset.name!;
+
+  (async () => {
+    const lab = await loadLab(world, cat);
+    const bodies = [...root.querySelectorAll<HTMLElement>('.body')];
+    if (!lab) {
+      for (const b of bodies) b.replaceChildren(Object.assign(document.createElement('p'), {
+        className: 'wait', textContent: 'এই কার্ডটা এই মুহূর্তে খোলা গেল না। পাতাটা একবার নতুন করে লোড করে দেখো।',
+      }));
+      return;
+    }
+
+    // Using a card counts exactly as reading the item counts: the card IS that
+    // item's content on this page, not a toy beside it.
+    const items = [...new Set(lab.cards.flatMap(cardItems))];
+    const mark = creditSet(world, name, items, () => {
+      praise({ at: root.querySelector('h1') ?? undefined, big: true, say: `🎉 ${name} - সবগুলো নেড়ে দেখা হয়ে গেছে!` });
+    });
+
+    lab.cards.forEach((card, i) => {
+      const host = bodies[i];
+      if (!host) return;
+      host.replaceChildren();
+      buildCard(host, card, mark);
+    });
+    track('lab_open', { world, cat, cards: lab.cards.length });
+  })();
+</script>
