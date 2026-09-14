@@ -234,6 +234,17 @@ export type GridCard = {
   how: string;
   rows: number;
   cols: number;
+  /**
+   * What a cell holds, which decides how big it is drawn.
+   *
+   * The default was built for the periodic table: eighteen columns of
+   * two-letter symbols, so square cells and seven-pixel type. Put a Bangla
+   * word in one of those and you get an enormous empty square with a caption
+   * lost in the middle of it. 'word' gives the cell room and readable type;
+   * 'glyph' makes the cell one big picture, for a grid you read by looking
+   * rather than by reading.
+   */
+  look?: 'symbol' | 'word' | 'glyph';
   cells: GridCell[];
   bands?: { k: string; n: string; hue: string }[];
   /** Said under the grid before anything is chosen. */
@@ -263,10 +274,64 @@ export type OrderCard = {
   n: string;
   how: string;
   rounds: OrderRound[];
+  /**
+   * Wording, for an order card whose pieces are not words.
+   *
+   * The card was written for বাক্য, so by default its prompts talk about
+   * words and a wrong first tap is answered with the Bangla word-order rule.
+   * A card whose pieces are the steps of an apology needs to say "ধাপ" and to
+   * read back with arrows, or the page lectures a child about grammar while
+   * they are learning to say sorry.
+   */
+  say?: {
+    /** What one piece is called. Defaults to "শব্দ". */
+    piece?: string;
+    /** What goes between the pieces when the answer is read back. Defaults to a space. */
+    join?: string;
+    /** Why this cannot be first. Defaults to the word-order rule. */
+    first?: string;
+    /** Why this cannot come next. Defaults to asking what should. */
+    next?: string;
+  };
   also?: string[];
 };
 
-export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard | CompareCard | GraphCard | GridCard | OrderCard;
+/* ---------------- say ---------------- */
+
+/** One word to hear and say back. */
+export type SayWord = { w: string; e?: string; note?: string };
+
+/** A group of words that stands for one item in `worlds.ts`. */
+export type SayRound = { n: string; item?: string; words: SayWord[] };
+
+/**
+ * Hear it, say it.
+ *
+ * PLAN.md's AudioLine, built to the limits of what can honestly be shipped.
+ * Two halves were asked for and only one can be: recorded human voice needs a
+ * person in a room with a microphone, so this uses `speak.ts` instead, under
+ * that file's rule that no Bangla is ever spoken in a non-Bangla voice.
+ *
+ * The second half, listening to the child, is here but is deliberately not a
+ * judge. It can confirm and it can report what it heard; it can never say a
+ * child was wrong. Speech recognition mishears children, accents and Bangla
+ * far more than it mishears an adult reading English, and the cost of a false
+ * "wrong" is a child who stops speaking. So the card works fully with no
+ * microphone at all, the microphone is an extra the child has to reach for,
+ * and a mismatch says what was heard and offers another go.
+ */
+export type SayCard = {
+  kind: 'say';
+  item: string;
+  n: string;
+  how: string;
+  rounds: SayRound[];
+  /** Said under the buttons before anything happens. */
+  intro: string;
+  also?: string[];
+};
+
+export type LabCard = CycleCard | PlaceCard | BalanceCard | ScrubCard | CompareCard | GraphCard | GridCard | OrderCard | SayCard;
 
 export type Lab = {
   /** Which world and which category index in `worlds.ts` this lab is. */

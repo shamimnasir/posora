@@ -17,6 +17,7 @@ export function cardItems(c: LabCard): string[] {
   if (c.kind === 'place') return [...new Set([...(c.zones.map((z) => z.item).filter(Boolean) as string[]), ...own])];
   if (c.kind === 'balance') return [...new Set([...(c.rounds.map((r) => r.item).filter(Boolean) as string[]), ...own])];
   if (c.kind === 'order') return [...new Set([...(c.rounds.map((r) => r.item).filter(Boolean) as string[]), ...own, ...(c.also ?? [])])];
+  if (c.kind === 'say') return [...new Set([...(c.rounds.map((r) => r.item).filter(Boolean) as string[]), ...own, ...(c.also ?? [])])];
   if (c.kind === 'grid') return [...new Set([...(c.cells.map((x) => x.item).filter(Boolean) as string[]), ...own, ...(c.also ?? [])])];
   if (c.kind === 'compare') return [...new Set([...(c.items.map((i) => i.item).filter(Boolean) as string[]), ...own, ...(c.also ?? [])])];
   return [...new Set([...own, ...(c.also ?? [])])];

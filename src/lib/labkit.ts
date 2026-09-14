@@ -14,10 +14,11 @@
  * the same as reading the item it stands for, because the card IS that item's
  * content and not a toy beside it.
  */
-import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard, CompareCard, GraphCard, GridCard, OrderCard, ScrubKnob } from '../data/lab-types';
+import type { LabCard, CycleCard, PlaceCard, BalanceCard, ScrubCard, CompareCard, GraphCard, GridCard, OrderCard, SayCard, ScrubKnob } from '../data/lab-types';
 import { bn, bnOf } from './bn';
 import { svgEl, clamp } from './handson';
 import { praise } from './praise';
+import { makeSpeaker } from './speak';
 import { rewardCorrect } from './handson';
 import './../styles/lab-kit.css';
 
@@ -438,7 +439,14 @@ function buildCompare(c: CompareCard, credit: Credit): HTMLElement {
   const table = el('div', 'lk-cmp');
   const out = readout();
 
-  function render() {
+  /**
+   * `first` is the render that happens on arrival, and it credits nothing.
+   *
+   * The cycle card already refuses to mark its opening stage for the same
+   * reason: a page that hands out points before the child has touched
+   * anything is recording that the page loaded, not that anything was used.
+   */
+  function render(first = false) {
     const A = c.items[ai]!, B = c.items[bi]!;
     table.replaceChildren();
     const head = el('div', 'lk-cmp-h');
@@ -475,13 +483,14 @@ function buildCompare(c: CompareCard, credit: Credit): HTMLElement {
     out.innerHTML = ai === bi
       ? `<b>${A.n}</b> - ${A.note}<span class="lk-note">দুই পাশে আলাদা দুটো বাছলে তুলনাটা দেখা যাবে।</span>`
       : `${ratio}<span class="lk-note"><b>${A.n}:</b> ${A.note}<br><b>${B.n}:</b> ${B.note}</span>`;
+    if (first) return;
     if (A.item) credit(A.item);
     if (B.item) credit(B.item);
     credit(c.item);
   }
 
   pa.mark(ai); pb.mark(bi);
-  render();
+  render(true);
   wrap.append(rows, table, out);
   if (c.source) wrap.append(el('p', 'lk-src', c.source));
   return wrap;
@@ -679,7 +688,7 @@ function buildGrid(c: GridCard, credit: Credit): HTMLElement {
   const wrap = el('div', 'lk');
   const hue = new Map((c.bands ?? []).map((b) => [b.k, b.hue]));
 
-  const board = el('div', 'lk-grid');
+  const board = el('div', `lk-grid${c.look && c.look !== 'symbol' ? ` lk-grid-${c.look}` : ''}`);
   board.style.setProperty('--cols', String(c.cols));
   board.setAttribute('role', 'group');
   board.setAttribute('aria-label', c.n);
@@ -743,6 +752,13 @@ function buildGrid(c: GridCard, credit: Credit): HTMLElement {
 function buildOrder(c: OrderCard, credit: Credit): HTMLElement {
   const wrap = el('div', 'lk');
   let ri = 0, placed: string[] = [];
+  // The defaults are the sentence builder this card was written for. A lab
+  // about apologising overrides them, so it does not answer a wrong tap with
+  // a rule about Bangla word order.
+  const piece = c.say?.piece ?? 'শব্দ';
+  const join = c.say?.join ?? ' ';
+  const firstHint = c.say?.first ?? 'বাংলা বাক্য সাধারণত শুরু হয় কে কাজটা করছে তাকে দিয়ে।';
+  const nextHint = c.say?.next ?? 'ভেবে দেখো এই বাক্যে এরপর কোনটা আসা উচিত।';
 
   const rounds = picker(c.rounds.map((r) => r.n), (i) => { ri = i; rounds.mark(i); reset(); });
   const line = el('div', 'lk-line');
@@ -751,7 +767,7 @@ function buildOrder(c: OrderCard, credit: Credit): HTMLElement {
   const bank = el('div', 'lk-pick lk-bank-row');
   const out = readout();
 
-  const shuffled = (a: string[]) => {
+  const shuffled = (a: string[]): string[] => {
     const b = a.slice();
     for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j]!, b[i]!]; }
     // a shuffle that happens to be the answer is not a puzzle
@@ -762,7 +778,7 @@ function buildOrder(c: OrderCard, credit: Credit): HTMLElement {
     const r = c.rounds[ri]!;
     line.replaceChildren();
     if (!placed.length) {
-      const hint = el('span', 'lk-line-empty', 'নিচের শব্দগুলোয় ক্রম অনুযায়ী চাপো');
+      const hint = el('span', 'lk-line-empty', `নিচের ${piece}গুলোয় ক্রম অনুযায়ী চাপো`);
       line.append(hint);
     }
     placed.forEach((w) => line.append(el('span', 'lk-word', w)));
@@ -771,7 +787,7 @@ function buildOrder(c: OrderCard, credit: Credit): HTMLElement {
       b.disabled = placed.includes(b.textContent ?? '') || done;
     }
     if (done) {
-      out.innerHTML = `<b>${placed.join(' ')}</b><span class="lk-note">${r.note}</span>`;
+      out.innerHTML = `<b>${placed.join(join)}</b><span class="lk-note">${r.note}</span>`;
       praise({ at: line, xp: 8, say: 'ঠিক ক্রমে বসেছে!' });
       rewardCorrect(8);
       credit(r.item ?? c.item);
@@ -791,18 +807,198 @@ function buildOrder(c: OrderCard, credit: Credit): HTMLElement {
         b.classList.add('lk-shake');
         setTimeout(() => b.classList.remove('lk-shake'), 340);
         out.innerHTML = placed.length
-          ? `"${placed[placed.length - 1]}"-এর পরে <b>"${w}"</b> নয়।<span class="lk-note">ভেবে দেখো এই বাক্যে এরপর কোনটা আসা উচিত।</span>`
-          : `<b>"${w}"</b> দিয়ে শুরু নয়।<span class="lk-note">বাংলা বাক্য সাধারণত শুরু হয় কে কাজটা করছে তাকে দিয়ে।</span>`;
+          ? `"${placed[placed.length - 1]}"-এর পরে <b>"${w}"</b> নয়।<span class="lk-note">${nextHint}</span>`
+          : `<b>"${w}"</b> দিয়ে শুরু নয়।<span class="lk-note">${firstHint}</span>`;
       });
       return b;
     }));
-    out.innerHTML = `<b>${r.n}</b><span class="lk-note">শব্দগুলো এলোমেলো। ঠিক ক্রমে একটার পর একটা চাপো।</span>`;
+    out.innerHTML = `<b>${r.n}</b><span class="lk-note">${piece}গুলো এলোমেলো। ঠিক ক্রমে একটার পর একটা চাপো।</span>`;
     paint();
   }
 
   rounds.mark(0);
   reset();
   wrap.append(rounds.host, line, bank, out);
+  return wrap;
+}
+
+/* ---------------- say ---------------- */
+
+/**
+ * Does what the recogniser heard contain the word that was asked for?
+ *
+ * Exported because it is the one piece of this card that can be tested without
+ * a microphone, and it is the piece that decides whether a child is told they
+ * got it. Punctuation, the danda and spaces come out; nothing else is
+ * normalised, because Bangla vowel signs are not decoration and a card about
+ * pronunciation must not quietly treat ই and ঈ as the same thing.
+ *
+ * The transcript may carry more than the word, because a recogniser handed
+ * "আম" often returns "আমি আম বললাম". So the word is looked for across runs of
+ * whole words rather than anywhere in the string: a plain substring test would
+ * accept "আমি" as "আম", which is a different word and would hand out credit
+ * for a sound the child did not make. Only a match ever changes anything on
+ * screen, so being strict here costs a child nothing.
+ */
+export const sayClean = (s: string): string => s.replace(/[\s।॥.,!?;:"'`‘’“”-]+/g, '').normalize('NFC');
+
+export function heardMatch(want: string, heard: readonly string[]): boolean {
+  const w = sayClean(want);
+  if (!w) return false;
+  return heard.some((h) => {
+    const parts = h.split(/\s+/).map(sayClean).filter(Boolean);
+    // every run of consecutive words, so a two-word answer is still found
+    // inside a longer sentence but a longer word is never found inside itself
+    for (let i = 0; i < parts.length; i++) {
+      let run = '';
+      for (let j = i; j < parts.length; j++) {
+        run += parts[j];
+        if (run === w) return true;
+        if (run.length > w.length) break;
+      }
+    }
+    return false;
+  });
+}
+
+/* The Web Speech API is not in the DOM lib, and only the parts used are declared. */
+type SRAlt = { transcript: string };
+type SRResult = { readonly length: number; [i: number]: SRAlt };
+type SREvent = { results: { readonly length: number; [i: number]: SRResult } };
+type SR = {
+  lang: string; continuous: boolean; interimResults: boolean; maxAlternatives: number;
+  start(): void; abort(): void;
+  onresult: ((e: SREvent) => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
+  onend: (() => void) | null;
+};
+type SRCtor = new () => SR;
+
+const recogniser = (): SRCtor | null => {
+  const w = window as unknown as { SpeechRecognition?: SRCtor; webkitSpeechRecognition?: SRCtor };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+};
+
+/**
+ * Hear a word, say it back.
+ *
+ * Three controls, in order of how much the child has to trust the machine:
+ * the page reads the word (only where a Bangla voice exists, per `speak.ts`),
+ * the child says "I said it" and is believed, and - only where the browser can
+ * listen at all - a microphone that confirms. The microphone never contradicts:
+ * a mismatch prints what was heard and offers another go, and nothing is
+ * marked wrong, because a recogniser that mishears a child's Bangla would
+ * otherwise be teaching that child their correct pronunciation is wrong.
+ */
+function buildSay(c: SayCard, credit: Credit): HTMLElement {
+  const wrap = el('div', 'lk lk-say');
+  let ri = 0, wi = 0, listening = false;
+
+  const rounds = picker(c.rounds.map((r) => r.n), (i) => { ri = i; wi = 0; rounds.mark(i); paint(); });
+
+  const stage = el('div', 'lk-say-stage');
+  const glyph = el('div', 'lk-say-e');
+  const word = el('div', 'lk-say-w');
+  const count = el('span', 'lk-say-n');
+  stage.append(glyph, word, count);
+
+  const row = el('div', 'lk-say-row');
+  const hear = el('button', 'lk-say-b', '🔈 শুনে নাও'); hear.type = 'button'; hear.hidden = true;
+  const mine = el('button', 'lk-say-b', '✓ বলতে পেরেছি'); mine.type = 'button';
+  const mic = el('button', 'lk-say-b', '🎤 মিলিয়ে দেখি'); mic.type = 'button'; mic.hidden = true;
+  const next = el('button', 'lk-say-b', 'পরের শব্দ →'); next.type = 'button';
+  row.append(hear, mine, mic, next);
+
+  const out = readout();
+  const why = el('p', 'lk-src');
+  why.hidden = true;
+  why.textContent = 'মাইক চাপলে ব্রাউজার তোমার কণ্ঠ তার নিজের শনাক্তকরণ সেবায় পাঠায় - ক্রোমে সেটা গুগলের সার্ভার। পসরা কিছুই শোনে না, রাখেও না। মাইক ছাড়াও পুরো কার্ডটা চলে, তাই ইচ্ছা না হলে চেপো না।';
+
+  const cur = () => c.rounds[ri]!.words[wi]!;
+
+  function paint(first = false) {
+    const r = c.rounds[ri]!;
+    const w = cur();
+    glyph.textContent = w.e ?? '';
+    glyph.hidden = !w.e;
+    word.textContent = w.w;
+    count.textContent = `${r.n} · ${bn(wi + 1)} / ${bn(r.words.length)}`;
+    // The instruction on arrival, the word's own note from then on: showing
+    // only the note would leave the card's opening line never read at all.
+    out.innerHTML = (first ? c.intro : '') + (w.note ? `<span class="lk-note">${w.note}</span>` : '');
+  }
+
+  function won(how: string) {
+    credit(c.rounds[ri]!.item ?? c.item);
+    praise({ at: word, xp: 5, sound: 'ok' });
+    rewardCorrect(5);
+    out.innerHTML = `<b>${how}</b><span class="lk-note">${cur().note ?? 'পরের শব্দে যাও।'}</span>`;
+  }
+
+  mine.addEventListener('click', () => won(`"${cur().w}" বলা হলো।`));
+
+  next.addEventListener('click', () => {
+    const r = c.rounds[ri]!;
+    wi = (wi + 1) % r.words.length;
+    paint();
+  });
+
+  // The page reads the word only where a Bangla voice exists; speak.ts returns
+  // null rather than letting an English voice loose on Bangla text.
+  void makeSpeaker().then((sp) => {
+    if (!sp) return;
+    hear.hidden = false;
+    hear.addEventListener('click', () => { sp.say(cur().w); });
+  });
+
+  const SRc = recogniser();
+  if (SRc) {
+    mic.hidden = false;
+    why.hidden = false;
+    mic.addEventListener('click', () => {
+      if (listening) return;
+      const want = cur().w;
+      let rec: SR;
+      try { rec = new SRc(); } catch { out.innerHTML = 'এই ব্রাউজারে মাইক দিয়ে মেলানো গেল না। "বলতে পেরেছি" চেপে এগিয়ে যাও।'; return; }
+      rec.lang = 'bn-BD'; rec.continuous = false; rec.interimResults = false; rec.maxAlternatives = 5;
+      listening = true;
+      mic.textContent = '🎤 শুনছি...';
+      mic.setAttribute('aria-busy', 'true');
+      out.innerHTML = `এখন <b>"${want}"</b> বলো।`;
+      let got: string[] = [];
+      rec.onresult = (e) => {
+        const alts: string[] = [];
+        for (let i = 0; i < e.results.length; i++) {
+          const r = e.results[i]!;
+          for (let j = 0; j < r.length; j++) alts.push(r[j]!.transcript);
+        }
+        got = alts;
+      };
+      rec.onerror = (e) => {
+        got = [];
+        out.innerHTML = e.error === 'not-allowed'
+          ? 'মাইক ব্যবহারের অনুমতি পাওয়া যায়নি, আর সেটা একদম ঠিক আছে। "বলতে পেরেছি" চেপে এগিয়ে যাও।'
+          : e.error === 'no-speech'
+            ? 'কিছু শোনা গেল না। আরেকবার চেষ্টা করতে পারো, বা "বলতে পেরেছি" চেপে এগিয়ে যাও।'
+            : 'এখন শোনা গেল না। "বলতে পেরেছি" চেপে এগিয়ে যাও।';
+      };
+      rec.onend = () => {
+        listening = false;
+        mic.textContent = '🎤 মিলিয়ে দেখি';
+        mic.removeAttribute('aria-busy');
+        if (!got.length) return;
+        if (heardMatch(want, got)) { won('মিলে গেছে!'); return; }
+        // Never "wrong": the recogniser is far likelier to be at fault than
+        // the child, so it reports and steps back.
+        out.innerHTML = `আমি শুনলাম <b>"${got[0]}"</b>।<span class="lk-note">হতেই পারে আমি ঠিকমতো শুনিনি - মাইক আর বাংলা শনাক্তকরণ দুটোই অনেক সময় ভুল করে। আবার বলে দেখো, বা "বলতে পেরেছি" চেপে এগিয়ে যাও।</span>`;
+      };
+      try { rec.start(); } catch { listening = false; mic.textContent = '🎤 মিলিয়ে দেখি'; }
+    });
+  }
+
+  rounds.mark(0);
+  paint(true);
+  wrap.append(rounds.host, stage, row, out, why);
   return wrap;
 }
 
@@ -820,6 +1016,7 @@ export function buildCard(host: HTMLElement, card: LabCard, credit: Credit): voi
             : card.kind === 'graph' ? buildGraph(card, credit)
               : card.kind === 'grid' ? buildGrid(card, credit)
                 : card.kind === 'order' ? buildOrder(card, credit)
-                  : buildScrub(card, credit),
+                  : card.kind === 'say' ? buildSay(card, credit)
+                    : buildScrub(card, credit),
   );
 }

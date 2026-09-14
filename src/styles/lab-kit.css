@@ -157,6 +157,17 @@
 .lk-cell[aria-pressed='true'] { background: color-mix(in oklab, var(--cell) 55%, var(--panel)); border-color: var(--cell); z-index: 2; }
 .lk-cell-off { cursor: default; opacity: 0.42; background: var(--panel-2); }
 .lk-cell-off:hover { transform: none; background: var(--panel-2); }
+/* A grid of words or pictures, not of chemical symbols: the cells above are
+   sized for eighteen columns of two-letter labels, which leaves a Bangla word
+   marooned in the middle of a big empty square. */
+.lk-grid-word, .lk-grid-glyph { gap: 6px; }
+.lk-grid-word .lk-cell, .lk-grid-glyph .lk-cell { aspect-ratio: auto; min-height: 74px; padding: 9px 7px; gap: 5px; border-radius: 8px; }
+.lk-grid-word .lk-cell b { font-size: clamp(10.5px, 1.35vw, 15px); line-height: 1.3; text-align: center; overflow-wrap: anywhere; }
+.lk-grid-word .lk-cell-no { font-family: inherit; font-size: clamp(9.5px, 1.1vw, 12.5px); }
+.lk-grid-glyph .lk-cell { min-height: 86px; }
+.lk-grid-glyph .lk-cell b { font-size: clamp(26px, 3.2vw, 40px); line-height: 1; font-weight: 400; }
+.lk-grid-word .lk-cell:hover, .lk-grid-glyph .lk-cell:hover { transform: scale(1.05); }
+
 .lk-gridwrap { overflow-x: auto; padding-bottom: 4px; }
 .lk-gridwrap .lk-grid { min-width: 460px; }
 
@@ -175,3 +186,21 @@
 }
 .lk-bank-row button:disabled { opacity: 0.3; cursor: default; transform: none; }
 .lk-bank-row button { font-size: 15px; }
+
+/* ---- say ---- */
+.lk-say-stage {
+  display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+  padding: 1.1rem 1rem 1rem; margin-bottom: 0.7rem;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2);
+}
+.lk-say-e { font-size: clamp(34px, 6vw, 52px); line-height: 1; }
+.lk-say-w { font-size: clamp(26px, 4.6vw, 40px); font-weight: 700; line-height: 1.3; text-align: center; color: var(--ink); }
+.lk-say-n { font-size: 12.5px; color: var(--muted); }
+.lk-say-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.7rem; }
+.lk-say-b {
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  padding: 0.5rem 0.9rem; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+.lk-say-b:hover { border-color: var(--w); background: color-mix(in oklab, var(--w) 12%, var(--panel)); }
+.lk-say-b[aria-busy='true'] { border-color: var(--w); background: color-mix(in oklab, var(--w) 22%, var(--panel)); }
