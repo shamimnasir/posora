@@ -316,7 +316,7 @@ const SCENES: Record<string, Builder> = {
     // the slider grows the tree; the engine's খুলে দেখো control pulls it apart.
     // No shared ground: this scene brought its own mound, and two floors a hair
     // apart is the z-fighting stripe that spoiled the collection scene.
-    return { label: 'বড় হও', anchors, heroScale: 1.1, aim: { y: 0.92, eye: 1.25 }, update(t, _dt, p) {
+    return { label: 'বড় হও', anchors, heroScale: 1.05, aim: { y: 1.34, eye: 1.25 }, update(t, _dt, p) {
       const g = 0.3 + p * 0.7;
       canopy.scale.setScalar(g); flowers.scale.setScalar(Math.max(0.001, (p - 0.35) / 0.65));
       fruit.scale.setScalar(Math.max(0.001, (p - 0.6) / 0.4)); leafG.scale.setScalar(0.4 + p * 0.6);
@@ -959,7 +959,7 @@ const SCENES: Record<string, Builder> = {
       sun.position.set(2.6, 3.6, -1); root.add(sun);
       for (let i = 0; i < 10; i++) { const b = new Mesh(new SphereGeometry(0.08, 10, 8), glassy('#bfe9ff', 0.85)); root.add(b); o2.push(b); }
     }
-    return { label: v === 'photo' ? 'সূর্যের আলো' : 'বড় হওয়া', groundY: GY, heroScale: 1.1, aim: { y: 0.92, eye: 1.2 }, update(t, dt, p) {
+    return { label: v === 'photo' ? 'সূর্যের আলো' : 'বড় হওয়া', groundY: GY, heroScale: 1.05, aim: { y: 1.34, eye: 1.2 }, update(t, dt, p) {
       if (v === 'photo') {
         const s = 0.3 + p; sun!.scale.setScalar(s);
         (sun!.material as MeshStandardMaterial).emissiveIntensity = 0.3 + p * 1.5;
