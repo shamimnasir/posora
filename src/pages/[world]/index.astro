@@ -1165,6 +1165,10 @@ const schema = [
     .top-chips { display: none; }
     .progress-drawer { margin-inline: 1rem; }
     .lesson-cue { top: 48px; font-size: 13.5px; max-height: 4.8em; overflow: hidden; }
+    /* Give the 3D hero a real stage on phones. A 96vw box was only ~300px
+       before the overlays, so the model became a thumbnail between the lesson
+       cue and controls. The extra height makes the entrance and reveal legible. */
+    .scene { min-height: min(132vw, 520px); }
     .model-note { left: 12px; right: auto; bottom: 90px; max-width: calc(100% - 24px); text-align: left; }
     .actions { justify-content: flex-start; overflow-x: auto; }
     .actions button { flex: none; min-height: 44px; }
