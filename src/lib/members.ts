@@ -460,19 +460,34 @@ async function loadMember(d: D1Database, id: string): Promise<Member | null> {
   };
 }
 
-/** The signed-in member for this request, or null. Safe to call when D1 is absent. */
+/**
+ * The signed-in member for this request, or null. Safe to call when D1 is
+ * absent - and, like `content.ts`'s `loadAllWorlds`, safe to call when D1 is
+ * present but the query itself fails.
+ *
+ * Every world page reads this, so a member whose session lookup throws - a
+ * mid-migration schema mismatch, a transient D1 error, anything - cannot be
+ * allowed to take the page down for them. The failure mode has to be "treated
+ * as a visitor who isn't signed in", the same as a missing cookie, not a
+ * broken page. content.ts's own comment says it best: an outage must never
+ * take the public site down.
+ */
 export async function getMember(ctx: APIContext): Promise<Member | null> {
   const d = db();
   const token = ctx.cookies.get(MEMBER_COOKIE)?.value;
   if (!d || !token) return null;
-  const hash = await sha256Hex(token);
-  const row = await d.prepare('SELECT member_id, expires_at FROM member_sessions WHERE id_hash = ?').bind(hash).first<{ member_id: string; expires_at: number }>();
-  if (!row) return null;
-  if (row.expires_at < Date.now()) {
-    await d.prepare('DELETE FROM member_sessions WHERE id_hash = ?').bind(hash).run();
+  try {
+    const hash = await sha256Hex(token);
+    const row = await d.prepare('SELECT member_id, expires_at FROM member_sessions WHERE id_hash = ?').bind(hash).first<{ member_id: string; expires_at: number }>();
+    if (!row) return null;
+    if (row.expires_at < Date.now()) {
+      await d.prepare('DELETE FROM member_sessions WHERE id_hash = ?').bind(hash).run();
+      return null;
+    }
+    return await loadMember(d, row.member_id);
+  } catch {
     return null;
   }
-  return loadMember(d, row.member_id);
 }
 
 /** True when the member holds a live entitlement to the plan right now. */
