@@ -1844,7 +1844,8 @@ export function mountHero(
     if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;   // that was a drag, not a click
     const i = pick(e.clientX, e.clientY);
     if (i >= 0) {
-      if (i !== active) focus(i);
+      const changed = i !== active;
+      if (changed) focus(i);
       // Three taps form the reusable reveal language: focus the part, open its
       // layer, then bring the detail layer toward the child. Scenes that have
       // explicit nested parts can map these levels to their own objects; all
@@ -1852,7 +1853,10 @@ export function mountHero(
       revealLevel = Math.min(3, revealLevel + 1);
       explodeTo = revealLevel === 1 ? 0.22 : revealLevel === 2 ? 0.62 : 1;
       detailZoom = revealLevel === 3 ? 1 : 0;
-      onPick?.(i);
+      // Let the page update its reading panel only when the selected item
+      // changes. Repeated taps must stay inside the reveal choreography;
+      // otherwise the page rebuilds the hero and resets the explosion.
+      if (changed) onPick?.(i);
       start();
     }
   });
