@@ -2046,7 +2046,7 @@ export function mountHero(
     if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
     // the camera eases back as the model opens up, so nothing leaves the frame
     focusZoom += ((active >= 0 ? 1 : 0) - focusZoom) * 0.1;
-    camera.position.z = Math.max(2.15, camZBase * (1 - focusZoom * 0.27 - detailZoom * 0.11) + explodeNow * spread * 1.05);
+    camera.position.z = Math.max(2.05, camZBase * (1 - focusZoom * 0.36 - detailZoom * 0.13) + explodeNow * spread * 0.96);
     aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
