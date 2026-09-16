@@ -1855,8 +1855,10 @@ export function mountHero(
       // explicit nested parts can map these levels to their own objects; all
       // other scenes still get a meaningful staged explosion for free.
       revealLevel = Math.min(3, revealLevel + 1);
-      explodeTo = revealLevel === 1 ? 0.22 : revealLevel === 2 ? 0.62 : 1;
-      detailZoom = revealLevel === 3 ? 1 : 0;
+      // Keep the reveal inside the viewport even on a 320px phone canvas.
+      // Explicit nested scenes can opt into larger distances later.
+      explodeTo = revealLevel === 1 ? 0.12 : revealLevel === 2 ? 0.32 : 0.55;
+      detailZoom = revealLevel === 3 ? 0.35 : 0;
       // Let the page update its reading panel only when the selected item
       // changes. Repeated taps must stay inside the reveal choreography;
       // otherwise the page rebuilds the hero and resets the explosion.
@@ -2033,7 +2035,7 @@ export function mountHero(
     explodeNow += (explodeTo - explodeNow) * 0.16;
     if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
     // the camera eases back as the model opens up, so nothing leaves the frame
-    camera.position.z = Math.max(2.2, camZBase * (1 - detailZoom * 0.16) + explodeNow * spread * 2.1);
+    camera.position.z = Math.max(2.2, camZBase * (1 - detailZoom * 0.08) + explodeNow * spread * 1.15);
     aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
