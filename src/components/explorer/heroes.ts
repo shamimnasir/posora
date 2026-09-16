@@ -1595,7 +1595,15 @@ export function mountHero(
   // error, and it takes the whole scene out. The initial resize runs on its
   // own a moment later; every later scene change goes through this flag.
   let framed = false;
-  const aimCamera = () => { camera.position.y = eyeY; camera.lookAt(0, aimY, aimZ); };
+  let focusNode: Object3D | null = null, focusZoom = 0;
+  const focusPos = new Vector3();
+  const aimCamera = () => {
+    camera.position.y = eyeY;
+    if (focusNode && focusZoom > 0.01) {
+      focusNode.getWorldPosition(focusPos);
+      camera.lookAt(focusPos.x, focusPos.y, focusPos.z);
+    } else camera.lookAt(0, aimY, aimZ);
+  };
   aimCamera();
   // Shadows, filmic tone mapping, a sky/ground environment and fog. See
   // render.ts for why those four and not a pile of downloaded models.
@@ -1659,6 +1667,8 @@ export function mountHero(
   function focus(i: number) {
     active = i;
     revealLevel = 0; detailZoom = 0; explodeTo = 0;
+    focusNode = i >= 0 && badges[i]?.marker ? badges[i]!.marker! : null;
+    focusZoom = i >= 0 ? 1 : 0;
     if (i < 0 || !badges[i] || badges[i]!.marker) return;
     // turn the ring so the chosen badge comes to the front (toward the camera, +z)
     orbitYawTo = Math.PI / 2 - badges[i]!.a0;
@@ -2035,7 +2045,8 @@ export function mountHero(
     explodeNow += (explodeTo - explodeNow) * 0.16;
     if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
     // the camera eases back as the model opens up, so nothing leaves the frame
-    camera.position.z = Math.max(2.2, camZBase * (1 - detailZoom * 0.08) + explodeNow * spread * 1.15);
+    focusZoom += ((active >= 0 ? 1 : 0) - focusZoom) * 0.1;
+    camera.position.z = Math.max(2.2, camZBase * (1 - focusZoom * 0.16 - detailZoom * 0.08) + explodeNow * spread * 1.15);
     aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
