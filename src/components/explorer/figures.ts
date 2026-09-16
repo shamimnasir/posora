@@ -35,7 +35,7 @@ import { stylise } from './render';
  * was one. Anything that genuinely is metal or glazed passes its own values.
  */
 const std = (color: string | Color, o: Record<string, unknown> = {}) =>
-  stylise(new MeshStandardMaterial({ color: color as Color, roughness: 0.75, metalness: 0, ...o }));
+  stylise(new MeshStandardMaterial({ color: color as Color, roughness: 0.6, metalness: 0, envMapIntensity: 0.8, ...o }));
 const glow = (color: string, opacity = 0.4) =>
   new MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
 

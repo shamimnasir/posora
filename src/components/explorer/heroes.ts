@@ -13,6 +13,7 @@ import {
 } from 'three';
 import { FIGURES, arc, arcPerRow } from './figures';
 import { dressScene, castShadows, stylise } from './render';
+import { loadLicensedModel } from './model-loader';
 import { iconFont, withIconFont } from '../../lib/icon-font';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
@@ -103,7 +104,7 @@ const darken = (c: Color, k: number) => c.clone().lerp(BLACK, k);
  * looking like toys mis-moulded from the same shiny polymer - a wooden plank, a
  * cloth shirt and a clay pot all catching the same glint.
  */
-const std = (color: Color | string, o: Record<string, unknown> = {}) => stylise(new MeshStandardMaterial({ color: color as Color, roughness: 0.78, metalness: 0, ...o }));
+const std = (color: Color | string, o: Record<string, unknown> = {}) => stylise(new MeshStandardMaterial({ color: color as Color, roughness: 0.6, metalness: 0, envMapIntensity: 0.8, ...o }));
 /** Things that genuinely are metal now have to say so, which is the point. */
 const metal = (color: Color | string, o: Record<string, unknown> = {}) => new MeshStandardMaterial({ color: color as Color, roughness: 0.28, metalness: 0.85, ...o });
 /**
@@ -270,6 +271,14 @@ const SCENES: Record<string, Builder> = {
     const flowers = part(new Vector3(0, 1.6, 0), new Vector3(0.3, 0.6, 1));
     for (let i = 0; i < 7; i++) { const f = new Mesh(new SphereGeometry(0.11, 10, 8), std('#f4a7c3', { emissive: '#f4a7c3', emissiveIntensity: 0.25 })); const a = i * 1.7; f.position.set(Math.cos(a) * 0.9, Math.sin(a * 1.3) * 0.4, 0.7 + Math.sin(a) * 0.3); flowers.add(f); }
     mark('ফুল', flowers, 0.9, 0.2, 0.9);
+    // A real botanical specimen gives the child a recognisable reference for
+    // leaves and flowers. The procedural exploded parts remain visible while
+    // it loads and are the fallback if the model cannot be fetched.
+    const realPlant = new Group();
+    realPlant.position.set(-1.25, -1.72, 0.65);
+    realPlant.rotation.y = -0.28;
+    root.add(realPlant);
+    void loadLicensedModel('/models/anthurium_botany_01/anthurium_botany_01_1k.gltf', realPlant, { height: 2.15 });
     // fruit
     const fruit = part(new Vector3(0, 1.3, 0), new Vector3(1, -0.4, 0.6));
     for (let i = 0; i < 5; i++) { const fr = new Mesh(new SphereGeometry(0.15, 12, 10), std('#d94a3a')); const a = i * 1.4; fr.position.set(Math.cos(a) * 0.95, -0.35 + Math.sin(a) * 0.2, Math.sin(a) * 0.95); fruit.add(fr); }

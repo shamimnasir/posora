@@ -808,6 +808,7 @@ const schema = [
 
   .host { position: absolute; inset: 0; cursor: grab; touch-action: none; overflow: hidden; }
   .host.dragging { cursor: grabbing; }
+  .host.dragging canvas { filter: saturate(1.18) brightness(1.08); }
   /* set by the scene when an item is under the pointer: the canvas otherwise
      says "grab" everywhere and never that anything can be opened */
   .host.over-item { cursor: pointer; }

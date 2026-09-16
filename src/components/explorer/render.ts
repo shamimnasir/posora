@@ -108,7 +108,9 @@ export function stylise<T extends MeshStandardMaterial>(m: T): T {
         '#include <color_fragment>',
         `#include <color_fragment>
         float upW_ = clamp(vPosW_.y * 0.5 + 0.5, 0.0, 1.0);
-        diffuseColor.rgb *= mix(vec3(0.76, 0.79, 0.88), vec3(1.05, 1.03, 0.98), upW_);`,
+        // A restrained vertical response keeps form readable without the
+        // painted light/dark split that made trees and objects look cartoonish.
+        diffuseColor.rgb *= mix(vec3(0.90, 0.92, 0.96), vec3(1.04, 1.03, 1.00), upW_);`,
       )
       // Scaled by how dark the surface already is. A rim exists to pull a
       // silhouette off the background; a pale figure on this near-black stage
@@ -120,7 +122,7 @@ export function stylise<T extends MeshStandardMaterial>(m: T): T {
         vec3 vDir_ = normalize(cameraPosition - vPosW_);
         float rim_ = pow(1.0 - clamp(dot(normalize(vNrmW_), vDir_), 0.0, 1.0), 3.0);
         float lum_ = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-        totalEmissiveRadiance += rim_ * mix(0.20, 0.05, clamp(lum_, 0.0, 1.0)) * vec3(0.60, 0.73, 0.96);`,
+        totalEmissiveRadiance += rim_ * mix(0.09, 0.025, clamp(lum_, 0.0, 1.0)) * vec3(0.60, 0.73, 0.96);`,
       );
   };
   m.customProgramCacheKey = () => 'posora-stylise-1';
@@ -174,9 +176,9 @@ export function dressScene(
 
   // The ambient is low on purpose: the environment map is doing that job now,
   // and leaving the old flat 0.55 on top of it washes every shadow out.
-  scene.add(new AmbientLight('#ffffff', 0.18));
+  scene.add(new AmbientLight('#ffffff', 0.28));
 
-  const key = new DirectionalLight('#fff6e2', 2.1);
+  const key = new DirectionalLight('#fff3dc', 2.35);
   key.position.set(3.2, 6.4, 3.6);
   key.castShadow = true;
   key.shadow.mapSize.set(weak ? 1024 : 2048, weak ? 1024 : 2048);
@@ -190,10 +192,10 @@ export function dressScene(
 
   // A cool fill from the opposite side keeps the shadow side from going dead,
   // and a rim from behind separates the figure from the background.
-  const fill = new DirectionalLight('#cfe2ff', 0.35);
+  const fill = new DirectionalLight('#cfe2ff', 0.46);
   fill.position.set(-4, 2.2, -2.4);
   scene.add(fill);
-  const rim = new DirectionalLight('#ffe8c2', 0.5);
+  const rim = new DirectionalLight('#ffe8c2', 0.34);
   rim.position.set(-2.4, 2.6, -5);
   scene.add(rim);
 
