@@ -1624,7 +1624,7 @@ export function mountHero(
    */
   let beckon = reduced ? 0 : 1, beckonWant = reduced ? 0 : 1;
   const beckonAt = (i: number, t: number) => 1 + 0.09 * beckon * Math.sin(t * 2.1 + i * 0.7);
-  let active = -1, orbitYawTo = 0, orbitYaw = 0, hueNow = new Color(spec.hue);
+  let active = -1, revealLevel = 0, detailZoom = 0, orbitYawTo = 0, orbitYaw = 0, hueNow = new Color(spec.hue);
   function clearItems() {
     for (const b of badges) { b.sp.material.map?.dispose(); b.sp.material.dispose(); b.label.material.map?.dispose(); b.label.material.dispose(); }
     orbit.clear(); pins.clear(); badges = []; anchoredCount = 0;
@@ -1658,6 +1658,7 @@ export function mountHero(
   }
   function focus(i: number) {
     active = i;
+    revealLevel = 0; detailZoom = 0; explodeTo = 0;
     if (i < 0 || !badges[i] || badges[i]!.marker) return;
     // turn the ring so the chosen badge comes to the front (toward the camera, +z)
     orbitYawTo = Math.PI / 2 - badges[i]!.a0;
@@ -1842,7 +1843,18 @@ export function mountHero(
   host.addEventListener('pointerup', (e) => {
     if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;   // that was a drag, not a click
     const i = pick(e.clientX, e.clientY);
-    if (i >= 0) { focus(i); onPick?.(i); }
+    if (i >= 0) {
+      if (i !== active) focus(i);
+      // Three taps form the reusable reveal language: focus the part, open its
+      // layer, then bring the detail layer toward the child. Scenes that have
+      // explicit nested parts can map these levels to their own objects; all
+      // other scenes still get a meaningful staged explosion for free.
+      revealLevel = Math.min(3, revealLevel + 1);
+      explodeTo = revealLevel === 1 ? 0.22 : revealLevel === 2 ? 0.62 : 1;
+      detailZoom = revealLevel === 3 ? 1 : 0;
+      onPick?.(i);
+      start();
+    }
   });
   host.addEventListener('pointermove', (e) => {
     if (!dragging) {
@@ -2013,7 +2025,7 @@ export function mountHero(
     explodeNow += (explodeTo - explodeNow) * 0.16;
     if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
     // the camera eases back as the model opens up, so nothing leaves the frame
-    camera.position.z = camZBase + explodeNow * spread * 2.1;
+    camera.position.z = Math.max(2.2, camZBase * (1 - detailZoom * 0.16) + explodeNow * spread * 2.1);
     aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
