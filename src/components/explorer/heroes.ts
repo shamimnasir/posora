@@ -1524,6 +1524,10 @@ export function mountHero(
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const font = getComputedStyle(document.body).fontFamily;
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  // A dense 3D canvas at 2x device scale costs four times the pixels. The
+  // models are learning diagrams, so 1.5x keeps Bengali labels crisp without
+  // making a low-end phone shade millions of invisible extra pixels.
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
   const scene = new Scene();
   // A slightly longer lens and a lower eye line. 42mm from up at 1.9 was a
   // grown-up looking down at a diorama; this stands the viewer in front of the
@@ -1802,7 +1806,7 @@ export function mountHero(
   let dragging = false, lx = 0, ly = 0, vx = 0, vy = 0, yaw = 0, pitch = 0;
   // The turntable is a switchable camera behaviour, not decoration: visitors who
   // ask for reduced motion start still, and anyone can pause or reset it.
-  let auto = !reduced && !wantsStill, yawTo: number | null = null;
+  let auto = !reduced && !wantsStill, previewUntil = auto ? performance.now() + 6000 : 0, yawTo: number | null = null;
   const yawDeg = () => { const d = ((yaw * 180) / Math.PI) % 360; return d < 0 ? d + 360 : d; };
   let downX = 0, downY = 0;
   host.addEventListener('pointerdown', (e) => { beckonWant = 0; dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; downX = e.clientX; downY = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
@@ -1902,6 +1906,9 @@ export function mountHero(
      * visitor simply scrolling.
      */
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
+    // Motion demonstrates that the model can turn, then yields control. A
+    // learner who explicitly presses the spin button gets continuous motion.
+    if (previewUntil && now >= previewUntil) { auto = false; previewUntil = 0; }
     const run = auto || dragging; if (run) t += dt;
     if (!dragging) {
       yaw += vx; pitch = MathUtils.clamp(pitch + vy, -0.8, 0.8); vx *= 0.92; vy *= 0.92;
@@ -1983,12 +1990,12 @@ export function mountHero(
     // A new scene decides for itself whether it turns, the way it decides its
     // own camera: switching from a planet to a crowd must not leave the crowd
     // spinning because the planet was.
-    set: (s) => { const l = build(s); auto = !reduced && !wantsStill; start(); return l; },
+    set: (s) => { const l = build(s); auto = !reduced && !wantsStill; previewUntil = auto ? performance.now() + 6000 : 0; start(); return l; },
     setItems: (items, act) => { setItems(items, act); resize(); start(); },
     focus: (i) => { focus(i); start(); },
     setParam: (v) => { param = v; start(); },
     setExplode: (v) => { explodeTo = MathUtils.clamp(v, 0, 1); start(); },
-    setAuto: (on) => { auto = on; start(); },
+    setAuto: (on) => { auto = on; previewUntil = 0; start(); },
     isAuto: () => auto,
     resetView: () => { vx = vy = 0; pitch = 0; yawTo = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; start(); },
     badgeAt(i) {

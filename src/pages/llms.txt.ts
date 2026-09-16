@@ -37,7 +37,7 @@ export const GET: APIRoute = async ({ site }) => {
   const body = `# পসরা (Posora)
 
 > A free, Bangla-language interactive learning site for children, at https://posora.com.
-> Every topic is a 3D model you can turn, pull apart and click, with the same
+> Every category has a live 3D scene you can turn, pull apart and click, with
 > explanation written at three depths so one page works for a five-year-old and
 > a thirteen-year-old. Built and run from Dhaka, Bangladesh.
 
@@ -53,8 +53,8 @@ and carries no advertising.
 - ${c.tool} items are live interactive tools rather than reading.
 ${c.uncovered === 0
   ? '- Nothing on the plan is unwritten: every item has its text.\n'
-  : `- ${c.uncovered} items are listed in the plan but not yet written, and the site marks\n  them as such rather than showing an empty page.\n`}- ${missionCount} playable missions, three per world, each a small game with three
-  lives, a timer bonus and a star score.
+  : `- ${c.uncovered} items are listed in the plan but not yet written, and the site marks\n  them as such rather than showing an empty page.\n`}- ${missionCount} playable missions across the eleven worlds. Each is a small game
+  with three lives, a timer bonus and a star score.
 - Every category also has a find-it game: the model names one of its own items
   and the child has to spot that item on the model.
 

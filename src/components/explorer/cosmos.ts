@@ -203,7 +203,7 @@ export function mountCosmos(
   const canvas = host.querySelector('canvas')!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
   // The same filmic curve the world stages use, so a planet looks like it
   // belongs to the same site as a mango tree. The shaders opt in at their tail.
   renderer.outputColorSpace = SRGBColorSpace;
