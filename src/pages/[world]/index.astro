@@ -1153,6 +1153,7 @@ const schema = [
     .rail-list .tg, .rail-list .no { display: none; }
     .stage { min-height: 0; }
     .scene { min-height: min(96vw, 460px); }
+    .lesson-cue { top: 12px; max-width: min(62ch, calc(100% - 24px)); font-size: 13px; max-height: 3.6em; overflow: hidden; }
   }
   @media (max-width: 560px) {
     .ow-records .recs { grid-template-columns: 1fr; }
@@ -1164,7 +1165,7 @@ const schema = [
     .stage-h { padding: 1rem 1rem 0; }
     .top-chips { display: none; }
     .progress-drawer { margin-inline: 1rem; }
-    .lesson-cue { top: 48px; font-size: 13.5px; max-height: 4.8em; overflow: hidden; }
+    .lesson-cue { top: 12px; font-size: 12.5px; max-height: 3.6em; overflow: hidden; }
     /* Give the 3D hero a real stage on phones. A 96vw box was only ~300px
        before the overlays, so the model became a thumbnail between the lesson
        cue and controls. The extra height makes the entrance and reveal legible. */
