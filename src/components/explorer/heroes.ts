@@ -1918,7 +1918,7 @@ export function mountHero(
       } else if (auto && Math.abs(vx) < 0.002) yaw += dt * IDLE_YAW; // drag momentum fades into a steady idle turntable
     }
     user.rotation.set(pitch, yaw, 0);
-    user.position.y = run ? Math.sin(t * 0.55) * 0.045 : 0; // faint breathing bob - a still photo never does this
+    user.position.y = run ? Math.sin(t * 0.7) * 0.075 : 0; // a lively toybox hover, still gentle enough to read
     if (badges.length) {
       // the ring drifts slowly, and eases round when an item is chosen
       orbitYaw += (orbitYawTo - orbitYaw) * 0.08;
@@ -1932,7 +1932,7 @@ export function mountHero(
         if (b.marker) {
           // pinned to its part: follow the part, hover slightly, face the camera
           b.marker.getWorldPosition(wp); user.worldToLocal(wp);
-          b.sp.position.copy(wp); b.sp.position.y += pinScale * 0.33 + Math.sin(t * 1.3 + i) * 0.04;
+          b.sp.position.copy(wp); b.sp.position.y += pinScale * 0.33 + Math.sin(t * 1.7 + i) * 0.065;
           /**
            * One label at a time.
            *
@@ -1962,7 +1962,7 @@ export function mountHero(
         const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
         const target = (on ? 1.45 : 0.8 + 0.18 * depth) * beckonAt(i, t);
         b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.12);
-        b.sp.position.set(Math.cos(b.a0) * ORBIT_R, Math.sin(t * 0.9 + i) * 0.12 + (on ? 0.15 : 0), Math.sin(b.a0) * ORBIT_R);
+        b.sp.position.set(Math.cos(b.a0) * ORBIT_R, Math.sin(t * 1.15 + i) * 0.16 + (on ? 0.18 : 0), Math.sin(b.a0) * ORBIT_R);
         (b.sp.material as SpriteMaterial).opacity = on ? 1 : 0.7 + 0.3 * Math.max(0, depth);
         b.label.position.copy(b.sp.position); b.label.position.y -= on ? 1.15 : 0.8;
         const lo = on ? 1 : depth > 0.35 ? (depth - 0.35) * 0.9 : 0;

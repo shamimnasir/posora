@@ -95,7 +95,9 @@ void main(){
   }
   if (!star) {
     float diff = max(dot(N, normalize(uLight)), 0.0);
-    col = col * (0.14 + diff * 0.98) + uGlow * rim * 0.35 * (0.3 + diff);
+    // Keep the shadow side readable and let the glow carry a little colour;
+    // the old low floor made every planet look like a grey plastic bead.
+    col = col * (0.22 + diff * 1.05) + uGlow * rim * 0.48 * (0.35 + diff);
   }
   gl_FragColor = vec4(col, 1.0);
   /**
@@ -611,7 +613,7 @@ export function mountCosmos(
       if (!reduced || dragging) planet.rotation.y += spin * dt * (idle > 4 ? 1 : 0.6);
       const pop = Math.min(1, (now - popStart) / 500); const sc = 1 - Math.pow(1 - pop, 3);
       planet.scale.setScalar(sc);
-      glow.scale.setScalar(glowBase * sc);
+      glow.scale.setScalar(glowBase * sc * (1 + Math.sin(t * 2.2) * 0.045));
       (planet.material as ShaderMaterial).uniforms.uTime.value = t;
       // A body alone in frame has no sun in the scene, so the direction is the
       // art-directed one - but still pushed through the view matrix, so the

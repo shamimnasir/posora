@@ -34,7 +34,7 @@ interface Props {
 }
 const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [] } = Astro.props;
 const paletteParam = Astro.url.searchParams.get('palette');
-const palette = paletteParam && ['cosmic', 'toybox', 'storybook', 'jungle', 'sunset'].includes(paletteParam) ? paletteParam : undefined;
+const palette = paletteParam && ['cosmic', 'toybox', 'storybook', 'jungle', 'sunset'].includes(paletteParam) ? paletteParam : 'toybox';
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হোক খেলার মতো' : `${title} · পসরা`;
 const ogImage = new URL('/og.png', Astro.site ?? 'https://posora.com').href;
