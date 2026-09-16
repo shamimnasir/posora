@@ -12,9 +12,9 @@ body.mz-open { overflow: hidden; }
   @keyframes mz-in { from { opacity: 0; } to { opacity: 1; } }
   /* min-width:0 matters: without it the grid item takes its content's
      min-content width, and a wide track pushes the panel off both edges */
-  .mz-panel { position: relative; width: min(720px, 100%); min-width: 0; max-height: 92vh; overflow: hidden auto; border-radius: 22px;
+  .mz-panel { position: relative; width: min(720px, 100%); min-width: 0; max-height: 92vh; overflow: hidden auto; border-radius: 24px;
     background: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--w) 26%, #141c2e) 0%, #0d1322 55%, #070a12 100%);
-    border: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); color: #eef4fb;
+    border: 2px solid var(--brand); box-shadow: 7px 7px 0 var(--pink), 0 30px 80px rgba(0, 0, 0, 0.55); color: #eef4fb;
     animation: mz-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.25); }
   @keyframes mz-pop { from { transform: scale(0.9) translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
   .mz-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -42,9 +42,9 @@ body.mz-open { overflow: hidden; }
   .mz-rule { font-size: 1.05rem; line-height: 1.7; max-width: 46ch; margin: 0 auto; }
   .mz-rule-s { margin: 0.9rem auto 0; max-width: 44ch; font-size: 12.5px; line-height: 1.7; color: rgba(226, 235, 245, 0.7); }
   .mz-vary { margin: 0.8rem auto 0; max-width: 44ch; font-size: 12.5px; line-height: 1.6; color: var(--w); font-weight: 600; }
-  .mz-btn { font-size: 14px; font-weight: 800; padding: 0.6rem 1.3rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.1); color: #fff; transition: transform 0.15s ease, background 0.15s ease; }
-  .mz-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.2); }
-  .mz-primary { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 55%, #ffd76a)); border-color: transparent; color: #0d1322; }
+  .mz-btn { font-size: 14px; font-weight: 800; padding: 0.65rem 1.3rem; border-radius: 12px; border: 2px solid #06091f; background: #f5f3ff; color: #172033; box-shadow: 4px 4px 0 #06091f; transition: transform 0.15s ease, background 0.15s ease, box-shadow .15s ease; }
+  .mz-btn:hover { transform: translateY(-2px); background: #c9f7ff; box-shadow: 4px 6px 0 #06091f; }
+  .mz-primary { background: linear-gradient(135deg, #ffe56b, #ffd04d); border-color: #06091f; color: #0d1322; }
   .mz-go { margin-top: 1.2rem; font-size: 16px; padding: 0.7rem 1.8rem; }
   .mz-btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 1.1rem; }
   .mz-round { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; color: rgba(226, 235, 245, 0.65); text-transform: uppercase; }
@@ -56,10 +56,10 @@ body.mz-open { overflow: hidden; }
   .mz-em { font-size: 30px; line-height: 1.1; }
   .mz-arrow { color: rgba(226, 235, 245, 0.45); font-size: 18px; }
   .mz-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-  .mz-card { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 92px; padding: 0.6rem 0.7rem; border-radius: 16px;
-    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; font-size: 12.5px; font-weight: 700;
-    transition: transform 0.15s ease, background 0.15s ease; }
-  .mz-card:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.2); }
+  .mz-card { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 92px; padding: 0.65rem 0.7rem; border-radius: 14px;
+    background: #f5f3ff; border: 2px solid #06091f; box-shadow: 4px 4px 0 #06091f; color: #172033; font-size: 12.5px; font-weight: 700;
+    transition: transform 0.15s ease, background 0.15s ease, box-shadow .15s ease; }
+  .mz-card:hover { transform: translateY(-3px); background: #c9f7ff; box-shadow: 4px 7px 0 #06091f; }
   .mz-card.used { opacity: 0.25; transform: none; }
   .mz-next { margin-top: 0.2rem; }
 
@@ -75,11 +75,12 @@ body.mz-open { overflow: hidden; }
   .mz-fact { max-width: 52ch; text-align: center; font-size: 13.5px; line-height: 1.75; color: rgba(238, 244, 251, 0.92); }
   .mz-ask { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; text-align: center; }
   .mz-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-  .mz-choice { padding: 0.5rem 1.05rem; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22);
-    color: #fff; font-size: 14px; font-weight: 700; transition: transform 0.15s ease, background 0.15s ease; }
-  .mz-choice:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.22); }
-  .mz-choice.ok { background: #2fa360; border-color: transparent; }
-  .mz-choice.bad { background: rgba(224, 85, 106, 0.3); border-color: rgba(224, 85, 106, 0.6); opacity: 0.65; }
+  .mz-choice { padding: 0.6rem 1.05rem; border-radius: 12px; background: #f5f3ff; border: 2px solid #06091f; box-shadow: 4px 4px 0 #06091f;
+    color: #172033; font-size: 14px; font-weight: 700; transition: transform 0.15s ease, background 0.15s ease, box-shadow .15s ease; }
+  .mz-choice:nth-child(2n) { background: #fff0a8; }
+  .mz-choice:hover { transform: translateY(-2px); background: #9af0ff; box-shadow: 4px 6px 0 #06091f; }
+  .mz-choice.ok { background: #66edb7; border-color: #06091f; }
+  .mz-choice.bad { background: #ff9aaa; border-color: #06091f; opacity: 0.72; }
 
   .mz-art { width: 160px; height: 160px; display: grid; place-items: center; border-radius: 20px; background: rgba(255, 255, 255, 0.94); }
   .mz-art svg { width: 130px; height: 130px; color: #1d3524; fill: #2f6b3f; }
@@ -103,11 +104,12 @@ body.mz-open { overflow: hidden; }
     background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.16); }
   .mz-sit p { font-size: 15px; line-height: 1.65; }
   .mz-opts { display: flex; flex-direction: column; align-items: stretch; gap: 7px; width: min(100%, 48ch); }
-  .mz-opt { padding: 0.65rem 1rem; border-radius: 14px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22);
-    color: #fff; font-size: 14px; font-weight: 600; line-height: 1.5; text-align: left; transition: transform 0.15s ease, background 0.15s ease; }
-  .mz-opt:hover { transform: translateX(3px); background: rgba(255, 255, 255, 0.2); }
-  .mz-opt.ok { background: #2fa360; border-color: transparent; }
-  .mz-opt.bad { background: rgba(224, 85, 106, 0.28); border-color: rgba(224, 85, 106, 0.55); opacity: 0.6; }
+  .mz-opt { padding: 0.7rem 1rem; border-radius: 12px; background: #f5f3ff; border: 2px solid #06091f; box-shadow: 4px 4px 0 #06091f;
+    color: #172033; font-size: 14px; font-weight: 700; line-height: 1.5; text-align: left; transition: transform 0.15s ease, background 0.15s ease, box-shadow .15s ease; }
+  .mz-opt:nth-child(2n) { background: #fff0a8; }
+  .mz-opt:hover { transform: translateX(3px); background: #9af0ff; }
+  .mz-opt.ok { background: #66edb7; border-color: #06091f; }
+  .mz-opt.bad { background: #ff9aaa; border-color: #06091f; opacity: 0.72; }
 
   /* calc: a question and a Bangla keypad */
   .mz-q { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; text-align: center; max-width: 22ch; line-height: 1.4; }

@@ -172,12 +172,13 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
   /* the option buttons are built by the script, so they need :global() */
   .opts :global(button) {
     font: inherit; font-family: var(--font-display); font-size: 20px; font-weight: 700;
-    padding: 0.5rem 0.9rem; border-radius: 10px; border: 1px solid var(--line);
-    background: var(--panel-2); color: var(--ink); cursor: pointer;
+    padding: 0.58rem 0.95rem; border-radius: 11px; border: 2px solid #070b2c;
+    background: #f5f3ff; color: #172033; box-shadow: 4px 4px 0 #070b2c; cursor: pointer;
   }
-  .opts :global(button:hover) { background: color-mix(in oklab, var(--w) 14%, var(--panel-2)); }
-  .opts :global(button.right) { background: var(--ok); border-color: var(--ok); color: #fff; }
-  .opts :global(button.wrong) { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .opts :global(button:nth-child(2n)) { background: #fff0a8; }
+  .opts :global(button:hover) { background: #9af0ff; transform: translateY(-2px); }
+  .opts :global(button.right) { background: var(--ok); border-color: #070b2c; color: #071d1a; }
+  .opts :global(button.wrong) { background: #ff9aaa; border-color: #070b2c; color: #2d0b13; }
   .opts :global(button:disabled) { cursor: default; }
   .won { color: var(--ok); }
   #q-next { margin-top: 1rem; }

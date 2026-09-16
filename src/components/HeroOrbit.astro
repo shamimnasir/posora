@@ -21,7 +21,9 @@ const data = worlds.map((w) => ({ slug: w.slug, bn: w.bn, hue: w.hue, open: w.op
   const ctx = canvas.getContext('2d')!;
   const worlds: W[] = JSON.parse(host.dataset.worlds!);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const dark = () => matchMedia('(prefers-color-scheme: dark)').matches;
+  // The public site now deliberately uses the Cosmic Quest night palette,
+  // independent of the operating-system theme.
+  const dark = () => true;
   // Astro hashes self-hosted family names - read the resolved stacks instead of hard-coding them.
   const bodyFont = getComputedStyle(document.body).fontFamily;
 
@@ -51,7 +53,7 @@ const data = worlds.map((w) => ({ slug: w.slug, bn: w.bn, hue: w.hue, open: w.op
   });
 
   let size = 0, dpr = 1, t0 = performance.now(), hovered: Orb | null = null;
-  let px = -1e4, py = -1e4, visible = true, raf = 0, fontReady = false;
+  let px = -1e4, py = -1e4, visible = true, raf = 0;
 
   function resize() {
     const rect = host.getBoundingClientRect();
@@ -152,6 +154,6 @@ const data = worlds.map((w) => ({ slug: w.slug, bn: w.bn, hue: w.hue, open: w.op
   new ResizeObserver(resize).observe(host);
   new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) start(); }).observe(host);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
-  document.fonts.load(`500 12px ${bodyFont}`).then(() => { fontReady = true; resize(); start(); });
+  document.fonts.load(`500 12px ${bodyFont}`).then(() => { resize(); start(); });
   resize(); start();
 </script>

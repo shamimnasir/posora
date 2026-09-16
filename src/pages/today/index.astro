@@ -337,12 +337,13 @@ const schema = [
   .qp { font-size: 16px; line-height: 1.8; color: var(--ink); margin-bottom: 0.9rem; }
   .qopts, .oopts { display: grid; gap: 0.5rem; }
   .oopts { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-  .qo, .oo-b { text-align: right; padding: 0.7rem 1rem; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--panel-2); font-size: 15px; font-weight: 600; transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease; }
+  .qo, .oo-b { text-align: right; padding: 0.78rem 1rem; border-radius: 12px; border: 2px solid #070b2c; background: #f5f3ff; color: #172033; box-shadow: 4px 4px 0 #070b2c; font-size: 15px; font-weight: 700; transition: background 0.15s ease, transform 0.15s ease, box-shadow .15s ease; }
+  .qo:nth-child(2n), .oo-b:nth-child(2n) { background: #fff0a8; }
   .qo { text-align: start; }
   .oo-b { text-align: center; }
-  .qo:hover, .oo-b:hover { border-color: var(--brand); transform: translateY(-1px); }
-  .qo.right, .oo-b.right { background: color-mix(in oklab, var(--ok) 16%, var(--panel)); border-color: var(--ok); color: var(--ok); }
-  .qo.wrong, .oo-b.wrong { background: color-mix(in oklab, var(--danger) 14%, var(--panel)); border-color: var(--danger); color: var(--danger); }
+  .qo:hover, .oo-b:hover { background: #9af0ff; transform: translateY(-2px); box-shadow: 4px 6px 0 #070b2c; }
+  .qo.right, .oo-b.right { background: var(--ok); border-color: #070b2c; color: #071d1a; }
+  .qo.wrong, .oo-b.wrong { background: #ff9aaa; border-color: #070b2c; color: #2d0b13; }
   .qo.lock, .oo-b.lock { pointer-events: none; }
   .qwhy { margin-top: 0.75rem; font-size: 14px; color: var(--ink-2); padding: 0.6rem 0.8rem; border-radius: var(--r-sm); background: var(--panel-2); }
   .qwhy a { color: var(--brand); font-weight: 600; }

@@ -28,19 +28,19 @@ const { labs, missions } = doableFor(w.slug);
   .wcard {
     --rx: 0deg; --ry: 0deg;
     position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 1rem; row-gap: 0.15rem;
-    padding: 1.1rem 1.15rem 1.15rem; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--shadow-sm);
+    padding: 1.15rem 1.2rem 1.2rem; border-radius: var(--r); background: linear-gradient(145deg, color-mix(in oklab, var(--panel) 88%, var(--w)), var(--panel)); border: 1px solid color-mix(in oklab, var(--w) 34%, var(--line)); box-shadow: 5px 5px 0 color-mix(in oklab, var(--w) 32%, transparent);
     transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)); transition: transform 0.12s ease-out, box-shadow 0.2s ease, border-color 0.2s ease;
     will-change: transform;
   }
-  .wcard:hover { box-shadow: var(--shadow-lg); border-color: color-mix(in oklab, var(--w) 45%, var(--line)); }
+  .wcard:hover { box-shadow: 3px 8px 0 color-mix(in oklab, var(--w) 55%, transparent), var(--shadow-lg); border-color: color-mix(in oklab, var(--w) 68%, var(--line)); }
   .orb { grid-row: 1 / 4; align-self: start; transition: transform 0.25s ease; }
   .wcard:hover .orb { transform: scale(1.08) rotate(-6deg); }
   .no { position: absolute; top: 0.9rem; right: 1rem; }
-  .name { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.25; }
+  .name { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.25; color: var(--ink); }
   .tag { color: var(--muted); font-size: 13.5px; }
   .meta { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.55rem; }
   .pill { font-size: 12px; }
-  .open { background: var(--brand-soft); color: var(--brand-ink); border-color: transparent; font-weight: 600; }
+  .open { background: color-mix(in oklab,var(--ok) 18%,var(--panel)); color: var(--ok); border-color: color-mix(in oklab,var(--ok) 45%,var(--line)); font-weight: 700; }
   .part { background: color-mix(in oklab, var(--sun) 16%, var(--panel)); color: color-mix(in oklab, var(--sun) 55%, var(--ink));
     border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); font-weight: 600; }
   .soon { color: var(--muted); }

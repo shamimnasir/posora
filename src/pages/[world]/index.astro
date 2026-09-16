@@ -664,11 +664,11 @@ const schema = [
   .card-h { padding: 0.7rem 0.95rem; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
 
   /* rail */
-  .rail { overflow: hidden; }
+  .rail { overflow: hidden; border-color: color-mix(in oklab,var(--w) 34%,var(--line)); }
   .rail-list { padding: 6px; display: flex; flex-direction: column; gap: 2px; max-height: 640px; overflow-y: auto; }
   .rail-list button { display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; padding: 8px 9px; border-radius: 11px; border-left: 3px solid transparent; transition: background 0.15s ease; }
   .rail-list button:hover { background: var(--panel-2); }
-  .rail-list button[aria-current="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
+  .rail-list button[aria-current="true"] { background: color-mix(in oklab, var(--o) 22%, var(--panel)); border-left-color: var(--o); box-shadow: inset 0 0 0 1px color-mix(in oklab,var(--o) 40%,transparent); }
   /* the subject of the row, not another identical bead */
   .rorb { width: 32px; height: 32px; border-radius: 11px; flex: none; display: grid; place-items: center; font-size: 17px; line-height: 1;
     background: color-mix(in oklab, var(--o) 18%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 38%, var(--line)); transition: transform 0.2s ease, background 0.2s ease;
@@ -684,7 +684,7 @@ const schema = [
 
   /* stage */
   .mid { display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; }
-  .stage { display: flex; flex-direction: column; min-height: 620px; overflow: hidden; }
+  .stage { display: flex; flex-direction: column; min-height: 620px; overflow: hidden; border-color: color-mix(in oklab,var(--w) 42%,var(--line)); box-shadow: 6px 6px 0 color-mix(in oklab,var(--w) 28%,transparent),var(--shadow); }
   .stage-h { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem 0; flex-wrap: wrap; }
   .stage-h h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -0.01em; line-height: 1.15; font-weight: 800; margin-top: 0.1rem; overflow-wrap: anywhere; }
   .tag { color: var(--muted); font-size: 14px; }
@@ -734,15 +734,15 @@ const schema = [
   .q-hint:empty { display: none; }
   .q-start { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 60%, #f0b429)) !important; border-color: transparent !important; }
   .qres { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(5, 7, 14, 0.62); backdrop-filter: blur(3px); }
-  .qres-card { text-align: center; padding: 1.3rem 1.5rem 1.2rem; border-radius: 20px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: var(--shadow-lg, 0 20px 50px rgba(0,0,0,.4)); max-width: 92%; width: 380px; animation: pop 0.45s cubic-bezier(.2,.9,.3,1.3); }
+  .qres-card { text-align: center; padding: 1.3rem 1.5rem 1.2rem; border-radius: 20px; background: var(--panel); border: 2px solid var(--brand); box-shadow: 6px 6px 0 var(--pink),var(--shadow-lg, 0 20px 50px rgba(0,0,0,.4)); max-width: 92%; width: 380px; animation: pop 0.45s cubic-bezier(.2,.9,.3,1.3); }
   @keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
   .q-stars { font-size: 34px; letter-spacing: 0.1em; color: var(--sun); line-height: 1.1; margin-top: 0.3rem; }
   .qres-card h3 { font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem; }
   .q-sum { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; margin-top: 0.4rem; }
   .q-btns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 0.9rem; }
-  .q-btns button { font-size: 13px; font-weight: 700; padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); transition: transform 0.15s ease; }
-  .q-btns button:hover { transform: translateY(-1px); }
-  .q-btns .primary { background: var(--w); color: #fff; border-color: transparent; }
+  .q-btns button { font-size: 13px; font-weight: 700; padding: 0.55rem 0.9rem; border-radius: 11px; border: 2px solid #070b2c; background: #f5f3ff; color: #172033; box-shadow: 3px 3px 0 #070b2c; transition: transform 0.15s ease,box-shadow .15s ease; }
+  .q-btns button:hover { transform: translateY(-2px); box-shadow: 3px 5px 0 #070b2c; }
+  .q-btns .primary { background: var(--sun); color: #101735; border-color: #070b2c; }
   .award-toast { position: absolute; bottom: 124px; left: 50%; transform: translate(-50%, 8px); z-index: 8; font-size: 13.5px; font-weight: 700; color: #1a1408; background: linear-gradient(135deg, #ffe08a, #f0b429); padding: 0.45rem 1rem; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.35); opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
   .award-toast.show { opacity: 1; transform: translate(-50%, 0); }
   @media (prefers-reduced-motion: reduce) { .q-card.shake, .qres-card, .xp-float.go { animation: none; } .xp-float.go { opacity: 1; } }
@@ -782,7 +782,7 @@ const schema = [
    * times the area, for two numbers.
    */
   .scene { position: relative; flex: 1; min-height: min(74vh, 780px); overflow: hidden; margin-top: 1rem;
-    background: radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 22%, #141c2e) 0%, #0c1220 52%, #05070e 100%); }
+    background: radial-gradient(circle at 82% 14%,rgba(255,111,189,.14),transparent 24%), radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 24%, #141c2e) 0%, #0c122d 52%, #05070e 100%); }
   /* Nothing but the model. The engine's own ResizeObserver refits the camera,
      so going full screen costs no extra code on the 3D side. */
   .scene:fullscreen { min-height: 100vh; border-radius: 0; margin: 0; }
@@ -870,7 +870,7 @@ const schema = [
      rules must be :global(). Astro stamps data-astro-cid onto elements at build
      time, and a JS-created <button class="chip"> never gets one, so a scoped
      .chip selector would match nothing and the list would render unstyled. */
-  .chips :global(.chip) { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13.5px; padding: 6px 13px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line-soft); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
+  .chips :global(.chip) { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 13.5px; padding: 7px 13px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
   .chips :global(.chip:hover) { background: color-mix(in oklab, var(--w) 14%, var(--panel)); border-color: color-mix(in oklab, var(--w) 34%, var(--line)); transform: translateY(-1px); }
   .chips :global(.chip[data-di][aria-pressed="true"]) { background: var(--w); border-color: transparent; color: #fff; font-weight: 700; }
   .chips :global(.chip.done) { border-color: color-mix(in oklab, var(--ok) 45%, var(--line)); }
@@ -886,10 +886,10 @@ const schema = [
   .toast.show { opacity: 1; }
 
   .actions { display: flex; justify-content: center; gap: 6px; padding: 0.75rem; border-top: 1px solid var(--line-soft); background: var(--panel-2); margin-top: auto; }
-  .actions button { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.05rem; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ink-2); transition: background 0.15s ease, transform 0.15s ease; }
+  .actions button { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.58rem 1.05rem; border-radius: 11px; font-weight: 700; font-size: 14px; color: var(--ink-2); border: 1px solid var(--line); transition: background 0.15s ease, transform 0.15s ease; }
   .actions button:hover { background: var(--panel); transform: translateY(-1px); }
-  .actions .primary { background: var(--brand); color: var(--on-brand); }
-  .actions .primary:hover { background: var(--brand-ink); }
+  .actions .primary { background: var(--sun); color: #101735; border-color: transparent; box-shadow: 3px 3px 0 var(--pink); }
+  .actions .primary:hover { background: #ffe574; }
 
   /* এক নজরে - the animated comparison chart under the stage */
   .glance { overflow: hidden; }

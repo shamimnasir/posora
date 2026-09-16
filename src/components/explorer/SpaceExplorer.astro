@@ -578,15 +578,15 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .q-hint:empty { display: none; }
   .q-start { background: linear-gradient(135deg, var(--w), color-mix(in oklab, var(--w) 60%, #f0b429)); color: #fff; }
   .qres { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(5, 7, 14, 0.62); backdrop-filter: blur(3px); }
-  .qres-card { text-align: center; padding: 1.3rem 1.5rem 1.2rem; border-radius: 20px; background: var(--panel); border: 1px solid var(--line-soft); box-shadow: 0 20px 50px rgba(0,0,0,.4); max-width: 92%; width: 380px; animation: qpop 0.45s cubic-bezier(.2,.9,.3,1.3); }
+  .qres-card { text-align: center; padding: 1.3rem 1.5rem 1.2rem; border-radius: 20px; background: var(--panel); border: 2px solid var(--brand); box-shadow: 6px 6px 0 var(--pink),0 20px 50px rgba(0,0,0,.4); max-width: 92%; width: 380px; animation: qpop 0.45s cubic-bezier(.2,.9,.3,1.3); }
   @keyframes qpop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
   .q-stars { font-size: 34px; letter-spacing: 0.1em; color: var(--sun); line-height: 1.1; margin-top: 0.3rem; }
   .qres-card h3 { font-size: 1.5rem; font-weight: 800; margin-top: 0.2rem; }
   .q-sum { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; margin-top: 0.4rem; }
   .q-btns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 0.9rem; }
-  .q-btns button { font-size: 13px; font-weight: 700; padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); transition: transform 0.15s ease; }
-  .q-btns button:hover { transform: translateY(-1px); }
-  .q-btns .primary { background: var(--w); color: #fff; border-color: transparent; }
+  .q-btns button { font-size: 13px; font-weight: 700; padding: 0.55rem 0.9rem; border-radius: 11px; border: 2px solid #070b2c; background: #f5f3ff; color: #172033; box-shadow: 3px 3px 0 #070b2c; transition: transform 0.15s ease,box-shadow .15s ease; }
+  .q-btns button:hover { transform: translateY(-2px); box-shadow: 3px 5px 0 #070b2c; }
+  .q-btns .primary { background: var(--sun); color: #101735; border-color: #070b2c; }
   @media (prefers-reduced-motion: reduce) { .q-card.shake, .qres-card { animation: none; } }
 
   .lab-link {
