@@ -219,6 +219,29 @@ function ring(rOut: number, rIn: number, color: Color | string, o: Record<string
 function sector(r: number, start: number, len: number, color: Color | string, h = 0.25) {
   return new Mesh(new CylinderGeometry(r, r, h, 48, 1, false, start, len), std(color));
 }
+/** A thin, pointed leaf silhouette; unlike a sphere it reads as foliage. */
+function organicLeaf(color: Color | string, size = 0.38): Mesh {
+  const s = new Shape();
+  s.moveTo(0, 0);
+  s.bezierCurveTo(size * 0.62, size * 0.2, size * 0.76, size * 0.72, 0, size);
+  s.bezierCurveTo(-size * 0.76, size * 0.72, -size * 0.62, size * 0.2, 0, 0);
+  const m = new Mesh(new ExtrudeGeometry(s, { depth: 0.025, bevelEnabled: false }), std(color, { side: DoubleSide, roughness: 0.82 }));
+  m.rotation.x = -Math.PI / 2;
+  return m;
+}
+function organicLeafCluster(parent: Object3D, colorA: Color | string, colorB: Color | string, size: number, seed: number) {
+  const g = new Group();
+  for (let i = 0; i < 7; i++) {
+    const leaf = organicLeaf(i % 2 ? colorA : colorB, size * (0.78 + ((seed + i * 17) % 7) / 28));
+    const a = (i / 7) * Math.PI * 2 + seed * 0.13;
+    leaf.position.set(Math.cos(a) * size * 0.55, ((seed + i) % 3 - 1) * size * 0.32, Math.sin(a) * size * 0.55);
+    leaf.rotation.y = a + Math.PI * 0.5;
+    leaf.rotation.z = ((seed + i * 5) % 9 - 4) * 0.08;
+    g.add(leaf);
+  }
+  parent.add(g);
+  return g;
+}
 
 /* ---------- scenes ---------- */
 const SCENES: Record<string, Builder> = {
@@ -258,7 +281,7 @@ const SCENES: Record<string, Builder> = {
     // canopy clusters
     const canopy = part(new Vector3(0, 1.6, 0), new Vector3(0, 1, 0));
     [[0, 0.3, 0], [0.8, 0, 0.2], [-0.8, 0.05, -0.2], [0.2, -0.1, 0.85], [-0.3, 0, -0.85], [0.5, 0.55, -0.4], [-0.5, 0.5, 0.4]].forEach(([x, y, z], i) => {
-      const c = new Mesh(new SphereGeometry(0.62, 18, 14), std(i % 2 ? leaf : leaf2)); c.position.set(x, y, z); canopy.add(c);
+      const c = organicLeafCluster(canopy, leaf, leaf2, 0.43 + (i % 3) * 0.04, i + 2); c.position.set(x, y, z);
     });
     mark('পাতা', canopy, -1.1, 0.2, 0.5);
     // one big leaf with veins
@@ -922,17 +945,12 @@ const SCENES: Record<string, Builder> = {
     // Leaf clumps, each a different size, tilt and green. Flat-shaded
     // icosahedra rather than 8-segment spheres: the facets are the style, and
     // they cost fewer triangles than the smooth balls they replace.
-    const leaves = new InstancedMesh(new IcosahedronGeometry(0.3, 0), leafMat, tips.length);
-    tree.add(leaves);
-    const m4 = new Matrix4(), sv = new Vector3();
+    const leaves = new Group(); tree.add(leaves);
     tips.forEach((tp, i) => {
-      const s = rr(0.82, 1.35);
-      m4.makeRotationY(rr(0, 6.28)); m4.scale(sv.set(s * 1.15, s * 0.86, s * 1.15));
-      m4.setPosition(tp.x, tp.y, tp.z);
-      leaves.setMatrixAt(i, m4);
-      leaves.setColorAt(i, leafCols.green.clone().offsetHSL(rr(-0.035, 0.035), rr(-0.06, 0.06), rr(-0.07, 0.07)));
+      const c = organicLeafCluster(leaves, leafCols.green, lighten(leafCols.green, 0.18), rr(0.28, 0.42), i + 4);
+      c.position.copy(tp);
+      c.rotation.y = rr(0, 6.28);
     });
-    if (leaves.instanceColor) leaves.instanceColor.needsUpdate = true;
     let sun: Mesh | null = null; const o2: Mesh[] = [];
     if (v === 'photo') {
       sun = new Mesh(new SphereGeometry(0.5, 24, 18), std(GOLD, { emissive: GOLD, emissiveIntensity: 1 }));
