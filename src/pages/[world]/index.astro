@@ -440,6 +440,17 @@ const schema = [
             ))}
           </div>
 
+          <div class="ow-records">
+            <div class="card-h"><span class="lbl">রেকর্ড</span><span class="lbl">এই ভুবনে</span></div>
+            <div class="recs" id="recs">
+              {seedRecords.map((r) => (
+                <button type="button" data-i={r.i}>
+                  <span>{r.label}</span><b>{r.name} <small>{r.val}</small></b>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <p class="ow-foot">
             বড়দের জন্য: <a href="/family/">পসরা পরিবার</a> · <a href="/schools/">স্কুলের জন্য</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ</a>
           </p>
@@ -490,17 +501,6 @@ const schema = [
             </details>
           )}
           {playableMissions > 0 && <p class="miss-foot" id="miss-foot"></p>}
-        </section>
-
-        <section class="card">
-          <div class="card-h"><span class="lbl">রেকর্ড</span><span class="lbl">এই ভুবনে</span></div>
-          <div class="recs" id="recs">
-            {seedRecords.map((r) => (
-              <button type="button" data-i={r.i}>
-                <span>{r.label}</span><b>{r.name} <small>{r.val}</small></b>
-              </button>
-            ))}
-          </div>
         </section>
 
         {familyTop.length > 0 && (
@@ -953,6 +953,12 @@ const schema = [
   .oww-m { font-size: 11.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   @media (prefers-reduced-motion: reduce) { .oww { transition: border-color 0.15s ease; } }
 
+  /* Keep one useful, scannable rail module in the open middle-column pocket. */
+  .ow-records { margin: 0.7rem 0.8rem 0; border-top: 1px solid var(--line-soft); }
+  .ow-records .card-h { padding: 0.7rem 0.3rem 0.1rem; }
+  .ow-records .recs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 0.8rem; padding: 0.2rem 0.3rem 0.5rem; }
+  .ow-records .recs :global(button) { min-width: 0; }
+
   .ow-foot { padding: 0.85rem 1.1rem 1rem; font-size: 12px; color: var(--muted); }
   .ow-foot a { color: var(--ink-2); font-weight: 600; }
   .ow-foot a:hover { color: var(--w); }
@@ -1148,6 +1154,7 @@ const schema = [
     .scene { min-height: min(96vw, 460px); }
   }
   @media (max-width: 560px) {
+    .ow-records .recs { grid-template-columns: 1fr; }
     /* the world name is already the page heading; on a phone the crumb only
        needs to say which category and item the model is showing */
     .crumb-world, .sep-world { display: none; }

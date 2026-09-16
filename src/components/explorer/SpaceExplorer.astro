@@ -197,6 +197,94 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
       <p class="out" id="age-out"></p>
     </div>
   </section>
+
+  {/* The reading-and-mission rail must stay short enough that the next major
+      section is visible after the stage. These richer tools belong in the
+      wide middle column: they are easier to use here and fill the space that
+      used to sit empty beside a very long sidebar. */}
+  <section class="lower-tools" aria-labelledby="more-tools-title">
+    <div class="lower-tools-h">
+      <div>
+        <p class="eyebrow">আরও ঘেঁটে দেখো</p>
+        <h2 id="more-tools-title">{cur.bn} মাপো ও তুলনা করো</h2>
+      </div>
+      <p>পড়ার পর সংখ্যাগুলো নিয়ে খেলো—মাপ, দূরত্ব, রেকর্ড আর পরিচিতি একসঙ্গে।</p>
+    </div>
+
+    <section class="card">
+      <div class="card-h">
+        <span class="lbl">কত বড়</span>
+        <button type="button" class="mini" id="cmp3d" aria-pressed="false">পাশে পৃথিবী রাখো</button>
+      </div>
+      <div class="size">
+        <div class="size-bars" id="size-bars" aria-hidden="true">
+          {seedSize && <><span><i style={`width:${seedSize.bigPx}px;height:${seedSize.bigPx}px;--c:${world?.hue ?? '#5A6BD4'}`}></i>{cur.bn}</span><span><i style={`width:${seedSize.smallPx}px;height:${seedSize.smallPx}px;--c:#3f9a4a`}></i>পৃথিবী</span></>}
+        </div>
+        <p class="size-out" id="size-out"></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><span class="lbl">কতদিনে পৌঁছাবে</span><span class="lbl" id="trav-dist"></span></div>
+      <div class="trav" id="trav">
+        {seedTravel
+          ? seedTravel.map((r) => <div class="t"><span>{r.bn}</span><b>{r.t}</b></div>)
+          : <div class="t"><span>তুমি তো এখানেই আছো!</span></div>}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><span class="lbl">রেকর্ড</span><span class="lbl">সৌরজগতে</span></div>
+      <div class="recs" id="recs">
+        {seedRecords.map((r) => (
+          <button type="button" data-id={r.b.id} class={r.b.id === cur.id ? 'is-cur' : undefined}>
+            <span>{r.label}</span><b>{r.b.bn} <small style="font-weight:500;color:var(--muted)">{r.val}</small></b>
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><span class="lbl">যন্ত্র</span><span class="lbl">এই জগতের হিসাব</span></div>
+      <div class="miss tools">
+        <div class="m">
+          <span class="mb">০১</span>
+          <div class="m-t">
+            <b>ওজন মাপো</b>
+            <label class="kg">তোমার ওজন <input type="number" id="kg" inputmode="numeric" min="1" max="500" value="30" /> কেজি</label>
+            <p id="kg-out" class="out"></p>
+          </div>
+        </div>
+        <div class="m">
+          <span class="mb">০২</span>
+          <div class="m-t"><b>আলো কতক্ষণে পৌঁছায়</b><p id="light-out" class="out"></p></div>
+        </div>
+        <div class="m">
+          <span class="mb">০৩</span>
+          <div class="m-t"><b>তুলনা করো</b><p class="out">উপরে “তুলনা” চেপে অন্য একটি গ্রহ বেছে নাও - সংখ্যাগুলো পাশাপাশি দেখাবে।</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card lower-spec">
+      <div class="card-h">
+        <span class="lbl">পরিচিতি</span>
+        <label class="cmp" id="cmp-wrap" hidden><span class="lbl">বনাম</span>
+          <select id="cmp">{bodies.map((b) => <option value={b.id} selected={b.id === (cur.id === 'earth' ? 'mars' : 'earth')}>{b.bn}</option>)}</select>
+        </label>
+      </div>
+      <div class="spec" id="spec">
+        {cur.stats.map((s) => (
+          <button type="button" class="row" aria-expanded="false">
+            <span class="k">{s.k}</span>
+            <span class="v">{s.v}</span><span class="v v2" hidden></span>
+            <span class="meter"><i style={`--p:${Math.round(s.s * 100)}%`}></i><i class="m2" hidden></i></span>
+            <span class="dig" aria-hidden="true">+</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  </section>
   </div>
 
   <aside class="info">
@@ -281,80 +369,6 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
       </div>
     </section>
 
-    <section class="card">
-      <div class="card-h">
-        <span class="lbl">কত বড়</span>
-        <button type="button" class="mini" id="cmp3d" aria-pressed="false">পাশে পৃথিবী রাখো</button>
-      </div>
-      <div class="size">
-        <div class="size-bars" id="size-bars" aria-hidden="true">
-          {seedSize && <><span><i style={`width:${seedSize.bigPx}px;height:${seedSize.bigPx}px;--c:${world?.hue ?? '#5A6BD4'}`}></i>{cur.bn}</span><span><i style={`width:${seedSize.smallPx}px;height:${seedSize.smallPx}px;--c:#3f9a4a`}></i>পৃথিবী</span></>}
-        </div>
-        <p class="size-out" id="size-out"></p>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-h"><span class="lbl">কতদিনে পৌঁছাবে</span><span class="lbl" id="trav-dist"></span></div>
-      <div class="trav" id="trav">
-        {seedTravel
-          ? seedTravel.map((r) => <div class="t"><span>{r.bn}</span><b>{r.t}</b></div>)
-          : <div class="t"><span>তুমি তো এখানেই আছো!</span></div>}
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-h"><span class="lbl">রেকর্ড</span><span class="lbl">সৌরজগতে</span></div>
-      <div class="recs" id="recs">
-        {seedRecords.map((r) => (
-          <button type="button" data-id={r.b.id} class={r.b.id === cur.id ? 'is-cur' : undefined}>
-            <span>{r.label}</span><b>{r.b.bn} <small style="font-weight:500;color:var(--muted)">{r.val}</small></b>
-          </button>
-        ))}
-      </div>
-    </section>
-
-    {/* Three live calculators, each computed from this body's real numbers. */}
-    <section class="card">
-      <div class="card-h"><span class="lbl">যন্ত্র</span><span class="lbl">এই জগতের হিসাব</span></div>
-      <div class="miss tools">
-        <div class="m">
-          <span class="mb">০১</span>
-          <div class="m-t">
-            <b>ওজন মাপো</b>
-            <label class="kg">তোমার ওজন <input type="number" id="kg" inputmode="numeric" min="1" max="500" value="30" /> কেজি</label>
-            <p id="kg-out" class="out"></p>
-          </div>
-        </div>
-        <div class="m">
-          <span class="mb">০২</span>
-          <div class="m-t"><b>আলো কতক্ষণে পৌঁছায়</b><p id="light-out" class="out"></p></div>
-        </div>
-        <div class="m">
-          <span class="mb">০৩</span>
-          <div class="m-t"><b>তুলনা করো</b><p class="out">উপরে “তুলনা” চেপে অন্য একটি গ্রহ বেছে নাও - সংখ্যাগুলো পাশাপাশি দেখাবে।</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-h">
-        <span class="lbl">পরিচিতি</span>
-        <label class="cmp" id="cmp-wrap" hidden><span class="lbl">বনাম</span>
-          <select id="cmp">{bodies.map((b) => <option value={b.id} selected={b.id === (cur.id === 'earth' ? 'mars' : 'earth')}>{b.bn}</option>)}</select>
-        </label>
-      </div>
-      <div class="spec" id="spec">
-        {cur.stats.map((s) => (
-          <button type="button" class="row" aria-expanded="false">
-            <span class="k">{s.k}</span>
-            <span class="v">{s.v}</span><span class="v v2" hidden></span>
-            <span class="meter"><i style={`--p:${Math.round(s.s * 100)}%`}></i><i class="m2" hidden></i></span>
-            <span class="dig" aria-hidden="true">+</span>
-          </button>
-        ))}
-      </div>
-    </section>
   </aside>
 </div>
 
@@ -470,6 +484,18 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .agebox { margin: 0.8rem 1.1rem 1rem; padding: 0.7rem 0.85rem; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line-soft); }
   .agebox .out { margin-top: 0.3rem; }
   @media (prefers-reduced-motion: reduce) { .gtrack i { transition: none; } }
+
+  /* Wide-column tools: these used to make the sidebar more than twice as tall
+     as the stage. A two-column workbench keeps the next lesson section close
+     and gives the interactive controls the room they need. */
+  .lower-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+  .lower-tools-h { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: end; gap: 1.25rem; padding: 0.85rem 0.2rem 0.1rem; }
+  .lower-tools-h h2 { font-size: clamp(1.35rem, 2.5vw, 1.8rem); margin-top: 0.15rem; }
+  .lower-tools-h > p { max-width: 40ch; color: var(--muted); font-size: 13.5px; line-height: 1.65; }
+  .lower-tools .card { min-width: 0; overflow: hidden; }
+  .lower-tools .lower-spec { grid-column: 1 / -1; }
+  .lower-tools .lower-spec .spec { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; }
+  .lower-tools .lower-spec .row:nth-last-child(-n + 2) { border-bottom: 0; }
 
   /* info */
   .info { display: flex; flex-direction: column; gap: 0.85rem; }
@@ -644,6 +670,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
     .rail-list .tg, .rail-list .no { display: none; }
     .stage { min-height: 0; }
     .scene { min-height: min(96vw, 480px); }
+    .lower-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 460px) {
     .progress-drawer { margin-inline: 1rem; }
@@ -654,6 +681,11 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
     .grow { grid-template-columns: 66px minmax(0, 1fr) auto; column-gap: 0.5rem; }
     .gn { font-size: 12px; }
     .gv { font-size: 11.5px; min-width: 70px; }
+    .lower-tools { grid-template-columns: 1fr; }
+    .lower-tools-h, .lower-tools .lower-spec { grid-column: auto; }
+    .lower-tools-h { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
+    .lower-tools .lower-spec .spec { grid-template-columns: 1fr; }
+    .lower-tools .lower-spec .row:nth-last-child(2) { border-bottom: 1px solid var(--line-soft); }
   }
 </style>
 
