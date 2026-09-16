@@ -1842,7 +1842,11 @@ export function mountHero(
   host.addEventListener('pointerdown', (e) => { beckonWant = 0; dragging = true; yawTo = null; lx = e.clientX; ly = e.clientY; downX = e.clientX; downY = e.clientY; vx = vy = 0; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); });
   host.addEventListener('pointerup', (e) => {
     if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;   // that was a drag, not a click
-    const i = pick(e.clientX, e.clientY);
+    const picked = pick(e.clientX, e.clientY);
+    // After the first selection the badge may move, especially on a narrow
+    // phone viewport. Keep the selected part as the tap target so the next
+    // reveal does not depend on hitting a tiny moving sprite again.
+    const i = picked >= 0 ? picked : active;
     if (i >= 0) {
       const changed = i !== active;
       if (changed) focus(i);
