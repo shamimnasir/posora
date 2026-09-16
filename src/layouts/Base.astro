@@ -33,6 +33,8 @@ interface Props {
   crumbs?: { name: string; url: string }[];
 }
 const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [] } = Astro.props;
+const paletteParam = Astro.url.searchParams.get('palette');
+const palette = paletteParam && ['cosmic', 'toybox', 'storybook', 'jungle', 'sunset'].includes(paletteParam) ? paletteParam : undefined;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হোক খেলার মতো' : `${title} · পসরা`;
 const ogImage = new URL('/og.png', Astro.site ?? 'https://posora.com').href;
@@ -170,7 +172,7 @@ const graph = [
     <link rel="preload" href={FONT_URL} as="font" type="font/woff2" crossorigin />
     <Analytics />
   </head>
-  <body style={hue ? `--w:${hue}` : undefined}>
+  <body data-palette={palette} style={hue ? `--w:${hue}` : undefined}>
     {/* Keyboard users land here first and can jump past the header, which on a
         world page sits in front of a long category rail. */}
     <a class="skip" href="#main">মূল অংশে যাও</a>

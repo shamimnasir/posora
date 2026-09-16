@@ -40,6 +40,40 @@
   color-scheme: dark;
 }
 
+/* Preview palettes: append ?palette=<name> to any page while comparing the
+   visual direction. Cosmic remains the shipped default until a palette is
+   deliberately chosen. */
+body[data-palette='toybox'] {
+  --paper: #17102e; --paper-2: #0b1730; --panel: #24194b; --panel-2: #342266; --sunk: #100d28;
+  --ink: #fff8ef; --ink-2: #f0dff2; --muted: #c8add2; --line: #694a87; --line-soft: #49346f;
+  --brand: #57e4d0; --brand-ink: #8ff5e6; --brand-soft: #194e5d; --on-brand: #0b2030;
+  --sun: #ffbd4a; --pink: #ff6c9f; --ok: #78ef9c;
+}
+body[data-palette='storybook'] {
+  --paper: #25132c; --paper-2: #120d22; --panel: #3b1e3f; --panel-2: #542950; --sunk: #1d1028;
+  --ink: #fff3df; --ink-2: #f0d5c1; --muted: #cfac9e; --line: #7b4d67; --line-soft: #5d3859;
+  --brand: #ffc857; --brand-ink: #ffe39a; --brand-soft: #704149; --on-brand: #28162b;
+  --sun: #ff8d5c; --pink: #f35d83; --ok: #8bdf9a;
+}
+body[data-palette='jungle'] {
+  --paper: #071e24; --paper-2: #06151c; --panel: #103b3b; --panel-2: #16504a; --sunk: #071a20;
+  --ink: #efffe9; --ink-2: #d1f2d0; --muted: #9bc5b0; --line: #347368; --line-soft: #245b58;
+  --brand: #7ee081; --brand-ink: #b0f3a7; --brand-soft: #255b43; --on-brand: #08231e;
+  --sun: #ffd166; --pink: #ff8c69; --ok: #9bf6c2;
+}
+body[data-palette='sunset'] {
+  --paper: #17143b; --paper-2: #0c1028; --panel: #29225a; --panel-2: #3a2e76; --sunk: #12132e;
+  --ink: #fff7f4; --ink-2: #f1d9df; --muted: #c9acc0; --line: #735281; --line-soft: #523d70;
+  --brand: #ff7a59; --brand-ink: #ffad8f; --brand-soft: #6d3154; --on-brand: #28142c;
+  --sun: #ffd166; --pink: #ff5d9e; --ok: #7fe0ca;
+}
+body[data-palette] {
+  background:
+    radial-gradient(circle at 82% 6%, color-mix(in oklab, var(--pink) 24%, transparent), transparent 23rem),
+    radial-gradient(circle at 14% 28%, color-mix(in oklab, var(--brand) 18%, transparent), transparent 28rem),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+}
+
 /* ---------- reset ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
