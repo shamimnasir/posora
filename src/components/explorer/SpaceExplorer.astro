@@ -374,7 +374,11 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .rail-list button[aria-current="true"] { background: color-mix(in oklab, var(--o) 13%, var(--panel)); border-left-color: var(--o); }
   /* the body itself, not another identical bead: its own colour behind its own icon */
   .rorb { width: 32px; height: 32px; border-radius: 11px; flex: none; display: grid; place-items: center; font-size: 17px; line-height: 1;
-    background: color-mix(in oklab, var(--o) 22%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 45%, var(--line)); transition: transform 0.2s ease; }
+    background: color-mix(in oklab, var(--o) 22%, var(--panel)); border: 1px solid color-mix(in oklab, var(--o) 45%, var(--line)); transition: transform 0.2s ease;
+    /* The icon font is monochrome, so the mark takes the body's own colour
+       instead of arriving in whatever hue the phone's emoji artist chose -
+       the same rule [world]/index.astro applies to its own rail. */
+    color: color-mix(in oklab, var(--o) 72%, var(--ink)); }
   .rail-list button:hover .rorb { transform: scale(1.1); }
   .rail-list button.seen .rorb { border-color: var(--ok); box-shadow: 0 0 0 2px color-mix(in oklab, var(--ok) 28%, transparent); }
   .rt { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
