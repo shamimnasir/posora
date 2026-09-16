@@ -87,6 +87,8 @@ type SceneObj = {
    * rotate. Dragging still turns it, and ঘোরাও still starts it.
    */
   still?: boolean;
+  /** Optional emphasis multiplier used by the shared hero framing template. */
+  heroScale?: number;
 };
 type Builder = (c: Ctx) => SceneObj;
 
@@ -314,7 +316,7 @@ const SCENES: Record<string, Builder> = {
     // the slider grows the tree; the engine's খুলে দেখো control pulls it apart.
     // No shared ground: this scene brought its own mound, and two floors a hair
     // apart is the z-fighting stripe that spoiled the collection scene.
-    return { label: 'বড় হও', anchors, aim: { y: 0.3, eye: 1.25 }, update(t, _dt, p) {
+    return { label: 'বড় হও', anchors, heroScale: 1.18, aim: { y: 0.3, eye: 1.25 }, update(t, _dt, p) {
       const g = 0.3 + p * 0.7;
       canopy.scale.setScalar(g); flowers.scale.setScalar(Math.max(0.001, (p - 0.35) / 0.65));
       fruit.scale.setScalar(Math.max(0.001, (p - 0.6) / 0.4)); leafG.scale.setScalar(0.4 + p * 0.6);
@@ -957,7 +959,7 @@ const SCENES: Record<string, Builder> = {
       sun.position.set(2.6, 3.6, -1); root.add(sun);
       for (let i = 0; i < 10; i++) { const b = new Mesh(new SphereGeometry(0.08, 10, 8), glassy('#bfe9ff', 0.85)); root.add(b); o2.push(b); }
     }
-    return { label: v === 'photo' ? 'সূর্যের আলো' : 'বড় হওয়া', groundY: GY, aim: { y: 0.35, eye: 1.2 }, update(t, dt, p) {
+    return { label: v === 'photo' ? 'সূর্যের আলো' : 'বড় হওয়া', groundY: GY, heroScale: 1.2, aim: { y: 0.35, eye: 1.2 }, update(t, dt, p) {
       if (v === 'photo') {
         const s = 0.3 + p; sun!.scale.setScalar(s);
         (sun!.material as MeshStandardMaterial).emissiveIntensity = 0.3 + p * 1.5;
@@ -1651,7 +1653,7 @@ export function mountHero(
     });
     // when the items live on the model, the model stays full size; otherwise it
     // sits smaller in the middle of the ring
-    baseScale = n && anchoredCount < n / 2 ? 0.5 : 1;
+    baseScale = (n && anchoredCount < n / 2 ? 0.5 : 1) * (cur?.heroScale ?? 1);
     focus(act);
   }
   function focus(i: number) {
@@ -1997,7 +1999,15 @@ export function mountHero(
         const ls = on ? 1 : 0.72; b.label.scale.set(2.6 * ls, 0.52 * ls, 1);
       });
     }
-    const pop = Math.min(1, (now - popStart) / 450); root.scale.setScalar(baseScale * (1 - Math.pow(1 - pop, 3)));
+    // Shared hero entrance: a deliberate reveal makes every procedural scene
+    // feel authored. It starts slightly close, eases out, then gives one soft
+    // settle instead of the old instant pop-in. The same template can be
+    // reused by imported GLB scenes later, so geometry and asset source do not
+    // change the interaction language.
+    const pop = Math.min(1, (now - popStart) / 1100);
+    const ease = 1 - Math.pow(1 - pop, 3);
+    const settle = pop < 1 ? Math.sin(pop * Math.PI) * 0.045 : 0;
+    root.scale.setScalar(baseScale * (0.84 + ease * 0.16 + settle));
     cur?.update(t, run ? dt : 0, param);
     // the explode rides on top of whatever the scene just did to its own parts
     explodeNow += (explodeTo - explodeNow) * 0.16;
