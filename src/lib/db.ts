@@ -1,5 +1,6 @@
 /** D1 access for the admin panel and the runtime content layer. */
 import { env } from 'cloudflare:workers';
+import type { R2Bucket } from '@cloudflare/workers-types';
 import type { World } from '../data/worlds';
 
 export type Status = 'draft' | 'published';
@@ -8,6 +9,8 @@ export type AdminWorld = World & { status: Status; sort: number; updatedAt: numb
 
 export type Env = {
   DB?: D1Database;
+  /** Private R2 bucket for paid digital-pack files. */
+  PACK_FILES?: R2Bucket;
   ADMIN_PASSWORD_HASH?: string;
   SITE_URL?: string;
   /** Google sign-in. Set these and the panel's front door becomes Google. */

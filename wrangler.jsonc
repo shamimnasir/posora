@@ -8,6 +8,9 @@
   "compatibility_date": "2026-06-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "./dist", "binding": "ASSETS" },
+  "r2_buckets": [
+    { "binding": "PACK_FILES", "bucket_name": "posora-digital-packs" }
+  ],
   "routes": [
     { "pattern": "posora.com", "custom_domain": true },
     { "pattern": "www.posora.com", "custom_domain": true }

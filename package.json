@@ -10,6 +10,8 @@
     "deploy": "astro build && wrangler deploy",
     "check": "astro check",
     "audit": "node scripts/audit-content.mjs",
+    "digital-packs": "node --experimental-strip-types scripts/generate-digital-packs.mjs",
+    "test:smoke": "node scripts/browser-smoke.mjs",
     "admin:hash": "node scripts/hash-password.mjs",
     "db:create": "wrangler d1 create posora",
     "db:migrate": "wrangler d1 migrations apply posora --remote",
@@ -25,6 +27,7 @@
     "@astrojs/check": "^0.9.10",
     "@cloudflare/workers-types": "^5.20260910.1",
     "@types/three": "^0.185.4",
+    "playwright-core": "^1.63.0",
     "typescript": "^6.0.3",
     "wrangler": "^4.131.0"
   }

@@ -56,6 +56,13 @@ payment. `DIGITAL_PACK_READY` is an independent release switch: leave it unset
 until the actual downloadable pack files and the member library are published.
 The callback endpoints are `/api/sslcommerz/success`, `/fail`, and `/cancel`.
 
+Paid files live in the private R2 bucket `posora-digital-packs` under
+`digital-packs/`. The member account serves them through
+`/api/digital-pack/download/<slug>` only after the `digital-pack-bundle`
+entitlement is active. Generate the release files locally with
+`npm run digital-packs`, upload each PDF (and the ZIP bundle) to R2, then set
+`DIGITAL_PACK_READY=true` only after the member library has been deployed.
+
 ## Admin panel
 
 `/admin` manages the whole site: every world's fields, categories, items, key
