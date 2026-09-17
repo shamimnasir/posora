@@ -132,12 +132,12 @@ const skillLine: Record<typeof sheet.kind, string> = {
 
       {sheet.kind === 'conjuncts' && (
         <>
-          <p class="note">বাঁ পাশে যুক্তবর্ণ, মাঝে সেটা কোন দুটো বর্ণ মিলে তৈরি, ডানে একটা চেনা শব্দ।</p>
+          <p class="note">বাঁ পাশে যুক্তবর্ণ, মাঝে কোন দুটো বর্ণ জুড়ে হয়েছে, ডানে একটা চেনা শব্দ।</p>
           <div class="grid3">
             {conjuncts.map((c) => (
               <div class="cell cj">
                 <b class="big">{c.ch}</b>
-                <span class="parts">{c.parts[0]} + {c.parts[1]}</span>
+                <span class="parts">{c.parts[0]}্ + {c.parts[1]}</span>
                 <span class="cword">{c.emoji} {c.word}</span>
               </div>
             ))}
@@ -162,6 +162,7 @@ const skillLine: Record<typeof sheet.kind, string> = {
       {sheet.kind === 'space' && (
         <>
           <p class="note">সংখ্যাগুলো আসল মাপের, গোল করে লেখা। ব্যাস কিলোমিটারে।</p>
+          <p class="source-note">তথ্য-ভিত্তি: NASA Science-এর গ্রহের মাপ ও গড় দূরত্ব; শেখার সুবিধায় কিছু সংখ্যা গোল করা হয়েছে।</p>
           <table class="tbl">
             <thead>
               <tr><th>বস্তু</th><th>কী</th><th>ব্যাস</th>{bodies[0]?.stats.slice(0, 3).map((s) => <th>{s.k}</th>)}</tr>
@@ -209,6 +210,10 @@ const skillLine: Record<typeof sheet.kind, string> = {
           </table>
         </>
       )}
+
+      <div class="choice-line">
+        <span>শেষে একটা বেছে নাও:</span><b>□ পড়ে শোনাই</b><b>□ দেখিয়ে বলি</b><b>□ নিজের উদাহরণ দিই</b>
+      </div>
 
       <footer class="pf">
         <span>পসরা · posora.com</span><span>আজকের ছোট জয়: ____________________</span>
@@ -261,8 +266,12 @@ const skillLine: Record<typeof sheet.kind, string> = {
   .learner-line span { display: inline-flex; align-items: center; gap: .28rem; }
   .learner-line i { display: inline-block; width: 110px; border-bottom: 1px solid #7b8991; height: 1em; }
   .learner-line b { font-weight: 700; color: #1b2931; }
+  .choice-line { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem .9rem; padding: .55rem .65rem; margin-top: 1rem; border: 1px dashed #aebbc0; border-radius: 8px; color: #40505a; font-size: 11.5px; }
+  .choice-line span { font-weight: 800; color: #1b2931; }
+  .choice-line b { font-weight: 700; }
   .note { font-size: 12.5px; color: #444; margin-bottom: 0.9rem; }
   .note b { font-weight: 700; }
+  .source-note { font-size: 10.5px; color: #68737a; margin: -.35rem 0 .7rem; }
   .pf { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.1rem; padding-top: 0.5rem; border-top: 1px solid #ccc; font-size: 10px; color: #666; }
   .sub { font-size: 1.05rem; font-weight: 800; margin: 1.1rem 0 0.5rem; }
 
