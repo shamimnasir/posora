@@ -1,0 +1,179 @@
+---
+import Base from '../../layouts/Base.astro';
+import { bundle, digitalPacks } from '../../data/digital-packs';
+import { bn } from '../../lib/bn';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
+
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
+      { '@type': 'ListItem', position: 2, name: 'ডিজিটাল প্যাক', item: 'https://posora.com/digital-pack/' },
+    ],
+  },
+  {
+    '@type': 'ItemList',
+    name: bundle.title,
+    numberOfItems: bundle.packs,
+    itemListElement: digitalPacks.map((p, i) => ({
+      '@type': 'ListItem', position: i + 1, name: p.title, description: p.hook,
+      url: `https://posora.com/digital-pack/#${p.slug}`,
+    })),
+  },
+];
+const activitiesPerPack = digitalPacks[0]?.activities.length ?? 0;
+const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
+---
+
+<Base
+  title="৳২৪৯ ডিজিটাল প্যাক বান্ডল"
+  description="পসরার ১১ ভুবনের ঘর, স্কুল ও ছাপার জন্য তৈরি ডিজিটাল লার্নিং প্যাক। ৮৮টি কার্যপত্র, কার্ড, গাইড ও উত্তরপত্রের প্রি-লঞ্চ বান্ডল।"
+  schema={schema}
+>
+  <div class="wrap page">
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> ডিজিটাল প্যাক</p>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">প্রি-লঞ্চ · পরিবার ও শিক্ষক</p>
+        <h1>এক বান্ডলে <em>শেখার পুরো ঘর</em></h1>
+        <p class="lede">
+          স্ক্রিনের ভেতরের পসরাকে টেবিলে, খাতায় আর ক্লাসে নিয়ে যাওয়ার জন্য ১১টি ভুবনের
+          ছোট ছোট খেলার প্যাক। এক পাতায় এক কাজ, সঙ্গে কার্ড, গাইড আর উত্তরপত্র।
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
+          <a class="btn" href="/printables/">ফ্রি শিট আগে দেখো</a>
+        </div>
+        <p class="fine">প্রস্তাবিত লঞ্চ মূল্য <b>৳{bn(bundle.priceBdt)}</b>। পেমেন্ট এখনো চালু নয়; নাম লেখালে কোনো টাকা কাটা যাবে না।</p>
+      </div>
+      <div class="price-card" aria-label="বান্ডলের সারাংশ">
+        <span class="price-kicker">১১ ভুবন · ১ বান্ডল</span>
+        <strong>৳{bn(bundle.priceBdt)}</strong>
+        <span>একবারের ডিজিটাল ডাউনলোড</span>
+        <div class="stat-row"><b>{bn(bundle.activitySheets)}</b><span>টি কার্যপত্র</span></div>
+        <div class="stat-row"><b>{bn(bundle.packs)}</b><span>টি বিষয়ভিত্তিক প্যাক</span></div>
+        <div class="stat-row"><b>{bn(bundle.bonusSets)}</b><span>টি কার্ড, গাইড ও উত্তরপত্র</span></div>
+      </div>
+    </section>
+
+    <section class="value-strip" aria-label="বান্ডলে কী আছে">
+      <div><span aria-hidden="true">✦</span><b>প্রিন্ট-রেডি</b><small>A4 · রঙিন ও সাদা-কালো</small></div>
+      <div><span aria-hidden="true">↺</span><b>স্ক্রিন থেকে দূরে</b><small>টেবিলে বসে, একসঙ্গে</small></div>
+      <div><span aria-hidden="true">✓</span><b>উত্তরপত্রসহ</b><small>অভিভাবক ও শিক্ষক দুজনের জন্য</small></div>
+      <div><span aria-hidden="true">∞</span><b>একবার কিনে</b><small>নিজের ঘরে যতবার দরকার</small></div>
+    </section>
+
+    <section class="sec research">
+      <div class="sec-h">
+        <p class="eyebrow">কেন এই জিনিসগুলো</p>
+        <h2>যে কাজগুলো মানুষ সত্যিই খুঁজে নেয়</h2>
+        <p>শুধু সুন্দর পাতা নয় - প্রতিটি প্যাক এমন কাজকে ছোট করেছে, যা বাড়ি বা ক্লাসে বারবার দরকার হয়।</p>
+      </div>
+      <div class="signal-grid">
+        <article><b>অক্ষর লিখতে শেখা</b><p>ট্রেসিং, কার, যুক্তবর্ণ, ডিকটেশন ও ছবি-শব্দ - শুরুর বাংলা শেখার সবচেয়ে ঘন চাহিদা।</p></article>
+        <article><b>গোনা ও হিসাব</b><p>সংখ্যা, যোগ-বিয়োগ, আকার, সময়, মাপ আর টাকা - একই পাতায় দেখা ও করার সুযোগ।</p></article>
+        <article><b>সোর্ট, লেবেল, উত্তর</b><p>বিজ্ঞান শেখায় বাছাই, অংশের নাম, জীবনচক্র, খাদ্যশৃঙ্খল এবং আলাদা উত্তরপত্র।</p></article>
+        <article><b>রুটিন ও অনুভূতি</b><p>ভিজ্যুয়াল রুটিন, প্রথমে-তারপর, অনুভূতি, বন্ধুত্ব ও শান্ত হওয়ার কার্ড - বাড়ির কাজ সহজ করে।</p></article>
+      </div>
+    </section>
+
+    <section class="sec packs" id="packs">
+      <div class="sec-h">
+        <p class="eyebrow">ভেতরে যা বানাবো</p>
+        <h2>১১টি প্যাক, ১১ রকমের “আজ কী করব?”</h2>
+        <p>প্রতিটি প্যাকে {bn(activitiesPerPack)}টি ছোট কার্যপত্র, {bn(bonusPerPack)}টি সহায়ক বোনাস এবং বয়স অনুযায়ী ব্যবহার-পদ্ধতি।</p>
+      </div>
+      <div class="pack-grid">
+        {digitalPacks.map((p, i) => (
+          <article class="pack" id={p.slug} style={`--pack:${p.color}`}>
+            <div class="pack-top"><span class="pack-no">{bn(i + 1)}</span><span class="world">{p.world}</span></div>
+            <h3>{p.title}</h3>
+            <p class="hook">{p.hook}</p>
+            <p class="audience">{p.audience}</p>
+            <ul>
+              {p.activities.map((a) => <li>{a}</li>)}
+            </ul>
+            <div class="bonus"><b>বোনাস</b><span>{p.bonus.join(' · ')}</span></div>
+            <p class="outcome"><b>ফল:</b> {p.outcome}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="sec bundle" id="bundle">
+      <div>
+        <p class="eyebrow">সবচেয়ে সহজ পছন্দ</p>
+        <h2>আলাদা আলাদা নয় - সব ১১টি একসঙ্গে</h2>
+        <p>আজ বাংলা লিখবে, কাল গাছ দেখবে, পরশু দোকান খেলবে। শিশুর আগ্রহ বদলালেও প্যাক বদলাতে হবে না।</p>
+      </div>
+      <div class="bundle-price"><span>প্রস্তাবিত লঞ্চ মূল্য</span><b>৳{bn(bundle.priceBdt)}</b><small>একবারের ডিজিটাল বান্ডল</small><a class="btn btn-primary" href="/family/#join">আমাকে জানাও →</a></div>
+    </section>
+
+    <section class="sec honest">
+      <h2>একটা সৎ কথা</h2>
+      <p>এখনকার ৬টি ফ্রি শিট ফ্রিই থাকবে। ৳২৪৯ বান্ডল হবে তার ওপরের স্তর - আরও খেলা, কার্ড, উত্তরপত্র, অভিভাবক-গাইড আর ১১ ভুবনের ধারাবাহিক কাজ। পেমেন্ট গেটওয়ে চালু হলে লঞ্চ তালিকার মানুষ আগে জানবেন।</p>
+      <a href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 3rem; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .crumbs span { margin: 0 .35rem; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, .7fr); gap: 2rem; align-items: center; }
+  .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: .85rem; }
+  h1 { font-size: clamp(2.35rem, 6vw, 4.5rem); line-height: 1.08; max-width: 12ch; }
+  h1 em { color: var(--brand); font-style: normal; }
+  .lede { font-size: clamp(1.08rem, 2vw, 1.28rem); line-height: 1.72; color: var(--ink-2); max-width: 54ch; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .2rem; }
+  .fine { color: var(--muted); font-size: 12px; line-height: 1.6; }
+  .fine b { color: var(--brand-ink); }
+  .price-card { background: linear-gradient(155deg, color-mix(in oklab, var(--brand) 26%, var(--panel)), var(--panel)); border: 1px solid color-mix(in oklab, var(--brand) 55%, var(--line)); border-radius: 26px; padding: 1.6rem; display: flex; flex-direction: column; gap: .7rem; box-shadow: 0 20px 50px rgba(0,0,0,.16); }
+  .price-kicker { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; color: var(--brand-ink); }
+  .price-card > strong { font-family: var(--font-display); font-size: clamp(3.2rem, 8vw, 5rem); line-height: .95; color: var(--ink); }
+  .price-card > span:not(.price-kicker) { color: var(--ink-2); font-size: 14px; }
+  .stat-row { display: flex; align-items: baseline; gap: .5rem; border-top: 1px solid var(--line-soft); padding-top: .6rem; }
+  .stat-row b { font-family: var(--font-display); color: var(--brand); font-size: 1.5rem; }
+  .stat-row span { color: var(--ink-2); font-size: 13px; }
+  .value-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; }
+  .value-strip > div { display: grid; grid-template-columns: 28px 1fr; column-gap: .55rem; align-items: center; padding: .8rem .9rem; border: 1px solid var(--line-soft); border-radius: var(--r-sm); background: var(--panel); }
+  .value-strip span { grid-row: span 2; color: var(--brand); font-size: 1.4rem; }
+  .value-strip b { font-size: 14px; }
+  .value-strip small { color: var(--muted); font-size: 11px; }
+  .sec { display: flex; flex-direction: column; gap: 1.25rem; }
+  .sec-h { max-width: 70ch; }
+  .sec-h h2, .bundle h2, .honest h2 { font-size: clamp(1.7rem, 3.5vw, 2.5rem); line-height: 1.2; }
+  .sec-h > p:last-child, .bundle p, .honest p { color: var(--ink-2); line-height: 1.7; }
+  .signal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; }
+  .signal-grid article { padding: 1.1rem; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); }
+  .signal-grid b { color: var(--brand-ink); }
+  .signal-grid p { margin: .35rem 0 0; color: var(--ink-2); font-size: 13px; line-height: 1.6; }
+  .pack-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .pack { padding: 1.2rem; border: 1px solid color-mix(in oklab, var(--pack) 38%, var(--line)); border-top: 5px solid var(--pack); border-radius: var(--r-sm); background: linear-gradient(145deg, color-mix(in oklab, var(--pack) 9%, var(--panel)), var(--panel)); }
+  .pack-top { display: flex; justify-content: space-between; align-items: center; }
+  .pack-no { width: 29px; height: 29px; border-radius: 50%; display: grid; place-items: center; color: var(--on-brand); background: var(--pack); font-family: var(--font-mono); font-size: 12px; }
+  .world { color: var(--muted); font-size: 12px; }
+  .pack h3 { font-size: 1.35rem; margin: .8rem 0 .15rem; }
+  .hook { color: var(--brand-ink); font-weight: 700; }
+  .audience { color: var(--muted); font-size: 12px; }
+  .pack ul { margin: .8rem 0; padding-left: 1.1rem; columns: 2; }
+  .pack li { color: var(--ink-2); font-size: 13px; line-height: 1.65; break-inside: avoid; }
+  .bonus { display: flex; flex-direction: column; gap: .2rem; padding: .7rem .8rem; border-radius: 10px; background: color-mix(in oklab, var(--pack) 12%, var(--panel)); color: var(--ink-2); font-size: 12px; line-height: 1.55; }
+  .bonus b { color: var(--pack); }
+  .outcome { color: var(--ink-2); font-size: 13px; line-height: 1.6; margin-top: .7rem; }
+  .outcome b { color: var(--ink); }
+  .bundle { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center; padding: 1.6rem; border: 1px solid color-mix(in oklab, var(--brand) 40%, var(--line)); border-radius: 20px; background: var(--brand-soft); }
+  .bundle-price { display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; min-width: 180px; }
+  .bundle-price span, .bundle-price small { color: var(--brand-ink); font-size: 12px; }
+  .bundle-price b { font-family: var(--font-display); font-size: 3rem; line-height: 1; color: var(--brand-ink); }
+  .bundle-price .btn { margin-top: .7rem; }
+  .honest { border-top: 1px solid var(--line-soft); padding-top: 1.4rem; max-width: 70ch; }
+  .honest a { color: var(--brand-ink); font-weight: 700; }
+  @media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .value-strip, .signal-grid { grid-template-columns: repeat(2, 1fr); } .pack-grid { grid-template-columns: 1fr; } .bundle { grid-template-columns: 1fr; } .bundle-price { align-items: flex-start; } }
+  @media (max-width: 480px) { .value-strip { grid-template-columns: 1fr; } .pack ul { columns: 1; } h1 { max-width: none; } }
+</style>
