@@ -11,7 +11,7 @@ import Base from '../../layouts/Base.astro';
 import { db } from '../../lib/db';
 import { getWorlds } from '../../lib/content';
 import { bn } from '../../lib/bn';
-import { getMember, hasPlan, activeChild, progressSummary, bestQuizResults, familyWeek, MAX_CHILDREN } from '../../lib/members';
+import { getMember, hasPlan, activeChild, progressSummary, bestQuizResults, familyWeek, MAX_CHILDREN, PLAN_DIGITAL_PACK } from '../../lib/members';
 import { readableCount, readableCats } from '../../lib/explorers';
 import { passMark } from '../../lib/quiz';
 
@@ -21,6 +21,7 @@ Astro.response.headers.set('cache-control', 'private, no-store');
 const ready = !!db();
 const member = ready ? await getMember(Astro) : null;
 const plan = hasPlan(member);
+const digitalPack = hasPlan(member, PLAN_DIGITAL_PACK);
 const child = activeChild(Astro, member);
 const welcome = Astro.url.searchParams.get('welcome') === '1';
 const LEVELS = [['l1', 'ছোট ৫–৮'], ['l2', 'মাঝারি ৯–১২'], ['l3', 'বড় ১৩+']] as const;
@@ -146,6 +147,14 @@ if (member && plan && child) {
           </div>
           <form method="post" action="/api/account/logout"><button class="btn" type="submit">বেরিয়ে যাও</button></form>
         </header>
+
+        {digitalPack && (
+          <section class="card box pack-status">
+            <div class="sh"><h2>ডিজিটাল প্যাক বান্ডল</h2><span class="lbl ok-label">চালু</span></div>
+            <p class="note">আপনার ৳২৪৯ বান্ডলের access এই অ্যাকাউন্টে রাখা আছে। ডাউনলোড লাইব্রেরি প্রকাশ হলে এখান থেকেই ফাইল পাবেন।</p>
+            <a class="btn" href="/digital-pack/">বান্ডলের সব জিনিস দেখো →</a>
+          </section>
+        )}
 
         {!plan && (
           <section class="card box gate">
@@ -295,6 +304,8 @@ if (member && plan && child) {
   .dh form { flex-direction: row; }
   .gate { background: color-mix(in oklab, var(--sun) 12%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); }
   .gate p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
+  .pack-status { background: color-mix(in oklab, var(--ok) 10%, var(--panel)); border-color: color-mix(in oklab, var(--ok) 38%, var(--line)); }
+  .ok-label { color: var(--ok); }
   .sh { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .note { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
 

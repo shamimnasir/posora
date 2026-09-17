@@ -37,6 +37,8 @@ const LINK_WINDOW_MS = 60 * 60_000;
 const CODE_TRIES = 5;
 export const MAX_CHILDREN = 6;
 export const PLAN_FAMILY = 'family';
+/** One-time products can use the same entitlement ledger as the family plan. */
+export const PLAN_DIGITAL_PACK = 'digital-pack-bundle';
 
 type MailEnv = {
   EMAIL?: { send(msg: { to: string; from: { email: string; name: string }; subject: string; text: string; html: string }): Promise<unknown> };
@@ -743,6 +745,19 @@ export async function grantPlan(memberId: string, days: number | null, note: str
   await d.prepare("UPDATE entitlements SET status = 'ended' WHERE member_id = ? AND plan = ? AND status = 'active'").bind(memberId, PLAN_FAMILY).run();
   await d.prepare('INSERT INTO entitlements (member_id, plan, status, starts_at, ends_at, note, granted_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
     .bind(memberId, PLAN_FAMILY, 'active', now, days === null ? null : now + days * 86_400_000, note.slice(0, 200) || null, grantedBy, now).run();
+}
+
+/** Grant a one-time or recurring entitlement without duplicating an active row. */
+export async function grantEntitlement(memberId: string, plan: string, days: number | null, note: string, grantedBy: string): Promise<void> {
+  const d = requireDb();
+  const now = Date.now();
+  const current = await d.prepare(
+    `SELECT id FROM entitlements WHERE member_id = ? AND plan = ? AND status = 'active'
+     AND (ends_at IS NULL OR ends_at > ?) LIMIT 1`,
+  ).bind(memberId, plan, now).first<{ id: number }>();
+  if (current) return;
+  await d.prepare('INSERT INTO entitlements (member_id, plan, status, starts_at, ends_at, note, granted_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(memberId, plan, 'active', now, days === null ? null : now + days * 86_400_000, note.slice(0, 200) || null, grantedBy.slice(0, 80), now).run();
 }
 
 export async function revokePlan(memberId: string): Promise<void> {

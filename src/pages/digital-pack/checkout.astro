@@ -1,0 +1,98 @@
+---
+import Base from '../../layouts/Base.astro';
+import { configured, DIGITAL_PACK_AMOUNT } from '../../lib/sslcommerz';
+import { bn } from '../../lib/bn';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'no-store');
+const ready = configured();
+---
+
+<Base title="ডিজিটাল প্যাক চেকআউট" description="পসরা ডিজিটাল প্যাক বান্ডলের নিরাপদ চেকআউট পাতা।" noindex>
+  <div class="wrap page">
+    <p class="crumbs"><a href="/digital-pack/">ডিজিটাল প্যাক</a> <span>/</span> চেকআউট</p>
+    <div class="checkout-grid">
+      <section class="card intro">
+        <p class="eyebrow">পসরা ডিজিটাল প্যাক</p>
+        <h1>চেকআউট</h1>
+        <p class="lede">১১টি ভুবনের activity sheet, card, guide আর answer key একসঙ্গে।</p>
+        <div class="order"><span>একবারের বান্ডল</span><b>৳{bn(DIGITAL_PACK_AMOUNT)}</b></div>
+        <ul>
+          <li>কার্ডের তথ্য পসরায় জমা থাকে না</li>
+          <li>SSLCommerz-এর hosted checkout-এ পেমেন্ট হবে</li>
+          <li>পেমেন্ট যাচাই না হওয়া পর্যন্ত অর্ডার paid হবে না</li>
+        </ul>
+        <a href="/digital-pack/">বান্ডলের সব প্যাক দেখো →</a>
+      </section>
+
+      {ready ? (
+        <form class="card form" id="checkout-form" novalidate>
+          <h2>আপনার তথ্য</h2>
+          <p class="note">ডিজিটাল প্যাকের অর্ডার এবং access link এই ইমেইলের সঙ্গে যুক্ত হবে।</p>
+          <label>আপনার নাম <input name="name" required minlength="2" maxlength="100" autocomplete="name" /></label>
+          <label>ইমেইল <input name="email" type="email" required maxlength="254" autocomplete="email" inputmode="email" /></label>
+          <label>মোবাইল নম্বর <input name="phone" required minlength="6" maxlength="24" autocomplete="tel" inputmode="tel" placeholder="০১৭..." /></label>
+          <label>ঠিকানা <input name="address" maxlength="120" autocomplete="street-address" placeholder="জেলা বা শহর" /></label>
+          <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" tabindex="-1" autocomplete="off" /></div>
+          <button class="btn btn-primary" type="submit">SSLCommerz-এ পেমেন্ট দাও →</button>
+          <p class="msg" id="checkout-msg" role="status" aria-live="polite"></p>
+          <p class="fine">পেমেন্ট বাতিল করলে বা ব্যর্থ হলে কোনো access দেওয়া হবে না।</p>
+        </form>
+      ) : (
+        <section class="card setup">
+          <p class="eyebrow">চেকআউট প্রস্তুত হচ্ছে</p>
+          <h2>SSLCommerz merchant keys এখনো বসানো হয়নি</h2>
+          <p>পেমেন্ট গেটওয়ে চালু হলেই এই পাতায় নিরাপদ hosted checkout খুলবে। এখন কোনো টাকা নেওয়া হচ্ছে না।</p>
+          <a class="btn btn-primary" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
+        </section>
+      )}
+    </div>
+  </div>
+</Base>
+
+{ready && <script>
+  const form = document.getElementById('checkout-form') as HTMLFormElement;
+  const msg = document.getElementById('checkout-msg')!;
+  const button = form.querySelector('button')!;
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    msg.textContent = 'চেকআউট তৈরি হচ্ছে...';
+    button.disabled = true;
+    const body = Object.fromEntries(new FormData(form).entries());
+    try {
+      const response = await fetch('/api/sslcommerz/checkout', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+      });
+      const data = await response.json() as { ok?: boolean; gatewayUrl?: string; error?: string };
+      if (data.ok && data.gatewayUrl) { location.href = data.gatewayUrl; return; }
+      msg.textContent = data.error === 'invalid' ? 'নাম, ইমেইল আর মোবাইল নম্বর ঠিক করে দিন।' : 'চেকআউট এখন তৈরি করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।';
+    } catch { msg.textContent = 'যোগাযোগে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।'; }
+    button.disabled = false;
+  });
+</script>}
+
+<style>
+  .page { padding-block: 1rem 4rem; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 2rem; }
+  .crumbs span { margin: 0 .35rem; }
+  .checkout-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(300px, 1fr); gap: 1.2rem; align-items: start; max-width: 960px; margin: 0 auto; }
+  .intro, .form, .setup { padding: 1.5rem; }
+  h1 { font-size: clamp(2.3rem, 5vw, 3.6rem); line-height: 1.1; }
+  h2 { font-size: 1.35rem; }
+  .lede, .intro li, .intro > a, .setup p, .note { color: var(--ink-2); line-height: 1.7; }
+  .order { display: flex; justify-content: space-between; align-items: baseline; padding: .9rem 0; margin: .8rem 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+  .order b { font-family: var(--font-display); color: var(--brand-ink); font-size: 2rem; }
+  .intro ul { padding-left: 1.1rem; margin: 1rem 0 1.2rem; }
+  .form { display: flex; flex-direction: column; gap: .8rem; }
+  label { display: flex; flex-direction: column; gap: .3rem; font-size: 13px; color: var(--ink-2); }
+  input { font: inherit; font-size: 15px; padding: .62rem .75rem; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); }
+  input:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
+  .note, .fine, .msg { font-size: 12.5px; }
+  .fine { color: var(--muted); }
+  .msg { min-height: 1.4em; color: var(--brand-ink); }
+  button:disabled { opacity: .6; cursor: wait; }
+  .setup { background: var(--brand-soft); }
+  .setup p { margin: .5rem 0 1rem; }
+  .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  @media (max-width: 720px) { .checkout-grid { grid-template-columns: 1fr; } }
+</style>

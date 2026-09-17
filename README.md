@@ -30,6 +30,30 @@ npm run deploy
 
 `wrangler.jsonc` binds the custom domains `posora.com` and `www.posora.com` — Cloudflare creates the DNS records on first deploy (the zone must already be on the account, which it is). The contact form posts to `/api/contact`, which sends to `CONTACT_TO` via the `EMAIL` binding; until Email Sending is enabled the form falls back to WhatsApp / mailto with the message pre-filled.
 
+### SSLCommerz digital-pack checkout
+
+The ৳249 digital-pack bundle is wired to a hosted SSLCommerz checkout. The
+browser never receives merchant credentials or decides the price. The Worker
+creates a pending order in D1, sends the customer to SSLCommerz, and accepts
+success/fail/cancel callbacks plus IPN. A payment is only marked paid after
+server-side validation; a valid payment grants the digital-pack entitlement to
+the member account. Risk-flagged payments remain held for review.
+
+Add the merchant credentials as Cloudflare secrets (never commit them):
+
+```bash
+npx wrangler secret put SSLCOMMERZ_STORE_ID
+npx wrangler secret put SSLCOMMERZ_STORE_PASSWORD
+npx wrangler secret put SSLCOMMERZ_MODE       # sandbox first; use live for production
+npx wrangler deploy
+```
+
+In the SSLCommerz merchant panel, set the IPN URL to
+`https://posora.com/api/sslcommerz/ipn`. Until the two merchant credentials are
+present, the checkout page intentionally shows a setup message and takes no
+payment. The callback endpoints are `/api/sslcommerz/success`, `/fail`, and
+`/cancel`.
+
 ## Admin panel
 
 `/admin` manages the whole site: every world's fields, categories, items, key

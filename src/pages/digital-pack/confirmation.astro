@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import { orderFor } from '../../lib/sslcommerz';
+import { bn } from '../../lib/bn';
+
+export const prerender = false;
+Astro.response.headers.set('cache-control', 'no-store');
+const status = Astro.url.searchParams.get('status') ?? 'unknown';
+const tranId = Astro.url.searchParams.get('tran_id') ?? '';
+const order = tranId ? await orderFor(tranId).catch(() => null) : null;
+const title = status === 'success' && order?.status === 'paid' ? 'পেমেন্ট সফল' : status === 'review' || order?.status === 'held' ? 'অর্ডার যাচাই হচ্ছে' : status === 'cancelled' ? 'পেমেন্ট বাতিল হয়েছে' : 'পেমেন্ট সম্পূর্ণ হয়নি';
+---
+
+<Base title={title} description="পসরা ডিজিটাল প্যাক অর্ডারের অবস্থা।" noindex>
+  <div class="wrap page">
+    <section class="card box">
+      <p class="eyebrow">পসরা ডিজিটাল প্যাক</p>
+      <h1>{title}</h1>
+      {status === 'success' && order?.status === 'paid' ? (
+        <>
+          <p>আপনার ৳{bn(order.amount_bdt)} অর্ডার SSLCommerz দিয়ে যাচাই হয়েছে। access আপনার পসরা অ্যাকাউন্টে যোগ হয়েছে।</p>
+          <a class="btn btn-primary" href="/account/">অ্যাকাউন্টে যাও →</a>
+        </>
+      ) : status === 'review' || order?.status === 'held' ? (
+        <p>পেমেন্টটি অতিরিক্ত যাচাইয়ের জন্য আটকে আছে। যাচাই শেষ না হওয়া পর্যন্ত অর্ডারটি access পাবে না; প্রয়োজনে আমরা যোগাযোগ করব।</p>
+      ) : status === 'cancelled' ? (
+        <p>আপনি চেকআউট বন্ধ করেছেন। কোনো access দেওয়া হয়নি, এবং আবার চেষ্টা করতে পারেন।</p>
+      ) : (
+        <p>পেমেন্ট সম্পূর্ণ হয়নি। টাকা কাটা গেছে মনে হলে একই transaction id দিয়ে আমাদের <a href="/contact/">যোগাযোগ</a> করুন।</p>
+      )}
+      {tranId && <p class="fine">Transaction: {tranId}</p>}
+      <p class="back"><a href="/digital-pack/">বান্ডলে ফিরে যাও</a> · <a href="/">পসরার হোম</a></p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page { padding-block: 3rem 5rem; display: grid; place-items: center; }
+  .box { width: min(100%, 560px); padding: 1.6rem; display: flex; flex-direction: column; gap: .8rem; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; }
+  p { color: var(--ink-2); line-height: 1.7; }
+  .fine { color: var(--muted); font-family: var(--font-mono); font-size: 11px; overflow-wrap: anywhere; }
+  .back { font-size: 13px; color: var(--muted); }
+</style>

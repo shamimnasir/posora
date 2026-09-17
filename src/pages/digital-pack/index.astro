@@ -45,7 +45,8 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
           ছোট ছোট খেলার প্যাক। এক পাতায় এক কাজ, সঙ্গে কার্ড, গাইড আর উত্তরপত্র।
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
+          <a class="btn btn-primary" href="/digital-pack/checkout/">চেকআউট প্রস্তুতি দেখো →</a>
+          <a class="btn" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও</a>
           <a class="btn" href="/printables/">ফ্রি শিট আগে দেখো</a>
         </div>
         <p class="fine">প্রস্তাবিত লঞ্চ মূল্য <b>৳{bn(bundle.priceBdt)}</b>। পেমেন্ট এখনো চালু নয়; নাম লেখালে কোনো টাকা কাটা যাবে না।</p>
@@ -53,7 +54,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
       <div class="price-card" aria-label="বান্ডলের সারাংশ">
         <span class="price-kicker">১১ ভুবন · ১ বান্ডল</span>
         <strong>৳{bn(bundle.priceBdt)}</strong>
-        <span>একবারের ডিজিটাল ডাউনলোড</span>
+        <span>পেমেন্ট চালু হলে একবারের ডিজিটাল ডাউনলোড</span>
         <div class="stat-row"><b>{bn(bundle.activitySheets)}</b><span>টি কার্যপত্র</span></div>
         <div class="stat-row"><b>{bn(bundle.packs)}</b><span>টি বিষয়ভিত্তিক প্যাক</span></div>
         <div class="stat-row"><b>{bn(bundle.bonusSets)}</b><span>টি কার্ড, গাইড ও উত্তরপত্র</span></div>
@@ -110,7 +111,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
         <h2>আলাদা আলাদা নয় - সব ১১টি একসঙ্গে</h2>
         <p>আজ বাংলা লিখবে, কাল গাছ দেখবে, পরশু দোকান খেলবে। শিশুর আগ্রহ বদলালেও প্যাক বদলাতে হবে না।</p>
       </div>
-      <div class="bundle-price"><span>প্রস্তাবিত লঞ্চ মূল্য</span><b>৳{bn(bundle.priceBdt)}</b><small>একবারের ডিজিটাল বান্ডল</small><a class="btn btn-primary" href="/family/#join">আমাকে জানাও →</a></div>
+      <div class="bundle-price"><span>প্রস্তাবিত লঞ্চ মূল্য</span><b>৳{bn(bundle.priceBdt)}</b><small>পেমেন্ট চালু হলে একবারের ডিজিটাল বান্ডল</small><a class="btn btn-primary" href="/digital-pack/checkout/">চেকআউট প্রস্তুতি দেখো →</a></div>
     </section>
 
     <section class="sec honest">

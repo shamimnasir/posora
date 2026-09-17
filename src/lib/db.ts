@@ -15,6 +15,11 @@ export type Env = {
   GOOGLE_CLIENT_SECRET?: string;
   /** Comma separated. Only these Google accounts may enter the panel. */
   ADMIN_EMAILS?: string;
+  /** SSLCommerz credentials are Worker secrets, never committed to source. */
+  SSLCOMMERZ_STORE_ID?: string;
+  SSLCOMMERZ_STORE_PASSWORD?: string;
+  /** `sandbox` until the merchant account is approved for production. */
+  SSLCOMMERZ_MODE?: 'sandbox' | 'live';
 };
 
 export const dbEnv = () => env as unknown as Env;
