@@ -1905,10 +1905,13 @@ export function mountHero(
   function fits(z: number): boolean {
     const halfV = Math.tan(MathUtils.degToRad(camera.fov) / 2), halfH = halfV * camera.aspect;
     const s = baseScale;
+    // Reserve room for the deepest staged reveal as well as the resting model;
+    // otherwise detached leaves, rings, or labels can reach the canvas edge.
+    const explodePad = spread * 0.62 * s;
     const rxz = Math.hypot(
       Math.max(Math.abs(fitMin.x), Math.abs(fitMax.x)),
       Math.max(Math.abs(fitMin.z), Math.abs(fitMax.z)),
-    ) * s;
+    ) * s + explodePad;
     const near = z - rxz;
     if (near <= 0.6) return false;
     const axisY = eyeY + (aimY - eyeY) * (near / Math.max(0.01, z - aimZ));
@@ -1918,8 +1921,8 @@ export function mountHero(
     // off the top of it
     const padTop = anchoredCount ? pinScale * topPad : 0;
     return (wide || rxz <= near * halfH)
-      && fitMax.y * s + padTop - axisY <= halfAt
-      && axisY - fitMin.y * s <= halfAt;
+      && fitMax.y * s + padTop + explodePad - axisY <= halfAt
+      && axisY - (fitMin.y * s - explodePad) <= halfAt;
   }
   /**
    * A fixed camera distance crops silently, which is how the space explorer
@@ -2048,7 +2051,9 @@ export function mountHero(
     if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
     // the camera eases back as the model opens up, so nothing leaves the frame
     focusZoom += ((active >= 0 ? 1 : 0) - focusZoom) * 0.1;
-    camera.position.z = Math.max(2.05, camZBase * (1 - focusZoom * 0.36 - detailZoom * 0.13) + explodeNow * spread * 0.96);
+    // Pull back progressively as the staged reveal opens; the deepest state
+    // must keep every detached piece inside the canvas on narrow screens.
+    camera.position.z = Math.max(2.05, camZBase * (1 - focusZoom * 0.36 - detailZoom * 0.13) + explodeNow * spread * 2.4);
     aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });

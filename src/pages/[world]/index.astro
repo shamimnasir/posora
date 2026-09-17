@@ -781,7 +781,7 @@ const schema = [
    * screen that takes the canvas from 709x646 to about 990x760: two and a half
    * times the area, for two numbers.
    */
-  .scene { position: relative; flex: 1; min-height: min(74vh, 780px); overflow: hidden; margin-top: 1rem;
+  .scene { position: relative; flex: 1; min-height: min(86vh, 980px); overflow: hidden; margin-top: 1rem;
     background: radial-gradient(circle at 82% 14%,rgba(255,111,189,.14),transparent 24%), radial-gradient(ellipse at 50% 42%, color-mix(in oklab, var(--w) 24%, #141c2e) 0%, #0c122d 52%, #05070e 100%); }
   /* Nothing but the model. The engine's own ResizeObserver refits the camera,
      so going full screen costs no extra code on the 3D side. */
@@ -1152,7 +1152,7 @@ const schema = [
     .rail-list button[aria-current="true"] { border-bottom-color: var(--o); }
     .rail-list .tg, .rail-list .no { display: none; }
     .stage { min-height: 0; }
-    .scene { min-height: min(96vw, 460px); }
+    .scene { min-height: min(118vw, 560px); }
     .lesson-cue { max-width: 100%; font-size: 12px; }
   }
   @media (max-width: 560px) {
@@ -1169,7 +1169,7 @@ const schema = [
     /* Give the 3D hero a real stage on phones. A 96vw box was only ~300px
        before the overlays, so the model became a thumbnail between the lesson
        cue and controls. The extra height makes the entrance and reveal legible. */
-    .scene { min-height: min(132vw, 520px); }
+    .scene { min-height: min(160vw, 620px); }
     .model-note { left: 12px; right: auto; bottom: 90px; max-width: calc(100% - 24px); text-align: left; }
     .actions { justify-content: flex-start; overflow-x: auto; }
     .actions button { flex: none; min-height: 44px; }
