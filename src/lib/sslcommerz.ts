@@ -35,6 +35,10 @@ export const configured = (): boolean => {
   return !!e.SSLCOMMERZ_STORE_ID && !!e.SSLCOMMERZ_STORE_PASSWORD;
 };
 
+/** A separate release switch prevents charging before the files exist. */
+export const digitalPackReady = (): boolean => dbEnv().DIGITAL_PACK_READY === 'true';
+export const checkoutReady = (): boolean => configured() && digitalPackReady();
+
 function config(): Config | null {
   const e = dbEnv();
   if (!e.SSLCOMMERZ_STORE_ID || !e.SSLCOMMERZ_STORE_PASSWORD) return null;
@@ -59,7 +63,7 @@ export type CheckoutResult =
 export async function initiateCheckout(input: CheckoutInput): Promise<CheckoutResult> {
   const cfg = config();
   const d = db();
-  if (!cfg || !d) return { ok: false, error: 'unavailable' };
+  if (!cfg || !d || !digitalPackReady()) return { ok: false, error: 'unavailable' };
   const name = text(input.name, 100), email = text(input.email, 254).toLowerCase();
   const phone = text(input.phone, 24), address = text(input.address, 120);
   if (name.length < 2 || !/^\S+@\S+\.\S{2,}$/.test(email) || phone.replace(/\D/g, '').length < 6) return { ok: false, error: 'invalid' };

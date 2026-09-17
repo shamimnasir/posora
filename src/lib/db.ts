@@ -20,6 +20,8 @@ export type Env = {
   SSLCOMMERZ_STORE_PASSWORD?: string;
   /** `sandbox` until the merchant account is approved for production. */
   SSLCOMMERZ_MODE?: 'sandbox' | 'live';
+  /** Set to "true" only after the paid pack's downloadable files are live. */
+  DIGITAL_PACK_READY?: string;
 };
 
 export const dbEnv = () => env as unknown as Env;

@@ -45,14 +45,16 @@ Add the merchant credentials as Cloudflare secrets (never commit them):
 npx wrangler secret put SSLCOMMERZ_STORE_ID
 npx wrangler secret put SSLCOMMERZ_STORE_PASSWORD
 npx wrangler secret put SSLCOMMERZ_MODE       # sandbox first; use live for production
+npx wrangler secret put DIGITAL_PACK_READY    # only "true" after files are live
 npx wrangler deploy
 ```
 
 In the SSLCommerz merchant panel, set the IPN URL to
 `https://posora.com/api/sslcommerz/ipn`. Until the two merchant credentials are
 present, the checkout page intentionally shows a setup message and takes no
-payment. The callback endpoints are `/api/sslcommerz/success`, `/fail`, and
-`/cancel`.
+payment. `DIGITAL_PACK_READY` is an independent release switch: leave it unset
+until the actual downloadable pack files and the member library are published.
+The callback endpoints are `/api/sslcommerz/success`, `/fail`, and `/cancel`.
 
 ## Admin panel
 

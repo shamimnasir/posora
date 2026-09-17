@@ -1,11 +1,12 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { configured, DIGITAL_PACK_AMOUNT } from '../../lib/sslcommerz';
+import { configured, digitalPackReady, DIGITAL_PACK_AMOUNT } from '../../lib/sslcommerz';
 import { bn } from '../../lib/bn';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'no-store');
-const ready = configured();
+const merchantReady = configured();
+const ready = merchantReady && digitalPackReady();
 ---
 
 <Base title="ডিজিটাল প্যাক চেকআউট" description="পসরা ডিজিটাল প্যাক বান্ডলের নিরাপদ চেকআউট পাতা।" noindex>
@@ -38,11 +39,18 @@ const ready = configured();
           <p class="msg" id="checkout-msg" role="status" aria-live="polite"></p>
           <p class="fine">পেমেন্ট বাতিল করলে বা ব্যর্থ হলে কোনো access দেওয়া হবে না।</p>
         </form>
-      ) : (
+      ) : !merchantReady ? (
         <section class="card setup">
           <p class="eyebrow">চেকআউট প্রস্তুত হচ্ছে</p>
           <h2>SSLCommerz merchant keys এখনো বসানো হয়নি</h2>
           <p>পেমেন্ট গেটওয়ে চালু হলেই এই পাতায় নিরাপদ hosted checkout খুলবে। এখন কোনো টাকা নেওয়া হচ্ছে না।</p>
+          <a class="btn btn-primary" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
+        </section>
+      ) : (
+        <section class="card setup">
+          <p class="eyebrow">চেকআউট প্রস্তুত হচ্ছে</p>
+          <h2>ডিজিটাল ফাইল প্রকাশের কাজ চলছে</h2>
+          <p>পেমেন্ট নেওয়ার আগে প্রতিটি প্যাকের ডাউনলোড ফাইল প্রকাশ করা হবে। ফাইল প্রস্তুত হলে এই পাতায় নিরাপদ hosted checkout খুলবে।</p>
           <a class="btn btn-primary" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
         </section>
       )}
