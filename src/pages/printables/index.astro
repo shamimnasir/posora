@@ -37,6 +37,9 @@ const schema = [
     })),
   },
 ];
+const accents: Record<string, string> = {
+  letters: '#e6a921', kars: '#8a62d8', conjuncts: '#8a62d8', numbers: '#2c8dc3', space: '#315ad8', money: '#2b9d64',
+};
 ---
 <Base
   schema={schema}
@@ -61,10 +64,15 @@ const schema = [
       </p>
     </header>
 
+    <div class="how card">
+      <span class="how-title">একটা শিট বাছুন</span>
+      <span><b>১</b> খুলুন</span><i>→</i><span><b>২</b> একসঙ্গে করুন</span><i>→</i><span><b>৩</b> ছাপুন, খেলুন, টাঙান</span>
+    </div>
+
     <div class="grid">
       {sheets.map((s) => (
-        <a class="card sheet" href={`/printables/${s.slug}/`}>
-          <span class="emoji" aria-hidden="true">{s.emoji}</span>
+        <a class="card sheet" style={`--sheet-accent:${accents[s.kind] ?? '#1b8f82'}`} href={`/printables/${s.slug}/`}>
+          <span class="sheet-top"><span class="emoji" aria-hidden="true">{s.emoji}</span><span class="open">খুলে দেখো ↗</span></span>
           <h2>{s.bn}</h2>
           <p class="tag">{s.tag}</p>
           <p class="who">{s.who}</p>
@@ -103,15 +111,22 @@ const schema = [
     border: 1px solid color-mix(in oklab, var(--ok) 34%, var(--line)); border-radius: var(--r-sm); padding: 0.85rem 1rem; }
   .free b { color: var(--ink); }
 
+  .how { display: flex; align-items: center; gap: .7rem 1rem; flex-wrap: wrap; padding: .85rem 1rem; background: color-mix(in oklab, var(--brand) 9%, var(--panel)); border-color: color-mix(in oklab, var(--brand) 25%, var(--line)); color: var(--ink-2); font-size: 14px; }
+  .how-title { color: var(--brand-ink); font-weight: 800; margin-right: .3rem; }
+  .how b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: .25rem; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; }
+  .how i { color: var(--muted); font-style: normal; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 0.9rem; }
-  .sheet { padding: 1.2rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: 0.28rem; transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
-  .sheet:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: color-mix(in oklab, var(--brand) 42%, var(--line)); }
+  .sheet { position: relative; overflow: hidden; padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: 0.28rem; border-top: 4px solid var(--sheet-accent); transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+  .sheet::after { content: ''; position: absolute; width: 90px; height: 90px; right: -34px; top: -34px; border-radius: 50%; background: color-mix(in oklab, var(--sheet-accent) 18%, transparent); }
+  .sheet:hover { transform: translateY(-4px) rotate(-.3deg); box-shadow: 0 14px 28px rgba(20, 34, 48, .16); border-color: var(--sheet-accent); }
+  .sheet-top { display: flex; justify-content: space-between; align-items: flex-start; min-height: 38px; }
   .emoji { font-size: 30px; line-height: 1; margin-bottom: 0.25rem; }
+  .open { font-size: 11px; color: var(--sheet-accent); font-weight: 800; }
   .sheet h2 { font-size: 18px; font-weight: 700; line-height: 1.3; }
   .tag { font-size: 14px; color: var(--ink-2); line-height: 1.6; }
   .who { font-size: 12.5px; color: var(--muted); font-style: italic; }
   .pages { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--brand-ink); margin-top: 0.45rem;
-    background: var(--brand-soft); border-radius: 999px; padding: 0.22rem 0.6rem; align-self: flex-start; }
+    background: color-mix(in oklab, var(--sheet-accent) 15%, #fff); border-radius: 999px; padding: 0.22rem 0.6rem; align-self: flex-start; }
 
   .cta { padding: 1.4rem 1.5rem 1.5rem; display: flex; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; align-items: center; background: var(--brand-soft); border-color: transparent; }
   .cta h2 { font-size: 1.4rem; font-weight: 800; color: var(--brand-ink); margin: 0.15rem 0 0.4rem; }

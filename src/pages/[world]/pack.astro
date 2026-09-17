@@ -84,11 +84,13 @@ const pages = sheets.length * 2;
     {unlocked ? (
       <>
         {sheets.map((s, i) => (
-          <div class="paper sheet">
+          <div class="paper sheet" style={`--paper-accent:${w.hue}`}>
             <header class="ph">
+              <div class="ph-brand"><span class="mark" aria-hidden="true">✦</span><span>পসরা</span></div>
               <h2>{w.bn} · {s.n}</h2>
               <span>নাম: ____________________ &nbsp; তারিখ: __________</span>
             </header>
+            <div class="skill-strip"><span>আজকের মিশন</span><b>□ পড়েছি</b><b>□ চেষ্টা করেছি</b><b>□ বুঝিয়ে বলতে পারি</b></div>
             <h3>১. শূন্যস্থান পূরণ করো</h3>
             <p class="note">নিচের শব্দভাণ্ডার থেকে ঠিক শব্দটা বসাও।</p>
             <p class="bank">{s.ws.bank.map((b) => <span>{b}</span>)}</p>
@@ -105,7 +107,7 @@ const pages = sheets.length * 2;
           </div>
         ))}
 
-        <div class="paper keys">
+        <div class="paper keys" style={`--paper-accent:${w.hue}`}>
           <header class="ph">
             <h2>উত্তরপত্র · {w.bn}</h2>
             <span>অভিভাবক বা শিক্ষকের জন্য · {bn(sheets.length)}টি বিভাগ</span>
@@ -155,10 +157,16 @@ const pages = sheets.length * 2;
   .toc li span { color: var(--muted); font-family: var(--font-mono); font-size: 11px; margin-left: 0.4rem; }
   .toc .fine { margin-top: 0.5rem; font-size: 12px; color: var(--muted); }
 
-  .paper { background: #fff; color: #111820; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 1.6rem 1.6rem 1.2rem; box-shadow: var(--shadow-sm); }
-  .ph { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; border-bottom: 2px solid #111820; padding-bottom: 0.4rem; margin-bottom: 0.9rem; }
+  .paper { position: relative; overflow: hidden; background: #fff; color: #111820; border: 1px solid #cdd4da; border-radius: 14px; padding: 1.15rem 1.45rem 1.1rem; box-shadow: 0 8px 24px rgba(20, 34, 48, .08); }
+  .paper::before { content: ''; position: absolute; inset: 0 0 auto; height: 7px; background: var(--paper-accent, #1b8f82); }
+  .ph { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1rem; border-bottom: 2px solid #111820; padding: .45rem 0 .65rem; margin-bottom: .6rem; }
+  .ph-brand { display: flex; align-items: center; gap: .32rem; font-weight: 800; font-size: .9rem; }
+  .mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--paper-accent, #1b8f82); color: #fff; font-size: 13px; }
   .ph h2 { font-size: 1.2rem; font-weight: 800; }
-  .ph span { font-family: var(--font-mono); font-size: 10.5px; color: #555; letter-spacing: 0.06em; }
+  .ph > span { font-family: var(--font-mono); font-size: 10.5px; color: #555; letter-spacing: 0.06em; }
+  .skill-strip { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; padding: .42rem .6rem; margin-bottom: .8rem; border-radius: 8px; background: #f1f5f6; color: #40505a; font-size: 11.5px; }
+  .skill-strip span { color: #1b2931; font-weight: 800; margin-right: .2rem; }
+  .skill-strip b { font-weight: 700; }
   h3 { font-size: 1.05rem; font-weight: 800; margin: 0.9rem 0 0.3rem; }
   .note { font-size: 12.5px; color: #444; margin-bottom: 0.6rem; }
   .bank { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.8rem; }
@@ -183,10 +191,13 @@ const pages = sheets.length * 2;
   .acts { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 
   @media (max-width: 640px) { .match { grid-template-columns: 1fr; } .klist, .toc ol { columns: 1; } }
+  @media (max-width: 640px) { .ph { grid-template-columns: auto minmax(0, 1fr); } .ph > span { grid-column: 2; } }
   @media print {
+    @page { size: A4; margin: 11mm; }
     .no-print { display: none !important; }
     .page { padding: 0; gap: 0; max-width: none; }
     .paper { border: 0; box-shadow: none; padding: 0; border-radius: 0; }
+    .paper::before { height: 4px; }
     /* every sheet starts its own page, and so does the whole key section */
     .sheet + .sheet, .keys { break-before: page; page-break-before: always; }
   }
