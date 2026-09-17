@@ -12,6 +12,10 @@ export default defineConfig({
   adapter: cloudflare({ imageService: 'compile' }),
   trailingSlash: 'ignore',
   session: false, // no server sessions - progress lives in the visitor's browser
+  // SSLCommerz posts its IPN from a different origin. Browser-facing write
+  // routes enforce sameOrigin explicitly in src/lib/auth.ts; the framework
+  // check must be off so the payment provider can reach its callback.
+  security: { checkOrigin: false },
   compressHTML: true,
   // Fetch the next page while the pointer is still on its way to the link.
   // Every navigation here is a full server render of a heavy page, so the

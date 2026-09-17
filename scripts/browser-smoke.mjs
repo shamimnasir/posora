@@ -12,6 +12,8 @@ try {
   if (!health.ok) failures.push(`/api/health: HTTP ${health.status}`);
   const protectedDownload = await fetch(`${base}/api/digital-pack/download/bundle`);
   if (protectedDownload.status !== 401) failures.push(`/api/digital-pack/download/bundle: expected 401, got ${protectedDownload.status}`);
+  const malformedIpn = await fetch(`${base}/api/sslcommerz/ipn`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'tran_id=&val_id=' });
+  if (malformedIpn.status !== 422) failures.push(`/api/sslcommerz/ipn: expected 422 for malformed callback, got ${malformedIpn.status}`);
   for (const viewport of viewports) {
     const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, reducedMotion: 'reduce' });
     const page = await context.newPage();
