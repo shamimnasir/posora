@@ -15,6 +15,8 @@ function files(dir) {
 
 const banned = [
   ['outdated Saturn count', /১৪৬\s*(?:টি\s*)?চাঁদ|চাঁদ[^\n]{0,20}১৪৬/],
+  ['outdated Jupiter moon count', /(?:৯৫\s*চাঁদ|চাঁদ[^\n]{0,20}৯৫)/],
+  ['outdated Uranus moon count', /(?:২৮\s*চাঁদ|চাঁদ[^\n]{0,20}২৮)/],
   ['false per-item 3D claim', /প্রতিটি (?:বিষয়|জিনিস|আইটেম)(?:ের জন্য)? (?:একটা|একটি) থ্রিডি মডেল/],
   ['false all-printables-free claim', /সব ছাপার শিট (?:সম্পূর্ণ )?ফ্রি/],
   ['stale mission distribution claim', /three missions per world/],
