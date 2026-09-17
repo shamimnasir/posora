@@ -37,9 +37,10 @@ export const GET: APIRoute = async ({ site }) => {
   const body = `# পসরা (Posora)
 
 > A free, Bangla-language interactive learning site for children, at https://posora.com.
-> Every category has a live 3D scene you can turn, pull apart and click, with
-> explanation written at three depths so one page works for a five-year-old and
-> a thirteen-year-old. Built and run from Dhaka, Bangladesh.
+> Every category has a live 3D scene or interactive tool you can turn, pull
+> apart and click. ${c.readable} items have explanations at three depths so one
+> page works for a five-year-old and a thirteen-year-old; ${c.tool} items are
+> live tools rather than reading. Built and run from Dhaka, Bangladesh.
 
 The site is written in Bengali (bn). This file is in English because that is
 what reads best to a language model. Content is free to read, needs no account,

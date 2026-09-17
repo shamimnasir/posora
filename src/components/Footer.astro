@@ -7,7 +7,7 @@ import { COVERAGE } from '../lib/coverage';
   <div class="wrap grid">
     <div>
       <p class="brand">পসরা</p>
-      <p class="muted">শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। {bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস{COVERAGE.uncovered === 0 ? ', প্রতিটির পুরো কথা পড়া যায়।' : ` - ${bn(COVERAGE.covered)}টির পুরো কথা এখন পড়া যায়।`}</p>
+      <p class="muted">শিশু ও বড়দের জন্য বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা। {bn(totals.worlds)}টি ভুবন, {bn(totals.items)}টি জিনিস - {bn(COVERAGE.readable)}টির পুরো কথা তিন গভীরতায় পড়া যায়, আর {bn(COVERAGE.tool)}টি চালু টুল আছে{COVERAGE.uncovered > 0 ? `; ${bn(COVERAGE.uncovered)}টি লেখা হচ্ছে` : ''}।</p>
     </div>
     <div>
       <p class="lbl">যোগাযোগ</p>
