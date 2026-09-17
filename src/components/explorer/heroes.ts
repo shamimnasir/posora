@@ -913,7 +913,9 @@ const SCENES: Record<string, Builder> = {
    * rather than forty identical balls at eight segments each.
    */
   tree({ root, v }) {
-    const GY = -1.6;
+    // Keep the full canopy comfortably below the stage header while keeping
+    // the trunk planted on the matching ground plane.
+    const GY = -2.18;
     const rr = srand(0x7ee5);
     const trunkMat = std('#6b4a2b', { roughness: 0.92 });
     const leafCols = { green: new Color('#3e8e5a'), autumn: new Color('#d9822b'), spring: new Color('#e88fb0') };
