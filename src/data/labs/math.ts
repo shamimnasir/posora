@@ -6,13 +6,6 @@ import { numberWords } from '../math';
 const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
 const frac = (l: number, h: number) => `${bn(l)}/${bn(h)}`;
 
-const STEPS = {
-  piece: 'ধাপ',
-  join: ' → ',
-  first: 'ভেবে দেখো সবার আগে কোনটা করতে হয় - যেটা না করলে বাকিগুলো শুরুই করা যায় না।',
-  next: 'ভেবে দেখো আগের ধাপটা শেষ হলে হাতে কী থাকে, আর তা দিয়ে পরের কোনটা করা যায়।',
-};
-
 /** Roman numerals, up to the 999 the place-value builder can reach. */
 const ROMAN: [number, string][] = [
   [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'],

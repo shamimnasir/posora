@@ -280,8 +280,6 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
     }));
 
     const groupOf = (n: string) => data.foods.find((f) => f.n === n)!.g;
-    const hueOf = (k: string) => data.groups.find((g) => g.k === k)!.hue;
-
     function render() {
       // what is on the plate, laid out in rings from the middle
       const items: Food[] = [];
@@ -470,7 +468,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
   /* ---------- ৪. পানি ---------- */
   (function water() {
     const svg = $<SVGSVGElement>('#water-svg');
-    const { w: W, h: H, narrow } = fitScene(svg, [620, 180], [340, 300]);
+    const { w: W, narrow } = fitScene(svg, [620, 180], [340, 300]);
     const PER = narrow ? 6 : 14, GW = narrow ? 46 : 40, GH = narrow ? 58 : 52;
     const glasses = el('g'); svg.appendChild(glasses);
     const kgIn = $<HTMLInputElement>('#kg'), kgV = $('#kg-v');

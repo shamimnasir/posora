@@ -188,7 +188,7 @@ const HUE = '#C0473E';
   const credit = (item: string) => { if (live) mark(item); };
   const num = (n: number) => bn(n.toFixed(Math.abs(n) < 100 ? 1 : 0));
 
-  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', SOFT = 'var(--panel-2)', W = 'var(--w)';
+  const INK = 'var(--ink)', MUTED = 'var(--muted)', LINE = 'var(--line)', W = 'var(--w)';
   const text = (p: SVGElement, x: number, y: number, s: string, o: Record<string, string | number> = {}) => {
     const t = el('text', { x, y, 'font-size': 12, fill: MUTED, 'text-anchor': 'middle', ...o });
     t.textContent = s; p.appendChild(t); return t;

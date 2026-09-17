@@ -17,7 +17,7 @@
 import {
   Group, Mesh, Object3D, Color,
   SphereGeometry, BoxGeometry, CylinderGeometry, ConeGeometry, TorusGeometry,
-  CircleGeometry, TetrahedronGeometry, IcosahedronGeometry, PlaneGeometry,
+  CircleGeometry, IcosahedronGeometry,
   MeshStandardMaterial, MeshBasicMaterial, DoubleSide, Vector2, Vector3, Shape, ExtrudeGeometry,
   LatheGeometry,
 } from 'three';
@@ -871,13 +871,6 @@ const quills = (color: string): Figure => (g) => {
   lay(-0.02, -0.11, 0.14, 0.32);
 };
 
-const sticks = (color: string, n = 4, bent = false): Figure => (g) => {
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * 0.9 - 0.45;
-    const s = rod(g, color, bent ? 0.045 : 0.028, 0.46, (i - (n - 1) / 2) * 0.09, 0.24, 0, a);
-    if (bent) s.scale.set(1, 1, 0.6);
-  }
-};
 /**
  * A few dried leaves lying in a pile: tej pata and the like.
  *

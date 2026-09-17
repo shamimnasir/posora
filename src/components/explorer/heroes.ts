@@ -1008,7 +1008,7 @@ const SCENES: Record<string, Builder> = {
     } };
   },
 
-  terrain({ root, hue, v }) {
+  terrain({ root, v }) {
     const S = 8, seg = 70; const geo = new PlaneGeometry(S, S, seg, seg); geo.rotateX(-Math.PI / 2); const pos = geo.attributes.position as Float32BufferAttribute; const colors = new Float32Array(pos.count * 3); const c = new Color();
     const water = new Color('#2b7bd6'), sand = new Color('#d9c08a'), grass = new Color('#3e8e5a'), rock = new Color('#7a6a58'), snow = new Color('#f3f6f8');
     const paint = (p: number) => { for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i); let h = fbm2(x * 0.35 + 3, z * 0.35 + 7) * 2.6 - 1.1; if (v === 'farm') h = Math.sin(x * 3) * 0.08 + 0.1; if (v === 'delta') h = h * 0.4 - 0.15 + Math.max(0, Math.abs(Math.sin(x * 0.6 + z * 0.3)) - 0.7) * -1; h *= 0.4 + p * 1.2; pos.setY(i, h); c.copy(h < 0 ? water : h < 0.15 ? sand : h < 0.9 ? grass : h < 1.5 ? rock : snow); if (v === 'farm') c.copy(grass).lerp(new Color('#7bb661'), (Math.sin(x * 3) + 1) / 2); colors.set([c.r, c.g, c.b], i * 3); } pos.needsUpdate = true; geo.setAttribute('color', new Float32BufferAttribute(colors, 3)); geo.computeVertexNormals(); };
@@ -1027,7 +1027,7 @@ const SCENES: Record<string, Builder> = {
     return { label: v === 'farm' ? 'ফসল' : 'উচ্চতা', aim: { y: -0.15, eye: 1.55, wide: true }, update(t, _dt, p) { if (Math.abs(p - last) > 0.01) { paint(p); last = p; } root.rotation.y += 0.0015; sea.position.y = -1 + 0.01 + Math.sin(t) * 0.02; } };
   },
 
-  seasonwheel({ root, hue, v, font }) {
+  seasonwheel({ root, v, font }) {
     const cols = ['#f0b429', '#3b82f6', '#9fd3e6', '#d9822b', '#cfd8e3', '#e88fb0']; const names = ['গ্রীষ্ম', 'বর্ষা', 'শরৎ', 'হেমন্ত', 'শীত', 'বসন্ত'];
     const fruits = ['🥭', '🍈', '🍌', '🥥', '🥕', '🍓'];
     const wheel = new Group(); wheel.rotation.x = 0.5; root.add(wheel);
@@ -1168,7 +1168,7 @@ const SCENES: Record<string, Builder> = {
     } };
   },
 
-  coins({ root, hue, v }) {
+  coins({ root, v }) {
     void v;
     const GY = -1.45;
     // thinner than the beaker's glass: a jar is wall, wall, base and rim deep,

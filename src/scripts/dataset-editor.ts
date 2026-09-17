@@ -86,7 +86,6 @@ function init(key: string, doc: HTMLTextAreaElement) {
   window.addEventListener('beforeunload', (e) => {
     if (!dirty) return;
     e.preventDefault();
-    e.returnValue = '';
   });
 
   showSize();

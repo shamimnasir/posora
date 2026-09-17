@@ -304,7 +304,6 @@ function start(initial: World, creating: boolean) {
   window.addEventListener('beforeunload', (e) => {
     if (!dirty || JSON.stringify(state) === original) return;
     e.preventDefault();
-    e.returnValue = '';
   });
 
   renderCats();

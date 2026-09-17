@@ -9,7 +9,7 @@
  * Astro always inlines and the CSP would silently block).
  */
 ---
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-H4ESLZMRCW"></script>
+<script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-H4ESLZMRCW"></script>
 <script>
   /**
    * `arguments`, not a rest array. This is the whole bug.

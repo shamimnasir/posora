@@ -179,7 +179,7 @@ export function varyMission(m: Mission, seed: string): Mission {
 /** What changes between attempts, said plainly, or null when nothing does. */
 export function varies(m: Mission): string | null {
   const want = PLAY_LENGTH[m.type];
-  const [total, unit] = fullLength(m);
+  const [total] = fullLength(m);
   if (want === null) return m.type === 'path' ? null : 'প্রতিবার ক্রম বদলায়';
   if (total <= want) return 'প্রতিবার ক্রম বদলায়';
   return `প্রতিবার ${bnd(total)}টির মধ্যে ${bnd(want)}টি আসে`;
