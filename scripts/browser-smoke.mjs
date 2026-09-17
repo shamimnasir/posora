@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 
 const base = (process.env.SMOKE_BASE ?? 'https://posora.com').replace(/\/$/, '');
 const executablePath = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const routes = ['/', '/space/', '/life/', '/math/', '/printables/', '/digital-pack/', '/family/'];
+const routes = ['/', '/space/', '/physics/', '/chemistry/', '/life/', '/nature/', '/food/', '/math/', '/money/', '/language/', '/social/', '/discovery/', '/printables/', '/digital-pack/', '/family/'];
 const viewports = [{ name: 'mobile', width: 360, height: 800 }, { name: 'tablet', width: 768, height: 1024 }, { name: 'desktop', width: 1440, height: 900 }];
 
 const browser = await chromium.launch({ executablePath, headless: true, args: ['--no-sandbox', '--disable-gpu'] });
