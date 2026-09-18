@@ -1,9 +1,7 @@
 /**
- * The first paid digital-product line for পসরা.
- *
- * This is deliberately a product blueprint, not a fake download catalogue:
- * the payment rail and final PDF files are not live yet. The launch page uses
- * these promises to collect real demand before the files are produced.
+ * The first paid digital-product line for পসরা. The generated PDFs are built
+ * from this catalogue and delivered through the private, entitlement-gated
+ * member library.
  */
 export type DigitalPack = {
   slug: string;

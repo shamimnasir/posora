@@ -47,3 +47,23 @@ secret with `npx wrangler secret put ...`, then redeploy.
 - Cloudflare Worker Observability is enabled in `wrangler.jsonc`.
 - Payment callbacks and weekly mail failures use structured Worker logs; watch
   them with `npx wrangler tail posora`.
+
+### Alerts
+
+Create Cloudflare Notifications for the `posora` Worker with these conditions:
+
+- Worker errors above zero for five minutes: notify the release owner.
+- HTTP 5xx rate above 2% for ten minutes: page the release owner.
+- `/api/health` is not 2xx for two consecutive checks: page the release owner.
+- Search Worker logs for `SSLCommerz initiation failed` or `SSLCommerz validation failed` and notify the payment owner.
+
+Keep alert destinations outside the repository. Never put email addresses,
+tokens, merchant keys or webhook URLs in source control.
+
+## GitHub deployment
+
+`.github/workflows/deploy.yml` runs the release checks and deploys `main` with
+Wrangler. Add `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit) and
+`CLOUDFLARE_ACCOUNT_ID` as GitHub Actions secrets before enabling it. The
+workflow is push-or-manual triggered and cancels an older deployment when a
+newer commit arrives.

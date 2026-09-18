@@ -12,6 +12,7 @@
     "audit": "node scripts/audit-content.mjs",
     "digital-packs": "node --experimental-strip-types scripts/generate-digital-packs.mjs",
     "test:smoke": "node scripts/browser-smoke.mjs",
+    "test:interaction": "node scripts/interaction-smoke.mjs",
     "test:nature": "node --experimental-transform-types --test scripts/nature-cinema.test.mjs",
     "admin:hash": "node scripts/hash-password.mjs",
     "db:create": "wrangler d1 create posora",

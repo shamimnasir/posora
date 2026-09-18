@@ -30,7 +30,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
 
 <Base
   title="৳২৪৯ ডিজিটাল প্যাক বান্ডল"
-  description="পসরার ১১ ভুবনের ঘর, স্কুল ও ছাপার জন্য তৈরি ডিজিটাল লার্নিং প্যাক। ৮৮টি কার্যপত্র, কার্ড, গাইড ও উত্তরপত্রের প্রি-লঞ্চ বান্ডল।"
+  description="পসরার ১১ ভুবনের ঘর, স্কুল ও ছাপার জন্য তৈরি ডিজিটাল লার্নিং প্যাক। ৮৮টি কার্যপত্র, ৩৩টি bonus asset, গাইড ও উত্তরপত্রের downloadable বান্ডল।"
   schema={schema}
 >
   <div class="wrap page">
@@ -38,7 +38,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
 
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">প্রি-লঞ্চ · পরিবার ও শিক্ষক</p>
+        <p class="eyebrow">ডাউনলোড বান্ডল · পরিবার ও শিক্ষক</p>
         <h1>এক বান্ডলে <em>শেখার পুরো ঘর</em></h1>
         <p class="lede">
           স্ক্রিনের ভেতরের পসরাকে টেবিলে, খাতায় আর ক্লাসে নিয়ে যাওয়ার জন্য ১১টি ভুবনের
@@ -49,12 +49,12 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
           <a class="btn" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও</a>
           <a class="btn" href="/printables/">ফ্রি শিট আগে দেখো</a>
         </div>
-        <p class="fine">প্রস্তাবিত লঞ্চ মূল্য <b>৳{bn(bundle.priceBdt)}</b>। পেমেন্ট এখনো চালু নয়; নাম লেখালে কোনো টাকা কাটা যাবে না।</p>
+        <p class="fine">একবারের মূল্য <b>৳{bn(bundle.priceBdt)}</b>। পেমেন্ট যাচাই হলে আপনার account-এ re-download access থাকবে।</p>
       </div>
       <div class="price-card" aria-label="বান্ডলের সারাংশ">
         <span class="price-kicker">১১ ভুবন · ১ বান্ডল</span>
         <strong>৳{bn(bundle.priceBdt)}</strong>
-        <span>পেমেন্ট চালু হলে একবারের ডিজিটাল ডাউনলোড</span>
+        <span>পেমেন্টের পর নিরাপদ member library access</span>
         <div class="stat-row"><b>{bn(bundle.activitySheets)}</b><span>টি কার্যপত্র</span></div>
         <div class="stat-row"><b>{bn(bundle.packs)}</b><span>টি বিষয়ভিত্তিক প্যাক</span></div>
         <div class="stat-row"><b>{bn(bundle.bonusSets)}</b><span>টি কার্ড, গাইড ও উত্তরপত্র</span></div>
@@ -84,7 +84,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
 
     <section class="sec packs" id="packs">
       <div class="sec-h">
-        <p class="eyebrow">ভেতরে যা বানাবো</p>
+        <p class="eyebrow">ভেতরে যা পাবেন</p>
         <h2>১১টি প্যাক, ১১ রকমের “আজ কী করব?”</h2>
         <p>প্রতিটি প্যাকে {bn(activitiesPerPack)}টি ছোট কার্যপত্র, {bn(bonusPerPack)}টি সহায়ক বোনাস এবং বয়স অনুযায়ী ব্যবহার-পদ্ধতি।</p>
       </div>
@@ -111,7 +111,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
         <h2>আলাদা আলাদা নয় - সব ১১টি একসঙ্গে</h2>
         <p>আজ বাংলা লিখবে, কাল গাছ দেখবে, পরশু দোকান খেলবে। শিশুর আগ্রহ বদলালেও প্যাক বদলাতে হবে না।</p>
       </div>
-      <div class="bundle-price"><span>প্রস্তাবিত লঞ্চ মূল্য</span><b>৳{bn(bundle.priceBdt)}</b><small>পেমেন্ট চালু হলে একবারের ডিজিটাল বান্ডল</small><a class="btn btn-primary" href="/digital-pack/checkout/">চেকআউট প্রস্তুতি দেখো →</a></div>
+      <div class="bundle-price"><span>একবারের মূল্য</span><b>৳{bn(bundle.priceBdt)}</b><small>পেমেন্ট যাচাই হলে member library-তে re-download</small><a class="btn btn-primary" href="/digital-pack/checkout/">নিরাপদ চেকআউট →</a></div>
     </section>
 
     <section class="sec honest">
