@@ -92,6 +92,27 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
         <figure class="real-preview"><img src="/digital-pack-preview/math-guide.png" alt="গণিত খেলাঘর প্যাকের অভিভাবক guide preview" loading="lazy" /><figcaption>আসল guide page-এর sample · ঘরে ব্যবহারের ১৫ মিনিটের prompt</figcaption></figure>
         <div class="preview-copy"><span class="preview-index">০৩</span><h3>শুধু worksheet নয়</h3><p>প্রতিটি pack-এ age-aware prompt, ব্যবহার-পদ্ধতি, উত্তরপত্র এবং ঘরে কীভাবে কথাটি তুলবেন তার guide থাকে।</p><span class="preview-meta">পরিবার · শিক্ষক · ছোট group</span></div>
       </div>
+      <div class="preview-all-head"><h3>১১টি প্যাকের ১১টি আসল sample page</h3><span>প্রতিটি card খুলে নিজের প্যাকের প্রথম পাতাটি দেখুন</span></div>
+      <div class="preview-grid">
+        {digitalPacks.map((p) => (
+          <a class="pack-preview-card" href={`/digital-pack-preview/${p.slug}.png`} target="_blank" rel="noreferrer" style={`--pack:${p.color}`}>
+            <img src={`/digital-pack-preview/${p.slug}.png`} alt={`${p.title} আসল কার্যপত্র preview`} loading="lazy" />
+            <span class="pack-preview-info"><b>{p.title}</b><small>{p.activities.length}টি কার্যপত্র · {p.bonus.length}টি bonus</small><em>বড় করে দেখুন ↗</em></span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="sec pack-standard" id="every-pack">
+      <div class="sec-h"><p class="eyebrow">প্রতিটি প্যাকে যা থাকছে</p><h2>শুধু পাতার bundle নয়, শেখার পুরো loop</h2><p>প্রতিটি বিষয়ভিত্তিক pack-এ একই dependable structure থাকবে, যাতে শিশু চেষ্টা, feedback, reflection এবং আবার চেষ্টা করতে পারে।</p></div>
+      <div class="standard-grid">
+        <article><b>🎯 লক্ষ্য</b><p>এক লাইনের “আজ কী শিখব” এবং বয়স/সময় লেখা থাকবে।</p></article>
+        <article><b>🧠 মনে করে বলা</b><p>আগে জানা কথা টেনে আনার ছোট recall prompt থাকবে।</p></article>
+        <article><b>✍️ করে দেখানো</b><p>কাটা, মেলানো, আঁকা, মাপা বা বানানোর hands-on task থাকবে।</p></article>
+        <article><b>✓ feedback</b><p>উত্তর কী এবং কেন—দুটোই বোঝার জন্য answer key ও clue থাকবে।</p></article>
+        <article><b>↺ আবার চেষ্টা</b><p>ভুলকে নতুন hint দিয়ে ঠিক করার retry prompt থাকবে।</p></article>
+        <article><b>👨‍👩‍👧 ঘরে transfer</b><p>অভিভাবক/শিক্ষকের ১৫ মিনিটের কথোপকথন ও real-life extension থাকবে।</p></article>
+      </div>
     </section>
 
     <section class="sec research">
@@ -209,6 +230,22 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
   .real-preview { margin: 0; max-width: 520px; padding: .7rem; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: 0 20px 45px rgba(0,0,0,.18); }
   .real-preview img { display: block; width: 100%; height: min(62vw, 430px); object-fit: contain; object-position: top center; border-radius: 11px; background: #eef3f6; }
   .real-preview figcaption { padding: .65rem .35rem .15rem; color: var(--muted); font-size: 11px; line-height: 1.5; }
+  .preview-all-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-top: .7rem; }
+  .preview-all-head h3 { margin: 0; font-size: 1.35rem; }
+  .preview-all-head span { color: var(--muted); font-size: 12px; }
+  .preview-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
+  .pack-preview-card { display: flex; flex-direction: column; overflow: hidden; text-decoration: none; border: 1px solid color-mix(in oklab, var(--pack) 45%, var(--line)); border-top: 4px solid var(--pack); border-radius: 14px; background: var(--panel); transition: transform .2s ease, box-shadow .2s ease; }
+  .pack-preview-card:hover, .pack-preview-card:focus-visible { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(0,0,0,.18); }
+  .pack-preview-card img { display: block; width: 100%; aspect-ratio: 210 / 297; object-fit: cover; object-position: top; background: #eef3f6; }
+  .pack-preview-info { display: flex; flex-direction: column; gap: .25rem; padding: .65rem .7rem .75rem; }
+  .pack-preview-info b { color: var(--ink); font-size: 13px; }
+  .pack-preview-info small { color: var(--muted); font-size: 11px; }
+  .pack-preview-info em { color: var(--brand-ink); font-size: 11px; font-style: normal; font-weight: 700; }
+  .pack-standard { padding-top: .5rem; }
+  .standard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+  .standard-grid article { padding: 1rem; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--panel); }
+  .standard-grid b { color: var(--brand-ink); }
+  .standard-grid p { margin: .35rem 0 0; color: var(--ink-2); font-size: 13px; line-height: 1.6; }
   .bonus-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; align-items: center; position: relative; }
   .bonus-sticker { position: absolute; top: 1rem; right: 1rem; margin: 0; transform: rotate(4deg); }
   .bonus-card { min-height: 150px; padding: .9rem; display: flex; flex-direction: column; gap: .55rem; justify-content: space-between; border-radius: 14px; background: color-mix(in oklab, var(--brand) 16%, var(--panel)); border: 1px dashed color-mix(in oklab, var(--brand) 55%, var(--line)); }
@@ -249,6 +286,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
   .honest { border-top: 1px solid var(--line-soft); padding-top: 1.4rem; max-width: 70ch; }
   .honest a { color: var(--brand-ink); font-weight: 700; }
   @media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .value-strip, .signal-grid { grid-template-columns: repeat(2, 1fr); } .pack-grid { grid-template-columns: 1fr; } .bundle { grid-template-columns: 1fr; } .bundle-price { align-items: flex-start; } }
-  @media (max-width: 640px) { .preview-panel { grid-template-columns: 1fr; } .bonus-preview { min-height: 260px; } }
-  @media (max-width: 480px) { .value-strip { grid-template-columns: 1fr; } .pack ul { columns: 1; } h1 { max-width: none; } .preview-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: .8rem; } .preview-tab { white-space: nowrap; } .bonus-preview { grid-template-columns: 1fr; } .bonus-card { min-height: auto; } }
+  @media (max-width: 900px) { .preview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { .preview-panel { grid-template-columns: 1fr; } .preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .standard-grid { grid-template-columns: repeat(2, 1fr); } .bonus-preview { min-height: 260px; } .preview-all-head { align-items: flex-start; flex-direction: column; } }
+  @media (max-width: 480px) { .value-strip { grid-template-columns: 1fr; } .pack ul { columns: 1; } h1 { max-width: none; } .preview-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: .8rem; } .preview-tab { white-space: nowrap; } .bonus-preview { grid-template-columns: 1fr; } .bonus-card { min-height: auto; } .preview-grid { gap: .55rem; } .pack-preview-info { padding: .5rem; } .pack-preview-info b { font-size: 11px; } .standard-grid { grid-template-columns: 1fr; } }
 </style>
