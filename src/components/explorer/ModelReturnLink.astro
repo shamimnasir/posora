@@ -1,0 +1,30 @@
+---
+/** A consistent bridge from a focused activity back to its exact 3D lesson. */
+interface Props { world: string; cat: number; item?: number; label: string }
+const { world, cat, item = 0, label } = Astro.props;
+const href = world === 'space' ? '/space/' : `/${world}/?cat=${cat}&item=${item}#model-stage`;
+---
+<a class="model-return" href={href}>
+  <span class="model-icon" aria-hidden="true">◎</span>
+  <span><small>থ্রিডি দৃশ্য</small><strong>{label} মডেলে কাছে গিয়ে দেখো</strong></span>
+  <span class="model-arrow" aria-hidden="true">→</span>
+</a>
+
+<style>
+  .model-return {
+    width: fit-content; max-width: 100%; margin: .7rem 0 1.15rem; padding: .7rem .85rem;
+    display: grid; grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: .7rem;
+    text-decoration: none; border: 1px solid color-mix(in oklab, var(--w) 44%, var(--line)); border-radius: 15px;
+    background: linear-gradient(135deg, color-mix(in oklab, var(--w) 15%, var(--panel)), var(--panel-2));
+    box-shadow: 0 5px 0 color-mix(in oklab, var(--w) 30%, #07142b);
+    transition: transform .16s ease, box-shadow .16s ease;
+  }
+  .model-return:hover, .model-return:focus-visible { transform: translateY(-2px); box-shadow: 0 7px 0 color-mix(in oklab, var(--w) 34%, #07142b); }
+  .model-return:focus-visible { outline: 3px solid color-mix(in oklab, var(--w) 34%, transparent); outline-offset: 3px; }
+  .model-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; color: #fff; background: var(--w); font-size: 20px; }
+  small, strong { display: block; }
+  small { color: var(--muted); font: 700 9px/1.2 var(--font-mono); letter-spacing: .06em; }
+  strong { margin-top: 2px; color: var(--ink); font-size: 13px; line-height: 1.35; }
+  .model-arrow { color: var(--w); font-size: 18px; font-weight: 900; }
+  @media (max-width: 420px) { .model-return { width: 100%; } }
+</style>

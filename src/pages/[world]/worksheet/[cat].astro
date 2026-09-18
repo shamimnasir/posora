@@ -26,6 +26,7 @@ if (!ws) return Astro.rewrite('/404');
 const member = await getMember(Astro);
 const unlocked = hasPlan(member);
 const shown = unlocked ? ws.blanks : ws.blanks.slice(0, 1);
+const modelHref = `/${w.slug}/?cat=${cat}&item=0#model-stage`;
 ---
 <Base title={`অনুশীলনী · ${c.n}`} description={`${w.bn} - ${c.n} বিভাগের ছাপার অনুশীলনী: শূন্যস্থান পূরণ আর মিলানো, উত্তরপত্র সহ।`} hue={w.hue} noindex>
   <div class="wrap page">
@@ -39,6 +40,7 @@ const shown = unlocked ? ws.blanks : ws.blanks.slice(0, 1);
       </div>
       <div class="hacts">
         {unlocked && <button type="button" class="btn btn-primary" id="print">ছাপাও বা PDF করো</button>}
+        <a class="btn model-link" href={modelHref}>◎ মডেলে দেখে নাও</a>
         <a class="btn" href={`/${w.slug}/pack/`}>পুরো ভুবনের প্যাক →</a>
       </div>
     </header>
@@ -98,6 +100,7 @@ const shown = unlocked ? ws.blanks : ws.blanks.slice(0, 1);
   .crumbs span { margin: 0 0.35rem; }
   .wh { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
   .hacts { display: flex; gap: 0.55rem; flex-wrap: wrap; }
+  .model-link { border-color: color-mix(in oklab, var(--w) 46%, var(--line)); color: var(--w); background: color-mix(in oklab, var(--w) 10%, var(--panel)); }
   h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; margin: 0.15rem 0 0.4rem; }
   .lede { color: var(--ink-2); line-height: 1.7; max-width: 58ch; }
 

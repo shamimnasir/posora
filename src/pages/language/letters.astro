@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getLanguage } from '../../lib/content';
+import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
 
 export const prerender = false;
 
@@ -27,6 +28,7 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
 >
   <div class="wrap page" id="lab">
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/language/">ভাষা</a> <span>/</span> কার, ফলা ও যুক্তবর্ণ</p>
+    <ModelReturnLink world="language" cat={1} item={0} label="কার, ফলা ও যুক্তবর্ণ" />
 
     <header class="head">
       <p class="eyebrow">ভাষা ভুবন · বিভাগ পরিচিতি</p>

@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
 
 export const prerender = true;
 
@@ -12,6 +13,7 @@ const HUE = '#6E8C2F';
 >
   <div class="wrap page" id="lab">
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/money/">ব্যবসা ও টাকা ম্যানেজমেন্ট</a> <span>/</span> সঞ্চয় ও লক্ষ্য</p>
+    <ModelReturnLink world="money" cat={3} item={0} label="সঞ্চয় ও লক্ষ্য" />
 
     <header class="head">
       <p class="eyebrow">ব্যবসা ও টাকা ভুবন · বিভাগ পরিচিতি</p>

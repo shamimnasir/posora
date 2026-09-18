@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
 
 export const prerender = true;
 
@@ -41,6 +42,7 @@ const payload = { seasons: SEASONS, months: MONTHS };
 >
   <div class="wrap page" id="lab">
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/nature/">প্রকৃতি ও পরিবেশ</a> <span>/</span> ছয় ঋতু ও বারো মাস</p>
+    <ModelReturnLink world="nature" cat={1} item={0} label="ছয় ঋতু ও বারো মাস" />
 
     <header class="head">
       <p class="eyebrow">প্রকৃতি ও পরিবেশ ভুবন · বিভাগ পরিচিতি</p>

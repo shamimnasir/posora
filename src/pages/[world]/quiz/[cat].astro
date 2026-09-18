@@ -55,6 +55,7 @@ const payload = { world: w.slug, cat, questions: unlocked ? questions : question
       <div class="opts" id="qopts"></div>
       <p class="fb" id="qfb" role="status" aria-live="polite"></p>
       <div class="qacts">
+        <a class="btn model-link" id="qmodel" href={`/${w.slug}/?cat=${cat}&item=0#model-stage`} hidden>◎ মডেলে দেখে নাও</a>
         <button type="button" class="btn btn-primary" id="qnext" hidden>পরের প্রশ্ন →</button>
       </div>
     </div>
@@ -64,7 +65,7 @@ const payload = { world: w.slug, cat, questions: unlocked ? questions : question
       <h2 id="qresult"></h2>
       <p id="qnote" class="lede"></p>
       <div class="qacts">
-        <a class="btn btn-primary" href={`/${w.slug}/`}>ভুবনে ফিরে যাও</a>
+        <a class="btn btn-primary" href={`/${w.slug}/?cat=${cat}&item=0#model-stage`}>মডেল ও পাঠে ফিরে যাও</a>
         <button type="button" class="btn" id="qagain">আবার দাও</button>
         <a class="btn" href="/account/">আমার পসরা</a>
       </div>
@@ -119,6 +120,7 @@ const payload = { world: w.slug, cat, questions: unlocked ? questions : question
   .opts :global(button:disabled) { cursor: default; opacity: 0.85; }
   .fb { font-size: 15px; font-weight: 700; min-height: 1.5em; color: var(--sun); }
   .qacts { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .model-link { border-color: color-mix(in oklab, var(--w) 46%, var(--line)); color: var(--w); background: color-mix(in oklab, var(--w) 10%, var(--panel)); }
   .done { padding: 1.5rem 1.6rem 1.6rem; display: flex; flex-direction: column; gap: 0.6rem; border-color: color-mix(in oklab, var(--w) 40%, var(--line)); }
   .done h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); font-weight: 800; }
   .gate { padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; background: color-mix(in oklab, var(--sun) 12%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); }
@@ -141,6 +143,7 @@ const payload = { world: w.slug, cat, questions: unlocked ? questions : question
   const data: Data = JSON.parse(document.getElementById('quiz-data')!.textContent!);
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const prompt = $('qprompt'), opts = $('qopts'), fb = $('qfb'), next = $<HTMLButtonElement>('qnext'), no = $('qno'), scoreEl = $('qscore');
+  const model = $<HTMLAnchorElement>('qmodel');
   const bar = $('qbar');
   const progressTrack = document.querySelector<HTMLElement>('.qtrack')!;
   let i = 0, score = 0, answered = false;
@@ -155,6 +158,7 @@ const payload = { world: w.slug, cat, questions: unlocked ? questions : question
     prompt.textContent = q.prompt;
     fb.textContent = '';
     next.hidden = true;
+    model.hidden = true;
     opts.replaceChildren(...q.options.map((o, k) => {
       const b = document.createElement('button');
       b.type = 'button'; b.textContent = `${bn(k + 1)} · ${o}`; b.dataset.k = String(k);
@@ -173,6 +177,9 @@ const payload = { world: w.slug, cat, questions: unlocked ? questions : question
       else if (x === b) x.classList.add('wrong');
     });
     fb.textContent = right ? 'ঠিক!' : `না, এটা ${q.options[q.answer]}-এর কথা।`;
+    model.href = `/${data.world}/?cat=${data.cat}&item=${q.item}#model-stage`;
+    model.textContent = `◎ ${q.options[q.answer]} মডেলে দেখে নাও`;
+    model.hidden = false;
     scoreEl.textContent = `ঠিক ${bn(score)}`;
     if (i + 1 < data.questions.length) next.hidden = false;
     else finish();

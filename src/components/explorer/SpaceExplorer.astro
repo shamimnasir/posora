@@ -2,10 +2,10 @@
 import { bodies, branchesFor, FACTS, METRICS, SPEEDS, EARTH_DIAMETER_KM, type Body } from '../../data/space';
 import { bn, pad2, bnNum, bnDuration, bnOf } from '../../lib/bn';
 import { worlds } from '../../data/worlds';
-import { missionSpec, missionKind, missionLength, varies } from '../../data/missions';
 import { AWARDS, awardKey } from '../../lib/game';
 import { bodyEmoji } from '../../data/cat-emoji';
 import { labFor } from '../../data/labs';
+import MissionPanel from './MissionPanel.astro';
 interface Props { current: Body }
 const { current: cur } = Astro.props;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
@@ -68,7 +68,6 @@ const seedRecords = (() => {
 const seedTravel = facts && facts.nearestKm > 0
   ? SPEEDS.map((sp) => ({ bn: sp.bn, t: bnDuration(facts.nearestKm / sp.kmh) }))
   : null;
-const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i)).length;
 ---
 <div class="xp" id="explorer" data-current={cur.id}>
   <aside class="rail card" aria-label="সৌরজগতের তালিকা">
@@ -313,44 +312,8 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
       </a>
     )}
 
-    {/* Missions sit directly under the reading card, exactly as on every other world. */}
-    <section class="card miss-card" id="miss-card">
-      <div class="card-h">
-        <span class="lbl">মিশন</span>
-        <span class="lbl num" id="miss-count">০ / {bn(playableMissions)}</span>
-      </div>
-      <div class="miss">
-        {world.missions.map((m, i) => {
-          const spec = missionSpec('space', i);
-          return spec ? (
-            <button type="button" class="m mission-play" data-mi={i}>
-              <span class="mb">{pad2(i + 1)}</span>
-              <div class="m-t">
-                <b>{m.n}</b>
-                <p>{m.d}</p>
-                <span class="m-meta">
-                  <span class="m-kind">{missionKind(spec)}</span>
-                  <span class="m-len">{`${bn(missionLength(spec)[0])} ${missionLength(spec)[1]}`}</span>
-                  <span class="m-hearts" aria-hidden="true">♥♥♥</span>
-                  {varies(spec) && <span class="m-vary" title={`${varies(spec)}, তাই প্রতিবার নতুন খেলা`}>🎲 নতুন</span>}
-                </span>
-              </div>
-              <span class="m-go">
-                <span class="m-stars" aria-hidden="true">☆☆☆</span>
-                <span class="m-play">খেলো ▶</span>
-              </span>
-            </button>
-          ) : (
-            <div class="m m-soon">
-              <span class="mb">{pad2(i + 1)}</span>
-              <div class="m-t"><b>{m.n}</b><p>{m.d}</p></div>
-              <span class="try soon">শীঘ্রই আসছে</span>
-            </div>
-          );
-        })}
-      </div>
-      <p class="miss-foot" id="miss-foot"></p>
-    </section>
+    {/* The same mission shelf used by every other world. */}
+    <MissionPanel world="space" missions={world.missions} missionCats={world.missionCats} shown={4} />
 
     <section class="card sub" id="subtopic" hidden>
       <div class="card-h"><span class="lbl" id="sub-k">শাখা</span><button type="button" class="x" id="sub-close" aria-label="বন্ধ করো">✕</button></div>
@@ -647,7 +610,6 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   .m-hearts { font-size: 10px; color: #e0556a; letter-spacing: 0.08em; }
   .m-vary { font-size: 10px; color: var(--w); font-weight: 700; }
   .m-go { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .m-stars { font-size: 13px; letter-spacing: 0.06em; color: var(--sun); }
   .m-play { font-size: 11.5px; font-weight: 800; padding: 0.22rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); color: var(--w); transition: background 0.18s ease, color 0.18s ease; }
   .miss-foot { padding: 0 0.95rem 0.9rem; font-size: 12px; color: var(--muted); line-height: 1.55; }
   .m-soon { opacity: 0.66; border-style: dashed; background: transparent; }
@@ -1203,7 +1165,7 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
   $('#q-read').addEventListener('click', () => { qRes.hidden = true; $('#read').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!qRes.hidden) qRes.hidden = true; else questQuit(); } });
 
-  /* ---- missions: the same three-hearts games every other world has ---- */
+  /* ---- missions: the same progress language every other world has ---- */
   const missionBtns = [...root.querySelectorAll<HTMLButtonElement>('.mission-play')];
   const missionKeys = missionBtns.map((b) => `${WORLD}:${b.dataset.mi}`);
   function renderMissions() {
@@ -1214,18 +1176,16 @@ const playableMissions = world.missions.filter((_m, i) => missionSpec('space', i
       const s = best[missionKeys[i]!] ?? 0;
       if (s > 0) done++;
       b.classList.toggle('done', s > 0);
-      b.querySelector<HTMLElement>('.m-stars')!.textContent = '★'.repeat(s) + '☆'.repeat(3 - s);
-      b.querySelector<HTMLElement>('.m-play')!.textContent = s > 0 ? 'আবার ▶' : 'খেলো ▶';
+      const status = b.querySelector<HTMLElement>('.m-status');
+      if (status) status.textContent = s > 0 ? 'সম্পূর্ণ' : 'শুরু করা হয়নি';
+      b.querySelector<HTMLElement>('.m-play')!.textContent = s > 0 ? 'আবার খেলো →' : 'খেলো →';
     });
     $('#miss-count').textContent = `${bn(done)} / ${bn(missionBtns.length)}`;
-    const three = missionKeys.filter((k) => (best[k] ?? 0) === 3).length;
     $('#miss-foot').textContent = done === 0
-      ? 'প্রতিটি মিশন একেকটা ছোট খেলা: তিনটি হৃদয়, দ্রুত উত্তরে বেশি পয়েন্ট, শেষে তারা।'
+      ? 'একটি মিশন বেছে নাও। প্রতিটিই ছোট, খেলতে খেলতে শেখার কাজ।'
       : done < missionBtns.length
-        ? `${bn(missionBtns.length - done)}টি মিশন এখনও বাকি। সব হৃদয় বাঁচিয়ে শেষ করলে তিন তারা।`
-        : three === missionBtns.length
-          ? 'সব মিশনে তিন তারা! এই ভুবনে তোমাকে আর কিছু শেখানোর নেই।'
-          : `সব মিশন শেষ, ${bn(missionBtns.length - three)}টিতে এখনও তিন তারা বাকি।`;
+        ? `${bn(missionBtns.length - done)}টি মিশন এখনও বাকি।`
+        : 'সব মিশন শেষ! চাইলে যেকোনোটি আবার খেলে আরও ভালো করো।';
   }
   missionBtns.forEach((b, i) => b.addEventListener('click', async () => {
     const mi = +b.dataset.mi!;

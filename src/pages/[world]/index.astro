@@ -22,7 +22,7 @@ import { catEmoji } from '../../data/cat-emoji';
 import { AWARDS, awardKey } from '../../lib/game';
 import { missionSpec } from '../../data/missions';
 import { sheets } from '../../data/printables';
-import MissionRow from '../../components/explorer/MissionRow.astro';
+import MissionPanel from '../../components/explorer/MissionPanel.astro';
 import NatureCinema from '../../components/explorer/NatureCinema.astro';
 import { natureChapters } from '../../data/nature-cinema';
 
@@ -69,10 +69,6 @@ const charsOf = (d: ItemDetail[] | null) =>
  *
  * A mission with no data behind it yet is not a door, so it is not offered.
  */
-/** How many missions stay open before the rest fold away. */
-const MISS_SHOWN = 4;
-const missionRows = w.missions.map((m, i) => ({ m, i, cat: w.missionCats[i] ?? null }));
-
 const catMission = w.cats.map((_c, i) => {
   const mi = w.missionCats.findIndex((mc) => mc === i);
   return mi >= 0 && missionSpec(w.slug, mi) ? mi : null;
@@ -149,9 +145,6 @@ const seedRecords = (() => {
 const shade = (i: number) => `color-mix(in oklab, ${w.hue} ${96 - (i % 6) * 9}%, #8894a8)`;
 const LEVELS = [['l1', 'ছোট', '৫–৮'], ['l2', 'মাঝারি', '৯–১২'], ['l3', 'বড়', '১৩+']] as const;
 const GMETRICS = [['items', 'আইটেম সংখ্যা'], ['time', 'পড়ার সময়'], ['read', 'তুমি যত দেখেছ']] as const;
-// How many of this world's missions are actually playable today. The card
-// counts against this, never against the wish list, so the number is honest.
-const playableMissions = w.missions.filter((_m, i) => missionSpec(w.slug, i)).length;
 // Sideways links between worlds, so every world is two clicks from every
 // other one rather than only reachable back through the home page.
 const otherWorlds = (await getWorlds()).filter((o) => o.slug !== w.slug);
@@ -221,7 +214,7 @@ const schema = [
       </aside>
 
       <div class="mid">
-        <section class="stage card">
+        <section class="stage card" id="model-stage">
           <header class="stage-h">
             <div>
               <p class="eyebrow">ভুবন · {w.en}</p>
@@ -486,29 +479,7 @@ const schema = [
 
         {/* Missions sit directly under the reading card: they are the thing a
             child comes back for, so they are never below the fold of the rail. */}
-        <section class="card miss-card" id="miss-card">
-          <div class="card-h">
-            <span class="lbl">মিশন</span>
-            <span class="lbl num" id="miss-count">০ / {bn(playableMissions)}</span>
-          </div>
-          {/* The first few, then the rest behind a fold.
-              A world used to have three missions and now has up to eleven, and
-              eleven full-height rows push everything under them off the page.
-              `details` rather than a script, so the fold works before any
-              JavaScript runs and a keyboard opens it the usual way. */}
-          <div class="miss">
-            {missionRows.slice(0, MISS_SHOWN).map((r) => <MissionRow world={w.slug} i={r.i} n={r.m.n} d={r.m.d} cat={r.cat} />)}
-          </div>
-          {missionRows.length > MISS_SHOWN && (
-            <details class="miss-more" id="miss-more">
-              <summary>আরও {bn(missionRows.length - MISS_SHOWN)}টি মিশন</summary>
-              <div class="miss">
-                {missionRows.slice(MISS_SHOWN).map((r) => <MissionRow world={w.slug} i={r.i} n={r.m.n} d={r.m.d} cat={r.cat} />)}
-              </div>
-            </details>
-          )}
-          {playableMissions > 0 && <p class="miss-foot" id="miss-foot"></p>}
-        </section>
+        <MissionPanel world={w.slug} missions={w.missions} missionCats={w.missionCats} />
 
         {familyTop.length > 0 && (
           <section class="card fam">
@@ -1241,7 +1212,12 @@ const schema = [
   const starToast = $('#star-toast');
   let toastTimer = 0;
 
-  let curCat = 0, curItem = 0;
+  const focusParams = new URLSearchParams(location.search);
+  const requestedCat = Number(focusParams.get('cat'));
+  const startCat = Number.isInteger(requestedCat) && requestedCat >= 0 && requestedCat < cats.length ? requestedCat : 0;
+  const requestedItem = Number(focusParams.get('item'));
+  const startItem = Number.isInteger(requestedItem) && requestedItem >= 0 && requestedItem < cats[startCat].items.length ? requestedItem : 0;
+  let curCat = startCat, curItem = startItem;
   let level = (localStorage.getItem('posora:level') as 'l1' | 'l2' | 'l3' | null) ?? 'l1';
   let hero: HeroHandle | null = null, lastDeg = -1;
   let pendingHeroFocus: number | null = null;
@@ -1282,7 +1258,7 @@ const schema = [
   }));
   (slug === 'nature' ? import('../../components/explorer/nature-viewer') : import('../../components/explorer/heroes')).then(({ mountHero }) => {
     const loading = root.querySelector<HTMLElement>('#hero-loading');
-    hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => {
+    hero = mountHero(host, cats[curCat].hero, onHeroFrame, (j) => {
       const c = cats[curCat];
       // A category with no writing yet still shows every item as a labelled
       // badge, so a click there used to fall into silence. Do what the chip
@@ -2014,7 +1990,7 @@ const schema = [
       // Some scenes turn on their own and some hold still. The button has to
       // say which, or it offers to stop something that was never moving.
       syncSpin(hero.isAuto());
-    }
+    } else pendingHeroFocus = curItem;
     renderChips(); renderRead(); renderCrumbs(); renderProgress(); renderGlance(); renderRecords();
     if (readable(c)) { if (markSeen(slug, keyOf(i, curItem))) { if (childId) pushSeen(slug, keyOf(i, curItem)); noteItem(slug); renderProgress(); renderGlance(); renderRecords(); renderChips(); checkGoal(); } }
     // After the arrival has been marked read, not before: the line names what
@@ -2317,18 +2293,24 @@ const schema = [
     window.setTimeout(() => stage.classList.remove('model-arrival'), reduced ? 0 : 1500);
   });
 
-  renderChips(); renderRead(); pinRead(); renderCrumbs(); renderGlance(); renderRecords();
-  if (readable(cats[0]) && markSeen(slug, keyOf(0, 0))) { noteItem(slug); if (childId) pushSeen(slug, keyOf(0, 0)); }
+  if (startCat !== 0 || startItem !== 0) {
+    showCat(startCat, startItem);
+    pendingHeroFocus = startItem;
+  } else {
+    renderChips(); renderRead(); renderCrumbs(); renderGlance(); renderRecords();
+    if (readable(cats[0]) && markSeen(slug, keyOf(0, 0))) { noteItem(slug); if (childId) pushSeen(slug, keyOf(0, 0)); }
+  }
+  pinRead();
   renderProgress();
   renderChips();
-  $('#extras').hidden = !readable(cats[0]);
+  $('#extras').hidden = !readable(cats[curCat]);
   renderPlayer(); renderAwards(); renderQuestBtn(); renderMissions(); checkAwards(); renderNext();
   // Pull the child's progress from other devices, then repaint what it changes.
   if (childId) syncWorld(slug).then(() => { renderProgress(); renderGlance(); renderRecords(); renderChips(); renderPlayer(); checkAwards(); renderNext(); });
   // count the category and item the page lands on the same way a click is
   // counted, so the totals are not skewed toward whatever happens to be first
-  trackCategory(slug, cats[0].n);
-  if (readable(cats[0])) trackItem(slug, cats[0].n, cats[0].items[0]);
+  trackCategory(slug, cats[curCat].n);
+  if (readable(cats[curCat])) trackItem(slug, cats[curCat].n, cats[curCat].items[curItem]);
 
   /* ---- what today did to the streak ---- */
   if (day.froze) toast(`❄ একটা বরফ খরচ হলো, ${bn(streakDays)} দিনের ধারা টিকে গেছে`);
@@ -2344,7 +2326,6 @@ const schema = [
   }
   void freezeCount; void goalDone;
 
-  /* ---- ?cat=N lands straight on a category, which is how /today/ links in ---- */
-  const wantCat = Number(new URLSearchParams(location.search).get('cat'));
-  if (Number.isInteger(wantCat) && wantCat > 0 && wantCat < cats.length) showCat(wantCat);
+  /* `cat` and `item` are applied during initial rendering above, before the
+     async model arrives, so subsection links land on the exact subject. */
 </script>

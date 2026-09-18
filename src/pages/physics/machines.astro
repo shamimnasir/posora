@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
 
 export const prerender = true;
 
@@ -22,6 +23,7 @@ const items = [
 >
   <div class="wrap page">
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/physics/">পদার্থবিজ্ঞান</a> <span>/</span> সরল যন্ত্র</p>
+    <ModelReturnLink world="physics" cat={2} item={0} label="সরল যন্ত্র" />
 
     <header class="head">
       <p class="eyebrow">পদার্থবিজ্ঞান ভুবন · বিভাগ পরিচিতি</p>

@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
 
 export const prerender = true;
 
@@ -42,6 +43,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
 >
   <div class="wrap page" id="lab">
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> <a href="/food/">খাদ্য ও পুষ্টি</a> <span>/</span> আমার থালা</p>
+    <ModelReturnLink world="food" cat={1} item={0} label="সুষম খাবারের থালা" />
 
     <header class="head">
       <p class="eyebrow">খাদ্য ও পুষ্টি ভুবন · বিভাগ পরিচিতি</p>
