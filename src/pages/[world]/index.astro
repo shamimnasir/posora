@@ -23,6 +23,8 @@ import { AWARDS, awardKey } from '../../lib/game';
 import { missionSpec } from '../../data/missions';
 import { sheets } from '../../data/printables';
 import MissionRow from '../../components/explorer/MissionRow.astro';
+import NatureCinema from '../../components/explorer/NatureCinema.astro';
+import { natureChapters } from '../../data/nature-cinema';
 
 export const prerender = false;
 
@@ -33,6 +35,9 @@ const w = await getWorld(Astro.params.world!, { includeDrafts: preview, fresh: p
 // Unknown slug, a draft without preview, or a world with its own bespoke
 // explorer (space) - none of which this generic template should render.
 if (!w || w.open) return Astro.rewrite('/404');
+const worldIntro = w.slug === 'nature'
+  ? 'আবহাওয়া থেকে বাস্তুতন্ত্র - আটটি জীবন্ত থ্রিডি ভূদৃশ্যে পুরো দৃশ্য দেখো, বিষয়ের কাছে যাও, তারপর খুঁটিনাটি আলাদা করে আবিষ্কার করো।'
+  : w.intro;
 
 Astro.response.headers.set(
   'cache-control',
@@ -76,7 +81,8 @@ const catMission = w.cats.map((_c, i) => {
 const payload = w.cats.map((c, i) => {
   const detail = explorer?.[i] ?? null;
   return {
-    n: c.n, items: c.items, play: c.play, hero: heroFor(w.slug, w.hue, i, c.n),
+    n: c.n, items: c.items, play: w.slug === 'nature' ? natureChapters[i]?.cue ?? c.play : c.play,
+    hero: w.slug === 'nature' ? { type: 'nature-cinema', hue: w.hue, v: String(i), p: i === 1 ? 0.04 : 0.4 } : heroFor(w.slug, w.hue, i, c.n),
     lab: c.lab, labAnchors: c.labAnchors, detail, chars: charsOf(detail),
     emoji: c.items.map((it) => emojiFor(w.slug, it)), mission: catMission[i] ?? null,
   };
@@ -182,7 +188,7 @@ const schema = [
     typicalAgeRange: w.age.replace('+', '-16'),
     teaches: w.cats.map((c) => c.n),
     about: w.cats.flatMap((c) => c.items).slice(0, 40),
-    description: `${w.tag} - ${w.intro}`,
+    description: `${w.tag} - ${worldIntro}`,
     provider: { '@id': 'https://posora.com/#org' },
     audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
   },
@@ -196,7 +202,7 @@ const schema = [
   },
 ];
 ---
-<Base title={w.bn} description={`${w.tag} - ${w.intro}`} hue={w.hue} bare schema={schema} crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }]}>
+<Base title={w.bn} description={`${w.tag} - ${worldIntro}`} hue={w.hue} bare schema={schema} crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }]}>
   <div class="wrap page" id="world" data-slug={w.slug} data-total={total} data-child={child?.id} data-plan={plan ? '1' : '0'}>
     <p class="crumbs"><a href="/#worlds">ভুবন</a> <span>/</span> {w.bn}</p>
 
@@ -259,6 +265,7 @@ const schema = [
           </p>
           <p class="lesson-cue"><b>করে দেখো</b><span id="lesson-cue">{first.play}</span></p>
           <div class="scene">
+            {w.slug === 'nature' && <NatureCinema />}
             <nav class="zoombar" aria-label="কোথায় আছো">
               <a class="crumb crumb-world" href="/#worlds">{w.bn}</a>
               <span class="sep sep-world" aria-hidden="true">›</span>
@@ -546,7 +553,7 @@ const schema = [
               <span class="pill key-soon">{k}<small>শীঘ্রই</small></span>
             ))}
           </div>
-          <p class="intro">{w.intro}</p>
+          <p class="intro">{worldIntro}</p>
         </section>
 
         <a class="card cta" href="/space/">
@@ -1256,7 +1263,7 @@ const schema = [
   const host = $('#hero-host'), ctl = $<HTMLInputElement>('#ctl'), ctlLabel = $('#ctl-label');
   const ctlX = $<HTMLInputElement>('#ctl-x');
   const spinBtn = $<HTMLButtonElement>('#h-spin'), resetBtn = $<HTMLButtonElement>('#h-reset'), angleEl = $('#h-angle');
-  const syncSpin = (on: boolean) => { spinBtn.setAttribute('aria-pressed', String(on)); spinBtn.textContent = on ? 'ঘোরানো থামাও' : 'ঘোরানো চালাও'; };
+  const syncSpin = (on: boolean) => { spinBtn.setAttribute('aria-pressed', String(on)); spinBtn.textContent = slug === 'nature' ? (on ? 'চলাচল থামাও' : 'চলাচল চালাও') : (on ? 'ঘোরানো থামাও' : 'ঘোরানো চালাও'); };
   let lastAuto: boolean | null = null;
   const onHeroFrame = ({ yawDeg, auto }: { yawDeg: number; auto: boolean }) => {
     if (auto !== lastAuto) { lastAuto = auto; syncSpin(auto); }
@@ -1264,9 +1271,8 @@ const schema = [
     lastDeg = d; angleEl.textContent = `কোণ ${bn(d)}°`;
   };
   const heroItems = (c: Cat) => c.items.map((label, j) => ({ label, emoji: c.emoji[j] }));
-  import('../../components/explorer/heroes').then(({ mountHero }) => {
+  (slug === 'nature' ? import('../../components/explorer/nature-viewer') : import('../../components/explorer/heroes')).then(({ mountHero }) => {
     const loading = root.querySelector<HTMLElement>('#hero-loading');
-    if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
     hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => {
       const c = cats[curCat];
       // A category with no writing yet still shows every item as a labelled
@@ -1278,8 +1284,15 @@ const schema = [
     ctlLabel.textContent = hero.set(cats[curCat].hero);
     ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
     hero.setItems(heroItems(cats[curCat]), curItem);
+    if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
     syncGrove(curItem);
     syncSpin(hero.isAuto());
+    if (slug === 'nature') {
+      const syncNatureMotion = () => { spinBtn.textContent = hero?.isAuto() ? 'চলাচল থামাও' : 'চলাচল চালাও'; };
+      spinBtn.addEventListener('click', syncNatureMotion);
+      syncNatureMotion();
+      window.addEventListener('pagehide', () => hero?.destroy(), { once: true });
+    }
     host.addEventListener('pointerdown', () => { $('#hero-hint').style.opacity = '0'; }, { once: true });
   }).catch(() => {
     const loading = root.querySelector<HTMLElement>('#hero-loading');

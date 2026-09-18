@@ -1,0 +1,96 @@
+---
+import { natureSources } from '../../data/nature-cinema';
+---
+<div class="nature-console" id="nature-console">
+  <div class="nc-heading">
+    <div><p class="nc-kicker" id="nc-kicker">NATURE FIELD STATION</p><h2 id="nc-title">আকাশের গল্প</h2></div>
+    <span class="nc-edition">ঘুরে দেখো · কাছে যাও · আবিষ্কার করো</span>
+  </div>
+  <div class="nc-navigation">
+    <label for="nc-topic">আজ কী দেখবে?</label><select id="nc-topic" aria-label="দৃশ্যের বিষয়"><option>মেঘের ধরন</option></select>
+    <button type="button" id="nc-overview">↖ পুরো দৃশ্য</button>
+    <button type="button" id="nc-close">＋ কাছে যাও</button>
+    <button type="button" id="nc-detail">◎ খুঁটিয়ে দেখো</button>
+  </div>
+  <div id="nc-targets" class="nc-targets" role="group" aria-label="দৃশ্যের অংশ"></div>
+  <p id="nc-caption" class="nc-caption" role="status" aria-live="polite">দৃশ্যের কোনো অংশ বেছে নিয়ে কাছে যাও।</p>
+</div>
+<div class="nature-sources">
+  <details><summary>মডেল ও তথ্য সম্পর্কে</summary>
+    <p>নিজস্ব থ্রিডি ভূদৃশ্য। শিক্ষামূলক উপস্থাপনা - আলোকচিত্র, বাস্তব মানচিত্র বা পূর্বাভাস নয়। সব বিষয়ের লেখা ও হাতে-কলমে কাজ নিচেও পাওয়া যাবে।</p>
+    <p>{natureSources.map(([name,href])=><a href={href} target="_blank" rel="noopener noreferrer">{name} ↗</a>)}</p>
+  </details>
+</div>
+
+<style is:global>
+  /* Nature-only pilot: no other world inherits this until the pilot is approved. */
+  #world[data-slug="nature"] { --wrap: 1600px; }
+  #world[data-slug="nature"] .xp { grid-template-columns: minmax(0,1fr) 300px; }
+  #world[data-slug="nature"] .rail { grid-column: 1/-1; }
+  #world[data-slug="nature"] .rail-list { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); max-height:none; padding:8px; gap:4px; }
+  #world[data-slug="nature"] .rail-list button { flex-direction:column; justify-content:center; text-align:center; gap:7px; border-left:0; border-bottom:3px solid transparent; padding:12px 5px; height:100%; }
+  #world[data-slug="nature"] .rail-list button[aria-current] { border-bottom-color:#93ddba; }
+  #world[data-slug="nature"] .rail-list .no, #world[data-slug="nature"] .rail-list .tg { display:none; }
+  #world[data-slug="nature"] .rail-list .nm { font-size:13px; }
+  #world[data-slug="nature"] .stage-h { padding-bottom:14px; }
+  #world[data-slug="nature"] .top-chips, #world[data-slug="nature"] .lesson-cue, #world[data-slug="nature"] .progress-drawer, #world[data-slug="nature"] #next-up { display:none; }
+  #world[data-slug="nature"] .scene { display:flex; flex-direction:column; min-height:0; margin-top:0; background:#edf1e6; color:#233f34; }
+  #world[data-slug="nature"] .scene .zoombar, #world[data-slug="nature"] .scene #hero-hint { display:none; }
+  #world[data-slug="nature"] #hero-host { position:relative; inset:auto; width:100%; height:clamp(440px,54vw,640px); flex:none; background:radial-gradient(ellipse at 50% 45%,#f9faf2 0%,#e3ebde 65%,#d7e4d9 100%); touch-action:pan-y; }
+  #world[data-slug="nature"] #hero-host canvas { position:absolute; inset:0; }
+  #world[data-slug="nature"] .scene[data-nature-category="0"] #hero-host { background:radial-gradient(ellipse at 50% 32%,#7596a6,#345971); }
+  #world[data-slug="nature"] .scene[data-nature-category="2"] #hero-host { background:radial-gradient(ellipse at 50% 35%,#e3f0e7,#a4c7c4); }
+  #world[data-slug="nature"] .scene .scenebar { position:relative; padding:18px 22px; background:#f7f8ee; color:#233f34; gap:14px; }
+  #world[data-slug="nature"] .scene .model-note { position:relative; inset:auto; max-width:none; background:#e5ecdf; color:#4a6357; padding:10px 22px; text-align:left; border-radius:0; font-size:12px; order:1; }
+  #world[data-slug="nature"] .scene .scenebar .lbl { color:#345343; letter-spacing:0; font-family:inherit; font-size:13px; }
+  #world[data-slug="nature"] .scene .scenebar input { accent-color:#347557; min-height:24px; }
+  #world[data-slug="nature"] .scene .ctl-x, #world[data-slug="nature"] .scene #q-start, #world[data-slug="nature"] .scene .hang { display:none; }
+  #world[data-slug="nature"] .scene .hctl button { background:#e4ebdd; color:#234133; border-color:#bacdbb; min-height:42px; border-radius:9px; }
+  #world[data-slug="nature"] .scene .hctl button[aria-pressed=true] { background:#2e634b; color:#fff; }
+  #world[data-slug="nature"] .scene:fullscreen #hero-host { flex:1; height:auto; min-height:180px; }
+  #world[data-slug="nature"] .scene:fullscreen { height:100dvh; overflow:auto; }
+  #world[data-slug="nature"] .scene:fullscreen .nature-sources { display:none; }
+  #world[data-slug="nature"] .loading p { color:#345343; }
+  #world[data-slug="nature"] .loading.fallback { color:#233f34; background:#edf1e6; }
+  #world[data-slug="nature"] .loading.fallback p + p { color:#476254; }
+  #world[data-slug="nature"] .nature-sources { order:2; padding:8px 22px 14px; font-size:12px; color:#4a6357; background:#e5ecdf; }
+  .nature-sources summary { cursor:pointer; }
+  .nature-sources a { display:inline-block; text-decoration:underline; margin:8px 16px 0 0; }
+  .nature-console { background:#f7f8ee; padding:22px 24px 0; }
+  .nc-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+  .nc-kicker { color:#62816b; font:10px/1.4 var(--font-mono); letter-spacing:.2em; margin-bottom:6px; }
+  .nc-heading h2 { font-size:clamp(21px,2vw,29px); color:#233f34; }
+  .nc-edition { font-size:11px; color:#5b7564; max-width:16ch; text-align:right; }
+  .nc-navigation { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .nc-navigation label { font-size:12px; width:100%; color:#577060; }
+  .nc-navigation select { font:inherit; font-size:14px; border:1px solid #b8cbb9; background:#fffef4; color:#233f34; padding:10px; border-radius:8px; flex:1; min-width:140px; max-width:100%; color-scheme:light; }
+  .nc-navigation button { background:#e6ecdf; color:#254935; border:1px solid #c4d3bd; border-radius:8px; padding:10px 12px; font-size:13px; min-height:44px; }
+  .nc-navigation #nc-close { background:#2e634b; color:#fff; border-color:#2e634b; }
+  .nc-navigation button[aria-pressed=true] { box-shadow:inset 0 -3px #aab83e; }
+  .nc-targets { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 8px; }
+  .nc-targets button { font-size:12px; color:#476254; padding:7px 10px; border:1px solid #cad5bf; border-radius:999px; min-height:36px; }
+  .nc-targets button[aria-pressed=true] { background:#dee9c9; color:#274f35; border-color:#789452; }
+  .nc-caption { font-size:13px; line-height:1.7; color:#45614e; min-height:3.4em; padding:3px 0 13px; }
+  #world[data-slug="nature"] .items-h .play { display:none; }
+  #world[data-slug="nature"] .items { border-top:1px solid var(--line); }
+  @media(max-width:1100px) {
+    #world[data-slug="nature"] .xp { grid-template-columns:minmax(0,1fr); }
+    #world[data-slug="nature"] .rail-list { grid-template-columns:repeat(4,minmax(0,1fr)); }
+    #world[data-slug="nature"] .scene .host { height:560px; }
+  }
+  @media(max-width:600px) {
+    #world[data-slug="nature"] .rail-list { gap:3px; }
+    #world[data-slug="nature"] .rail-list button { padding:9px 3px; }
+    #world[data-slug="nature"] .rail-list .nm { font-size:11px; }
+    #world[data-slug="nature"] .rorb { width:26px; height:26px; }
+    #world[data-slug="nature"] #hero-host { height:460px; }
+    .nature-console { padding:17px 14px 0; }
+    .nc-edition { display:none; }
+    .nc-navigation select { flex-basis:100%; }
+    .nc-navigation button { flex:1; font-size:11px; padding:8px 5px; }
+    .nc-targets { gap:5px; }.nc-targets button { font-size:11px; padding:6px 8px; min-height:44px; }
+    .nc-caption { min-height:5em; font-size:12px; }
+    #world[data-slug="nature"] .scene .scenebar { padding:14px; }
+    #world[data-slug="nature"] .scene .model-note { padding:10px 14px; }
+  }
+</style>
