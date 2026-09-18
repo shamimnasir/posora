@@ -81,23 +81,15 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
         <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-guide" id="tab-guide">অভিভাবক guide</button>
       </div>
       <div class="preview-panel is-active" id="preview-sheets" role="tabpanel" aria-labelledby="tab-sheets">
-        <div class="sample-page" aria-label="কার্যপত্রের sample preview">
-          <div class="sample-top"><span>পসরা · গণিত খেলাঘর</span><span>পাতা ০৩</span></div>
-          <span class="sample-pill">আজকের ছোট মিশন</span>
-          <h3>গুনে দেখো, তারপর মিলিয়ে দাও</h3>
-          <p>ছবিগুলো গুনে সঠিক সংখ্যার সঙ্গে দাগ টানো। শেষে নিজের উত্তরটি একবার ব্যাখ্যা করো।</p>
-          <div class="sample-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="sample-lines"><span>আমার উত্তর</span><b></b><span>আমি কী দেখলাম?</span><b></b></div>
-          <small>এক পাতায়: নির্দেশনা · কাজের জায়গা · নিজের ব্যাখ্যা</small>
-        </div>
+        <figure class="real-preview"><img src="/digital-pack-preview/math-worksheet.png" alt="গণিত খেলাঘর প্যাকের আসল কার্যপত্রের preview" loading="lazy" /><figcaption>আসল generated PDF-এর প্রথম কার্যপত্র · সম্পূর্ণ প্যাকের একটি sample page</figcaption></figure>
         <div class="preview-copy"><span class="preview-index">০১</span><h3>শিশু শুধু টিক দেবে না</h3><p>প্রতিটি sheet-এ ছোট action, আঁকার বা লেখার জায়গা এবং “আমি কী দেখলাম?” reflection থাকে।</p><span class="preview-meta">A4 · রঙিন বা সাদা-কালো · ১৫ মিনিট</span></div>
       </div>
       <div class="preview-panel" id="preview-bonus" role="tabpanel" aria-labelledby="tab-bonus" hidden>
-        <div class="bonus-preview" aria-label="বোনাস asset sample preview"><span class="bonus-sticker">কেটে নাও</span><div class="bonus-card"><b>আজকের লক্ষ্য</b><span>আমি আজ যে কাজটি নিজে চেষ্টা করব</span><i></i></div><div class="bonus-card"><b>মিশন ব্যাজ</b><span>আমি দেখেছি · ভেবেছি · বানিয়েছি</span><i></i></div><div class="bonus-card"><b>আবার চেষ্টা</b><span>ভুল মানে নতুন clue</span><i></i></div></div>
+        <figure class="real-preview"><img src="/digital-pack-preview/math-bonus.png" alt="গণিত খেলাঘর প্যাকের bonus asset-এর preview" loading="lazy" /><figcaption>আসল bonus page-এর sample · কাট-আউট, goal এবং reflection space</figcaption></figure>
         <div class="preview-copy"><span class="preview-index">০২</span><h3>শেখার পরে ঘরে থাকে</h3><p>Goal card, mission badge, routine board, tracker এবং answer key—শিশুকে আবার বসতে সাহায্য করে।</p><span class="preview-meta">কাট-আউট · wall card · family routine</span></div>
       </div>
       <div class="preview-panel" id="preview-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
-        <div class="guide-preview" aria-label="অভিভাবক guide sample preview"><span class="guide-label">অভিভাবকের ১৫ মিনিট</span><h3>প্রথমে প্রশ্ন করুন</h3><p>“তুমি কী লক্ষ্য করলে?”</p><div><span>১</span>শিশুকে আগে চেষ্টা করতে দিন</div><div><span>২</span>ভুলের উত্তর না বলে একটি clue দিন</div><div><span>৩</span>শেষে শিশুর নিজের ভাষা শুনুন</div></div>
+        <figure class="real-preview"><img src="/digital-pack-preview/math-guide.png" alt="গণিত খেলাঘর প্যাকের অভিভাবক guide preview" loading="lazy" /><figcaption>আসল guide page-এর sample · ঘরে ব্যবহারের ১৫ মিনিটের prompt</figcaption></figure>
         <div class="preview-copy"><span class="preview-index">০৩</span><h3>শুধু worksheet নয়</h3><p>প্রতিটি pack-এ age-aware prompt, ব্যবহার-পদ্ধতি, উত্তরপত্র এবং ঘরে কীভাবে কথাটি তুলবেন তার guide থাকে।</p><span class="preview-meta">পরিবার · শিক্ষক · ছোট group</span></div>
       </div>
     </section>
@@ -214,6 +206,9 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
   .preview-copy h3 { font-size: 1.7rem; margin: .35rem 0 .45rem; }
   .preview-copy p { color: var(--ink-2); line-height: 1.7; }
   .preview-meta { color: var(--brand-ink); font-size: 12px; }
+  .real-preview { margin: 0; max-width: 520px; padding: .7rem; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: 0 20px 45px rgba(0,0,0,.18); }
+  .real-preview img { display: block; width: 100%; height: min(62vw, 430px); object-fit: contain; object-position: top center; border-radius: 11px; background: #eef3f6; }
+  .real-preview figcaption { padding: .65rem .35rem .15rem; color: var(--muted); font-size: 11px; line-height: 1.5; }
   .bonus-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; align-items: center; position: relative; }
   .bonus-sticker { position: absolute; top: 1rem; right: 1rem; margin: 0; transform: rotate(4deg); }
   .bonus-card { min-height: 150px; padding: .9rem; display: flex; flex-direction: column; gap: .55rem; justify-content: space-between; border-radius: 14px; background: color-mix(in oklab, var(--brand) 16%, var(--panel)); border: 1px dashed color-mix(in oklab, var(--brand) 55%, var(--line)); }
