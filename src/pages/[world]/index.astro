@@ -588,7 +588,7 @@ const schema = [
           <h2>{w.bn} ভুবনের পুরো তালিকা</h2>
           <p class="index-s">
             {bn(w.cats.length)}টি বিভাগ, {bn(total)}টি বিষয়। নিচের যেকোনো শিরোনামে চাপলে
-            ছোট লেখাটা খুলবে। পুরো লেখা আর তিনটি গভীরতা উপরের মডেলে।
+            ছোট লেখাটা খুলবে। “মডেলে কাছে গিয়ে দেখো” চাপলে উপরের দৃশ্যে সেই বিষয়টি আলাদা করে বড় হবে।
           </p>
         </div>
         {/* Eighty-four things in a grid is a wall, and a wall is only useful to
@@ -628,7 +628,7 @@ const schema = [
                   <p>{c.detail![ii].l1}</p>
                   <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{c.detail![ii].fun}</p>
                   <p class="ix-more">
-                    <button type="button" class="ix-open" data-c={ci} data-i={ii}>উপরে মডেলে দেখাও →</button>
+                    <button type="button" class="ix-open" data-c={ci} data-i={ii}>মডেলে কাছে গিয়ে দেখো ↑</button>
                   </p>
                 </details>
               ))}
@@ -692,6 +692,11 @@ const schema = [
   /* stage */
   .mid { display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; }
   .stage { display: flex; flex-direction: column; min-height: 620px; overflow: hidden; border-color: color-mix(in oklab,var(--w) 42%,var(--line)); box-shadow: 6px 6px 0 color-mix(in oklab,var(--w) 28%,transparent),var(--shadow); }
+  .stage.model-arrival { animation: model-arrival 1.45s ease-out; }
+  @keyframes model-arrival {
+    0%, 100% { box-shadow: 6px 6px 0 color-mix(in oklab,var(--w) 28%,transparent),var(--shadow); }
+    28% { border-color: color-mix(in oklab,var(--w) 88%,white); box-shadow: 0 0 0 5px color-mix(in oklab,var(--w) 28%,transparent),0 0 42px color-mix(in oklab,var(--w) 38%,transparent); }
+  }
   .stage-h { display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem 0; flex-wrap: wrap; }
   .stage-h h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -0.01em; line-height: 1.15; font-weight: 800; margin-top: 0.1rem; overflow-wrap: anywhere; }
   .tag { color: var(--muted); font-size: 14px; }
@@ -1051,7 +1056,6 @@ const schema = [
   .m-hearts { font-size: 10px; color: #e0556a; letter-spacing: 0.08em; }
   .m-vary { font-size: 10px; color: var(--w); font-weight: 700; }
   .m-go { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .m-stars { font-size: 13px; letter-spacing: 0.06em; color: var(--sun); }
   .m-play { font-size: 11.5px; font-weight: 800; padding: 0.22rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); color: var(--w); transition: background 0.18s ease, color 0.18s ease; }
   .miss-foot { padding: 0 0.95rem 0.9rem; font-size: 12px; color: var(--muted); line-height: 1.55; }
   .miss-more > summary {
@@ -1240,6 +1244,7 @@ const schema = [
   let curCat = 0, curItem = 0;
   let level = (localStorage.getItem('posora:level') as 'l1' | 'l2' | 'l3' | null) ?? 'l1';
   let hero: HeroHandle | null = null, lastDeg = -1;
+  let pendingHeroFocus: number | null = null;
   // "did this visitor actually touch the model", counted once per category so a
   // single drag does not turn into a hundred events
   let playCounted = false;
@@ -1270,7 +1275,11 @@ const schema = [
     const d = Math.round(yawDeg); if (d === lastDeg) return;
     lastDeg = d; angleEl.textContent = `কোণ ${bn(d)}°`;
   };
-  const heroItems = (c: Cat) => c.items.map((label, j) => ({ label, emoji: c.emoji[j] }));
+  const heroItems = (c: Cat) => c.items.map((label, j) => ({
+    label,
+    emoji: c.emoji[j],
+    caption: c.detail?.[j]?.l1,
+  }));
   (slug === 'nature' ? import('../../components/explorer/nature-viewer') : import('../../components/explorer/heroes')).then(({ mountHero }) => {
     const loading = root.querySelector<HTMLElement>('#hero-loading');
     hero = mountHero(host, cats[0].hero, onHeroFrame, (j) => {
@@ -1284,6 +1293,10 @@ const schema = [
     ctlLabel.textContent = hero.set(cats[curCat].hero);
     ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
     hero.setItems(heroItems(cats[curCat]), curItem);
+    if (pendingHeroFocus !== null) {
+      hero.focus(pendingHeroFocus);
+      pendingHeroFocus = null;
+    }
     if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
     syncGrove(curItem);
     syncSpin(hero.isAuto());
@@ -1472,21 +1485,18 @@ const schema = [
       const s = best[missionKeys[i]!] ?? 0;
       if (s > 0) done++;
       b.classList.toggle('done', s > 0);
-      const st = b.querySelector<HTMLElement>('.m-stars')!;
-      st.textContent = '★'.repeat(s) + '☆'.repeat(3 - s);
-      b.querySelector<HTMLElement>('.m-play')!.textContent = s > 0 ? 'আবার ▶' : 'খেলো ▶';
+      const status = b.querySelector<HTMLElement>('.m-status')!;
+      status.textContent = s > 0 ? 'সম্পূর্ণ' : 'শুরু করা হয়নি';
+      b.querySelector<HTMLElement>('.m-play')!.textContent = s > 0 ? 'আবার খেলো →' : 'খেলো →';
     });
     $('#miss-count').textContent = `${bn(done)} / ${bn(missionBtns.length)}`;
     const foot = root.querySelector<HTMLElement>('#miss-foot');
     if (foot) {
-      const three = missionKeys.filter((k) => (best[k] ?? 0) === 3).length;
       foot.textContent = done === 0
-        ? 'প্রতিটি মিশন একেকটা ছোট খেলা: তিনটি হৃদয়, দ্রুত উত্তরে বেশি পয়েন্ট, শেষে তারা।'
+        ? 'একটি মিশন বেছে নাও। প্রতিটিই ছোট, খেলতে খেলতে শেখার কাজ।'
         : done < missionBtns.length
-          ? `${bn(missionBtns.length - done)}টি মিশন এখনও বাকি। সব হৃদয় বাঁচিয়ে শেষ করলে তিন তারা।`
-          : three === missionBtns.length
-            ? 'সব মিশনে তিন তারা! এই ভুবনে তোমাকে আর কিছু শেখানোর নেই।'
-            : `সব মিশন শেষ, ${bn(missionBtns.length - three)}টিতে এখনও তিন তারা বাকি।`;
+          ? `${bn(done)}টি সম্পূর্ণ। আরও ${bn(missionBtns.length - done)}টি নতুন মিশন বাকি।`
+          : 'সব মিশন সম্পূর্ণ। চাইলে পছন্দের খেলাটি আবার খেলো।';
     }
   }
   // a key on the "যা যা করা যাবে" card whose real answer is a mission opens it
@@ -1945,7 +1955,8 @@ const schema = [
     curItem = ii;
     rememberSpot(curCat, ii);
     chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
-    hero?.focus(ii);
+    if (hero) hero.focus(ii);
+    else pendingHeroFocus = ii;
     syncGrove(ii);
     renderRead(); renderCrumbs();
     // the reading arrives, it does not just swap
@@ -2291,8 +2302,19 @@ const schema = [
   root.querySelector('#all')?.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.ix-open');
     if (!b) return;
-    showCat(+b.dataset.c!, +b.dataset.i!);
-    $('.stage')!.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    const ci = +b.dataset.c!, ii = +b.dataset.i!;
+    showCat(ci, ii);
+    // `setItems` resets Nature to the full landscape. This action explicitly
+    // promises the selected subject, so move one level in after the category
+    // and item have been installed in the viewer.
+    if (hero) hero.focus(ii);
+    else pendingHeroFocus = ii;
+    const stage = $('.stage')!;
+    stage.classList.remove('model-arrival');
+    void stage.offsetWidth;
+    stage.classList.add('model-arrival');
+    stage.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    window.setTimeout(() => stage.classList.remove('model-arrival'), reduced ? 0 : 1500);
   });
 
   renderChips(); renderRead(); pinRead(); renderCrumbs(); renderGlance(); renderRecords();

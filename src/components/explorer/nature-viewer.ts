@@ -40,10 +40,19 @@ export function mountHero(host: HTMLElement, spec:HeroSpec, onFrame?:(info:{yawD
     shell.setAttribute('data-nature-category',String(category));shell.setAttribute('data-nature-depth',String(depth));
     $('#nc-title').textContent=chapter().title;$('#nc-kicker').textContent=chapter().kicker;
     $('.model-note').textContent=chapter().note;
-    targetButtons.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===selected&&depth>0)));
+    const mappedTarget=chapter().map[item]??0;
+    targetButtons.querySelectorAll('button').forEach((b,i)=>{
+      b.setAttribute('aria-pressed',String(i===selected&&depth>0));
+      const name=i===mappedTarget&&items[item]?.label?items[item].label:chapter().targets[i];
+      b.textContent=`${['১','২','৩'][i]} · ${name}`;
+    });
     overview.setAttribute('aria-pressed',String(depth===0));close.setAttribute('aria-pressed',String(depth===1));detail.setAttribute('aria-pressed',String(depth===2));
-    caption.textContent=depth===0?chapter().cue:`${chapter().targets[selected]} - ${chapter().captions[selected]}`;
-    if(depth===2&&(category===0||category===2)&&selected<2)caption.textContent=selected===0&&category===0?'মেঘের ক্ষুদ্র পানিকণা - এখানে অনেক বড় করে দেখানো হয়েছে। এগুলো জলীয় বাষ্প নয়।':selected===1&&category===0?'বৃষ্টির ফোঁটা - বড় ফোঁটা পড়ার সময় কিছুটা চ্যাপ্টা হয়; সব ফোঁটার আকার এক নয়।':caption.textContent;
+    const exactItem=selected===mappedTarget?items[item]:undefined;
+    caption.textContent=depth===0
+      ?chapter().cue
+      :`${exactItem?.label??chapter().targets[selected]} - ${exactItem?.caption??chapter().captions[selected]}`;
+    if(depth===2&&category===0&&item===0&&selected===0)caption.textContent='মেঘের ক্ষুদ্র পানিকণা - এখানে অনেক বড় করে দেখানো হয়েছে। এগুলো জলীয় বাষ্প নয়।';
+    if(depth===2&&category===0&&item===1&&selected===1)caption.textContent='বৃষ্টির ফোঁটা - বড় ফোঁটা পড়ার সময় কিছুটা চ্যাপ্টা হয়; সব ফোঁটার আকার এক নয়।';
     host.setAttribute('aria-label',`${chapter().title} - ${depth===0?'পুরো দৃশ্য':chapter().targets[selected]}। টেনে ঘোরাও; নিচে একই নিয়ন্ত্রণের বোতাম আছে।`);
   }
   function frame(instant=false) {

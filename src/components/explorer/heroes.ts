@@ -20,7 +20,7 @@ export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
   /** For the `collection` scene: item label -> figure name, in order. */
   figures?: { label: string; figure: string }[] };
 /** One thing in the category, shown as a badge orbiting the category's model. */
-export type HeroItem = { label: string; emoji?: string };
+export type HeroItem = { label: string; emoji?: string; caption?: string };
 type Ctx = { root: Group; hue: Color; v: string; font: string; figures: { label: string; figure: string }[] };
 /**
  * A scene may expose `anchors`: a marker object per item label, attached to the
