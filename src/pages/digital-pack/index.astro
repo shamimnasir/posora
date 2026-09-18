@@ -4,7 +4,7 @@ import { bundle, digitalPacks } from '../../data/digital-packs';
 import { bn } from '../../lib/bn';
 
 export const prerender = false;
-Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
+Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
 
 const schema = [
   {
@@ -46,6 +46,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="/digital-pack/checkout/">চেকআউট প্রস্তুতি দেখো →</a>
+          <a class="btn preview-cta" href="#preview">ভেতরের preview দেখুন ↓</a>
           <a class="btn" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও</a>
           <a class="btn" href="/printables/">ফ্রি শিট আগে দেখো</a>
         </div>
