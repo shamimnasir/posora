@@ -68,6 +68,39 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
       <div><span aria-hidden="true">∞</span><b>একবার কিনে</b><small>নিজের ঘরে যতবার দরকার</small></div>
     </section>
 
+    <section class="sec preview" id="preview">
+      <div class="sec-h">
+        <p class="eyebrow">কেনার আগে দেখে নিন</p>
+        <h2>ভেতরের পাতার এক ঝলক</h2>
+        <p>এগুলো preview mock-up: আসল paid PDF-এর কাজের ধরন, জায়গা আর presentation দেখাবে, কিন্তু কোনো সম্পূর্ণ paid sheet ফ্রি করে দেবে না।</p>
+      </div>
+      <div class="preview-tabs" role="tablist" aria-label="ডিজিটাল প্যাক preview">
+        <button class="preview-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="preview-sheets" id="tab-sheets">কার্যপত্র</button>
+        <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-bonus" id="tab-bonus">বোনাস asset</button>
+        <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-guide" id="tab-guide">অভিভাবক guide</button>
+      </div>
+      <div class="preview-panel is-active" id="preview-sheets" role="tabpanel" aria-labelledby="tab-sheets">
+        <div class="sample-page" aria-label="কার্যপত্রের sample preview">
+          <div class="sample-top"><span>পসরা · গণিত খেলাঘর</span><span>পাতা ০৩</span></div>
+          <span class="sample-pill">আজকের ছোট মিশন</span>
+          <h3>গুনে দেখো, তারপর মিলিয়ে দাও</h3>
+          <p>ছবিগুলো গুনে সঠিক সংখ্যার সঙ্গে দাগ টানো। শেষে নিজের উত্তরটি একবার ব্যাখ্যা করো।</p>
+          <div class="sample-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="sample-lines"><span>আমার উত্তর</span><b></b><span>আমি কী দেখলাম?</span><b></b></div>
+          <small>এক পাতায়: নির্দেশনা · কাজের জায়গা · নিজের ব্যাখ্যা</small>
+        </div>
+        <div class="preview-copy"><span class="preview-index">০১</span><h3>শিশু শুধু টিক দেবে না</h3><p>প্রতিটি sheet-এ ছোট action, আঁকার বা লেখার জায়গা এবং “আমি কী দেখলাম?” reflection থাকে।</p><span class="preview-meta">A4 · রঙিন বা সাদা-কালো · ১৫ মিনিট</span></div>
+      </div>
+      <div class="preview-panel" id="preview-bonus" role="tabpanel" aria-labelledby="tab-bonus" hidden>
+        <div class="bonus-preview" aria-label="বোনাস asset sample preview"><span class="bonus-sticker">কেটে নাও</span><div class="bonus-card"><b>আজকের লক্ষ্য</b><span>আমি আজ যে কাজটি নিজে চেষ্টা করব</span><i></i></div><div class="bonus-card"><b>মিশন ব্যাজ</b><span>আমি দেখেছি · ভেবেছি · বানিয়েছি</span><i></i></div><div class="bonus-card"><b>আবার চেষ্টা</b><span>ভুল মানে নতুন clue</span><i></i></div></div>
+        <div class="preview-copy"><span class="preview-index">০২</span><h3>শেখার পরে ঘরে থাকে</h3><p>Goal card, mission badge, routine board, tracker এবং answer key—শিশুকে আবার বসতে সাহায্য করে।</p><span class="preview-meta">কাট-আউট · wall card · family routine</span></div>
+      </div>
+      <div class="preview-panel" id="preview-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
+        <div class="guide-preview" aria-label="অভিভাবক guide sample preview"><span class="guide-label">অভিভাবকের ১৫ মিনিট</span><h3>প্রথমে প্রশ্ন করুন</h3><p>“তুমি কী লক্ষ্য করলে?”</p><div><span>১</span>শিশুকে আগে চেষ্টা করতে দিন</div><div><span>২</span>ভুলের উত্তর না বলে একটি clue দিন</div><div><span>৩</span>শেষে শিশুর নিজের ভাষা শুনুন</div></div>
+        <div class="preview-copy"><span class="preview-index">০৩</span><h3>শুধু worksheet নয়</h3><p>প্রতিটি pack-এ age-aware prompt, ব্যবহার-পদ্ধতি, উত্তরপত্র এবং ঘরে কীভাবে কথাটি তুলবেন তার guide থাকে।</p><span class="preview-meta">পরিবার · শিক্ষক · ছোট group</span></div>
+      </div>
+    </section>
+
     <section class="sec research">
       <div class="sec-h">
         <p class="eyebrow">কেন এই জিনিসগুলো</p>
@@ -122,6 +155,15 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
   </div>
 </Base>
 
+<script>
+  const previewTabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
+  const previewPanels = [...document.querySelectorAll<HTMLElement>('.preview-panel')];
+  previewTabs.forEach((tab) => tab.addEventListener('click', () => {
+    previewTabs.forEach((t) => { t.classList.toggle('is-active', t === tab); t.setAttribute('aria-selected', String(t === tab)); });
+    previewPanels.forEach((panel) => { const active = panel.id === tab.getAttribute('aria-controls'); panel.hidden = !active; panel.classList.toggle('is-active', active); });
+  }));
+</script>
+
 <style>
   .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 3rem; }
   .crumbs { font-size: 13px; color: var(--muted); }
@@ -146,6 +188,41 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
   .value-strip span { grid-row: span 2; color: var(--brand); font-size: 1.4rem; }
   .value-strip b { font-size: 14px; }
   .value-strip small { color: var(--muted); font-size: 11px; }
+  .preview { scroll-margin-top: 1rem; }
+  .preview-tabs { display: flex; flex-wrap: wrap; gap: .55rem; border-bottom: 1px solid var(--line-soft); padding-bottom: .65rem; }
+  .preview-tab { border: 1px solid var(--line); border-radius: 999px; padding: .65rem 1rem; background: var(--panel); color: var(--ink-2); font: inherit; cursor: pointer; }
+  .preview-tab:hover, .preview-tab:focus-visible { border-color: var(--brand); color: var(--brand-ink); }
+  .preview-tab.is-active { background: var(--brand); border-color: var(--brand); color: var(--on-brand); font-weight: 700; }
+  .preview-panel { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(240px, .75fr); gap: 1.5rem; align-items: stretch; }
+  .preview-panel[hidden] { display: none; }
+  .sample-page, .bonus-preview, .guide-preview { min-height: 300px; border: 1px solid color-mix(in oklab, var(--brand) 35%, var(--line)); border-radius: 20px; padding: 1.35rem; background: linear-gradient(145deg, color-mix(in oklab, var(--brand) 16%, var(--panel)), var(--panel)); box-shadow: 0 18px 40px rgba(0,0,0,.1); }
+  .sample-page { position: relative; overflow: hidden; }
+  .sample-page::after { content: ''; position: absolute; width: 180px; height: 180px; border-radius: 50%; right: -65px; top: -70px; background: color-mix(in oklab, var(--brand) 28%, transparent); }
+  .sample-top { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; font-family: var(--font-mono); }
+  .sample-pill, .guide-label, .bonus-sticker { display: inline-block; margin-top: 1.5rem; padding: .4rem .7rem; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-size: 11px; font-weight: 700; }
+  .sample-page h3 { max-width: 18ch; margin: .75rem 0 .35rem; font-size: clamp(1.4rem, 3vw, 2rem); }
+  .sample-page p, .guide-preview p { color: var(--ink-2); line-height: 1.65; max-width: 50ch; }
+  .sample-dots { display: flex; gap: .55rem; margin: 1.35rem 0; }
+  .sample-dots i { width: 34px; height: 34px; border-radius: 50%; background: color-mix(in oklab, var(--brand) 45%, var(--panel)); border: 2px solid var(--brand); }
+  .sample-dots i:nth-child(2n) { transform: translateY(12px); background: color-mix(in oklab, #7cc9e8 55%, var(--panel)); }
+  .sample-lines { display: grid; grid-template-columns: auto 1fr; gap: .55rem .8rem; align-items: end; color: var(--muted); font-size: 12px; }
+  .sample-lines b { border-bottom: 1px dashed var(--muted); height: 1.25rem; }
+  .sample-page small { display: block; margin-top: 1.4rem; color: var(--brand-ink); font-size: 11px; }
+  .preview-copy { align-self: center; padding: .4rem .5rem; }
+  .preview-index { color: var(--brand); font-family: var(--font-mono); font-size: 12px; }
+  .preview-copy h3 { font-size: 1.7rem; margin: .35rem 0 .45rem; }
+  .preview-copy p { color: var(--ink-2); line-height: 1.7; }
+  .preview-meta { color: var(--brand-ink); font-size: 12px; }
+  .bonus-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; align-items: center; position: relative; }
+  .bonus-sticker { position: absolute; top: 1rem; right: 1rem; margin: 0; transform: rotate(4deg); }
+  .bonus-card { min-height: 150px; padding: .9rem; display: flex; flex-direction: column; gap: .55rem; justify-content: space-between; border-radius: 14px; background: color-mix(in oklab, var(--brand) 16%, var(--panel)); border: 1px dashed color-mix(in oklab, var(--brand) 55%, var(--line)); }
+  .bonus-card b { color: var(--brand-ink); font-size: 13px; }
+  .bonus-card span { color: var(--ink-2); font-size: 12px; line-height: 1.5; }
+  .bonus-card i { height: 2rem; border-bottom: 1px solid var(--muted); }
+  .guide-preview { background: linear-gradient(145deg, color-mix(in oklab, #75c9a6 18%, var(--panel)), var(--panel)); }
+  .guide-preview h3 { font-size: 1.7rem; margin: 1.1rem 0 .25rem; }
+  .guide-preview > div { display: flex; gap: .7rem; align-items: center; margin-top: .8rem; color: var(--ink-2); font-size: 13px; }
+  .guide-preview > div span { flex: 0 0 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: var(--on-brand); font-family: var(--font-mono); }
   .sec { display: flex; flex-direction: column; gap: 1.25rem; }
   .sec-h { max-width: 70ch; }
   .sec-h h2, .bundle h2, .honest h2 { font-size: clamp(1.7rem, 3.5vw, 2.5rem); line-height: 1.2; }
@@ -176,5 +253,6 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
   .honest { border-top: 1px solid var(--line-soft); padding-top: 1.4rem; max-width: 70ch; }
   .honest a { color: var(--brand-ink); font-weight: 700; }
   @media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .value-strip, .signal-grid { grid-template-columns: repeat(2, 1fr); } .pack-grid { grid-template-columns: 1fr; } .bundle { grid-template-columns: 1fr; } .bundle-price { align-items: flex-start; } }
-  @media (max-width: 480px) { .value-strip { grid-template-columns: 1fr; } .pack ul { columns: 1; } h1 { max-width: none; } }
+  @media (max-width: 640px) { .preview-panel { grid-template-columns: 1fr; } .bonus-preview { min-height: 260px; } }
+  @media (max-width: 480px) { .value-strip { grid-template-columns: 1fr; } .pack ul { columns: 1; } h1 { max-width: none; } .preview-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: .8rem; } .preview-tab { white-space: nowrap; } .bonus-preview { grid-template-columns: 1fr; } .bonus-card { min-height: auto; } }
 </style>
