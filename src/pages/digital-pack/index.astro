@@ -26,6 +26,7 @@ const schema = [
 ];
 const activitiesPerPack = digitalPacks[0]?.activities.length ?? 0;
 const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
+const previewVersion = '20260919-varied';
 ---
 
 <Base
@@ -46,7 +47,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="/digital-pack/checkout/">চেকআউট প্রস্তুতি দেখো →</a>
-          <a class="btn preview-cta" href="#preview">ভেতরের preview দেখুন ↓</a>
+          <a class="btn preview-cta" href="#preview">ভেতরের নমুনা দেখুন ↓</a>
           <a class="btn" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও</a>
           <a class="btn" href="/printables/">ফ্রি শিট আগে দেখো</a>
         </div>
@@ -73,7 +74,7 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
       <div class="sec-h">
         <p class="eyebrow">কেনার আগে দেখে নিন</p>
         <h2>ভেতরের পাতার এক ঝলক</h2>
-        <p>এগুলো preview mock-up: আসল paid PDF-এর কাজের ধরন, জায়গা আর presentation দেখাবে, কিন্তু কোনো সম্পূর্ণ paid sheet ফ্রি করে দেবে না।</p>
+        <p>এগুলো আসল paid PDF থেকে নেওয়া নমুনা। ট্রেসিং, সাজানো, মাপা, নকশা, সিদ্ধান্ত আর পরীক্ষার পাতা যে সত্যিই আলাদা, তা কেনার আগেই দেখা যাবে।</p>
       </div>
       <div class="preview-tabs" role="tablist" aria-label="ডিজিটাল প্যাক preview">
         <button class="preview-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="preview-sheets" id="tab-sheets">ওয়ার্কশিট</button>
@@ -81,22 +82,22 @@ const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
         <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-guide" id="tab-guide">অভিভাবকের গাইড</button>
       </div>
       <div class="preview-panel is-active" id="preview-sheets" role="tabpanel" aria-labelledby="tab-sheets">
-        <figure class="real-preview"><img src="/digital-pack-preview/math-worksheet.png" alt="গণিত খেলাঘর প্যাকের আসল ওয়ার্কশিটের preview" loading="lazy" /><figcaption>আসল generated PDF-এর প্রথম ওয়ার্কশিট · সম্পূর্ণ প্যাকের একটি নমুনা পাতা</figcaption></figure>
+        <figure class="real-preview"><img src={`/digital-pack-preview/math-worksheet.png?v=${previewVersion}`} alt="গণিত খেলাঘর প্যাকের আসল ওয়ার্কশিটের নমুনা" loading="lazy" /><figcaption>আসল PDF-এর প্রথম ওয়ার্কশিট · সম্পূর্ণ প্যাকের একটি নমুনা পাতা</figcaption></figure>
         <div class="preview-copy"><span class="preview-index">০১</span><h3>শিশু শুধু টিক দেবে না</h3><p>প্রতিটি শিটে ছোট কাজ, আঁকার বা লেখার জায়গা এবং “আমি কী দেখলাম?” নিজের ভাবনার অংশ থাকে।</p><span class="preview-meta">A4 · রঙিন বা সাদা-কালো · ১৫ মিনিট</span></div>
       </div>
       <div class="preview-panel" id="preview-bonus" role="tabpanel" aria-labelledby="tab-bonus" hidden>
-        <figure class="real-preview"><img src="/digital-pack-preview/math-bonus.png" alt="গণিত খেলাঘর প্যাকের বোনাস উপকরণের preview" loading="lazy" /><figcaption>আসল বোনাস পাতার নমুনা · কাট-আউট, লক্ষ্য আর নিজের ভাবনার জায়গা</figcaption></figure>
+        <figure class="real-preview"><img src={`/digital-pack-preview/math-bonus.png?v=${previewVersion}`} alt="গণিত খেলাঘর প্যাকের বোনাস উপকরণের নমুনা" loading="lazy" /><figcaption>আসল বোনাস পাতার নমুনা · কাট-আউট, লক্ষ্য আর নিজের ভাবনার জায়গা</figcaption></figure>
         <div class="preview-copy"><span class="preview-index">০২</span><h3>শেখার পরে ঘরে থাকে</h3><p>লক্ষ্য কার্ড, মিশন ব্যাজ, রুটিন বোর্ড, হিসাব রাখার পাতা এবং উত্তর মিলানোর পাতা। এগুলো শিশুকে আবার বসতে সাহায্য করে।</p><span class="preview-meta">কাট-আউট · দেয়ালে লাগানোর কার্ড · পারিবারিক রুটিন</span></div>
       </div>
       <div class="preview-panel" id="preview-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
-        <figure class="real-preview"><img src="/digital-pack-preview/math-guide.png" alt="গণিত খেলাঘর প্যাকের অভিভাবকের গাইড preview" loading="lazy" /><figcaption>আসল গাইড পাতার নমুনা · ঘরে ব্যবহারের ১৫ মিনিটের প্রশ্ন</figcaption></figure>
+        <figure class="real-preview"><img src={`/digital-pack-preview/math-guide.png?v=${previewVersion}`} alt="গণিত খেলাঘর প্যাকের অভিভাবকের গাইডের নমুনা" loading="lazy" /><figcaption>আসল গাইড পাতার নমুনা · ঘরে ব্যবহারের ১৫ মিনিটের প্রশ্ন</figcaption></figure>
         <div class="preview-copy"><span class="preview-index">০৩</span><h3>শুধু ওয়ার্কশিট নয়</h3><p>প্রতিটি প্যাকে বয়স অনুযায়ী প্রশ্ন, ব্যবহার-পদ্ধতি, উত্তরপত্র এবং ঘরে কীভাবে কথাটি তুলবেন তার গাইড থাকে।</p><span class="preview-meta">পরিবার · শিক্ষক · ছোট দল</span></div>
       </div>
       <div class="preview-all-head"><h3>১১টি প্যাকের ১১টি আসল নমুনা পাতা</h3><span>প্রতিটি কার্ড খুলে নিজের প্যাকের প্রথম পাতাটি দেখুন</span></div>
       <div class="preview-grid">
         {digitalPacks.map((p) => (
-          <a class="pack-preview-card" href={`/digital-pack-preview/${p.slug}.png`} target="_blank" rel="noreferrer" style={`--pack:${p.color}`}>
-            <img src={`/digital-pack-preview/${p.slug}.png`} alt={`${p.title} আসল ওয়ার্কশিট preview`} loading="lazy" />
+          <a class="pack-preview-card" href={`/digital-pack-preview/${p.slug}.png?v=${previewVersion}`} target="_blank" rel="noreferrer" style={`--pack:${p.color}`}>
+            <img src={`/digital-pack-preview/${p.slug}.png?v=${previewVersion}`} alt={`${p.title} আসল ওয়ার্কশিটের নমুনা`} loading="lazy" />
             <span class="pack-preview-info"><b>{p.title}</b><small>{p.activities.length}টি ওয়ার্কশিট · {p.bonus.length}টি বোনাস উপকরণ</small><em>বড় করে দেখুন ↗</em></span>
           </a>
         ))}
