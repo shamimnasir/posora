@@ -24,6 +24,12 @@ try {
       try {
         const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
         const status = response?.status() ?? 0;
+        if (route.startsWith('/blog/')) {
+          await page.waitForFunction(() => {
+            const image = document.querySelector('main img');
+            return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0;
+          }, { timeout: 10000 }).catch(() => {});
+        }
         const result = await page.evaluate(() => ({
           title: document.title,
           bodyText: document.body.innerText.trim().length,
