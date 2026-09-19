@@ -24,7 +24,9 @@ export const GET: APIRoute = async (ctx) => {
   if (!bucket) return json({ ok: false, error: 'storage-unavailable' }, 503);
 
   const isBundle = slug === 'bundle';
-  const key = isBundle ? 'digital-packs/posora-digital-pack-bundle.zip' : `digital-packs/${slug}.pdf`;
+  const guideSlugs = new Set(['start-here', '30-day-plan']);
+  const key = isBundle ? 'digital-packs/posora-digital-pack-bundle.zip' : guideSlugs.has(slug) || /^[a-z0-9-]{2,48}$/.test(slug) ? `digital-packs/${slug}.pdf` : '';
+  if (!key) return json({ ok: false, error: 'file' }, 404);
   const object = await bucket.get(key);
   if (!object) return json({ ok: false, error: 'file-not-found' }, 404);
 

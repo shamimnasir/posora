@@ -159,6 +159,8 @@ if (member && plan && child) {
                 <p class="note">আপনার ৳২৪৯ বান্ডলের ফাইলগুলো এখান থেকে নামিয়ে নিন। লিংকটি শুধু আপনার অ্যাকাউন্টে কাজ করে।</p>
                 <div class="pack-downloads">
                   <a class="mini download all" href="/api/digital-pack/download/bundle">সব প্যাক একসঙ্গে (ZIP) <span aria-hidden="true">↓</span></a>
+                  <a class="mini download" href="/api/digital-pack/download/start-here">শুরু করার গাইড <span aria-hidden="true">↓</span></a>
+                  <a class="mini download" href="/api/digital-pack/download/30-day-plan">৩০ দিনের পরিকল্পনা <span aria-hidden="true">↓</span></a>
                   {digitalPacks.map((p) => <a class="mini download" href={`/api/digital-pack/download/${p.slug}`}>{p.title} <span aria-hidden="true">↓</span></a>)}
                 </div>
               </>
