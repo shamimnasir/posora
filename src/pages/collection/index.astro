@@ -220,8 +220,8 @@ const first = shelves[0];
   .wn { font-size: 12.5px; color: var(--muted); text-align: end; font-weight: 600; }
   @media (max-width: 560px) { .wrow { grid-template-columns: 10px minmax(0, 1fr) auto; gap: .55rem; } .wrow .wtrack { display: none; } .wrow b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .wn { font-size: 11px; } }
   @media (max-width: 640px) {
-    .wrow { grid-template-columns: 12px 1fr 52px; }
-    .wtrack { grid-column: 2 / 4; }
+    .wrow { grid-template-columns: 10px minmax(0, 1fr) auto; gap: .55rem; }
+    .wrow .wtrack { display: none; }
   }
 </style>
 
