@@ -31,7 +31,7 @@ const previewVersion = '20260919-varied';
 
 <Base
   title="৳২৪৯ ডিজিটাল প্যাক বান্ডল"
-  description="পসরার ১১ ভুবনের ঘর, স্কুল ও ছাপার জন্য তৈরি ডিজিটাল লার্নিং প্যাক। ৮৮টি ওয়ার্কশিট, ৩৩টি বোনাস উপকরণ, গাইড ও উত্তরপত্রের downloadable বান্ডল।"
+  description="পসরার ১১ ভুবনের ঘর, স্কুল ও ছাপার জন্য তৈরি ডিজিটাল লার্নিং প্যাক। ৮৮টি ওয়ার্কশিট, ২২টি মিশন পাতা, ৩৩টি বোনাস উপকরণ, গাইড ও উত্তরপত্রের downloadable বান্ডল।"
   schema={schema}
 >
   <div class="wrap page">
@@ -98,7 +98,7 @@ const previewVersion = '20260919-varied';
         {digitalPacks.map((p) => (
           <a class="pack-preview-card" href={`/digital-pack-preview/${p.slug}.png?v=${previewVersion}`} target="_blank" rel="noreferrer" style={`--pack:${p.color}`}>
             <img src={`/digital-pack-preview/${p.slug}.png?v=${previewVersion}`} alt={`${p.title} আসল ওয়ার্কশিটের নমুনা`} loading="lazy" />
-            <span class="pack-preview-info"><b>{p.title}</b><small>{p.activities.length}টি ওয়ার্কশিট · {p.bonus.length}টি বোনাস উপকরণ</small><em>বড় করে দেখুন ↗</em></span>
+            <span class="pack-preview-info"><b>{p.title}</b><small>২টি মিশন পাতা · {p.activities.length}টি ওয়ার্কশিট · {p.bonus.length}টি বোনাস</small><em>বড় করে দেখুন ↗</em></span>
           </a>
         ))}
       </div>
@@ -134,7 +134,7 @@ const previewVersion = '20260919-varied';
       <div class="sec-h">
         <p class="eyebrow">ভেতরে যা পাবেন</p>
         <h2>১১টি প্যাক, ১১ রকমের “আজ কী করব?”</h2>
-        <p>প্রতিটি প্যাকে {bn(activitiesPerPack)}টি ছোট ওয়ার্কশিট, {bn(bonusPerPack)}টি সহায়ক বোনাস উপকরণ এবং বয়স অনুযায়ী ব্যবহার-পদ্ধতি।</p>
+        <p>প্রতিটি প্যাকে ২টি মিশন পাতা, {bn(activitiesPerPack)}টি ছোট ওয়ার্কশিট, {bn(bonusPerPack)}টি সহায়ক বোনাস উপকরণ এবং বয়স অনুযায়ী ব্যবহার-পদ্ধতি।</p>
       </div>
       <div class="pack-grid">
         {digitalPacks.map((p, i) => (
