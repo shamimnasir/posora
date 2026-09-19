@@ -223,6 +223,7 @@ const first = shelves[0];
     .wrow { grid-template-columns: 10px minmax(0, 1fr) auto; gap: .55rem; }
     .wrow .wtrack { display: none; }
   }
+  @media (max-width: 560px) { .host { min-height: 0; width: 100%; max-width: 100%; aspect-ratio: 4 / 3; overflow: hidden; } }
 </style>
 
 <script>
