@@ -8,7 +8,7 @@
  * question, and the rest go deeper.
  */
 import Base from '../../layouts/Base.astro';
-import { CLUSTERS, POSTS, postsIn, clusterHue, readMinutes } from '../../data/blog';
+import { CLUSTERS, POSTS, postsIn, clusterHue, readMinutes, postImage, postImageAlt } from '../../data/blog';
 import { bn, pad2 } from '../../lib/bn';
 
 export const prerender = false;
@@ -28,6 +28,7 @@ const schema = [{
     datePublished: p.updated,
     dateModified: p.updated,
     inLanguage: 'bn',
+    image: new URL(postImage(p), Astro.site).href,
   })),
 }];
 ---
@@ -62,12 +63,15 @@ const schema = [{
           <div class="posts">
             {list.map((p) => (
               <a class="post" href={`/blog/${p.slug}/`}>
+                <img class="p-img" src={postImage(p)} alt={postImageAlt(p)} width="1200" height="675" loading="lazy" decoding="async" />
+                <span class="p-copy">
                 <span class="p-t">
                   <b>{p.title}</b>
                   {p.pillar && <span class="pill pill-w">মূল লেখা</span>}
                 </span>
                 <p>{p.description}</p>
                 <span class="p-meta">{bn(readMinutes(p))} মিনিট পড়া</span>
+                </span>
               </a>
             ))}
           </div>
@@ -88,17 +92,21 @@ const schema = [{
   .c-h { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
   .c-h h2 { font-size: 21px; margin: 0; }
   .c-blurb { color: var(--muted); font-size: 14px; max-width: 68ch; margin: 0.35rem 0 0.9rem; line-height: 1.7; }
-  .posts { display: grid; gap: 0.6rem; }
+  .posts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
   .post {
-    display: block; padding: 0.9rem 1.1rem; border-radius: 14px;
+    display: flex; min-width: 0; flex-direction: column; overflow: hidden; border-radius: 16px;
     border: 1px solid var(--line-soft); background: var(--panel);
-    border-left: 3px solid color-mix(in oklab, var(--w) 60%, var(--line));
+    border-bottom: 3px solid color-mix(in oklab, var(--w) 60%, var(--line));
     transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   }
   .post:hover { transform: translateY(-2px); background: color-mix(in oklab, var(--w) 6%, var(--panel)); }
+  .p-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--panel-2); }
+  .p-copy { display: block; padding: 0.85rem 1rem 0.95rem; }
   .p-t { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .p-t b { font-size: 16.5px; font-family: var(--font-display); color: var(--ink); }
   .post p { margin: 0.3rem 0 0.4rem; font-size: 14px; color: var(--ink-2); line-height: 1.7; max-width: 72ch; }
   .p-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
   .back { margin-top: 1.5rem; font-size: 14px; color: var(--muted); }
+  @media (max-width: 860px) { .posts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .posts { grid-template-columns: 1fr; } }
 </style>

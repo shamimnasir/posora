@@ -31,13 +31,18 @@ interface Props {
    * trusting the rest. The page itself is not included - it is added here.
    */
   crumbs?: { name: string; url: string }[];
+  /** Page-specific social/search image. Falls back to the site-wide cover. */
+  image?: string;
+  imageAlt?: string;
 }
-const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [] } = Astro.props;
+const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [], image, imageAlt } = Astro.props;
 const paletteParam = Astro.url.searchParams.get('palette');
 const palette = paletteParam && ['cosmic', 'toybox', 'storybook', 'jungle', 'sunset'].includes(paletteParam) ? paletteParam : 'toybox';
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হোক খেলার মতো' : `${title} · পসরা`;
-const ogImage = new URL('/og.png', Astro.site ?? 'https://posora.com').href;
+const ogImage = new URL(image ?? '/og.png', Astro.site ?? 'https://posora.com').href;
+const ogImageAlt = imageAlt ?? 'পসরা - বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা';
+const ogImageHeight = image ? 675 : 630;
 
 /**
  * Meta descriptions, cut where a search engine would cut them.
@@ -157,12 +162,13 @@ const graph = [
     <meta property="og:site_name" content="পসরা" />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="পসরা - বাংলায় ইন্টারঅ্যাকটিভ শেখার জায়গা" />
+    <meta property="og:image:height" content={String(ogImageHeight)} />
+    <meta property="og:image:alt" content={ogImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={metaDescription} />
     <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
     {/* Not executed, so the CSP's script-src does not apply to it. Describes
         only what the site actually is; no ratings, no prices, nothing unearned. */}
     <script type="application/ld+json" is:inline set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />

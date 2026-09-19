@@ -110,3 +110,5 @@ export const postsIn = (cluster: string): Post[] =>
 export const clusterOf = (id: string): Cluster | undefined => CLUSTERS.find((c) => c.id === id);
 /** The accent colour of the world a cluster belongs to, so the two match. */
 export const clusterHue = (c: Cluster): string => worlds.find((w) => w.slug === c.world)?.hue ?? '#2E7EA8';
+export const postImage = (p: Post): string => `/images/blog/${p.slug}.jpg`;
+export const postImageAlt = (p: Post): string => `${p.title} বিষয়ের বাস্তবধর্মী শিক্ষামূলক ছবি`;

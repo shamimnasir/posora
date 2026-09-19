@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 
 const base = (process.env.SMOKE_BASE ?? 'https://posora.com').replace(/\/$/, '');
 const executablePath = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const routes = ['/', '/space/', '/physics/', '/chemistry/', '/life/', '/nature/', '/food/', '/math/', '/money/', '/language/', '/social/', '/discovery/', '/printables/', '/digital-pack/', '/family/'];
+const routes = ['/', '/space/', '/physics/', '/chemistry/', '/life/', '/nature/', '/food/', '/math/', '/money/', '/language/', '/social/', '/discovery/', '/printables/', '/digital-pack/', '/family/', '/blog/', '/blog/sorol-jontro-kake-bole/'];
 const viewports = [{ name: 'mobile', width: 360, height: 800 }, { name: 'tablet', width: 768, height: 1024 }, { name: 'desktop', width: 1440, height: 900 }];
 
 const browser = await chromium.launch({ executablePath, headless: true, args: ['--no-sandbox', '--disable-gpu'] });
@@ -29,9 +29,13 @@ try {
           bodyText: document.body.innerText.trim().length,
           overflow: document.documentElement.scrollWidth > window.innerWidth + 2,
           primary: Boolean(document.querySelector('main, h1, [role="main"]')),
+          blogImage: location.pathname.startsWith('/blog/')
+            ? Boolean([...document.querySelectorAll('main img')].find((img) => img.complete && img.naturalWidth > 0))
+            : true,
         }));
         if (status < 200 || status >= 400) failures.push(`${viewport.name} ${route}: HTTP ${status}`);
         if (!result.title || !result.bodyText || !result.primary) failures.push(`${viewport.name} ${route}: incomplete document`);
+        if (!result.blogImage) failures.push(`${viewport.name} ${route}: blog image did not load`);
         if (viewport.name === 'mobile' && result.overflow) failures.push(`${viewport.name} ${route}: horizontal overflow`);
       } catch (error) {
         failures.push(`${viewport.name} ${route}: ${error.message}`);

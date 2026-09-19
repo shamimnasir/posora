@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 
 const ROOT = new URL('../', import.meta.url).pathname;
@@ -29,6 +29,18 @@ for (const path of files(join(ROOT, 'src'))) {
   if (text.includes('—') && !EXEMPT_EM_DASH.has(rel)) failures.push(`${rel}: forbidden em dash`);
   for (const [label, pattern] of banned) {
     if (pattern.test(text)) failures.push(`${rel}: ${label}`);
+  }
+}
+
+// Every published article must have its own crawlable social/cover image.
+// Keeping this in the audit prevents a later post from silently falling back
+// to the generic site artwork on the page, in image search and in link cards.
+for (const name of readdirSync(join(ROOT, 'src/data/posts'))) {
+  if (!name.endsWith('.ts')) continue;
+  const text = readFileSync(join(ROOT, 'src/data/posts', name), 'utf8');
+  for (const match of text.matchAll(/slug:\s*'([^']+)'/g)) {
+    const image = join(ROOT, 'public/images/blog', `${match[1]}.jpg`);
+    if (!existsSync(image)) failures.push(`public/images/blog/${match[1]}.jpg: missing blog image`);
   }
 }
 

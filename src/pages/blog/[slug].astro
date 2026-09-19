@@ -8,7 +8,7 @@
  * worse than none.
  */
 import Base from '../../layouts/Base.astro';
-import { postBySlug, postsIn, clusterOf, clusterHue, readMinutes } from '../../data/blog';
+import { postBySlug, postsIn, clusterOf, clusterHue, readMinutes, postImage, postImageAlt } from '../../data/blog';
 import { bn } from '../../lib/bn';
 
 export const prerender = false;
@@ -23,6 +23,8 @@ Astro.response.headers.set('cache-control', 'public, s-maxage=600, stale-while-r
 const url = new URL(Astro.url.pathname, Astro.site).href;
 const siblings = postsIn(p.cluster).filter((x) => x.slug !== p.slug);
 const words = p.intro.join('').length + p.sections.reduce((s, x) => s + x.p.join('').length, 0);
+const image = new URL(postImage(p), Astro.site).href;
+const imageAlt = postImageAlt(p);
 
 const schema: Record<string, unknown>[] = [
   {
@@ -37,9 +39,13 @@ const schema: Record<string, unknown>[] = [
     author: { '@id': 'https://posora.com/#org' },
     publisher: { '@id': 'https://posora.com/#org' },
     isPartOf: { '@id': 'https://posora.com/blog/#blog' },
+    mainEntityOfPage: { '@id': `${url}#page` },
     isAccessibleForFree: true,
     articleSection: c.n,
     wordCount: Math.round(words / 5.5),
+    abstract: p.intro.join(' '),
+    image: { '@type': 'ImageObject', url: image, width: 1200, height: 675, caption: imageAlt },
+    about: [{ '@type': 'Thing', name: c.n }, { '@type': 'Thing', name: p.title }],
   },
 ];
 if (p.faq?.length) {
@@ -59,6 +65,8 @@ if (p.faq?.length) {
   description={p.description}
   hue={clusterHue(c)}
   schema={schema}
+  image={postImage(p)}
+  imageAlt={imageAlt}
   crumbs={[
     { name: 'পসরা', url: 'https://posora.com/' },
     { name: 'লেখা', url: 'https://posora.com/blog/' },
@@ -75,6 +83,9 @@ if (p.faq?.length) {
         <span>·</span>
         <span>হালনাগাদ <time datetime={p.updated}>{p.updated}</time></span>
       </p>
+      <figure class="cover">
+        <img src={postImage(p)} alt={imageAlt} width="1200" height="675" fetchpriority="high" decoding="async" />
+      </figure>
       {p.intro.map((t) => <p class="lede">{t}</p>)}
     </header>
 
@@ -129,6 +140,8 @@ if (p.faq?.length) {
   .head { padding-bottom: 1.3rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.6rem; }
   .head h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin: 0.2rem 0 0.5rem; line-height: 1.35; }
   .meta { display: flex; gap: 0.5rem; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-bottom: 1rem; }
+  .cover { margin: 0 0 1.2rem; overflow: hidden; border-radius: 18px; border: 1px solid var(--line-soft); background: var(--panel); aspect-ratio: 16 / 9; }
+  .cover img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .lede { color: var(--ink-2); font-size: 16px; line-height: 1.9; margin-bottom: 0.8rem; }
   .sec { margin-bottom: 1.9rem; }
   .sec h2 {
