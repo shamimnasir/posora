@@ -41,8 +41,7 @@
 }
 
 /* Preview palettes: append ?palette=<name> to any page while comparing the
-   visual direction. Cosmic remains the shipped default until a palette is
-   deliberately chosen. */
+   visual direction. Clear Sky is the shipped sitewide default. */
 body[data-palette='toybox'] {
   --paper: #17102e; --paper-2: #0b1730; --panel: #24194b; --panel-2: #342266; --sunk: #100d28;
   --ink: #fff8ef; --ink-2: #f0dff2; --muted: #c8add2; --line: #694a87; --line-soft: #49346f;
