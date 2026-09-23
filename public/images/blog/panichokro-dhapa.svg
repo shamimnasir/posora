@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">পানিচক্রের চার ধাপ</title>
+  <desc id="desc">সূর্যের তাপে সাগরের পানি বাষ্প হয়, মেঘে ঘনীভূত হয়, বৃষ্টি হয়ে নামে, তারপর নদী দিয়ে সাগরে ফেরে।</desc>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#c9efff"/><stop offset="1" stop-color="#f1fbff"/></linearGradient>
+    <linearGradient id="sea" x2="0" y2="1"><stop stop-color="#39afd0"/><stop offset="1" stop-color="#16769e"/></linearGradient>
+    <linearGradient id="land" x2="0" y2="1"><stop stop-color="#90c878"/><stop offset="1" stop-color="#4c9b72"/></linearGradient>
+    <filter id="shadow" x="-.2" y="-.2" width="1.4" height="1.5"><feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#22516a" flood-opacity=".16"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ed9a35"/></marker>
+  </defs>
+  <rect width="1200" height="560" rx="28" fill="url(#sky)"/>
+  <circle cx="192" cy="139" r="58" fill="#ffc84e"/>
+  <g stroke="#f2ad37" stroke-width="8" stroke-linecap="round"><path d="M192 45v-20M192 253v-20M98 139H78M306 139h-20M126 73l-15-15M274 221l-15-15M258 73l15-15M111 220l15-15"/></g>
+  <path d="M0 366 Q150 336 290 372T580 360T870 365T1200 345V560H0z" fill="url(#land)"/>
+  <path d="M0 438 Q190 395 365 446T735 433T1200 428V560H0z" fill="url(#sea)"/>
+  <path d="M0 455 Q170 420 340 460T700 451T1200 446" fill="none" stroke="#a6e8ed" stroke-width="8" opacity=".8"/>
+  <path d="M636 368 C660 418 745 430 822 448" fill="none" stroke="#2388a6" stroke-width="24" stroke-linecap="round"/>
+  <g fill="#fff" filter="url(#shadow)"><ellipse cx="535" cy="177" rx="94" ry="48"/><circle cx="485" cy="160" r="48"/><circle cx="546" cy="143" r="61"/><circle cx="603" cy="166" r="45"/></g>
+  <g fill="#5b88b2"><path d="m456 255-15 29h17l-10 24 35-37h-19l13-16zM536 260l-15 29h17l-10 24 35-37h-19l13-16zM617 251l-15 29h17l-10 24 35-37h-19l13-16z"/></g>
+  <g fill="none" stroke="#ed9a35" stroke-width="7" stroke-linecap="round" marker-end="url(#arrow)">
+    <path d="M282 329 C322 260 351 236 395 226"/><path d="M627 121 C704 77 778 91 817 132"/><path d="M811 202 C832 250 829 291 802 324"/><path d="M759 383 C655 496 440 497 316 396"/>
+  </g>
+  <g font-family="sans-serif" font-weight="700" font-size="25" fill="#17394a">
+    <g><rect x="315" y="268" width="166" height="47" rx="23" fill="#fff"/><text x="398" y="300" text-anchor="middle">বাষ্পীভবন</text></g>
+    <g><rect x="696" y="64" width="151" height="47" rx="23" fill="#fff"/><text x="771" y="96" text-anchor="middle">ঘনীভবন</text></g>
+    <g><rect x="826" y="250" width="148" height="47" rx="23" fill="#fff"/><text x="900" y="282" text-anchor="middle">বৃষ্টিপাত</text></g>
+    <g><rect x="500" y="464" width="177" height="47" rx="23" fill="#fff"/><text x="588" y="496" text-anchor="middle">প্রবাহ ও ফেরা</text></g>
+  </g>
+  <g fill="#fff" opacity=".65"><path d="M75 321q32-24 65 0t65 0"/><path d="M933 375q32-24 65 0t65 0"/></g>
+</svg>

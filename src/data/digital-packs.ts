@@ -5,6 +5,7 @@
  */
 export type DigitalPack = {
   slug: string;
+  worldSlug: string;
   world: string;
   title: string;
   hook: string;
@@ -18,6 +19,7 @@ export type DigitalPack = {
 export const digitalPacks: DigitalPack[] = [
   {
     slug: 'bangla-starter',
+    worldSlug: 'language',
     world: 'ভাষা',
     title: 'বাংলা শুরু প্যাক',
     hook: 'অক্ষর থেকে নিজের প্রথম বাক্য',
@@ -29,6 +31,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'math-play',
+    worldSlug: 'math',
     world: 'গণিত',
     title: 'গণিত খেলাঘর প্যাক',
     hook: 'গোনা, মাপা, হিসাব - খেলতে খেলতে',
@@ -40,6 +43,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'space-explorer',
+    worldSlug: 'space',
     world: 'মহাকাশ',
     title: 'মহাকাশ অভিযান প্যাক',
     hook: 'নিজের হাতে সৌরজগৎ সাজাও',
@@ -51,6 +55,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'physics-makers',
+    worldSlug: 'physics',
     world: 'পদার্থবিজ্ঞান',
     title: 'ছোট বিজ্ঞানী: বল ও আলো',
     hook: 'ঠেলে, টেনে, আলো ফেলে ফল দেখো',
@@ -62,6 +67,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'chemistry-lab',
+    worldSlug: 'chemistry',
     world: 'রসায়ন',
     title: 'রান্নাঘর কেমিস্ট্রি প্যাক',
     hook: 'মিশাও, বদল দেখো, নিরাপদে ব্যাখ্যা করো',
@@ -73,6 +79,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'life-science',
+    worldSlug: 'life',
     world: 'উদ্ভিদ ও প্রাণিজগৎ',
     title: 'জীবনের ভিতর প্যাক',
     hook: 'বীজ থেকে শরীর - জীবনকে স্তরে স্তরে খুলো',
@@ -84,6 +91,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'nature-guardian',
+    worldSlug: 'nature',
     world: 'প্রকৃতি ও পরিবেশ',
     title: 'প্রকৃতি রক্ষক প্যাক',
     hook: 'নিজের পাড়া, ঋতু আর জলকে পড়তে শেখো',
@@ -95,6 +103,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'food-health',
+    worldSlug: 'food',
     world: 'খাদ্য ও পুষ্টি',
     title: 'খাবার গোয়েন্দা প্যাক',
     hook: 'প্লেট সাজাও, লেবেল পড়ো, শরীর বুঝো',
@@ -106,6 +115,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'money-life-skills',
+    worldSlug: 'money',
     world: 'ব্যবসা ও টাকা ম্যানেজমেন্ট',
     title: 'টাকার বুদ্ধি প্যাক',
     hook: 'দোকান খেলায় হিসাব, পছন্দ আর সঞ্চয়',
@@ -117,6 +127,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'social-emotional',
+    worldSlug: 'social',
     world: 'সামাজিক দক্ষতা',
     title: 'মন ও বন্ধুত্ব প্যাক',
     hook: 'অনুভূতি চিনে কথা বলো, মেরামত করো',
@@ -128,6 +139,7 @@ export const digitalPacks: DigitalPack[] = [
   },
   {
     slug: 'discovery-projects',
+    worldSlug: 'discovery',
     world: 'বিজ্ঞান ও আবিষ্কার',
     title: 'আবিষ্কারক প্রজেক্ট প্যাক',
     hook: 'প্রশ্ন থেকে প্রোটোটাইপ - নিজের হাতে বানাও',

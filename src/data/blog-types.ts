@@ -16,7 +16,12 @@
  * Nothing here may claim something the site does not do. Every `links` entry
  * points at a page that exists and does what the note says.
  */
-export type Section = { h: string; p: string[] };
+export type Section = {
+  h: string;
+  p: string[];
+  /** Optional topic-specific visual; shown within the section, not as another hero. */
+  image?: { src: string; alt: string; caption?: string };
+};
 export type Faq = { q: string; a: string };
 /** A link out to the real thing, and why it is worth a click from here. */
 export type Ref = { label: string; href: string; note: string };

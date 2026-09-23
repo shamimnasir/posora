@@ -152,21 +152,38 @@ if (member && plan && child) {
         </header>
 
         {digitalPack && (
-          <section class="card box pack-status">
-            <div class="sh"><h2>ডিজিটাল প্যাক বান্ডল</h2><span class="lbl ok-label">চালু</span></div>
-            {packReady ? (
-              <>
-                <p class="note">আপনার ৳২৪৯ বান্ডলের ফাইলগুলো এখান থেকে নামিয়ে নিন। লিংকটি শুধু আপনার অ্যাকাউন্টে কাজ করে।</p>
-                <div class="pack-downloads">
-                  <a class="mini download all" href="/api/digital-pack/download/bundle">সব প্যাক একসঙ্গে (ZIP) <span aria-hidden="true">↓</span></a>
-                  <a class="mini download" href="/api/digital-pack/download/start-here">শুরু করার গাইড <span aria-hidden="true">↓</span></a>
-                  <a class="mini download" href="/api/digital-pack/download/30-day-plan">৩০ দিনের পরিকল্পনা <span aria-hidden="true">↓</span></a>
-                  {digitalPacks.map((p) => <a class="mini download" href={`/api/digital-pack/download/${p.slug}`}>{p.title} <span aria-hidden="true">↓</span></a>)}
-                </div>
-              </>
-            ) : <p class="note">আপনার access রাখা আছে। ফাইল লাইব্রেরি প্রকাশ হলেই এখান থেকে ডাউনলোড করতে পারবেন।</p>}
-            <a class="btn" href="/digital-pack/">বান্ডলের সব জিনিস দেখো →</a>
-          </section>
+          <>
+            <section class="card box pack-status">
+              <div class="sh"><h2>ডিজিটাল প্যাক বান্ডল</h2><span class="lbl ok-label">চালু</span></div>
+              {packReady ? (
+                <>
+                  <p class="note">আপনার ৳২৪৯ বান্ডলের ফাইলগুলো এখান থেকে নামিয়ে নিন। লিংকটি শুধু আপনার অ্যাকাউন্টে কাজ করে।</p>
+                  <div class="pack-downloads">
+                    <a class="mini download all" href="/api/digital-pack/download/bundle">সব প্যাক একসঙ্গে (ZIP) <span aria-hidden="true">↓</span></a>
+                    <a class="mini download" href="/api/digital-pack/download/start-here">শুরু করার গাইড <span aria-hidden="true">↓</span></a>
+                    <a class="mini download" href="/api/digital-pack/download/30-day-plan">৩০ দিনের পরিকল্পনা <span aria-hidden="true">↓</span></a>
+                    {digitalPacks.map((p) => <a class="mini download" href={`/api/digital-pack/download/${p.slug}`}>{p.title} <span aria-hidden="true">↓</span></a>)}
+                  </div>
+                </>
+              ) : <p class="note">আপনার access রাখা আছে। ফাইল লাইব্রেরি প্রকাশ হলেই এখান থেকে ডাউনলোড করতে পারবেন।</p>}
+              <a class="btn" href="/digital-pack/">বান্ডলের সব জিনিস দেখো →</a>
+            </section>
+
+            <section class="card box play-room">
+              <div class="sh"><h2>প্যাকের সঙ্গী অনলাইন খেলাঘর</h2><span class="lbl">১১টি বিষয়</span></div>
+              <p class="note">প্রিন্টের কাজের পর একই বিষয় অনলাইনে ঘুরে দেখুন—প্রতিটি ভুবনে বিনা মূল্যের ইন্টার‌্যাকটিভ শেখা ও কুইজ আছে। এগুলো সাইটে সবার জন্য খোলা; এখানে আপনার প্যাকের সঙ্গে মিলিয়ে সাজানো হয়েছে।</p>
+              <div class="play-grid">
+                {digitalPacks.map((p) => (
+                  <a class="play-link" href={`/${p.worldSlug}/`} style={`--pack:${p.color}`}>
+                    <span class="play-world">{p.world}</span>
+                    <b>{p.title}</b>
+                    <small>{p.hook}</small>
+                    <span class="play-go">খেলতে যাও <span aria-hidden="true">→</span></span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </>
         )}
 
         {!plan && (
@@ -321,6 +338,14 @@ if (member && plan && child) {
   .pack-downloads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; margin: .8rem 0 1rem; }
   .pack-downloads .download { display: flex; justify-content: space-between; align-items: center; text-decoration: none; min-height: 2.4rem; }
   .pack-downloads .download span { color: var(--ok); font-size: 1.15rem; }
+  .play-room { background: color-mix(in oklab, var(--brand) 5%, var(--panel)); }
+  .play-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: .65rem; margin-top: .2rem; }
+  .play-link { display: flex; min-width: 0; flex-direction: column; gap: .35rem; padding: .85rem; border: 1px solid color-mix(in oklab, var(--pack) 42%, var(--line)); border-top: 4px solid var(--pack); border-radius: 14px; background: var(--panel-2); transition: transform .15s ease, background .15s ease; }
+  .play-link:hover { transform: translateY(-2px); background: color-mix(in oklab, var(--pack) 9%, var(--panel-2)); text-decoration: none; }
+  .play-world { font-size: 11px; color: var(--muted); }
+  .play-link b { color: var(--ink); font-size: 15px; }
+  .play-link small { color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
+  .play-go { margin-top: .25rem; color: var(--brand-ink); font-size: 13px; font-weight: 700; }
   .ok-label { color: var(--ok); }
   .sh { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .note { font-size: 13.5px; color: var(--muted); line-height: 1.6; }

@@ -27,11 +27,12 @@ if (db()) {
 }
 const when = (ms: number | null) => (ms ? new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium' }).format(ms) : '-');
 const active = members.filter((m) => m.family).length;
+const packMembers = members.filter((m) => m.digitalPack).length;
 ---
 <Admin title="সদস্য" section="members">
   <div class="a-wrap">
     <h1 class="a-h">সদস্য ও প্রতিষ্ঠাতা তালিকা</h1>
-    <p class="a-sub">পরিবার প্ল্যান এখনো হাতে চালু করা হয়। প্রতিটি চালু বা বন্ধ করা কার্যক্রমে লেখা থাকে।</p>
+    <p class="a-sub">পরিবার প্ল্যান, ৳২৪৯ ডিজিটাল বান্ডল access এবং সদস্য-সহায়তার কাজ এখান থেকে দেখুন। প্রতিটি access পরিবর্তন কার্যক্রমে লেখা থাকে।</p>
 
     {schemaMissing && (
       <div class="card">
@@ -44,6 +45,7 @@ const active = members.filter((m) => m.family).length;
     <div class="stat-row" style="margin-bottom:18px">
       <div class="s"><b>{bn(members.length)}</b><span>সদস্য</span></div>
       <div class="s"><b>{bn(active)}</b><span>পরিবার প্ল্যান চালু</span></div>
+      <div class="s"><b>{bn(packMembers)}</b><span>ডিজিটাল বান্ডল access</span></div>
       <div class="s"><b>{bn(waitlist.filter((w) => w.topic === 'family').length)}</b><span>প্রতিষ্ঠাতা তালিকায়</span></div>
       <div class="s"><b>{bn(waitlist.filter((w) => w.topic === 'school').length)}</b><span>স্কুলের আগ্রহ</span></div>
     </div>
@@ -51,18 +53,21 @@ const active = members.filter((m) => m.family).length;
     <div class="card">
       <div class="spread" style="margin-bottom:14px">
         <h2 style="margin:0">সদস্য</h2>
-        <form id="addf" class="inline">
-          <input name="email" type="email" placeholder="ইমেইল দিয়ে সদস্য যোগ করো" required />
-          <input name="name" type="text" placeholder="নাম (ঐচ্ছিক)" />
-          <button class="btn btn-sm" type="submit">যোগ করো</button>
-        </form>
+        <div class="member-tools">
+          <input id="member-search" type="search" placeholder="ইমেইল বা নাম খুঁজুন" aria-label="ইমেইল বা নাম দিয়ে সদস্য খুঁজুন" />
+          <form id="addf" class="inline">
+            <input name="email" type="email" placeholder="ইমেইল দিয়ে সদস্য যোগ করো" required />
+            <input name="name" type="text" placeholder="নাম (ঐচ্ছিক)" />
+            <button class="btn btn-sm" type="submit">যোগ করো</button>
+          </form>
+        </div>
       </div>
       {members.length === 0 ? <p class="note">এখনো কেউ ঢোকেনি।</p> : (
         <table class="a-list">
-          <thead><tr><th>ইমেইল</th><th>নাম</th><th>যোগ</th><th>শেষ ঢোকা</th><th>সন্তান</th><th>প্ল্যান</th><th></th></tr></thead>
+          <thead><tr><th>ইমেইল</th><th>নাম</th><th>যোগ</th><th>শেষ ঢোকা</th><th>সন্তান</th><th>পরিবার প্ল্যান</th><th>পরিবার কাজ</th><th>ডিজিটাল বান্ডল</th><th>বান্ডল কাজ</th></tr></thead>
           <tbody>
             {members.map((m) => (
-              <tr data-id={m.id}>
+              <tr data-id={m.id} data-search={`${m.email} ${m.name ?? ''}`.toLocaleLowerCase('bn')}>
                 <td>{m.email}</td>
                 <td>{m.name ?? '-'}</td>
                 <td>{when(m.createdAt)}</td>
@@ -76,6 +81,12 @@ const active = members.filter((m) => m.family).length;
                         <button type="button" class="btn btn-sm btn-primary" data-act="grant" data-days="365">১ বছর দাও</button>
                         <button type="button" class="btn btn-sm" data-act="grant" data-days="">শেষ ছাড়া</button>
                       </>}
+                </td>
+                <td>{m.digitalPack ? <span class="pill ok">access আছে{m.digitalPackEnds ? ` · ${when(m.digitalPackEnds)} পর্যন্ত` : ''}</span> : <span class="pill">নেই</span>}</td>
+                <td class="acts">
+                  {m.digitalPack
+                    ? <button type="button" class="btn btn-sm" data-act="revoke-pack">access বন্ধ</button>
+                    : <button type="button" class="btn btn-sm btn-primary" data-act="grant-pack">বান্ডল access দাও</button>}
                 </td>
               </tr>
             ))}
@@ -109,6 +120,9 @@ const active = members.filter((m) => m.family).length;
 </Admin>
 
 <style>
+  .member-tools { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+  .member-tools input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line, #cfd6de); }
+  .member-tools > input { width: min(240px, 100%); }
   .inline { display: flex; gap: 6px; flex-wrap: wrap; }
   .inline input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line, #cfd6de); }
   .acts { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -119,6 +133,14 @@ const active = members.filter((m) => m.family).length;
 </style>
 
 <script>
+  const search = document.getElementById('member-search') as HTMLInputElement | null;
+  search?.addEventListener('input', () => {
+    const query = search.value.trim().toLocaleLowerCase('bn');
+    document.querySelectorAll<HTMLTableRowElement>('tbody tr[data-search]').forEach((row) => {
+      row.hidden = !row.dataset.search?.includes(query);
+    });
+  });
+
   const msg = document.getElementById('mmsg')!;
   const call = async (body: Record<string, unknown>) => {
     const res = await fetch('/api/admin/member', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -132,6 +154,17 @@ const active = members.filter((m) => m.family).length;
       const note = prompt('কারণ (কার্যক্রমে লেখা থাকবে)', '') ?? '';
       const r = await call({ op: 'revoke', memberId: id, note });
       if (r.ok) location.reload(); else msg.textContent = 'বন্ধ করা গেল না।';
+    } else if (b.dataset.act === 'grant-pack') {
+      const note = prompt('কেন বান্ডল access দিচ্ছেন? (কার্যক্রমে লেখা থাকবে)', '') ?? '';
+      if (!note.trim()) { msg.textContent = 'কারণটি লিখে আবার চেষ্টা করুন।'; return; }
+      const r = await call({ op: 'bundle-grant', memberId: id, note });
+      if (r.ok) location.reload(); else msg.textContent = 'বান্ডল access দেওয়া গেল না।';
+    } else if (b.dataset.act === 'revoke-pack') {
+      if (!confirm(`${email}-এর ডিজিটাল বান্ডল access বন্ধ করবেন?`)) return;
+      const note = prompt('কারণ (কার্যক্রমে লেখা থাকবে)', '') ?? '';
+      if (!note.trim()) { msg.textContent = 'কারণটি লিখে আবার চেষ্টা করুন।'; return; }
+      const r = await call({ op: 'bundle-revoke', memberId: id, note });
+      if (r.ok) location.reload(); else msg.textContent = 'বান্ডল access বন্ধ করা গেল না।';
     } else {
       const days = b.dataset.days ? Number(b.dataset.days) : null;
       const note = prompt('নোট (যেমন: প্রতিষ্ঠাতা পরিবার #১২)', '') ?? '';

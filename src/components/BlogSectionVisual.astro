@@ -1,0 +1,60 @@
+---
+import type { Section } from '../data/blog-types';
+
+interface Props {
+  section: Section;
+  cluster: string;
+  index: number;
+  hue: string;
+}
+
+const { section, cluster, index, hue } = Astro.props;
+const content = `${section.h} ${section.p.join(' ')}`;
+const scene = /(গ্রহ|চাঁদ|তারা|কক্ষ|আকাশ)/u.test(content) ? 'orbit'
+  : /(পানি|নদী|বৃষ্টি|বাষ্প|বন্যা|সাগর|স্রোত)/u.test(content) ? 'water'
+  : /(গাছ|পাতা|মূল|ফুল|বীজ|প্রাণী|শুশুক|শরীর|শ্বসন)/u.test(content) ? 'living'
+  : /(পরমাণু|অণু|পিএইচ|তাপ|গলন|অ্যাসিড|ক্ষার|অবস্থা)/u.test(content) ? 'molecule'
+  : /(ভগ্নাংশ|শতকরা|সুদ|হিসাব|বাজেট|সঞ্চয়|সূত্র|মাপ|পরিমাপ|একক|ক্ষেত্রফল|পরিসীমা)/u.test(content) ? 'measure'
+  : /(রাগ|নিরাপত্তা|স্পর্শ|ভালো|ভুয়া|পাসওয়ার্ড|তথ্য)/u.test(content) ? 'care'
+  : /(খাদ্য|পাত|থালা|পোষণ|পানী|হাত ধোয়া|নিরাপদ)/u.test(content) ? 'food'
+  : /(বর্ণ|লেখা|হাতের|যুক্ত|স্ট্রোক|শব্দ)/u.test(content) ? 'letters'
+  : /(যন্ত্র|লিভার|বল|শক্তি|শিশু|কপিকল|ঢাল)/u.test(content) ? 'motion'
+  : /(পরীক্ষা|বিজ্ঞান|মাপা|যন্ত্র|ছায়া|ডিম|রঙধনু)/u.test(content) ? 'discover'
+  : 'sequence';
+
+const accessibleAlt = `${section.h} বিষয়ের ধারণাচিত্র`;
+const summary = section.p[0]?.split(/[।.!?]/u)[0]?.trim();
+const caption = summary && summary.length > 120 ? `${summary.slice(0, 117)}…` : summary;
+---
+
+<figure class="section-visual" style={`--art-accent:${hue}`}>
+  <svg viewBox="0 0 1200 440" role="img" aria-label={accessibleAlt} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id={`wash-${cluster}-${index}`} x2="0" y2="1"><stop stop-color="var(--art-accent)" stop-opacity=".13"/><stop offset="1" stop-color="var(--art-accent)" stop-opacity=".035"/></linearGradient>
+      <marker id={`point-${cluster}-${index}`} markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9z" fill="var(--art-accent)"/></marker>
+    </defs>
+    <rect width="1200" height="440" rx="24" fill={`url(#wash-${cluster}-${index})`}/>
+    <path d="M0 365 Q190 324 365 363 T730 354 T1200 364 V440 H0Z" fill="var(--art-accent)" opacity=".07"/>
+    <g fill="none" stroke="var(--art-accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".8">
+      {scene === 'orbit' && <><ellipse cx="600" cy="220" rx="370" ry="125" transform="rotate(-12 600 220)"/><circle cx="600" cy="220" r="54" fill="var(--art-accent)" fill-opacity=".18"/><circle cx="965" cy="148" r="27" fill="var(--art-accent)"/></>}
+      {scene === 'water' && <><path d="M78 248 C180 188 280 308 382 248 S584 188 686 248 888 308 990 248 1092 188 1122 208"/><path d="M93 302 C195 242 295 362 397 302 S599 242 701 302 903 362 1005 302"/><path d="M270 142 C320 95 387 98 424 143M785 130 C835 84 903 87 940 132"/></>}
+      {scene === 'living' && <><path d="M600 335 V125M600 216 C520 208 470 166 450 118M600 244 C683 230 743 182 758 124"/><path d="M451 119 C470 83 523 86 548 125 519 150 475 150 451 119ZM758 124 C734 83 681 88 656 128 686 151 731 151 758 124Z" fill="var(--art-accent)" fill-opacity=".16"/><path d="M530 336h140M550 363h100"/></>}
+      {scene === 'molecule' && <><path d="M410 205 600 118 790 205 790 300 600 383 410 300Z"/><circle cx="410" cy="205" r="55" fill="var(--art-accent)" fill-opacity=".18"/><circle cx="600" cy="118" r="55" fill="var(--art-accent)" fill-opacity=".18"/><circle cx="790" cy="205" r="55" fill="var(--art-accent)" fill-opacity=".18"/><circle cx="790" cy="300" r="55" fill="var(--art-accent)" fill-opacity=".18"/><circle cx="600" cy="383" r="55" fill="var(--art-accent)" fill-opacity=".18"/></>}
+      {scene === 'measure' && <><path d="M260 325V210h175v115zM512 325V145h175v180zM764 325V92h175v233z" fill="var(--art-accent)" fill-opacity=".16"/><path d="M235 350h730M300 183h94M552 118h94M804 65h94"/></>}
+      {scene === 'care' && <><path d="M600 353 C475 269 389 199 420 129 448 68 536 97 600 166 664 97 752 68 780 129 811 199 725 269 600 353Z" fill="var(--art-accent)" fill-opacity=".15"/><path d="M525 217h150M600 142v150"/></>}
+      {scene === 'food' && <><circle cx="600" cy="220" r="158"/><circle cx="600" cy="220" r="124"/><path d="M600 96v124h124M600 220 502 300"/><path d="M340 130v184M316 130v74M364 130v74M860 130v184M836 130v74M884 130v74"/></>}
+      {scene === 'letters' && <><path d="M385 315 500 119h82l105 196M435 235h205M722 145h95M769 145v170M894 145v170M850 230h88"/><circle cx="600" cy="220" r="174" stroke-dasharray="4 18" opacity=".35"/></>}
+      {scene === 'motion' && <><path d="M250 320h700M330 320 490 168h165l185 152M490 168l-46-68M655 168l54-76"/><circle cx="490" cy="168" r="31" fill="var(--art-accent)" fill-opacity=".2"/><circle cx="655" cy="168" r="31" fill="var(--art-accent)" fill-opacity=".2"/><path d="M275 350h650" stroke-dasharray="7 18"/></>}
+      {scene === 'discover' && <><circle cx="530" cy="198" r="118"/><path d="m615 282 115 115"/><circle cx="492" cy="171" r="23" fill="var(--art-accent)" fill-opacity=".35"/><path d="m516 243 75-79M480 221l42-43"/><path d="M790 130h145v145H790zM824 167h77M824 205h57M824 242h88"/></>}
+      {scene === 'sequence' && <><path d="M248 162h186v148H248zM507 162h186v148H507zM766 162h186v148H766z" fill="var(--art-accent)" fill-opacity=".12"/><path d="M434 236h73M693 236h73" marker-end={`url(#point-${cluster}-${index})`}/><circle cx="341" cy="235" r="38"/><circle cx="600" cy="235" r="38"/><circle cx="859" cy="235" r="38"/></>}
+    </g>
+    <g fill="var(--art-accent)" opacity=".22"><circle cx="105" cy="105" r="9"/><circle cx="1095" cy="105" r="13"/><circle cx="104" cy="330" r="6"/><circle cx="1090" cy="337" r="8"/></g>
+  </svg>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .section-visual { margin: 1rem 0 1.15rem; overflow: hidden; border: 1px solid var(--line-soft); border-radius: 18px; background: color-mix(in oklab, var(--w) 5%, var(--panel)); }
+  .section-visual svg { display: block; width: 100%; height: auto; aspect-ratio: 30 / 11; }
+  .section-visual figcaption { padding: 0.55rem 0.8rem 0.7rem; color: var(--muted); font-size: 12px; line-height: 1.65; }
+</style>

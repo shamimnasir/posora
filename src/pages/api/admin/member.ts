@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { isLoggedIn, sameOrigin } from '../../../lib/auth';
 import { requireDb } from '../../../lib/db';
-import { grantPlan, revokePlan, ensureMember, isEmail, normalizeEmail } from '../../../lib/members';
+import { grantPlan, revokePlan, grantEntitlement, revokeEntitlement, ensureMember, isEmail, normalizeEmail, PLAN_DIGITAL_PACK } from '../../../lib/members';
 
 export const prerender = false;
 
@@ -39,6 +39,18 @@ export const POST: APIRoute = async (ctx) => {
         if (!memberId) return json({ ok: false, error: 'invalid' }, 422);
         await revokePlan(memberId);
         await audit('member.revoke', memberId, note);
+        return json({ ok: true });
+      }
+      case 'bundle-grant': {
+        if (!memberId) return json({ ok: false, error: 'invalid' }, 422);
+        await grantEntitlement(memberId, PLAN_DIGITAL_PACK, null, note, 'admin');
+        await audit('bundle.access.grant', memberId, note || 'manual support grant');
+        return json({ ok: true });
+      }
+      case 'bundle-revoke': {
+        if (!memberId) return json({ ok: false, error: 'invalid' }, 422);
+        await revokeEntitlement(memberId, PLAN_DIGITAL_PACK);
+        await audit('bundle.access.revoke', memberId, note || 'manual support revoke');
         return json({ ok: true });
       }
       case 'add': {

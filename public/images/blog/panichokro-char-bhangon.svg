@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">চর তৈরি ও নদীভাঙন</title>
+  <desc id="desc">নদীর ভেতর পলি জমে চর তৈরি হয়; বাঁকের বাইরের পাড়ে দ্রুত স্রোত মাটি ক্ষয় করে।</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#dff4ff"/><stop offset="1" stop-color="#f4fbf2"/></linearGradient>
+    <linearGradient id="river" x2="0" y2="1"><stop stop-color="#49bfd0"/><stop offset="1" stop-color="#247fa5"/></linearGradient>
+    <linearGradient id="soil" x2="0" y2="1"><stop stop-color="#b88955"/><stop offset="1" stop-color="#805437"/></linearGradient>
+    <marker id="flow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#fff"/></marker>
+    <filter id="shadow" x="-.2" y="-.2" width="1.4" height="1.5"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#22516a" flood-opacity=".15"/></filter>
+  </defs>
+  <rect width="1200" height="560" rx="28" fill="url(#bg)"/>
+  <text x="300" y="70" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="700" fill="#194559">পলি জমে চর</text>
+  <text x="900" y="70" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="700" fill="#194559">স্রোতে পাড় ভাঙে</text>
+  <g filter="url(#shadow)">
+    <rect x="55" y="100" width="535" height="395" rx="24" fill="#fff"/>
+    <rect x="610" y="100" width="535" height="395" rx="24" fill="#fff"/>
+  </g>
+  <g transform="translate(75 138)">
+    <path d="M0 178 Q122 126 242 178T490 172V315H0z" fill="url(#river)"/>
+    <path d="M178 186 Q244 157 321 187 Q366 204 395 194 Q358 246 286 243 Q220 240 178 186" fill="#d6b46c"/>
+    <path d="M202 187q36-46 67-5t62 0" fill="none" stroke="#83ba72" stroke-width="14" stroke-linecap="round"/>
+    <g fill="#4b9869"><path d="m245 160 16-31 17 31zM316 168l14-27 15 27z"/><path d="M261 160v26M330 168v21" stroke="#805437" stroke-width="5"/></g>
+    <g fill="none" stroke="#fff" stroke-width="5" marker-end="url(#flow)" opacity=".92"><path d="M40 233h105M360 274h95"/><path d="M60 293h85"/></g>
+    <g fill="#e8c27b"><circle cx="215" cy="220" r="5"/><circle cx="242" cy="228" r="5"/><circle cx="268" cy="218" r="5"/><circle cx="300" cy="229" r="5"/></g>
+    <text x="267" y="291" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="700" fill="#fff">ধীর স্রোতে পলি থামে</text>
+  </g>
+  <g transform="translate(635 138)">
+    <path d="M0 125H490V315H0z" fill="url(#river)"/>
+    <path d="M0 125H181V213 Q164 226 145 233 L128 253 104 255 90 278 0 278z" fill="url(#soil)"/>
+    <path d="M490 125H339V167 Q362 177 383 192 L401 217 429 228 444 254 490 254z" fill="#91c878"/>
+    <path d="M44 167 C111 158 161 163 219 192" fill="none" stroke="#fff" stroke-width="6" marker-end="url(#flow)"/>
+    <path d="M48 208 C116 202 166 207 210 229" fill="none" stroke="#fff" stroke-width="6" marker-end="url(#flow)"/>
+    <path d="M455 291 C394 281 347 273 301 250" fill="none" stroke="#9ce7ef" stroke-width="5" stroke-dasharray="8 12"/>
+    <g fill="#b88955"><circle cx="148" cy="280" r="7"/><circle cx="174" cy="291" r="5"/><circle cx="197" cy="282" r="6"/></g>
+    <text x="243" y="310" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="700" fill="#fff">বাঁকের বাইরের তীব্র স্রোত মাটি কাটে</text>
+  </g>
+  <g font-family="sans-serif" font-size="19" font-weight="700" fill="#194559"><text x="330" y="466" text-anchor="middle">চর: জমা পলি</text><text x="885" y="466" text-anchor="middle">ভাঙন: ক্ষয় হওয়া পাড়</text></g>
+</svg>

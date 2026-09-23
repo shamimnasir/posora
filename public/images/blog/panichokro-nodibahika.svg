@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">নদী থেকে বদ্বীপ</title>
+  <desc id="desc">পদ্মা ও যমুনার মিলন, এরপর মেঘনার সঙ্গে যুক্ত হয়ে বঙ্গোপসাগরে প্রবাহিত হওয়ার একটি সরল ধারণাচিত্র।</desc>
+  <defs>
+    <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#e8f7ed"/><stop offset="1" stop-color="#d2efdf"/></linearGradient>
+    <linearGradient id="water" x2="1" y2="1"><stop stop-color="#61c6d4"/><stop offset="1" stop-color="#2588b5"/></linearGradient>
+    <filter id="shadow" x="-.2" y="-.2" width="1.4" height="1.5"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#22516a" flood-opacity=".14"/></filter>
+    <marker id="tip" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#187b9f"/></marker>
+  </defs>
+  <rect width="1200" height="560" rx="28" fill="url(#paper)"/>
+  <path d="M165 76q170-38 263 20t227 7q115-47 249 2t170 108q42 116-52 236t-242 66q-149-58-308 4T191 469q-104-70-79-198T165 76" fill="#fbf8e9" stroke="#a3c99b" stroke-width="5" filter="url(#shadow)"/>
+  <path d="M337 92 C350 172 418 208 502 262 C566 304 619 340 674 385" fill="none" stroke="url(#water)" stroke-width="28" stroke-linecap="round"/>
+  <path d="M749 89 C716 155 690 207 658 261 C631 310 639 354 674 385" fill="none" stroke="url(#water)" stroke-width="31" stroke-linecap="round"/>
+  <path d="M673 385 C754 391 811 368 857 321 C900 278 925 241 1000 225" fill="none" stroke="url(#water)" stroke-width="38" stroke-linecap="round" marker-end="url(#tip)"/>
+  <path d="M857 321 C878 358 914 383 962 394" fill="none" stroke="#47b8c9" stroke-width="18" stroke-linecap="round"/>
+  <path d="M861 319 C883 284 909 265 944 251M878 337 C925 337 950 348 986 370" fill="none" stroke="#47b8c9" stroke-width="12" stroke-linecap="round"/>
+  <g fill="#f1c46c" opacity=".9"><ellipse cx="723" cy="427" rx="115" ry="22"/><ellipse cx="857" cy="414" rx="70" ry="15"/></g>
+  <g fill="#4f986e"><path d="m247 173 25-47 25 47zM945 145l22-41 22 41zM245 376l20-40 22 40z"/><path d="M263 172v28M967 144v27M265 376v25" stroke="#80613f" stroke-width="8"/></g>
+  <g font-family="sans-serif" font-weight="700" fill="#194559">
+    <g><rect x="256" y="79" width="142" height="50" rx="25" fill="#fff"/><text x="327" y="112" text-anchor="middle" font-size="27">যমুনা</text></g>
+    <g><rect x="689" y="69" width="142" height="50" rx="25" fill="#fff"/><text x="760" y="102" text-anchor="middle" font-size="27">পদ্মা</text></g>
+    <g><rect x="836" y="252" width="144" height="50" rx="25" fill="#fff"/><text x="908" y="285" text-anchor="middle" font-size="27">মেঘনা</text></g>
+    <g><rect x="469" y="399" width="157" height="44" rx="22" fill="#fff"/><text x="547" y="428" text-anchor="middle" font-size="22">পলি জমে ভূমি</text></g>
+    <text x="1012" y="223" font-size="21">সাগর</text>
+  </g>
+  <g fill="none" stroke="#187b9f" stroke-width="4" stroke-dasharray="4 13" marker-end="url(#tip)"><path d="M353 148 C394 203 447 228 502 262"/><path d="M754 141 C728 197 697 226 671 258"/></g>
+  <text x="600" y="520" text-anchor="middle" font-family="sans-serif" font-size="19" fill="#54766b">ধারণাচিত্র · নদীর শাখা-প্রশাখা ও অবস্থানের মানচিত্র নয়</text>
+</svg>

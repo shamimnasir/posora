@@ -719,7 +719,10 @@ export async function listWaitlist(limit = 200): Promise<WaitlistRow[]> {
 
 /* ---------- admin ---------- */
 
-export type MemberRow = { id: string; email: string; name: string | null; createdAt: number; lastLoginAt: number | null; children: number; family: boolean; familyEnds: number | null };
+export type MemberRow = {
+  id: string; email: string; name: string | null; createdAt: number; lastLoginAt: number | null;
+  children: number; family: boolean; familyEnds: number | null; digitalPack: boolean; digitalPackEnds: number | null;
+};
 
 export async function listMembers(): Promise<MemberRow[]> {
   const d = requireDb();
@@ -728,13 +731,17 @@ export async function listMembers(): Promise<MemberRow[]> {
     SELECT m.id, m.email, m.name, m.created_at AS createdAt, m.last_login_at AS lastLoginAt,
       (SELECT COUNT(*) FROM children c WHERE c.member_id = m.id) AS children,
       (SELECT MAX(COALESCE(e.ends_at, 9007199254740991)) FROM entitlements e
-         WHERE e.member_id = m.id AND e.plan = ? AND e.status = 'active' AND e.starts_at <= ?) AS familyEnds
-    FROM members m ORDER BY m.created_at DESC`).bind(PLAN_FAMILY, now)
-    .all<{ id: string; email: string; name: string | null; createdAt: number; lastLoginAt: number | null; children: number; familyEnds: number | null }>();
+         WHERE e.member_id = m.id AND e.plan = ? AND e.status = 'active' AND e.starts_at <= ?) AS familyEnds,
+      (SELECT MAX(COALESCE(e.ends_at, 9007199254740991)) FROM entitlements e
+         WHERE e.member_id = m.id AND e.plan = ? AND e.status = 'active' AND e.starts_at <= ?) AS digitalPackEnds
+    FROM members m ORDER BY m.created_at DESC`).bind(PLAN_FAMILY, now, PLAN_DIGITAL_PACK, now)
+    .all<{ id: string; email: string; name: string | null; createdAt: number; lastLoginAt: number | null; children: number; familyEnds: number | null; digitalPackEnds: number | null }>();
   return results.map((r) => ({
     ...r,
     family: r.familyEnds !== null && r.familyEnds > now,
     familyEnds: r.familyEnds === null || r.familyEnds >= 9007199254740991 ? null : r.familyEnds,
+    digitalPack: r.digitalPackEnds !== null && r.digitalPackEnds > now,
+    digitalPackEnds: r.digitalPackEnds === null || r.digitalPackEnds >= 9007199254740991 ? null : r.digitalPackEnds,
   }));
 }
 
@@ -763,6 +770,12 @@ export async function grantEntitlement(memberId: string, plan: string, days: num
 export async function revokePlan(memberId: string): Promise<void> {
   await requireDb().prepare("UPDATE entitlements SET status = 'ended', ends_at = ? WHERE member_id = ? AND plan = ? AND status = 'active'")
     .bind(Date.now(), memberId, PLAN_FAMILY).run();
+}
+
+/** Revoke one named entitlement (e.g. a duplicate, refunded, or support-corrected bundle grant). */
+export async function revokeEntitlement(memberId: string, plan: string): Promise<void> {
+  await requireDb().prepare("UPDATE entitlements SET status = 'ended', ends_at = ? WHERE member_id = ? AND plan = ? AND status = 'active'")
+    .bind(Date.now(), memberId, plan).run();
 }
 
 /** Create a member row by hand (a founding family who has not signed in yet). */
