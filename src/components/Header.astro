@@ -35,6 +35,9 @@ const nav = [
 
 <style>
   .hdr { position: sticky; top: 0; z-index: 20; background: rgba(7, 11, 44, 0.86); backdrop-filter: saturate(1.4) blur(16px); -webkit-backdrop-filter: saturate(1.4) blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18); }
+  :global(body[data-palette='daylight']) .hdr,
+  :global(body[data-palette='mint']) .hdr,
+  :global(body[data-palette='sky']) .hdr { background: color-mix(in oklab, var(--panel) 92%, transparent); border-bottom-color: var(--line); box-shadow: 0 5px 22px color-mix(in oklab, var(--ink) 10%, transparent); }
   .row { display: flex; align-items: center; gap: 1.5rem; min-height: 68px; }
   .brand { display: flex; align-items: center; gap: 0.6rem; }
   .glyph { display: grid; place-items: center; border-radius: 13px 13px 13px 5px; box-shadow: 3px 3px 0 var(--pink); transform: rotate(-3deg); transition: transform .18s ease; }
@@ -48,6 +51,9 @@ const nav = [
   nav a { flex: none; }
   nav a { padding: 0.45rem 0.8rem; border-radius: 12px; font-weight: 700; font-size: 15px; color: var(--ink-2); transition: background 0.15s ease, color 0.15s ease, transform .15s ease; }
   nav a:hover { background: rgba(255,255,255,.08); color: var(--ink); transform: translateY(-1px); }
+  :global(body[data-palette='daylight']) nav a:hover,
+  :global(body[data-palette='mint']) nav a:hover,
+  :global(body[data-palette='sky']) nav a:hover { background: color-mix(in oklab, var(--brand) 10%, var(--panel)); }
   nav a[aria-current="page"] { background: var(--brand); color: var(--on-brand); box-shadow: 3px 3px 0 rgba(255,111,189,.8); }
   .xp { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.35rem 0.85rem; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
   .xp[hidden] { display: none; }

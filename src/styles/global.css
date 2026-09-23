@@ -67,10 +67,39 @@ body[data-palette='sunset'] {
   --brand: #ff7a59; --brand-ink: #ffad8f; --brand-soft: #6d3154; --on-brand: #28142c;
   --sun: #ffd166; --pink: #ff5d9e; --ok: #7fe0ca;
 }
+/* Light, high-contrast directions for the sitewide theme preview. These only
+   activate when the visitor chooses a palette query; Toybox remains default. */
+body[data-palette='daylight'] {
+  color-scheme: light;
+  --paper: #fffaf0; --paper-2: #fff3dc; --panel: #ffffff; --panel-2: #f5e8ce; --sunk: #f2e6d0;
+  --ink: #18253c; --ink-2: #35445d; --muted: #58677d; --line: #d8c8a9; --line-soft: #e9dcc5;
+  --brand: #126b7a; --brand-ink: #075564; --brand-soft: #d1f0ef; --on-brand: #ffffff;
+  --sun: #f2b52b; --pink: #d64f6d; --ok: #177b55; --danger: #b4233c;
+}
+body[data-palette='mint'] {
+  color-scheme: light;
+  --paper: #f2fbf5; --paper-2: #e7f5ec; --panel: #ffffff; --panel-2: #e3f2e8; --sunk: #deeee4;
+  --ink: #15352e; --ink-2: #31564c; --muted: #526e66; --line: #bfd9c9; --line-soft: #d3e7da;
+  --brand: #16745c; --brand-ink: #105c49; --brand-soft: #d1eee1; --on-brand: #ffffff;
+  --sun: #edaa28; --pink: #c64c66; --ok: #16714e; --danger: #b4233c;
+}
+body[data-palette='sky'] {
+  color-scheme: light;
+  --paper: #f2f8ff; --paper-2: #e6f0ff; --panel: #ffffff; --panel-2: #e4edfb; --sunk: #dbe7f8;
+  --ink: #172942; --ink-2: #334963; --muted: #50657d; --line: #c0d0e4; --line-soft: #d6e1ef;
+  --brand: #245eaa; --brand-ink: #194c91; --brand-soft: #d8e8ff; --on-brand: #ffffff;
+  --sun: #e8a52b; --pink: #c64d70; --ok: #177350; --danger: #b4233c;
+}
 body[data-palette] {
   background:
     radial-gradient(circle at 82% 6%, color-mix(in oklab, var(--pink) 24%, transparent), transparent 23rem),
     radial-gradient(circle at 14% 28%, color-mix(in oklab, var(--brand) 18%, transparent), transparent 28rem),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+}
+body[data-palette='daylight'], body[data-palette='mint'], body[data-palette='sky'] {
+  background:
+    radial-gradient(circle at 84% 4%, color-mix(in oklab, var(--pink) 8%, transparent), transparent 25rem),
+    radial-gradient(circle at 12% 22%, color-mix(in oklab, var(--brand) 8%, transparent), transparent 30rem),
     linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
 }
 

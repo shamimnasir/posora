@@ -37,7 +37,8 @@ interface Props {
 }
 const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [], image, imageAlt } = Astro.props;
 const paletteParam = Astro.url.searchParams.get('palette');
-const palette = paletteParam && ['cosmic', 'toybox', 'storybook', 'jungle', 'sunset'].includes(paletteParam) ? paletteParam : 'toybox';
+const palette = paletteParam && ['cosmic', 'toybox', 'storybook', 'jungle', 'sunset', 'daylight', 'mint', 'sky'].includes(paletteParam) ? paletteParam : 'toybox';
+const themeColor = ({ daylight: '#fffaf0', mint: '#f2fbf5', sky: '#f2f8ff', storybook: '#25132c', jungle: '#071e24', sunset: '#17143b', cosmic: '#070b2c' } as Record<string, string>)[palette] ?? '#17102e';
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title === 'পসরা' ? 'পসরা - শেখা হোক খেলার মতো' : `${title} · পসরা`;
 const ogImage = new URL(image ?? '/og.png', Astro.site ?? 'https://posora.com').href;
@@ -153,7 +154,7 @@ const graph = [
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="পসরা" />
-    <meta name="theme-color" content="#070b2c" />
+    <meta name="theme-color" content={themeColor} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={metaDescription} />
     <meta property="og:type" content="website" />
