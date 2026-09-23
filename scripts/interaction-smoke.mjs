@@ -18,12 +18,26 @@ try {
   check(await page.locator('canvas').count() > 0, 'nature: canvas missing');
   check(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), 'reduced-motion: media preference missing');
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), 'nature: mobile overflow');
-  const natureStart = page.locator('#nature-start');
+  const natureStart = page.locator('#world-start');
   check(await natureStart.isVisible(), 'nature mobile: explicit 3D start control is not visible');
   check(!natureViewerRequested, 'nature mobile: heavy 3D engine loaded before user intent');
   await natureStart.click();
   await page.waitForRequest((request) => request.url().includes('nature-viewer'), { timeout: 10000 }).catch(() => {});
   check(natureViewerRequested, 'nature mobile: start control did not load the 3D engine');
+
+  let cosmosRequested = false;
+  const spacePage = await reduced.newPage();
+  spacePage.on('request', (request) => {
+    if (request.url().includes('/cosmos.')) cosmosRequested = true;
+  });
+  await spacePage.goto(`${base}/space/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await spacePage.waitForTimeout(500);
+  const spaceStart = spacePage.locator('#space-start');
+  check(await spaceStart.isVisible(), 'space mobile: explicit 3D start control is not visible');
+  check(!cosmosRequested, 'space mobile: solar-system scene loaded before user intent');
+  await spaceStart.click();
+  await spacePage.waitForRequest((request) => request.url().includes('/cosmos.'), { timeout: 10000 }).catch(() => {});
+  check(cosmosRequested, 'space mobile: start control did not load the solar-system scene');
 
   // Keyboard path: focus the first mission control, activate it, then close it.
   const mission = page.locator('#miss-card button.mission-play').first();

@@ -117,9 +117,10 @@ const seedTravel = facts && facts.nearestKm > 0
         <span class="sep" id="crumb-sep2" hidden aria-hidden="true">›</span>
         <button type="button" class="crumb" id="crumb-moon" hidden></button>
       </nav>
-      <div class="host" id="planet-host" aria-label={`${bnOf(cur.bn)} থ্রিডি মডেল - টেনে ঘোরাও, ক্লিক করে ভেতরে যাও`} role="img">
+      <div class="host" id="planet-host" aria-label={`${bnOf(cur.bn)} থ্রিডি মডেল - টেনে ঘোরাও, ক্লিক করে ভেতরে যাও`} role="group">
         <canvas></canvas>
         <div class="labels" id="moon-labels"></div>
+        <button type="button" class="space-start" id="space-start"><span aria-hidden="true">✦</span><b>সৌরজগৎ ঘুরে দেখো</b><small>থ্রিডি মডেল চালু করো</small></button>
       </div>
       <div class="branchbar" id="branchbar" hidden>
         <span class="lbl" id="branch-title">ভেতরে কী কী আছে</span>
@@ -382,6 +383,7 @@ const seedTravel = facts && facts.nearestKm > 0
   .scene::after { content: ''; position: absolute; width: 70%; aspect-ratio: 1; left: 15%; top: 12%; z-index: -1; pointer-events: none; border-radius: 50%; background: color-mix(in oklab, var(--w) 18%, transparent); filter: blur(50px); opacity: 0.45; animation: scene-breathe 7s ease-in-out infinite; }
   @keyframes scene-breathe { 0%,100% { transform: scale(0.92); opacity: 0.28; } 50% { transform: scale(1.08); opacity: 0.55; } }
   .host { position: absolute; inset: 0; cursor: grab; touch-action: none; overflow: hidden; }
+  .space-start { display:none; }
   .host.dragging { cursor: grabbing; }
   .host.dragging canvas { filter: saturate(1.18) brightness(1.08); }
   .host canvas { width: 100%; height: 100%; }
@@ -655,6 +657,13 @@ const seedTravel = facts && facts.nearestKm > 0
     .lower-tools .lower-spec .spec { grid-template-columns: 1fr; }
     .lower-tools .lower-spec .row:nth-last-child(2) { border-bottom: 1px solid var(--line-soft); }
   }
+  @media (max-width: 700px) {
+    #explorer .space-start:not([hidden]) { position:absolute; z-index:3; inset:50% auto auto 50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.4rem; min-width:190px; padding:1rem 1.3rem; border:1px solid rgba(255,255,255,.65); border-radius:22px; color:#17233c; background:linear-gradient(145deg,color-mix(in oklab,var(--w) 18%,white),white); box-shadow:0 12px 36px rgba(0,0,0,.32),inset 0 1px 0 #fff; cursor:pointer; }
+    #explorer .space-start span { font-size:2.1rem; color:var(--w); }
+    #explorer .space-start b { font-size:1rem; }
+    #explorer .space-start small { font-size:.78rem; opacity:.76; }
+    #explorer .space-start[hidden] { display:none; }
+  }
 </style>
 
 <script>
@@ -686,7 +695,8 @@ const seedTravel = facts && facts.nearestKm > 0
 
   /* ---- 3D: load after first paint so the HTML is readable immediately ---- */
   const host = $('#planet-host');
-  import('./cosmos').then(({ mountCosmos }) => {
+  let cosmosInit: Promise<void> | null = null;
+  const initCosmos = () => cosmosInit ??= import('./cosmos').then(({ mountCosmos }) => {
     cosmos = mountCosmos(host, $('#moon-labels'), data, cur.id, {
       onPick(pk: Pick) {
         if (quest.on) { if (pk.kind === 'body') questPick(pk.id); return; }
@@ -696,6 +706,7 @@ const seedTravel = facts && facts.nearestKm > 0
       },
       onLevel(l: Level) { renderCrumbs(l); },
     });
+    $('#space-start').hidden = true;
     host.addEventListener('pointerdown', () => { $('#scene-hint').style.opacity = '0'; }, { once: true });
   }).catch(() => {
     const fallback = document.createElement('div'); fallback.className = 'model-fallback';
@@ -703,6 +714,16 @@ const seedTravel = facts && facts.nearestKm > 0
     const help = document.createElement('p'); help.textContent = 'বাঁ পাশের গ্রহের নাম চাপলে তার সব তথ্য, তুলনা আর তিন গভীরতার পাঠ তবু পাওয়া যাবে।';
     fallback.append(title, help); host.replaceChildren(fallback);
   });
+  if (matchMedia('(max-width: 700px)').matches) {
+    $('#space-start').addEventListener('click', () => {
+      const start = $('#space-start') as HTMLButtonElement;
+      start.disabled = true;
+      start.querySelector('b')!.textContent = 'দৃশ্য তৈরি হচ্ছে…';
+      void initCosmos().finally(() => start.remove());
+    }, { once: true });
+  } else {
+    void initCosmos();
+  }
 
   /* ---- zoom breadcrumbs ---- */
   const crumbBody = $('#crumb-body'), crumbMoon = $('#crumb-moon'), crumbSep2 = $('#crumb-sep2'), crumbSystem = $('#crumb-system');

@@ -272,7 +272,7 @@ const schema = [
                   has painted, so for a moment this box is empty. Saying so beats
                   looking broken. Removed the instant the model mounts. */}
               <div class="loading" id="hero-loading" aria-hidden="true"><span></span><span></span><span></span><p>মডেল আসছে…</p></div>
-              {w.slug === 'nature' && <button type="button" class="nature-start" id="nature-start"><span aria-hidden="true">🌿</span><b>প্রকৃতির দৃশ্য দেখো</b><small>৩D মডেল চালু করো</small></button>}
+              <button type="button" class="world-start" id="world-start"><span aria-hidden="true">✦</span><b>থ্রিডি দৃশ্য দেখো</b><small>মডেল চালু করো</small></button>
             </div>
             <canvas class="fx" id="fx" aria-hidden="true"></canvas>
             {/* খোঁজার খেলা: the model asks for one of its own items and the child has
@@ -809,15 +809,16 @@ const schema = [
   .loading.fallback { padding: 2rem; text-align: center; color: #eef4fb; opacity: 1; }
   .loading.fallback p { max-width: 42ch; font-size: 15px; line-height: 1.6; }
   .loading.fallback p + p { margin-top: 0.45rem; color: rgba(226, 235, 245, 0.72); font-size: 13.5px; }
-  .nature-start { display: none; }
+  .world-start { display: none; }
   @keyframes hb { 0%, 100% { transform: scale(0.9); opacity: 0.18; } 50% { transform: scale(1.06); opacity: 0.4; } }
   @media (prefers-reduced-motion: reduce) { .loading span { animation: none; } }
   @media (max-width: 700px) {
-    #world[data-slug="nature"] .nature-start:not([hidden]) { position:absolute; z-index:3; inset:50% auto auto 50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.4rem; min-width:190px; padding:1rem 1.3rem; border:1px solid rgba(255,255,255,.65); border-radius:22px; color:#173b2c; background:linear-gradient(145deg,#fff7d6,#a8e7c5); box-shadow:0 12px 36px rgba(0,0,0,.32),inset 0 1px 0 #fff; cursor:pointer; }
-    #world[data-slug="nature"] .nature-start span { font-size:2.1rem; }
-    #world[data-slug="nature"] .nature-start b { font-size:1rem; }
-    #world[data-slug="nature"] .nature-start small { font-size:.78rem; opacity:.76; }
-    #world[data-slug="nature"] .nature-start[hidden] { display:none; }
+    #world .world-start:not([hidden]) { position:absolute; z-index:3; inset:50% auto auto 50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.4rem; min-width:190px; padding:1rem 1.3rem; border:1px solid rgba(255,255,255,.65); border-radius:22px; color:#17233c; background:linear-gradient(145deg,color-mix(in oklab,var(--w) 18%,white),white); box-shadow:0 12px 36px rgba(0,0,0,.32),inset 0 1px 0 #fff; cursor:pointer; }
+    #world .host:has(.world-start:not([hidden])) .loading { display:none; }
+    #world .world-start span { font-size:2.1rem; color:var(--w); }
+    #world .world-start b { font-size:1rem; }
+    #world .world-start small { font-size:.78rem; opacity:.76; }
+    #world .world-start[hidden] { display:none; }
   }
   .zoombar { position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
   .crumb { font-size: 12.5px; font-weight: 600; color: #e6eef8; background: rgba(9, 14, 24, 0.6); border: 1px solid rgba(255, 255, 255, 0.16); padding: 0.22rem 0.7rem; border-radius: 999px; backdrop-filter: blur(6px); transition: background 0.15s ease; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1284,8 +1285,8 @@ const schema = [
       pendingHeroFocus = null;
     }
     if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
-    const natureStart = root.querySelector<HTMLButtonElement>('#nature-start');
-    if (natureStart) natureStart.hidden = true;
+    const worldStart = root.querySelector<HTMLButtonElement>('#world-start');
+    if (worldStart) worldStart.hidden = true;
     syncGrove(curItem);
     syncSpin(hero.isAuto());
     if (slug === 'nature') {
@@ -1305,21 +1306,19 @@ const schema = [
     }
     spinBtn.hidden = true; resetBtn.hidden = true; ctl.closest('label')!.hidden = true; ctlX.closest('label')!.hidden = true;
   });
-  // Don't build the heavy procedural forest during a phone's initial page load.
-  // Visitors explicitly opt in to 3D; other worlds retain their existing behavior.
-  const natureStart = root.querySelector<HTMLButtonElement>('#nature-start');
-  if (slug === 'nature' && window.matchMedia('(max-width: 700px)').matches) {
-    natureStart?.addEventListener('click', () => {
-      natureStart.disabled = true;
-      natureStart.querySelector('b')!.textContent = 'দৃশ্য তৈরি হচ্ছে…';
-      void initHero().finally(() => { natureStart.remove(); });
+  // Don't build heavy procedural 3D scenes during a phone's initial page load.
+  // Visitors explicitly opt in to the model; desktop behavior stays unchanged.
+  const worldStart = root.querySelector<HTMLButtonElement>('#world-start');
+  if (window.matchMedia('(max-width: 700px)').matches) {
+    worldStart?.addEventListener('click', () => {
+      worldStart.disabled = true;
+      worldStart.querySelector('b')!.textContent = 'দৃশ্য তৈরি হচ্ছে…';
+      void initHero().finally(() => { worldStart.remove(); });
     }, { once: true });
   } else if (slug === 'nature' && 'requestIdleCallback' in window) {
     window.requestIdleCallback(() => { void initHero(); }, { timeout: 1800 });
-    natureStart?.addEventListener('click', () => { void initHero(); }, { once: true });
   } else if (slug === 'nature') {
     window.setTimeout(() => { void initHero(); }, 500);
-    natureStart?.addEventListener('click', () => { void initHero(); }, { once: true });
   } else {
     void initHero();
   }
