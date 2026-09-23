@@ -9,7 +9,7 @@
  */
 import Base from '../../layouts/Base.astro';
 import BlogSectionVisual from '../../components/BlogSectionVisual.astro';
-import { postBySlug, postsIn, clusterOf, clusterHue, readMinutes, postImage, postImageAlt } from '../../data/blog';
+import { postBySlug, postsIn, clusterOf, clusterHue, readMinutes, postImage, postImageAlt, CLUSTERS } from '../../data/blog';
 import { bn } from '../../lib/bn';
 
 export const prerender = false;
@@ -23,6 +23,28 @@ Astro.response.headers.set('cache-control', 'public, s-maxage=600, stale-while-r
 
 const url = new URL(Astro.url.pathname, Astro.site).href;
 const siblings = postsIn(p.cluster).filter((x) => x.slug !== p.slug);
+// Curated cross-world paths turn each article into a useful next step rather
+// than a dead end. Every destination resolves through the live cluster list.
+const relatedWorldIds: Record<string, string[]> = {
+  physics: ['math', 'discovery', 'space'],
+  nature: ['life', 'food', 'discovery'],
+  language: ['social', 'discovery'],
+  money: ['math', 'social'],
+  space: ['physics', 'discovery', 'math'],
+  chemistry: ['food', 'nature', 'discovery'],
+  life: ['nature', 'food', 'chemistry'],
+  food: ['life', 'money', 'nature'],
+  math: ['money', 'physics', 'discovery'],
+  social: ['language', 'life', 'money'],
+  discovery: ['physics', 'nature', 'math'],
+};
+const relatedWorlds = (relatedWorldIds[p.cluster] ?? [])
+  .map((id) => CLUSTERS.find((cluster) => cluster.id === id))
+  .filter((cluster): cluster is NonNullable<typeof cluster> => !!cluster);
+const relatedArticles = (relatedWorldIds[p.cluster] ?? [])
+  .flatMap((id) => postsIn(id).filter((post) => post.slug !== p.slug).slice(0, 1));
+const ownWorld = CLUSTERS.find((cluster) => cluster.id === p.cluster)!;
+const worldHref = (world: (typeof CLUSTERS)[number]) => `/${world.world}/${world.world === 'space' ? '' : '#all'}`;
 const words = p.intro.join('').length + p.sections.reduce((s, x) => s + x.p.join('').length, 0);
 const image = new URL(postImage(p), Astro.site).href;
 const imageAlt = postImageAlt(p);
@@ -99,7 +121,7 @@ if (p.faq?.length) {
             {s.image.caption && <figcaption>{s.image.caption}</figcaption>}
           </figure>
         )}
-        {!s.image && <BlogSectionVisual section={s} cluster={p.cluster} index={index} hue={clusterHue(c)} />}
+        {!s.image && <BlogSectionVisual section={s} postSlug={p.slug} cluster={p.cluster} index={index} hue={clusterHue(c)} />}
         {s.p.map((t) => <p>{t}</p>)}
       </section>
     ))}
@@ -128,16 +150,35 @@ if (p.faq?.length) {
       </div>
     </section>
 
-    {siblings.length > 0 && (
-      <section class="sec">
-        <h2>একই গুচ্ছের বাকি লেখা</h2>
-        <ul class="more">
-          {siblings.map((s) => <li><a href={`/blog/${s.slug}/`}>{s.title}</a></li>)}
-        </ul>
-      </section>
-    )}
+    <section class="sec next-steps" aria-labelledby="next-title">
+      <p class="eyebrow">এবার হাতে-কলমে</p>
+      <h2 id="next-title">এই পড়া থেকে পরের ধাপে যাও</h2>
+      <p>লেখায় ধারণাটা বুঝে নাও, তারপর পসরা ভুবনে বিষয়টি খুঁজে দেখো বা কাছের আরেকটি বিষয় শেখো।</p>
+      <div class="next-grid">
+        <a class="next-card primary-next" href={worldHref(ownWorld)}>
+          <span>এই লেখার বিষয়</span><b>{ownWorld.n} ভুবন</b><small>বিভাগ ধরে বিষয় দেখো এবং মডেলে খুঁজে নাও →</small>
+        </a>
+        {relatedWorlds.slice(0, 3).map((world) => (
+          <a class="next-card" href={worldHref(world)}>
+            <span>সম্পর্কিত ভুবন</span><b>{world.n}</b><small>আরও জানো ও হাতে-কলমে দেখো →</small>
+          </a>
+        ))}
+      </div>
+      {siblings.length > 0 && (
+        <div class="related-reading">
+          <h3>এই বিষয়ের আরও লেখা</h3>
+          <ul class="more">{siblings.slice(0, 3).map((s) => <li><a href={`/blog/${s.slug}/`}>{s.title}</a></li>)}</ul>
+        </div>
+      )}
+      {relatedArticles.length > 0 && (
+        <div class="related-reading">
+          <h3>পাশের ভুবনের লেখা</h3>
+          <ul class="more">{relatedArticles.slice(0, 3).map((post) => <li><a href={`/blog/${post.slug}/`}>{post.title}</a></li>)}</ul>
+        </div>
+      )}
+    </section>
 
-    <p class="back"><a href="/blog/">← সব লেখা</a> · <a href={`/${c.world}/`}>{c.n} ভুবনে যাও</a></p>
+    <p class="back"><a href="/blog/">← সব লেখা</a> · <a href={worldHref(ownWorld)}>{c.n} ভুবনে যাও</a></p>
   </article>
 </Base>
 
@@ -151,7 +192,10 @@ if (p.faq?.length) {
   .cover { margin: 0 0 1.2rem; overflow: hidden; border-radius: 18px; border: 1px solid var(--line-soft); background: var(--panel); aspect-ratio: 16 / 9; }
   .cover img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .lede { color: var(--ink-2); font-size: 16px; line-height: 1.9; margin-bottom: 0.8rem; }
-  .sec { margin-bottom: 1.9rem; }
+  /* The site-wide .sec rule is for spacious landing-page bands. In an article
+     it adds up to 11rem of vertical padding per section, which looks like
+     missing content between paragraphs. Keep reading rhythm compact here. */
+  .sec { padding-block: 0; margin-bottom: 1.45rem; }
   .section-art { margin: 1rem 0 1.15rem; overflow: hidden; border: 1px solid var(--line-soft); border-radius: 18px; background: color-mix(in oklab, var(--w) 6%, var(--panel)); }
   .section-art img { display: block; width: 100%; height: auto; aspect-ratio: 15 / 7; object-fit: cover; }
   .section-art figcaption { padding: 0.55rem 0.8rem 0.65rem; color: var(--muted); font-size: 12px; line-height: 1.65; }
@@ -175,5 +219,17 @@ if (p.faq?.length) {
   .ref span { font-size: 13.5px; color: var(--ink-2); line-height: 1.7; }
   .more { margin: 0; padding-left: 1.1rem; }
   .more li { margin-bottom: 0.35rem; font-size: 15px; }
+  .next-steps { padding: 1.2rem; border: 1px solid color-mix(in oklab, var(--w) 35%, var(--line)); border-radius: 20px; background: color-mix(in oklab, var(--w) 7%, var(--panel)); }
+  .next-steps > h2 { margin: .25rem 0 .4rem; font-size: 1.35rem; }
+  .next-steps > p:not(.eyebrow) { color: var(--ink-2); line-height: 1.7; }
+  .next-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-top: 1rem; }
+  .next-card { min-width: 0; display: flex; flex-direction: column; gap: .28rem; padding: .9rem; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--panel); text-decoration: none; transition: transform .15s ease, border-color .15s ease; }
+  .next-card:hover, .next-card:focus-visible { transform: translateY(-2px); border-color: var(--w); }
+  .next-card > span, .next-card small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .next-card b { color: var(--brand-ink); font-size: 15px; }
+  .primary-next { border-color: color-mix(in oklab, var(--w) 45%, var(--line)); }
+  .related-reading { margin-top: 1.2rem; padding-top: .8rem; border-top: 1px solid var(--line-soft); }
+  .related-reading h3 { margin: 0 0 .45rem; font-size: 15px; }
   .back { margin-top: 1.6rem; font-size: 14px; color: var(--muted); }
+  @media (max-width: 540px) { .next-steps { padding: .9rem; } .next-grid { grid-template-columns: 1fr; } }
 </style>

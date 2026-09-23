@@ -137,6 +137,7 @@ const pages = sheets.length * 2;
           {!member && <a class="btn" href="/account/">আগেই সদস্য? ঢোকো</a>}
           <a class="btn" href="/printables/">ফ্রি ছাপার শিটগুলো</a>
         </div>
+        <p class="fine">এটি বার্ষিক সদস্যপদের অনুশীলনী। ১১টি বিষয়ের এককালীন ডাউনলোড বান্ডলটি আলাদা পণ্য; <a href="/digital-pack/">তার ভেতরের নমুনা ও বর্তমান বিক্রির অবস্থা দেখুন</a>।</p>
       </section>
     )}
   </div>
@@ -189,6 +190,8 @@ const pages = sheets.length * 2;
   .gate h2 { font-size: 1.3rem; font-weight: 800; }
   .gate p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
   .acts { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .fine { color: var(--muted); font-size: 12px; line-height: 1.6; }
+  .fine a { color: var(--brand-ink); font-weight: 700; }
 
   @media (max-width: 640px) { .match { grid-template-columns: 1fr; } .klist, .toc ol { columns: 1; } }
   @media (max-width: 640px) { .ph { grid-template-columns: auto minmax(0, 1fr); } .ph > span { grid-column: 2; } }

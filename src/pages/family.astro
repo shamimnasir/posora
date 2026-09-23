@@ -20,6 +20,7 @@ import { totals } from '../data/worlds';
 import { bn, bnNum } from '../lib/bn';
 import { COVERAGE } from '../lib/coverage';
 import { sheets } from '../data/printables';
+import { bundle as digitalBundle } from '../data/digital-packs';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
@@ -124,6 +125,7 @@ const schema = [
         <a class="btn" href="/printables/">আগে ফ্রি শিটগুলো নিয়ে যান →</a>
         <a class="btn" href="/account/">আগেই সদস্য? ঢোকো</a>
       </div>
+      <p class="digital-separate"><b>এককালীন ডিজিটাল প্যাক খুঁজছেন?</b> ৳{bn(digitalBundle.priceBdt)} দামের ১১-বিষয় ডাউনলোড বান্ডল সদস্যপদ থেকে আলাদা। <a href="/digital-pack/">সব প্যাকের নমুনা ও বিক্রির অবস্থা দেখুন →</a></p>
     </header>
 
     <section class="sec">
@@ -328,6 +330,9 @@ const schema = [
   .statusbox b { color: var(--ink); }
   .statusbox em { font-style: normal; font-weight: 700; color: var(--ink); }
   .hero-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.3rem; }
+  .digital-separate { padding: .8rem 1rem; border-left: 3px solid var(--brand); border-radius: 0 12px 12px 0; background: var(--panel); color: var(--ink-2); font-size: 13px; line-height: 1.7; }
+  .digital-separate b { color: var(--ink); }
+  .digital-separate a { color: var(--brand-ink); font-weight: 700; }
 
   .sec { display: flex; flex-direction: column; gap: 1rem; }
   .sec-h { display: flex; flex-direction: column; gap: 0.35rem; }
