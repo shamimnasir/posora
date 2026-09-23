@@ -266,12 +266,13 @@ const schema = [
               <span class="sep" id="crumb-sep2" aria-hidden="true">›</span>
               <button type="button" class="crumb" id="crumb-item">{first.items[0]}</button>
             </nav>
-            <div class="host" id="hero-host" role="img" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
+            <div class="host" id="hero-host" role="group" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
               <canvas></canvas>
               {/* The 3D engine is a 145KB download that starts after the text
                   has painted, so for a moment this box is empty. Saying so beats
                   looking broken. Removed the instant the model mounts. */}
               <div class="loading" id="hero-loading" aria-hidden="true"><span></span><span></span><span></span><p>মডেল আসছে…</p></div>
+              {w.slug === 'nature' && <button type="button" class="nature-start" id="nature-start"><span aria-hidden="true">🌿</span><b>প্রকৃতির দৃশ্য দেখো</b><small>৩D মডেল চালু করো</small></button>}
             </div>
             <canvas class="fx" id="fx" aria-hidden="true"></canvas>
             {/* খোঁজার খেলা: the model asks for one of its own items and the child has
@@ -808,8 +809,16 @@ const schema = [
   .loading.fallback { padding: 2rem; text-align: center; color: #eef4fb; opacity: 1; }
   .loading.fallback p { max-width: 42ch; font-size: 15px; line-height: 1.6; }
   .loading.fallback p + p { margin-top: 0.45rem; color: rgba(226, 235, 245, 0.72); font-size: 13.5px; }
+  .nature-start { display: none; }
   @keyframes hb { 0%, 100% { transform: scale(0.9); opacity: 0.18; } 50% { transform: scale(1.06); opacity: 0.4; } }
   @media (prefers-reduced-motion: reduce) { .loading span { animation: none; } }
+  @media (max-width: 700px) {
+    #world[data-slug="nature"] .nature-start:not([hidden]) { position:absolute; z-index:3; inset:50% auto auto 50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.4rem; min-width:190px; padding:1rem 1.3rem; border:1px solid rgba(255,255,255,.65); border-radius:22px; color:#173b2c; background:linear-gradient(145deg,#fff7d6,#a8e7c5); box-shadow:0 12px 36px rgba(0,0,0,.32),inset 0 1px 0 #fff; cursor:pointer; }
+    #world[data-slug="nature"] .nature-start span { font-size:2.1rem; }
+    #world[data-slug="nature"] .nature-start b { font-size:1rem; }
+    #world[data-slug="nature"] .nature-start small { font-size:.78rem; opacity:.76; }
+    #world[data-slug="nature"] .nature-start[hidden] { display:none; }
+  }
   .zoombar { position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
   .crumb { font-size: 12.5px; font-weight: 600; color: #e6eef8; background: rgba(9, 14, 24, 0.6); border: 1px solid rgba(255, 255, 255, 0.16); padding: 0.22rem 0.7rem; border-radius: 999px; backdrop-filter: blur(6px); transition: background 0.15s ease; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .crumb:hover { background: rgba(9, 14, 24, 0.9); color: #fff; }
@@ -1256,7 +1265,8 @@ const schema = [
     emoji: c.emoji[j],
     caption: c.detail?.[j]?.l1,
   }));
-  (slug === 'nature' ? import('../../components/explorer/nature-viewer') : import('../../components/explorer/heroes')).then(({ mountHero }) => {
+  let heroInitPromise: Promise<void> | null = null;
+  const initHero = () => heroInitPromise ??= (slug === 'nature' ? import('../../components/explorer/nature-viewer') : import('../../components/explorer/heroes')).then(({ mountHero }) => {
     const loading = root.querySelector<HTMLElement>('#hero-loading');
     hero = mountHero(host, cats[curCat].hero, onHeroFrame, (j) => {
       const c = cats[curCat];
@@ -1274,6 +1284,8 @@ const schema = [
       pendingHeroFocus = null;
     }
     if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
+    const natureStart = root.querySelector<HTMLButtonElement>('#nature-start');
+    if (natureStart) natureStart.hidden = true;
     syncGrove(curItem);
     syncSpin(hero.isAuto());
     if (slug === 'nature') {
@@ -1293,6 +1305,24 @@ const schema = [
     }
     spinBtn.hidden = true; resetBtn.hidden = true; ctl.closest('label')!.hidden = true; ctlX.closest('label')!.hidden = true;
   });
+  // Don't build the heavy procedural forest during a phone's initial page load.
+  // Visitors explicitly opt in to 3D; other worlds retain their existing behavior.
+  const natureStart = root.querySelector<HTMLButtonElement>('#nature-start');
+  if (slug === 'nature' && window.matchMedia('(max-width: 700px)').matches) {
+    natureStart?.addEventListener('click', () => {
+      natureStart.disabled = true;
+      natureStart.querySelector('b')!.textContent = 'দৃশ্য তৈরি হচ্ছে…';
+      void initHero().finally(() => { natureStart.remove(); });
+    }, { once: true });
+  } else if (slug === 'nature' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(() => { void initHero(); }, { timeout: 1800 });
+    natureStart?.addEventListener('click', () => { void initHero(); }, { once: true });
+  } else if (slug === 'nature') {
+    window.setTimeout(() => { void initHero(); }, 500);
+    natureStart?.addEventListener('click', () => { void initHero(); }, { once: true });
+  } else {
+    void initHero();
+  }
   spinBtn.addEventListener('click', () => { if (!hero) return; const on = !hero.isAuto(); hero.setAuto(on); syncSpin(on); });
   /**
    * পর্দাজুড়ে: the model with nothing else on the screen.
@@ -1453,6 +1483,17 @@ const schema = [
   /* ---- missions: a real game each, run in their own panel ---- */
   const missionBtns = [...root.querySelectorAll<HTMLButtonElement>('.mission-play')];
   const missionKeys = missionBtns.map((b) => `${slug}:${b.dataset.mi}`);
+  let missionLoaderPromise: Promise<typeof import('../../data/mission-loader')> | null = null;
+  let missionPlayerPromise: Promise<typeof import('../../components/explorer/missions')> | null = null;
+  const missionPrefetch = new Map<number, Promise<any>>();
+  function warmMission(b: HTMLButtonElement) {
+    const mi = +b.dataset.mi!;
+    missionLoaderPromise ??= import('../../data/mission-loader');
+    missionPlayerPromise ??= import('../../components/explorer/missions');
+    if (!missionPrefetch.has(mi)) {
+      missionPrefetch.set(mi, missionLoaderPromise.then(({ loadMission }) => loadMission(slug, mi)));
+    }
+  }
   function renderMissions() {
     if (!missionBtns.length) return;
     const best = getProgress().missions;
@@ -1482,13 +1523,17 @@ const schema = [
     target.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
     target.click();
   }));
+  missionBtns.forEach((b) => {
+    b.addEventListener('focus', () => warmMission(b), { once: true });
+    b.addEventListener('pointerenter', () => warmMission(b), { once: true });
+  });
   missionBtns.forEach((b, i) => b.addEventListener('click', async () => {
     const mi = +b.dataset.mi!;
     // one world's missions, not all eleven
-    const { loadMission } = await import('../../data/mission-loader');
-    const spec = await loadMission(slug, mi);
+    warmMission(b);
+    const spec = await missionPrefetch.get(mi);
     if (!spec) return;
-    const { playMission } = await import('../../components/explorer/missions');
+    const { playMission } = await missionPlayerPromise!;
     // If the mission belongs to a category, move the model there first, so
     // closing the panel leaves the child looking at what they just played with.
     const cat = b.dataset.cat;

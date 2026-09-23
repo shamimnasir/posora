@@ -9,11 +9,21 @@ const check = (ok, message) => { if (!ok) failures.push(message); };
 try {
   const reduced = await browser.newContext({ viewport: { width: 360, height: 800 }, reducedMotion: 'reduce' });
   const page = await reduced.newPage();
+  let natureViewerRequested = false;
+  page.on('request', (request) => {
+    if (request.url().includes('nature-viewer')) natureViewerRequested = true;
+  });
   await page.goto(`${base}/nature/?cat=1&item=1#model-stage`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForTimeout(500);
   check(await page.locator('canvas').count() > 0, 'nature: canvas missing');
   check(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), 'reduced-motion: media preference missing');
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), 'nature: mobile overflow');
+  const natureStart = page.locator('#nature-start');
+  check(await natureStart.isVisible(), 'nature mobile: explicit 3D start control is not visible');
+  check(!natureViewerRequested, 'nature mobile: heavy 3D engine loaded before user intent');
+  await natureStart.click();
+  await page.waitForRequest((request) => request.url().includes('nature-viewer'), { timeout: 10000 }).catch(() => {});
+  check(natureViewerRequested, 'nature mobile: start control did not load the 3D engine');
 
   // Keyboard path: focus the first mission control, activate it, then close it.
   const mission = page.locator('#miss-card button.mission-play').first();

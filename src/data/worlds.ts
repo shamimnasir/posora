@@ -782,7 +782,7 @@ export const worlds: World[] = [
   "bn": "প্রকৃতি ও পরিবেশ",
   "en": "Nature",
   "tag": "ঋতু, নদী, আবহাওয়া ও পৃথিবী",
-  "hue": "#2A9E9E",
+  "hue": "#1D7777",
   "age": "৫+",
   "dep": "নেই",
   "phase": "ফেজ ৩",

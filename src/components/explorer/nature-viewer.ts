@@ -13,7 +13,7 @@ export function mountHero(host: HTMLElement, spec:HeroSpec, onFrame?:(info:{yawD
   let reduced=media.matches,playing=!reduced,visible=true,disposed=false,time=0,last=0,raf=0;
   let category=Number(spec.v)||0,item=0,selected=0,depth=0,param=.4,items:HeroItem[]=[];
   const renderer=new WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'default'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=SRGBColorSpace;
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));renderer.outputColorSpace=SRGBColorSpace;
   renderer.toneMapping=ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=PCFShadowMap;
   const scene=new Scene();const camera=new PerspectiveCamera(36,1,.05,150);camera.position.set(8,7,11);

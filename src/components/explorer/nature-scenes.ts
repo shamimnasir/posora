@@ -56,13 +56,15 @@ function tree(parent: Group, x: number, y: number, z: number, scale = 1, mangrov
   const bark=mat('#695342'); bark.bumpMap=texture('bark'); bark.bumpScale=.075;
   branch(g,new Vector3(0,0,0),new Vector3(.08,1.9,0),.14,bark);
   const rng=random(218); const leafMat=mat('#8bab64',.73); leafMat.side=DoubleSide;leafMat.map=leafTexture();
-  const leaves=new InstancedMesh(leafGeometry(),leafMat,1040); leaves.castShadow=true; leaves.receiveShadow=true; g.add(leaves);
+  // Dense enough to read as foliage at the camera distance, while keeping the
+  // eight mobile scenes responsive during their first construction.
+  const leaves=new InstancedMesh(leafGeometry(),leafMat,416); leaves.castShadow=true; leaves.receiveShadow=true; g.add(leaves);
   const dummy=new Object3D(); let index=0;
   for(let j=0;j<13;j++) {
     const a=j*2.399, h=.65+j*.095;
     const end=new Vector3(Math.cos(a)*(.7+rng()*.45),h+.65+rng()*.3,Math.sin(a)*(.7+rng()*.45));
     const start=new Vector3(.06,h,0); branch(g,start,end,.038,bark);
-    for(let k=0;k<80;k++) {
+    for(let k=0;k<32;k++) {
       const t=.25+rng()*.85; dummy.position.copy(start).lerp(end,t);
       dummy.position.x+=(rng()-.5)*.5; dummy.position.y+=(rng()-.3)*.48; dummy.position.z+=(rng()-.5)*.5;
       dummy.rotation.set(rng()*2.8,rng()*Math.PI*2,rng()*Math.PI*2); dummy.scale.setScalar(.28+rng()*.4); dummy.updateMatrix();
