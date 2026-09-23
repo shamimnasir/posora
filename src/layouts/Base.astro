@@ -189,5 +189,19 @@ const graph = [
     </main>
     {!bare && <Footer />}
     <WhatsAppFab />
+    <script>
+      // Pre-rendered routes cannot vary their HTML by query string. Applying
+      // the allow-listed preview choice in the browser keeps ?palette=... in
+      // sync across static world/blog/sales pages without changing defaults.
+      const paletteColors: Record<string, string> = {
+        toybox: '#17102e', storybook: '#25132c', jungle: '#071e24', sunset: '#17143b', cosmic: '#070b2c',
+        daylight: '#fffaf0', mint: '#f2fbf5', sky: '#f2f8ff',
+      };
+      const paletteChoice = new URLSearchParams(location.search).get('palette');
+      if (paletteChoice && paletteColors[paletteChoice]) {
+        document.body.dataset.palette = paletteChoice;
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', paletteColors[paletteChoice]);
+      }
+    </script>
   </body>
 </html>
