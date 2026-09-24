@@ -8,7 +8,7 @@ const choices = [
   { id: 'mint', name: 'পাতার খাতা', mood: 'হালকা সবুজ, শান্ত ও প্রকৃতির কাছাকাছি', colors: ['#f2fbf5', '#ffffff', '#15352e', '#16745c', '#edaa28'], light: true },
   { id: 'sky', name: 'নীল আকাশ', mood: 'পরিষ্কার আকাশি, বিশ্বাসযোগ্য ও শান্ত', colors: ['#f2f8ff', '#ffffff', '#172942', '#245eaa', '#e8a52b'], light: true },
 ];
-const active = Astro.url.searchParams.get('palette') ?? 'sky';
+const active = Astro.url.searchParams.get('palette') ?? 'toybox';
 const selected = choices.find((choice) => choice.id === active) ?? choices[0];
 ---
 

@@ -41,11 +41,11 @@
 }
 
 /* Preview palettes: append ?palette=<name> to any page while comparing the
-   visual direction. Clear Sky is the shipped sitewide default. */
+   visual direction. Toybox is the shipped sitewide default. */
 body[data-palette='toybox'] {
   --paper: #17102e; --paper-2: #0b1730; --panel: #24194b; --panel-2: #342266; --sunk: #100d28;
-  --ink: #fff8ef; --ink-2: #f0dff2; --muted: #c8add2; --line: #694a87; --line-soft: #49346f;
-  --brand: #57e4d0; --brand-ink: #8ff5e6; --brand-soft: #194e5d; --on-brand: #0b2030;
+  --ink: #fffdfb; --ink-2: #f4f0ff; --muted: #ddd2eb; --line: #694a87; --line-soft: #49346f;
+  --brand: #57e4d0; --brand-ink: #a0f8eb; --brand-soft: #194e5d; --on-brand: #0b2030;
   --sun: #ffbd4a; --pink: #ff6c9f; --ok: #78ef9c;
 }
 body[data-palette='storybook'] {
