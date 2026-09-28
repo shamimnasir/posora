@@ -301,7 +301,6 @@ const schema = [
             </div>
             <p class="award-toast" id="award-toast" role="status" aria-live="polite" hidden></p>
             <p class="hint" id="hero-hint">গোল ছবিগুলোয় ক্লিক করো · টেনে ঘোরাও · খুলে দেখো টানো</p>
-            <p class="model-note">ধারণা বোঝানোর মডেল · মাপ ও দূরত্ব একই অনুপাতে নয়</p>
             <noscript><p class="hint">থ্রিডি মডেল দেখতে জাভাস্ক্রিপ্ট চালু করো।</p></noscript>
             <div class="scenebar">
               <label class="ctl-r"><span id="ctl-label" class="lbl">-</span><input type="range" id="ctl" min="0" max="100" value="50" aria-labelledby="ctl-label" /></label>
@@ -317,6 +316,8 @@ const schema = [
               </div>
             </div>
           </div>
+          <p class="model-note">ধারণা বোঝানোর মডেল · মাপ ও দূরত্ব একই অনুপাতে নয়</p>
+          {w.slug === 'food' && <p class="food-detail-note" id="food-detail-note" hidden><span id="food-detail-copy"></span><button type="button" id="food-detail-return" hidden>পুরো টেবিলে ফেরো</button></p>}
 
           <div class="items" id="c-items">
             <div class="items-h">
@@ -475,6 +476,16 @@ const schema = [
           </div>
           <p class="text" id="item-text">{firstItem?.l1 ?? ''}</p>
           <p class="fun" id="item-fun-wrap"><span class="lbl">মজার তথ্য</span><span id="item-fun">{firstItem?.fun ?? ''}</span></p>
+          {w.slug === 'food' && <section class="food-energy" id="food-energy" hidden aria-labelledby="food-energy-title">
+            <p class="lbl">ধারণা বোঝানোর চিত্র</p>
+            <h4 id="food-energy-title">একই খাবার, পরিমাণে তুলনা</h4>
+            <div class="energy-pair" role="img" aria-label="একই খাবারের অল্প পরিমাণে শক্তি তুলনায় কম, বেশি পরিমাণে শক্তি তুলনায় বেশি">
+              <div class="energy-sample"><svg viewBox="0 0 96 58" aria-hidden="true"><path d="M17 24h62c-2 17-14 25-31 25S19 41 17 24Z" fill="none" stroke="currentColor" stroke-width="4"/><path d="M22 23c2-7 8-7 11 0 3-12 12-12 15 0 4-9 12-8 15 0 4-6 9-5 12 0" fill="currentColor" opacity=".82"/></svg><b>অল্প পরিমাণ</b><span>তুলনায় কম শক্তি</span></div>
+              <span class="energy-arrow" aria-hidden="true">→</span>
+              <div class="energy-sample"><svg viewBox="0 0 96 58" aria-hidden="true"><path d="M17 24h62c-2 17-14 25-31 25S19 41 17 24Z" fill="none" stroke="currentColor" stroke-width="4"/><path d="M20 23c2-8 8-8 11 0 2-13 11-13 14 0 3-12 12-12 15 0 4-10 12-9 15 0 4-7 9-7 12 0" fill="currentColor" opacity=".82"/></svg><b>বেশি পরিমাণ</b><span>তুলনায় বেশি শক্তি</span></div>
+            </div>
+            <p class="energy-note">এটি একই খাবারের পরিমাণ বোঝানোর সরল ছবি। ক্যালরির সংখ্যা বা খাওয়ার পরামর্শ নয়।</p>
+          </section>}
           <p class="text lab-note" id="lab-note" hidden></p>
         </section>
 
@@ -729,6 +740,10 @@ const schema = [
   .q-btns .primary { background: var(--sun); color: #101735; border-color: #070b2c; }
   .award-toast { position: absolute; bottom: 124px; left: 50%; transform: translate(-50%, 8px); z-index: 8; font-size: 13.5px; font-weight: 700; color: #1a1408; background: linear-gradient(135deg, #ffe08a, #f0b429); padding: 0.45rem 1rem; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.35); opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
   .award-toast.show { opacity: 1; transform: translate(-50%, 0); }
+  /* Keep Food achievement feedback in the clear sky above the close-up, not
+     on top of the model caption or the two learner-operated sliders. */
+  #world[data-slug="food"] .award-toast { top: 3.8rem; bottom: auto; max-width: calc(100% - 2rem); text-align: center; white-space: normal; }
+  #world[data-slug="food"] .award-toast.show { transform: translate(-50%, 0); }
   @media (prefers-reduced-motion: reduce) { .q-card.shake, .qres-card, .xp-float.go { animation: none; } .xp-float.go { opacity: 1; } }
 
   /* awards shelf */
@@ -799,7 +814,14 @@ const schema = [
   .host canvas { width: 100%; height: 100%; }
   .lesson-cue { position: relative; z-index: 1; display: flex; align-items: baseline; gap: 0.65rem; margin: 0.65rem 0 0; padding: 0.25rem 0.15rem; max-width: 72ch; color: var(--ink-2); font-size: 13px; line-height: 1.45; }
   .lesson-cue b { flex: none; color: #ffd76a; }
-  .model-note { position: absolute; right: 12px; bottom: 92px; z-index: 3; max-width: 30ch; padding: 0.25rem 0.6rem; border-radius: 8px; background: rgba(9, 14, 24, 0.72); color: rgba(226, 235, 245, 0.78); font-size: 12px; line-height: 1.4; text-align: right; pointer-events: none; }
+  .model-note { position: relative; max-width: 68ch; margin: 0.55rem 0.9rem 0; padding: 0.25rem 0.6rem; border-radius: 8px; background: color-mix(in oklab, var(--panel) 76%, transparent); color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .food-detail-note { max-width: 68ch; margin: 0.35rem 0.9rem 0; padding: 0.65rem 0.8rem; border-left: 3px solid #5fc4b4; border-radius: 0 10px 10px 0; background: color-mix(in oklab, #5fc4b4 10%, var(--panel)); color: var(--ink-2); font-size: 13px; line-height: 1.6; }
+  .food-detail-note[hidden] { display: none; }
+  .food-detail-note button { display: inline-flex; margin: 0.45rem 0 0; padding: 0.35rem 0.75rem; border: 1px solid color-mix(in oklab,#5fc4b4 55%,var(--line)); border-radius: 999px; background: var(--panel); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+  .food-detail-note button[hidden] { display: none; }
+  #world[data-slug="food"] .host { z-index: 2; }
+  #world[data-slug="food"] .fx { z-index: 1; }
+  #world[data-slug="food"] .scene { background: radial-gradient(ellipse at 52% 42%, rgba(239, 225, 195, .16), transparent 38%), radial-gradient(ellipse at 50% 88%, #315653 0%, #193843 46%, #11182e 100%); }
   .loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; pointer-events: none; transition: opacity 0.35s ease; }
   .loading span { width: 44px; height: 44px; border-radius: 50%; background: color-mix(in oklab, var(--w) 55%, #0c1220); opacity: 0.25; animation: hb 1.4s ease-in-out infinite; }
   .loading span:nth-child(2) { width: 74px; height: 74px; animation-delay: 0.18s; }
@@ -1120,6 +1142,17 @@ const schema = [
   .ix-open { font-size: 12px; font-weight: 700; color: var(--w); padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--w) 40%, var(--line)); transition: background 0.15s ease, color 0.15s ease; }
   .ix-open:hover { background: var(--w); color: #fff; }
 
+  .food-energy { margin: 0.9rem 0; padding: 0.85rem; border: 1px solid color-mix(in oklab, var(--w) 35%, var(--line)); border-radius: 15px; background: color-mix(in oklab, var(--w) 10%, var(--panel)); }
+  .food-energy[hidden] { display: none; }
+  .food-energy h4 { margin: 0.15rem 0 0.7rem; font-size: 15px; color: var(--ink); }
+  .energy-pair { display: flex; align-items: center; justify-content: center; gap: 0.55rem; }
+  .energy-sample { min-width: 0; flex: 1; display: grid; justify-items: center; gap: 0.1rem; padding: 0.55rem 0.3rem; border-radius: 12px; background: var(--panel-2); color: var(--w); text-align: center; }
+  .energy-sample svg { width: 68px; max-width: 100%; height: 42px; }
+  .energy-sample b { font-size: 12px; color: var(--ink); }
+  .energy-sample span, .energy-note { font-size: 11px; line-height: 1.55; color: var(--ink-2); }
+  .energy-arrow { color: var(--muted); }
+  .energy-note { margin: 0.65rem 0 0; }
+
   /* ---------- paper ---------- */
   .printable { display: none; }
   @media print {
@@ -1162,7 +1195,8 @@ const schema = [
        before the overlays, so the model became a thumbnail between the lesson
        cue and controls. The extra height makes the entrance and reveal legible. */
     .scene { min-height: min(160vw, 620px); }
-    .model-note { left: 12px; right: auto; bottom: 90px; max-width: calc(100% - 24px); text-align: left; }
+    #world[data-slug="food"] .hint { display: none; }
+    .model-note { max-width: calc(100% - 24px); }
     .actions { justify-content: flex-start; overflow-x: auto; }
     .actions button { flex: none; min-height: 44px; }
     .grow { grid-template-columns: 84px minmax(0, 1fr) auto; column-gap: 0.5rem; }
@@ -1253,6 +1287,37 @@ const schema = [
   /* ---- 3D hero: loaded after first paint so the text is readable immediately ---- */
   const host = $('#hero-host'), ctl = $<HTMLInputElement>('#ctl'), ctlLabel = $('#ctl-label');
   const ctlX = $<HTMLInputElement>('#ctl-x');
+  const syncHeroCopy = () => {
+    const authoredFood = slug === 'food' && curCat === 0;
+    host.setAttribute('aria-label', authoredFood ? 'খাবারের থ্রিডি মডেল - খাবার বেছে নাও, টেনে ঘোরাও, খুঁটিনাটি খুলে দেখো' : 'থ্রিডি মডেল - টেনে ঘোরাও');
+    $('#hero-hint').textContent = authoredFood
+      ? 'যেকোনো খাবার বেছে নাও · টেনে দৃশ্য ঘোরাও · খুঁটিনাটি খুলে দেখো'
+      : 'গোল ছবিগুলোয় ক্লিক করো · টেনে ঘোরাও · খুলে দেখো টানো';
+    $('#ctl-x-label').textContent = authoredFood ? 'খুঁটিনাটি' : 'খুলে দেখো';
+  };
+  const foodDetailNote = root.querySelector<HTMLElement>('#food-detail-note');
+  const foodDetailCopy = root.querySelector<HTMLElement>('#food-detail-copy');
+  const foodDetailReturn = root.querySelector<HTMLButtonElement>('#food-detail-return');
+  const foodDetailText = [
+    'ভাতের কিছু রান্না-করা দানা বড় করে দেখা যায়; দানার আকার জাত ও রান্নাভেদে বদলাতে পারে। এটি কোনো পরিমাণ বা পুষ্টিমান মাপ নয়।',
+    'মাছের এই বড় দৃশ্যে চোখ, মাথা, ফুলকার বাইরের রেখা আর বুকের পাখনা আলাদা করে দেখা যায়। এটি ধারণা বোঝানোর মডেল। সব মাছের আকৃতি এক নয়।',
+    'বোতল আর তেল আলাদা করে দেখো। তেলের উচ্চতা বদলানো শুধু কম-বেশি দেখায়; এটি দৈনিক পরিমাণের পরামর্শ নয়।',
+    'পুরো ও কাটা পেয়ারা একসঙ্গে দেখা যায়। কাটার মুখে ফলের গঠন বোঝানো হয়েছে। ভিটামিন শুধু পেয়ারাতেই থাকে, এমন নয়।',
+    'লবণের দানা এখানে বড় করে দেখানো। টেবিলের লবণ খনিজযুক্ত একটি উদাহরণ; সব খনিজ মানেই লবণ নয়।',
+    'গ্লাসের দেয়াল, পানির পৃষ্ঠ আর দুইয়ের সীমানা দেখো। পানির উচ্চতা বদলানো কোনো পান করার পরামর্শ নয়।',
+    'পুরো ও কাটা শসায় খোসা, ভেতরের অংশ ও বীজ দেখো। খাদ্য-আঁশকে শুধু একটি দৃশ্যমান সুতো হিসেবে দেখানো ঠিক নয়।',
+  ];
+  const syncFoodDetailNote = () => {
+    const isDetail = slug === 'food' && curCat === 0 && Number(ctlX.value) >= 50 && curItem < 7;
+    if (foodDetailNote) foodDetailNote.hidden = !isDetail;
+    if (foodDetailCopy && isDetail) foodDetailCopy.textContent = foodDetailText[curItem] ?? '';
+    if (foodDetailReturn) foodDetailReturn.hidden = !isDetail;
+  };
+  foodDetailReturn?.addEventListener('click', () => { ctlX.value = '0'; ctlX.dispatchEvent(new Event('input', { bubbles: true })); });
+  const foodEnergyPanel = root.querySelector<HTMLElement>('#food-energy');
+  const syncFoodEnergyPanel = () => {
+    if (foodEnergyPanel) foodEnergyPanel.hidden = !(slug === 'food' && curCat === 0 && curItem === 7);
+  };
   const spinBtn = $<HTMLButtonElement>('#h-spin'), resetBtn = $<HTMLButtonElement>('#h-reset'), angleEl = $('#h-angle');
   const syncSpin = (on: boolean) => { spinBtn.setAttribute('aria-pressed', String(on)); spinBtn.textContent = slug === 'nature' ? (on ? 'চলাচল থামাও' : 'চলাচল চালাও') : (on ? 'ঘোরানো থামাও' : 'ঘোরানো চালাও'); };
   let lastAuto: boolean | null = null;
@@ -1278,11 +1343,16 @@ const schema = [
       if (quest.on) questPick(j); else selectItem(j);
     });
     ctlLabel.textContent = hero.set(cats[curCat].hero);
+    syncHeroCopy();
     ctl.value = String(Math.round((cats[curCat].hero.p ?? 0.5) * 100));
-    hero.setItems(heroItems(cats[curCat]), curItem);
+      hero.setItems(heroItems(cats[curCat]), curItem);
     if (pendingHeroFocus !== null) {
       hero.focus(pendingHeroFocus);
       pendingHeroFocus = null;
+    } else if (slug === 'food' && curCat === 0) {
+      // The learning list can remember its first row while the fresh visual
+      // scene still begins as a calm overview, as specified for this pilot.
+      hero.focus(-1);
     }
     if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
     const worldStart = root.querySelector<HTMLButtonElement>('#world-start');
@@ -1347,7 +1417,13 @@ const schema = [
   });
   document.addEventListener('fullscreenchange', syncBig);
   resetBtn.addEventListener('click', () => hero?.resetView());
-  ctl.addEventListener('input', () => { hero?.setParam(+ctl.value / 100); countPlay(); });
+  ctl.addEventListener('input', () => {
+    if (slug === 'food' && curCat === 0) {
+      const ii = Math.round((+ctl.value / 100) * (cats[curCat].items.length - 1));
+      if (ii !== curItem) selectItem(ii);
+    } else hero?.setParam(+ctl.value / 100);
+    countPlay();
+  });
   /**
    * On a crowd scene the slider IS the item picker, so clicking a name has to
    * move it.
@@ -1360,12 +1436,12 @@ const schema = [
    */
   function syncGrove(ii: number) {
     const c = cats[curCat];
-    if (c.hero.type !== 'collection' || c.items.length < 2) return;
+    if ((c.hero.type !== 'collection' && !(slug === 'food' && curCat === 0)) || c.items.length < 2) return;
     const v = Math.round((ii / (c.items.length - 1)) * 100);
     ctl.value = String(v);
     hero?.setParam(v / 100);
   }
-  ctlX.addEventListener('input', () => { hero?.setExplode(+ctlX.value / 100); countPlay(); });
+  ctlX.addEventListener('input', () => { hero?.setExplode(+ctlX.value / 100); syncFoodDetailNote(); countPlay(); });
   host.addEventListener('pointerdown', countPlay);
 
   /* ---- the player bar: points, title, days in a row, today's three things ---- */
@@ -1972,11 +2048,15 @@ const schema = [
   function selectItem(ii: number, mark = true) {
     const c = cats[curCat];
     if (!readable(c)) return;
+    if (slug === 'food' && curCat === 0) ctlX.value = '0';
     curItem = ii;
+    syncFoodEnergyPanel();
+    syncFoodDetailNote();
     rememberSpot(curCat, ii);
     chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
     if (hero) hero.focus(ii);
     else pendingHeroFocus = ii;
+    syncGrove(ii);
     syncGrove(ii);
     renderRead(); renderCrumbs();
     // the reading arrives, it does not just swap
@@ -2016,8 +2096,12 @@ const schema = [
   function showCat(i: number, item = 0) {
     questQuit(true); qRes.hidden = true;
     curCat = i; curItem = item; playCounted = false;
+    if (slug === 'food') ctlX.value = '0';
+    syncFoodEnergyPanel();
     rail.forEach((b) => { if (+b.dataset.i! === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
     const c = cats[i];
+    syncHeroCopy();
+    syncFoodDetailNote();
     trackCategory(slug, c.n);
     $('#c-no').textContent = pad2(i + 1);
     $('#c-name').textContent = c.n;

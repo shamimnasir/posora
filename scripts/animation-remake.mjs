@@ -13,8 +13,8 @@ const jobs = [...worlds].sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.
   const collection = COLLECTIONS[`${world.slug}:${cat.n}`];
   return {
     id, world: world.slug, categoryIndex: index, category: cat.n, status: 'planned',
-    worldOpen: world.open,
-    runtimeState: world.open ? 'currently-open-world' : 'closed-world-verify-route-and-do-not-enable-with-this-scene-task',
+    bespokeExplorer: world.open,
+    runtimeTemplate: world.open ? 'bespoke-route-verify-separately' : 'generic-world-route',
     route: `/${world.slug}/`, selectCategoryByVisibleName: cat.n,
     items: cat.items.map((label) => ({ label, currentCollectionFigure: collection?.items[label] ?? collection?.fallback ?? null })),
     currentEntryPoints: world.slug === 'space'
@@ -52,7 +52,7 @@ if (command === 'inventory') {
       'Read applicable AGENTS.md and docs/animation-remake-direction.md plus docs/animation-remake-orchestration.md first.',
       `Catalog digest: ${digest}. Recompute inventory before work; stop and refresh this packet if it differs.`,
       `Task: ${job.id}. Category index is zero-based. Exact Bengali category: ${job.category}.`,
-      `Route: ${job.route}. World runtime state: ${job.runtimeState}. Verify the route and category are actually available before browser-based integration; do not invent a category URL parameter or silently enable a closed world.`,
+      `Route: ${job.route}. Runtime template: ${job.runtimeTemplate}. Verify the route and category in the browser before integration; open=true denotes a bespoke route handled outside the generic template, not the only route available. Do not silently change route availability.`,
       `Items: ${job.items.map((item) => item.label).join(' | ')}`,
       `Current entry points: ${job.currentEntryPoints.join(', ')}`,
       `Owned output paths (create only if needed): ${job.proposedOwnedPaths[role].join(', ')}`,

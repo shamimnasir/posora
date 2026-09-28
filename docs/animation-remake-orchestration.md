@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-This is a repeatable planning and handoff system, not an animation implementation. The current catalog contains 11 worlds, 87 categories and 833 item entries. The catalog marks only Space as `open: true`; confirm actual route behavior before browser work, and do not enable closed routes as a side effect of scene work. The inventory command derives jobs and item labels from `src/data/worlds.ts` and existing collection mappings. It makes no model or network calls and does not prove visual quality.
+This is a repeatable planning and handoff system, not an animation implementation. The current catalog contains 11 worlds, 87 categories and 833 item entries. `open: true` marks a bespoke explorer route (Space); the other worlds use the generic world template and are not thereby closed. Confirm actual route/category behavior in a browser before integration, and do not silently change route availability during scene work. The inventory command derives jobs and item labels from `src/data/worlds.ts` and existing collection mappings. It makes no model or network calls and does not prove visual quality.
 
 The aspiration is cinematic, tactile educational 3D—not a promise to match a feature-film studio or a request to copy a studio's protected characters, models, textures, or signature designs. Translate “movie-like” into verifiable craft: strong silhouettes, researched forms, differentiated physically based materials, motivated lighting, considered camera composition, subject-specific motion and clear educational reveals.
 
@@ -27,7 +27,7 @@ node --experimental-strip-types scripts/animation-remake.mjs task food 0 builder
 node --experimental-strip-types scripts/animation-remake.mjs task food 0 reviewer
 ```
 
-The category index is zero-based and must be refreshed against the printed inventory when the catalog changes. Each task packet includes exact Bengali item labels, existing entry points and mapped figure IDs where available, proposed owned paths, world route state, implementation dependencies and a role-specific prompt. Do not treat a proposed path as permission to refactor a shared module. Preserve existing lesson/index mappings. A changed catalog digest invalidates packets generated from an earlier snapshot.
+The category index is zero-based and must be refreshed against the printed inventory when the catalog changes. Each task packet includes exact Bengali item labels, existing entry points and mapped figure IDs where available, proposed owned paths, the generic-versus-bespoke route template, implementation dependencies and a role-specific prompt. Do not treat a proposed path as permission to refactor a shared module. Preserve existing lesson/index mappings. A changed catalog digest invalidates packets generated from an earlier snapshot.
 
 The `task` command is a prompt generator, not an agent dispatcher, renderer, asset downloader, billing system, approval tracker or completion tracker. It performs no automatic API calls. The root coordinator records results and evidence outside the generated prompt; generated `status: planned` must not be mistaken for current implementation status.
 

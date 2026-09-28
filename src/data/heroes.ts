@@ -13,7 +13,7 @@ const MAP: Record<string, H[]> = {
   // slider. 0.42 is a young sapling, which is still early in the cycle.
   life:      [T('treeparts', undefined, 0.75), T('tree', 'photo', 0.7), T('tree', undefined, 0.42), T('collection'), T('collection'), T('collection'), T('collection'), T('bodyparts', undefined, 0.25)],
   nature:    [T('weather', undefined, 0.4), T('seasonwheel'), T('terrain', 'delta', 0.6), T('terrain', undefined, 0.6), T('collection'), T('collection'), T('earth', undefined, 0.2), T('weather', 'storm', 0.9)],
-  food:      [T('collection'), T('plate', undefined, 0.7), T('terrain', 'farm', 0.6), T('seasonwheel', 'fruit'), T('collection'), T('collection'), T('collection'), T('collection')],
+  food:      [T('foodtabletop'), T('plate', undefined, 0.7), T('terrain', 'farm', 0.6), T('seasonwheel', 'fruit'), T('collection'), T('collection'), T('collection'), T('collection')],
   math:      [T('blocks', undefined, 0.47), T('blocks', undefined, 0.25), T('pie', undefined, 0.375), T('shapes', undefined, 0.15), T('scale', undefined, 0.5), T('coins', undefined, 0.5), T('blocks', 'wave'), T('bars', undefined, 0.6), T('scale', undefined, 0.3)],
   money:     [T('coins', undefined, 0.6), T('bars', undefined, 0.5), T('pie', undefined, 0.25), T('coins', undefined, 0.3), T('collection'), T('bars', 'compound', 0.5), T('bars', undefined, 0.8), T('rocket', undefined, 0.6), T('collection'), T('shield', undefined, 0.9)],
   language:  [T('letters', undefined, 0.2), T('letters', 'jukto'), T('letters', undefined, 0.5), T('collection'), T('letters', 'words', 0.7), T('letters', 'words', 0.3), T('letters', 'en'), T('minar')],

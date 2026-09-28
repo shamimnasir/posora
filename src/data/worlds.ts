@@ -1,4 +1,4 @@
-/** The 11 worlds - structure from PLAN.md. Only `open: true` worlds have a live explorer. */
+/** The 11 worlds - structure from PLAN.md. `open: true` worlds use bespoke explorers; others use the generic world template. */
 export type Category = { n: string; items: string[]; play: string; lab?: string; labAnchors?: string[] };
 export type World = {
   slug: string; bn: string; en: string; tag: string; hue: string;
@@ -1037,7 +1037,7 @@ export const worlds: World[] = [
      "আঁশ",
      "ক্যালরি"
     ],
-    "play": "ছয় উপাদানের প্রতিটি তার নিজের চেহারায় - শর্করার ভাত, আমিষের মাছ, স্নেহের তেল, ভিটামিনের ফল, খনিজের লবণ, আর এক গ্লাস পানি। স্লাইডার টানলে একেকটা সামনে আসে।"
+    "play": "খাবারের নানা উপাদান এবার টেবিলে দেখো: ভাত, মাছ, তেল, ফল, লবণ, পানি ও আঁশের উদাহরণ। স্লাইডার টানলে একেকটি খাবার সামনে আসে।"
    },
    {
     "n": "আমার থালা",

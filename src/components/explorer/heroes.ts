@@ -14,6 +14,7 @@ import {
 import { FIGURES, arc, arcPerRow } from './figures';
 import { dressScene, castShadows, stylise } from './render';
 import { loadLicensedModel } from './model-loader';
+import { buildFoodTabletop } from './food-tabletop';
 import { iconFont, withIconFont } from '../../lib/icon-font';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
@@ -89,6 +90,20 @@ type SceneObj = {
   still?: boolean;
   /** Optional emphasis multiplier used by the shared hero framing template. */
   heroScale?: number;
+  /** Scene-authored target meshes enable direct object selection without icon overlays. */
+  pickTargets?: Object3D[];
+  /** When true, accessible DOM item buttons replace floating badge sprites. */
+  suppressBadges?: boolean;
+  /** A special scene may map lesson order to authored camera targets. */
+  focusTargets?: (Object3D | null)[];
+  /** Scene-defined detail states replace the generic mesh explosion. */
+  detailTargets?: (Object3D | null)[];
+  detailFocusTargets?: (Object3D | null)[];
+  setReveal?: (level: number, itemIndex: number) => void;
+  focusZoomFactor?: number;
+  detailZoomFactor?: number;
+  /** Preserve a scene's authored elevation while the camera dollies into detail. */
+  preserveFocusAngle?: boolean;
 };
 type Builder = (c: Ctx) => SceneObj;
 
@@ -247,6 +262,31 @@ function organicLeafCluster(parent: Object3D, colorA: Color | string, colorB: Co
 
 /* ---------- scenes ---------- */
 const SCENES: Record<string, Builder> = {
+  foodtabletop({ root }) {
+    const narrow = matchMedia('(max-width: 640px)').matches;
+    const food = buildFoodTabletop(root, narrow);
+    const labels = ['শর্করা', 'আমিষ', 'স্নেহ', 'ভিটামিন', 'খনিজ লবণ', 'পানি', 'আঁশ', 'ক্যালরি'];
+    const focusTargets = labels.map((label, i) => food.anchors[label] ?? food.pickTargets[i] ?? null);
+    // Calories is a DOM comparison, not a physical thing; keep rice in view as context.
+    focusTargets[7] = food.anchors['শর্করা'] ?? null;
+    const anchors = Object.fromEntries(labels.map((label, i) => [label, focusTargets[i] ?? new Object3D()]));
+    return {
+      label: 'খাবার বেছে নাও', anchors, pickTargets: food.pickTargets, focusTargets,
+      detailTargets: food.detailTargets, detailFocusTargets: food.detailFocusTargets, suppressBadges: true, setReveal: food.setReveal,
+      // This is a fixed tabletop shot, not a floor diorama. Disabling the
+      // shared ground plane removes the huge gray ellipse that dwarfed the meal.
+      still: true, heroScale: narrow ? 1.34 : 2.7,
+      // Portrait deliberately composes around the front rice/fish pair;
+      // support items remain selectable in the DOM rail and get their own shot.
+      // The fixed camera must not fit the platter's full orbit envelope on a
+      // narrow canvas: doing so shrinks the actual food to a tiny distant strip.
+      fit: { x: narrow ? 0.94 : 1.35, z: narrow ? 1.05 : 0.98 },
+      aim: { y: 0.18, eye: narrow ? 4.2 : 4.05, dolly: narrow ? 0.62 : 0.52, wide: true },
+      preserveFocusAngle: true,
+      focusZoomFactor: narrow ? 0.3 : 0.52, detailZoomFactor: narrow ? 0.1 : 0.18,
+      update(t, dt, p) { food.update(t, dt, p); },
+    };
+  },
   /** গাছের অংশ: every part is its own group with a direction to explode along, and an anchor for its badge. */
   treeparts({ root, hue }) {
     const brown = new Color('#7a4f2a'), bark = new Color('#5c3a1e'), leaf = hue, leaf2 = lighten(hue, 0.25);
@@ -1598,13 +1638,27 @@ export function mountHero(
   // own a moment later; every later scene change goes through this flag.
   let framed = false;
   let focusNode: Object3D | null = null, focusZoom = 0;
-  const focusPos = new Vector3();
+  const focusPos = new Vector3(), detailPos = new Vector3();
   const aimCamera = () => {
     camera.position.y = eyeY;
     if (focusNode && focusZoom > 0.01) {
       focusNode.getWorldPosition(focusPos);
+      if (cur?.setReveal && active >= 0 && detailZoom > 0) {
+        const detailNode = cur.detailFocusTargets?.[active] ?? cur.detailTargets?.[active];
+        if (detailNode) { detailNode.getWorldPosition(detailPos); focusPos.lerp(detailPos, detailZoom); }
+      }
+      if (cur?.preserveFocusAngle) {
+        // The detail dolly shortens Z; lowering the eye by the same ratio keeps
+        // a three-quarter food shot oblique instead of turning it overhead.
+        const ratio = MathUtils.clamp((camera.position.z - aimZ) / Math.max(0.1, camZBase - aimZ), 0.2, 1);
+        camera.position.y = focusPos.y + (eyeY - aimY) * ratio;
+      }
+      // Shift the camera over the selected lesson object instead of merely
+      // swivelling toward it; otherwise a close-up pushes objects near the
+      // edge of the tableau out of frame.
+      camera.position.x = focusPos.x * focusZoom;
       camera.lookAt(focusPos.x, focusPos.y, focusPos.z);
-    } else camera.lookAt(0, aimY, aimZ);
+    } else { camera.position.x = 0; camera.lookAt(0, aimY, aimZ); }
   };
   aimCamera();
   // Shadows, filmic tone mapping, a sky/ground environment and fog. See
@@ -1646,7 +1700,8 @@ export function mountHero(
     // is actually about. Where it does not, the engine spreads the badges over
     // the model's own pieces, so every category reads the same way.
     const named = cur?.anchors ?? {};
-    collectParts(n);
+    if (cur?.setReveal) { parts = []; spread = 0; }
+    else collectParts(n);
     const generic = genericAnchors(n);
     // pinned badges shrink as a model carries more of them, so fourteen organs do not bury the figure
     pinScale = MathUtils.clamp(0.66 - n * 0.018, 0.4, 0.55);
@@ -1657,8 +1712,9 @@ export function mountHero(
       // Start at the resting size rather than easing down to it: the frame
       // loop stops while the tab is in the background, so a scene loaded out
       // of view would be frozen mid-transition when the visitor arrives.
-      if (marker) { anchoredCount++; sp.scale.setScalar(pinScale * 0.72 * dolly); pins.add(sp); pins.add(label); }
-      else { sp.scale.setScalar(0.85); orbit.add(sp); orbit.add(label); }
+      if (marker) { anchoredCount++; sp.scale.setScalar(pinScale * 0.72 * dolly); if (!cur?.suppressBadges) { pins.add(sp); pins.add(label); } }
+      else { sp.scale.setScalar(0.85); if (!cur?.suppressBadges) { orbit.add(sp); orbit.add(label); } }
+      if (cur?.suppressBadges) { sp.visible = false; label.visible = false; }
       return { sp, label, a0, marker };
     });
     // when the items live on the model, the model stays full size; otherwise it
@@ -1669,8 +1725,13 @@ export function mountHero(
   function focus(i: number) {
     active = i;
     revealLevel = 0; detailZoom = 0; explodeTo = 0;
-    focusNode = i >= 0 && badges[i]?.marker ? badges[i]!.marker! : null;
-    focusZoom = i >= 0 ? 1 : 0;
+    if (cur?.setReveal) {
+      param = i < 0 ? 0.5 : i / Math.max(1, badges.length - 1);
+      cur.update(t, 0, param);
+    }
+    cur?.setReveal?.(0, i);
+    focusNode = i >= 0 ? (cur?.focusTargets?.[i] ?? badges[i]?.marker ?? null) : null;
+    focusZoom = i >= 0 && !(focusNode?.userData.domOnly) ? 1 : 0;
     if (i < 0 || !badges[i] || badges[i]!.marker) return;
     // turn the ring so the chosen badge comes to the front (toward the camera, +z)
     orbitYawTo = Math.PI / 2 - badges[i]!.a0;
@@ -1691,10 +1752,19 @@ export function mountHero(
    * broken rather than as the badge being the target.
    */
   function pick(clientX: number, clientY: number): number {
-    if (!badges.length) return -1;
     const r = host.getBoundingClientRect();
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
+    if (cur?.pickTargets?.length) {
+      const targetHit = ray.intersectObjects(cur.pickTargets, true)[0];
+      if (targetHit) {
+        for (let node: Object3D | null = targetHit.object; node; node = node.parent) {
+          const index = Number(node.userData.itemIndex);
+          if (Number.isInteger(index) && index >= 0) return index;
+        }
+      }
+    }
+    if (!badges.length) return -1;
     pickable.length = 0;
     for (const b of badges) pickable.push(b.sp, b.label);
     const hit = ray.intersectObjects(pickable, false)[0];   // nearest wins
@@ -1867,10 +1937,18 @@ export function mountHero(
       // explicit nested parts can map these levels to their own objects; all
       // other scenes still get a meaningful staged explosion for free.
       revealLevel = Math.min(3, revealLevel + 1);
-      // Keep the reveal inside the viewport even on a 320px phone canvas.
-      // Explicit nested scenes can opt into larger distances later.
-      explodeTo = revealLevel === 1 ? 0.12 : revealLevel === 2 ? 0.32 : 0.55;
-      detailZoom = revealLevel === 3 ? 0.35 : 0;
+      if (cur?.setReveal) {
+        const revealAmount = revealLevel >= 2 ? (revealLevel === 2 ? 0.66 : 1) : 0;
+        cur.setReveal(revealAmount, active);
+        explodeTo = 0;
+        const hasDetail = !!cur.detailTargets?.[active];
+        detailZoom = hasDetail && revealAmount >= 0.5 ? 0.04 + 0.96 * MathUtils.clamp((revealAmount - 0.5) / 0.5, 0, 1) : 0;
+        focusNode = cur.focusTargets?.[active] ?? focusNode;
+      } else {
+        // Keep the generic reveal inside the viewport for established scenes.
+        explodeTo = revealLevel === 1 ? 0.12 : revealLevel === 2 ? 0.32 : 0.55;
+        detailZoom = revealLevel === 3 ? 0.35 : 0;
+      }
       // Let the page update its reading panel only when the selected item
       // changes. Repeated taps must stay inside the reveal choreography;
       // otherwise the page rebuilds the hero and resets the explosion.
@@ -2053,7 +2131,7 @@ export function mountHero(
     focusZoom += ((active >= 0 ? 1 : 0) - focusZoom) * 0.1;
     // Pull back progressively as the staged reveal opens; the deepest state
     // must keep every detached piece inside the canvas on narrow screens.
-    camera.position.z = Math.max(2.05, camZBase * (1 - focusZoom * 0.36 - detailZoom * 0.13) + explodeNow * spread * 2.4);
+    camera.position.z = Math.max(1.75, camZBase * (1 - focusZoom * (cur?.focusZoomFactor ?? 0.36) - detailZoom * (cur?.detailZoomFactor ?? 0.13)) + explodeNow * spread * 2.4);
     aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });
@@ -2071,7 +2149,17 @@ export function mountHero(
     setItems: (items, act) => { setItems(items, act); resize(); start(); },
     focus: (i) => { focus(i); start(); },
     setParam: (v) => { param = v; start(); },
-    setExplode: (v) => { explodeTo = MathUtils.clamp(v, 0, 1); start(); },
+    setExplode: (v) => {
+      const amount = MathUtils.clamp(v, 0, 1);
+      if (cur?.setReveal) {
+        cur.setReveal(amount, active);
+        explodeTo = 0;
+        const hasDetail = !!cur.detailTargets?.[active];
+        detailZoom = hasDetail && amount >= 0.5 ? 0.04 + 0.96 * MathUtils.clamp((amount - 0.5) / 0.5, 0, 1) : 0;
+        focusNode = cur.focusTargets?.[active] ?? focusNode;
+      } else explodeTo = amount;
+      start();
+    },
     setAuto: (on) => { auto = on; previewUntil = 0; start(); },
     isAuto: () => auto,
     resetView: () => { vx = vy = 0; pitch = 0; yawTo = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; start(); },
