@@ -264,7 +264,8 @@ function organicLeafCluster(parent: Object3D, colorA: Color | string, colorB: Co
 const SCENES: Record<string, Builder> = {
   foodtabletop({ root }) {
     const narrow = matchMedia('(max-width: 640px)').matches;
-    const food = buildFoodTabletop(root, narrow);
+    const medium = !narrow && matchMedia('(max-width: 900px)').matches;
+    const food = buildFoodTabletop(root, narrow, medium);
     const labels = ['শর্করা', 'আমিষ', 'স্নেহ', 'ভিটামিন', 'খনিজ লবণ', 'পানি', 'আঁশ', 'ক্যালরি'];
     const focusTargets = labels.map((label, i) => food.anchors[label] ?? food.pickTargets[i] ?? null);
     // Calories is a DOM comparison, not a physical thing; keep rice in view as context.
@@ -283,7 +284,7 @@ const SCENES: Record<string, Builder> = {
       fit: { x: narrow ? 0.94 : 1.35, z: narrow ? 1.05 : 0.98 },
       aim: { y: 0.18, eye: narrow ? 4.2 : 4.05, dolly: narrow ? 0.62 : 0.52, wide: true },
       preserveFocusAngle: true,
-      focusZoomFactor: narrow ? 0.3 : 0.52, detailZoomFactor: narrow ? 0.1 : 0.18,
+      focusZoomFactor: narrow ? 0.34 : 0.62, detailZoomFactor: narrow ? 0.1 : 0.18,
       update(t, dt, p) { food.update(t, dt, p); },
     };
   },

@@ -1300,7 +1300,7 @@ const schema = [
   const foodDetailReturn = root.querySelector<HTMLButtonElement>('#food-detail-return');
   const foodDetailText = [
     'ভাতের কিছু রান্না-করা দানা বড় করে দেখা যায়; দানার আকার জাত ও রান্নাভেদে বদলাতে পারে। এটি কোনো পরিমাণ বা পুষ্টিমান মাপ নয়।',
-    'মাছের এই বড় দৃশ্যে চোখ, মাথা, ফুলকার বাইরের রেখা আর বুকের পাখনা আলাদা করে দেখা যায়। এটি ধারণা বোঝানোর মডেল। সব মাছের আকৃতি এক নয়।',
+    'মাছের গায়ের আঁশ, চোখ ও পাখনা দেখো। আরও টানলে চোখ আর ফুলকার পাশের অংশ কাছে আসবে। এটি শেখার মডেল: সব মাছের আকৃতি এক নয়।',
     'বোতল আর তেল আলাদা করে দেখো। তেলের উচ্চতা বদলানো শুধু কম-বেশি দেখায়; এটি দৈনিক পরিমাণের পরামর্শ নয়।',
     'পুরো ও কাটা পেয়ারা একসঙ্গে দেখা যায়। কাটার মুখে ফলের গঠন বোঝানো হয়েছে। ভিটামিন শুধু পেয়ারাতেই থাকে, এমন নয়।',
     'লবণের দানা এখানে বড় করে দেখানো। টেবিলের লবণ খনিজযুক্ত একটি উদাহরণ; সব খনিজ মানেই লবণ নয়।',
@@ -1310,7 +1310,12 @@ const schema = [
   const syncFoodDetailNote = () => {
     const isDetail = slug === 'food' && curCat === 0 && Number(ctlX.value) >= 50 && curItem < 7;
     if (foodDetailNote) foodDetailNote.hidden = !isDetail;
-    if (foodDetailCopy && isDetail) foodDetailCopy.textContent = foodDetailText[curItem] ?? '';
+    if (foodDetailCopy && isDetail) {
+      const fishMacro = curItem === 1 && Number(ctlX.value) >= 85;
+      foodDetailCopy.textContent = fishMacro
+        ? 'আরও কাছে দেখো: চোখ ও ফুলকার বাইরের রেখা। মাছ শ্বাস নিতে ফুলকা ব্যবহার করে; ভেতরের গঠন এই মডেলে দেখানো হয়নি।'
+        : foodDetailText[curItem] ?? '';
+    }
     if (foodDetailReturn) foodDetailReturn.hidden = !isDetail;
   };
   foodDetailReturn?.addEventListener('click', () => { ctlX.value = '0'; ctlX.dispatchEvent(new Event('input', { bubbles: true })); });

@@ -34,10 +34,10 @@ const nav = [
 </header>
 
 <style>
-  .hdr { position: sticky; top: 0; z-index: 20; background: rgba(7, 11, 44, 0.86); backdrop-filter: saturate(1.4) blur(16px); -webkit-backdrop-filter: saturate(1.4) blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18); }
+  .hdr { position: sticky; top: 0; z-index: 20; background: var(--paper); backdrop-filter: saturate(1.4) blur(16px); -webkit-backdrop-filter: saturate(1.4) blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18); }
   :global(body[data-palette='daylight']) .hdr,
   :global(body[data-palette='mint']) .hdr,
-  :global(body[data-palette='sky']) .hdr { background: color-mix(in oklab, var(--panel) 92%, transparent); border-bottom-color: var(--line); box-shadow: 0 5px 22px color-mix(in oklab, var(--ink) 10%, transparent); }
+  :global(body[data-palette='sky']) .hdr { background: var(--panel); border-bottom-color: var(--line); box-shadow: 0 5px 22px color-mix(in oklab, var(--ink) 10%, transparent); }
   .row { display: flex; align-items: center; gap: 1.5rem; min-height: 68px; }
   .brand { display: flex; align-items: center; gap: 0.6rem; }
   .glyph { display: grid; place-items: center; border-radius: 13px 13px 13px 5px; box-shadow: 3px 3px 0 var(--pink); transform: rotate(-3deg); transition: transform .18s ease; }

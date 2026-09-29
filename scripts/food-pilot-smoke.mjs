@@ -13,10 +13,20 @@ const browser = await chromium.launch({
 });
 const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
+const foodCaptureIds = ['carbohydrate', 'protein', 'fat', 'vitamin', 'minerals', 'water', 'fiber', 'energy'];
+const frameHostBelowStickyHeader = async (page) => page.evaluate(() => {
+  const host = document.querySelector('#hero-host');
+  const header = document.querySelector('.hdr');
+  if (!host) return;
+  const top = host.getBoundingClientRect().top + window.scrollY;
+  const offset = (header?.getBoundingClientRect().height ?? 0) + 12;
+  window.scrollTo({ top: Math.max(0, top - offset), behavior: 'instant' });
+});
 
 try {
   for (const viewport of [
     { name: 'mobile', width: 360, height: 800, start: true },
+    { name: 'tablet', width: 768, height: 1024, start: false },
     { name: 'desktop', width: 1440, height: 900, start: false },
   ]) {
     const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
@@ -31,13 +41,18 @@ try {
       if (message.type() === 'error' && !telemetryNoise && !text.includes('Executing inline script violates the following Content Security Policy')) errors.push(`console: ${text}`);
     });
     const response = await page.goto(`${base}/food/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    // Viewing every lesson can legitimately grant awards and fire confetti.
+    // Suppress only that transient celebration in captures so the 3D model,
+    // crop and control clearance remain assessable; no production source or
+    // interaction behavior is changed by this test-only style.
+    await page.addStyleTag({ content: '#fx { visibility: hidden !important; }' });
     check((response?.status() ?? 0) === 200, `${viewport.name}: /food/ did not return 200`);
     const labels = await page.locator('.chip[data-di]').allInnerTexts();
     const expected = ['শর্করা', 'আমিষ', 'স্নেহ', 'ভিটামিন', 'খনিজ লবণ', 'পানি', 'আঁশ', 'ক্যালরি'];
     check(labels.length === expected.length && expected.every((label, i) => labels[i]?.includes(label)), `${viewport.name}: the eight lesson labels/order changed`);
 
     if (viewport.start) {
-      check(await page.locator('#world-start').isVisible(), 'mobile: 3D scene should wait for explicit learner intent');
+      await page.locator('#world-start').waitFor({ state: 'visible', timeout: 10000 });
       await page.locator('#world-start').click({ force: true });
     }
     await page.waitForFunction(() => {
@@ -52,13 +67,14 @@ try {
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), `${viewport.name}: horizontal overflow`);
     check((await page.locator('#hero-hint').innerText()).includes('খাবার বেছে নাও'), `${viewport.name}: Food-specific interaction instructions are missing`);
     check((await page.locator('#ctl-x-label').innerText()) === 'খুঁটিনাটি', `${viewport.name}: authored-detail control label is missing`);
-    await page.evaluate(() => document.querySelector('#hero-host')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await frameHostBelowStickyHeader(page);
     await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-overview.png`) });
 
     // Rice is the first geometry gate in the pilot brief: review its focus and
     // authored close-up before moving to the fish/detail case.
     await page.locator('.chip[data-di="0"]').evaluate((el) => { if (el instanceof HTMLButtonElement) el.click(); });
     await page.waitForTimeout(800);
+    await frameHostBelowStickyHeader(page);
     await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-rice-focus.png`) });
     await page.locator('#ctl-x').evaluate((el) => { el.value = '66'; el.dispatchEvent(new Event('input', { bubbles: true })); });
     await page.waitForTimeout(1200);
@@ -69,13 +85,30 @@ try {
     await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-rice-detail.png`) });
     await page.locator('#food-detail-return').click();
     check(await page.locator('#food-detail-note').isHidden(), `${viewport.name}: detail return did not restore the regular view`);
+    await frameHostBelowStickyHeader(page);
 
     // Capture the focused fish before touring the rest of the catalog, so the
     // review image is not covered by category-completion confetti.
     await page.locator('.chip[data-di="1"]').evaluate((el) => { if (el instanceof HTMLButtonElement) el.click(); });
     check((await page.locator('#item-name').innerText()) === 'আমিষ', `${viewport.name}: fish selection did not update the lesson`);
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(3200);
+    await frameHostBelowStickyHeader(page);
     await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-fish-focus.png`) });
+    // Tilt the composed tableau down slightly to inspect that the fish is
+    // supported by the platter rather than appearing suspended in a top view.
+    const heroBox = await page.locator('#hero-host').boundingBox();
+    if (heroBox) {
+      const x = heroBox.x + heroBox.width / 2, y = heroBox.y + heroBox.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x, y - 28, { steps: 5 });
+      await page.mouse.up();
+      await page.waitForTimeout(500);
+      await frameHostBelowStickyHeader(page);
+      await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-fish-contact-angle.png`) });
+      await page.locator('#h-reset').click();
+      await page.waitForTimeout(500);
+    }
     await page.locator('#ctl-x').evaluate((el) => { el.value = '66'; el.dispatchEvent(new Event('input', { bubbles: true })); });
     await page.waitForTimeout(1200);
     await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-fish-detail-mid.png`) });
@@ -84,6 +117,7 @@ try {
     // authored model, not transient UI feedback.
     await page.waitForTimeout(3200);
     check(await page.locator('#food-detail-note').isVisible(), `${viewport.name}: the focused-detail explanation is missing`);
+    check((await page.locator('#food-detail-copy').innerText()).includes('আরও কাছে দেখো'), `${viewport.name}: the fish gill/eye macro explanation is missing`);
     const toastOverlap = await page.evaluate(() => {
       const toast = document.querySelector('#award-toast');
       if (!toast || toast.hidden) return [];
@@ -96,11 +130,9 @@ try {
       });
     });
     check(toastOverlap.length === 0, `${viewport.name}: Food award feedback overlaps ${toastOverlap.join(', ')}`);
-    await page.evaluate(() => {
-      const host = document.querySelector('#hero-host');
-      host?.scrollIntoView({ block: 'start', behavior: 'instant' });
-    });
+    await frameHostBelowStickyHeader(page);
     await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-fish-detail.png`) });
+    await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-fish-gill-macro.png`) });
     await page.locator('#food-detail-return').click();
     check(await page.locator('#food-detail-note').isHidden(), `${viewport.name}: fish detail return did not restore focus`);
 
@@ -108,6 +140,19 @@ try {
     for (const [i, label] of expected.entries()) {
       await page.locator(`.chip[data-di="${i}"]`).evaluate((el) => { if (el instanceof HTMLButtonElement) el.click(); });
       check((await page.locator('#item-name').innerText()) === label, `${viewport.name}: lesson target ${i} did not update to ${label}`);
+      if (i >= 2 && i <= 6) {
+        await page.waitForTimeout(1200);
+        await frameHostBelowStickyHeader(page);
+        await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-${foodCaptureIds[i]}-focus.png`) });
+        await page.locator('#ctl-x').evaluate((el) => { el.value = '100'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+        await page.waitForTimeout(1500);
+        check(await page.locator('#food-detail-note').isVisible(), `${viewport.name}: ${foodCaptureIds[i]} detail explanation is missing`);
+        await frameHostBelowStickyHeader(page);
+        await page.screenshot({ path: join(screenshotDir, `food-${viewport.name}-${foodCaptureIds[i]}-detail.png`) });
+        await page.locator('#food-detail-return').click();
+        check(await page.locator('#food-detail-note').isHidden(), `${viewport.name}: ${foodCaptureIds[i]} detail return did not restore focus`);
+        await frameHostBelowStickyHeader(page);
+      }
     }
 
     // The scene picker retains lesson state, including the conceptual calorie

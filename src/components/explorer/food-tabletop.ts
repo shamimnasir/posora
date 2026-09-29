@@ -1,7 +1,7 @@
 import {
-  Box3, BufferGeometry, CatmullRomCurve3, Color, CylinderGeometry, DoubleSide, Group, InstancedMesh,
+  Box3, BufferGeometry, CatmullRomCurve3, Color, CylinderGeometry, DodecahedronGeometry, DoubleSide, Group, InstancedMesh,
   LatheGeometry, MathUtils, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, ExtrudeGeometry,
-  Float32BufferAttribute, Quaternion, RepeatWrapping, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, TorusGeometry, TubeGeometry, Vector2, Vector3,
+  CanvasTexture, Float32BufferAttribute, Quaternion, RepeatWrapping, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, TorusGeometry, TubeGeometry, Vector2, Vector3,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
@@ -25,9 +25,30 @@ const ceramic = new MeshPhysicalMaterial({ color: '#eee6d7', roughness: .36, met
 const ceramicFoot = new MeshStandardMaterial({ color: '#c9bda9', roughness: .82 });
 const riceMat = new MeshPhysicalMaterial({ color: '#dccba8', roughness: .48, metalness: 0, clearcoat: .12, clearcoatRoughness: .36 });
 const riceMats = [riceMat, new MeshPhysicalMaterial({ color: '#d2c09a', roughness: .52, clearcoat: .1 }), new MeshPhysicalMaterial({ color: '#eadbb9', roughness: .49, clearcoat: .11 })];
+function riceCoreMaterial() {
+  // The low-poly support should never read as an exposed smooth dome between
+  // surface grains. This subtle, deterministic micro-pattern is only a hidden
+  // fill texture; the separate instanced grains remain the real silhouette.
+  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
+  const ctx=canvas.getContext('2d');
+  if(ctx){
+    ctx.fillStyle='#dcccae';ctx.fillRect(0,0,canvas.width,canvas.height);
+    let seed=0x8c214;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+    const tones=['#fff8e8','#baa77e','#f3e7cf','#cdb991'];
+    for(let i=0;i<2400;i++){
+      const x=rand()*canvas.width,y=rand()*canvas.height,length=5+rand()*10,width=1.2+rand()*1.8;
+      ctx.save();ctx.translate(x,y);ctx.rotate((rand()-.5)*1.2);ctx.globalAlpha=.32+rand()*.3;ctx.fillStyle=tones[Math.floor(rand()*tones.length)]!;
+      ctx.beginPath();ctx.ellipse(0,0,length/2,width/2,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+  }
+  const map=new CanvasTexture(canvas);map.colorSpace=SRGBColorSpace;map.wrapS=RepeatWrapping;map.wrapT=RepeatWrapping;
+  return new MeshStandardMaterial({color:'#fff',map,roughness:.88});
+}
 const fishSkin = new TextureLoader().load('/textures/fish-scale-albedo-v3.jpg'); fishSkin.colorSpace=SRGBColorSpace; fishSkin.wrapS=RepeatWrapping; fishSkin.wrapT=RepeatWrapping; fishSkin.repeat.set(1.45,.88);
 const fishMat = new MeshPhysicalMaterial({ color: '#fff', map: fishSkin, vertexColors: true, roughness: .66, metalness: 0, clearcoat: .055, clearcoatRoughness: .62 });
 const fishFinMat = new MeshStandardMaterial({ color: '#6d8184', roughness: .58, side: DoubleSide });
+const guavaSkin = new TextureLoader().load('/textures/guava-skin-albedo-v1.jpg'); guavaSkin.colorSpace=SRGBColorSpace; guavaSkin.wrapS=RepeatWrapping; guavaSkin.wrapT=RepeatWrapping; guavaSkin.repeat.set(1.1,1);
+const cucumberSkin = new TextureLoader().load('/textures/cucumber-skin-albedo-v1.jpg'); cucumberSkin.colorSpace=SRGBColorSpace; cucumberSkin.wrapS=RepeatWrapping; cucumberSkin.wrapT=RepeatWrapping; cucumberSkin.repeat.set(1.7,1);
 const oilMat = new MeshPhysicalMaterial({ color: '#8c5720', roughness: .22, metalness: 0, clearcoat: .35, clearcoatRoughness: .16 });
 const glassMat = new MeshPhysicalMaterial({ color: '#c7e4e2', roughness: .12, metalness: 0, transmission: .58, thickness: .028, ior: 1.46, transparent: true, opacity: .42, side: DoubleSide });
 const waterMat = new MeshPhysicalMaterial({ color: '#a7d6dc', roughness: .12, transmission: .2, thickness: .018, transparent: true, opacity: .72, side: DoubleSide });
@@ -54,9 +75,10 @@ function fishAssetInstance(source: Group, targetLength: number, supportY: number
   const posed = new Group();
   posed.name = 'cc0-barramundi-fish';
   posed.add(model);
-  // Original: length Z, height Y, narrow body thickness X. Roll onto its
-  // side, then turn its length along the plate's X axis.
-  posed.rotation.set(0, Math.PI / 2, Math.PI / 2, 'XYZ');
+  // The source stands upright on Y with length on Z. Turn its length across
+  // the platter, but keep the belly-down axis vertical: rolling onto the flank
+  // made a low fin tip support the model and left the body visibly suspended.
+  posed.rotation.set(0,Math.PI/2,0,'XYZ');
   posed.scale.setScalar(targetLength / Math.max(.001, sourceSize.z));
   posed.updateMatrixWorld(true);
   const posedBox = new Box3().setFromObject(posed);
@@ -90,13 +112,12 @@ function instanced(parent: Object3D, geo: BufferGeometry, mat: MeshStandardMater
   im.instanceMatrix.needsUpdate = true; parent.add(im); return im;
 }
 function riceGeometry() {
-  // Use a continuous ovoid rather than a capsule's straight cylindrical middle.
-  // Mild asymmetry and a tucked, curved tip make each grain read more like
-  // softened cooked rice and less like a pill or a pointed shard.
-  const g=new SphereGeometry(1,18,14),a=g.attributes.position;
+  // Keep smooth, rounded normals while using a compact low-detail surface for
+  // thousands of instances. A mild taper and bend distinguish a cooked grain
+  // without turning the close view into a faceted starburst.
+  const g=new SphereGeometry(1,8,6),a=g.attributes.position;
   for(let i=0;i<a.count;i++){
-    const y=a.getY(i), end=Math.pow(Math.abs(y),2.4);
-    const taper=1-.27*end, bend=.014*Math.sin(y*1.3);
+    const y=a.getY(i),end=Math.pow(Math.abs(y),2.4),taper=1-.27*end,bend=.014*Math.sin(y*1.3);
     a.setXYZ(i,a.getX(i)*taper+bend,y*.92,a.getZ(i)*taper);
   }
   g.computeVertexNormals();return g;
@@ -175,7 +196,7 @@ function produce(parent: Object3D, color: string, scale: [number,number,number],
   return fruit;
 }
 
-export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
+export function buildFoodTabletop(root: Group, compact = false, medium = false): FoodTabletop {
   const anchors: Record<string,Object3D> = {};
   const table = new Group(); root.add(table);
   const edgeMat=new MeshStandardMaterial({color:'#805a3d',roughness:.78});
@@ -194,10 +215,12 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
   anchors.rice=new Group(); anchors.rice.position.set(-.57,.025,.22); table.add(anchors.rice);
   const bowl=dish(anchors.rice,0,0,.31,.15,.018);
   // A low, shaded core supports the mound without swallowing the visible grains.
-  mesh(anchors.rice,new SphereGeometry(1,32,20),new MeshStandardMaterial({color:'#bcae8e',roughness:.82}),[0,.105,0]).scale.set(.23,.047,.22);
+  // Keep the hidden support well inside the grain envelope. The old broad,
+  // darker core showed through as smooth beige wedges in the desktop close-up.
+  mesh(anchors.rice,new SphereGeometry(1,24,16),riceCoreMaterial(),[0,.105,0]).scale.set(.232,.06,.22);
   let seed=0x341a; const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
   const grains:{p:Vector3;s:Vector3;q:Quaternion}[]=[];
-  for(let i=0;i<2300;i++) { const a=rand()*Math.PI*2, rr=Math.sqrt(rand())*.232, cl=.77+.23*Math.sin(a*7+rr*19); const x=Math.cos(a)*rr*cl,z=Math.sin(a)*rr*cl; const y=.103+.074*Math.sqrt(Math.max(0,1-(x*x+z*z)/(.25*.25))); grains.push({p:new Vector3(x,y,z),s:new Vector3(.006+rand()*.001,.009+rand()*.003,.0055+rand()*.001),q:riceGrainOrientation(rand()*Math.PI*2,.08+rand()*.46,rand()*Math.PI*2)}); }
+  for(let i=0;i<3400;i++) { const a=rand()*Math.PI*2, rr=Math.sqrt(rand())*.232, cl=.77+.23*Math.sin(a*7+rr*19); const x=Math.cos(a)*rr*cl,z=Math.sin(a)*rr*cl; const y=.103+.074*Math.sqrt(Math.max(0,1-(x*x+z*z)/(.25*.25))); grains.push({p:new Vector3(x,y,z),s:new Vector3(.006+rand()*.001,.009+rand()*.003,.0055+rand()*.001),q:riceGrainOrientation(rand()*Math.PI*2,.08+rand()*.46,rand()*Math.PI*2)}); }
   for(let i=0;i<3;i++) instanced(anchors.rice,riceGeometry(),riceMats[i],grains.filter((_,n)=>n%3===i));
   // Rice bowl geometry is a true open vessel with an inner surface and foot;
   // keeping it inside this target lets clicks on the visible ceramic pick rice.
@@ -206,7 +229,9 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
   // The detail camera must aim at the food, not the group's origin. Otherwise
   // the plate lip dominates the macro frame and the rice sits just below it.
   const riceDetailAim=new Object3D(); riceDetailAim.position.set(0,.105,0); riceDetail.add(riceDetailAim);
-  dish(riceDetail,0,0,.125,.05,.01);
+  // A smaller, shallow ceramic saucer leaves the grains as the subject in the
+  // macro shot instead of letting a broad plate dominate the frame.
+  dish(riceDetail,0,0,.09,.05,.008);
   const riceDetailMats=[
     new MeshPhysicalMaterial({color:'#d9c6a5',roughness:.62,clearcoat:.055,clearcoatRoughness:.5,transmission:.035,thickness:.008,ior:1.33}),
     new MeshPhysicalMaterial({color:'#cbb690',roughness:.68,clearcoat:.045,clearcoatRoughness:.55,transmission:.025,thickness:.008,ior:1.33}),
@@ -229,7 +254,9 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
   // Seat the platter on the board surface (y=.04). The former .15 parent
   // lift made both plate and fish visibly hover even though the fish touched
   // the plate in local space.
-  const fish=new Group(); fish.position.set(.43,.017,.2); fish.rotation.y=.16; table.add(fish); anchors.fish=fish;
+  // Center the platter on the board depth so the belly contact sits over its
+  // flat inner floor, not the rear curved shoulder that creates a hover cue.
+  const fish=new Group(); fish.position.set(.43,.017,0); fish.rotation.y=.16; table.add(fish); anchors.fish=fish;
   dish(fish,0,0,.39,.055,.015);
   const fishFallback=new Group(); fishFallback.name='procedural-fish-fallback'; fish.add(fishFallback);
   mesh(fishFallback,fishBody(),fishMat,[0,.035,0]);
@@ -251,7 +278,12 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
   const fishDetail=new Group(); fishDetail.position.set(.43,-.09,.2); table.add(fishDetail); fishDetail.visible=false;
   // The close-up's subject is the head/gill/pectoral-fin area, not the fish's
   // origin or its nose. The head points toward +X in the authored orientation.
-  const fishDetailAim=new Object3D();fishDetailAim.position.set(.09,.13,.02);fishDetail.add(fishDetailAim);
+  // Stage three moves the camera from the whole-fish study to the gill/eye
+  // junction. Keep this target outside the scaled close-up group so the aim
+  // point itself does not drift as the macro model grows.
+  // On narrow screens the target needs to sit farther toward the fish's head:
+  // the camera centers this point, which shifts the model left in the viewport.
+  const fishMacroAim=new Object3D();fishMacroAim.position.set(compact?1.55:1.3,.14,.2);table.add(fishMacroAim);
   const fishDetailFallback=new Group(); fishDetailFallback.name='procedural-fish-detail-fallback'; fishDetail.add(fishDetailFallback);
   // Authored close-up: head, eye socket, gill cover/slits, jaw and attached
   // pectoral fin. It is intentionally a different view, not another tiny fish.
@@ -302,14 +334,19 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
       document.documentElement.dataset.foodFishAsset='fallback';
       return;
     }
-    const overviewFish=fishAssetInstance(source,.66,.079);
+    // Place the unmodified scan so its ventral body meets the platter. The
+    // lowest fused pelvic-fin vertices sit slightly below the ceramic plane
+    // and are naturally occluded by its opaque surface instead of being
+    // flattened into an artificial straight strip.
+    const overviewFish=fishAssetInstance(source,.66,.016);
     fish.add(overviewFish);
     const detailFish=fishAssetInstance(source,.66,0);
-    detailFish.position.x=-.09;
+    // Align the fish's longitudinal midpoint to the detail camera target.
+    // The earlier -0.09 offset left its tail outside narrow canvases.
+    detailFish.position.x=.09;
     fishDetail.add(detailFish);
     fishFallback.visible=false;
     fishDetailFallback.visible=false;
-    fishDetailAim.position.set(.09,.12,0);
     root.userData.foodFishAsset='cc0-barramundi';
     document.documentElement.dataset.foodFishAsset='ready';
     document.dispatchEvent(new CustomEvent('posora:food-fish-ready'));
@@ -320,18 +357,26 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
   const oilFill=lathe(oil,[[0,.025],[.05,.025],[.052,.12],[.045,.125],[0,.125]],oilMat,[0,0,0],36);
   lathe(oil,[[.022,.166],[.024,.166],[.024,.169],[.022,.169]],new MeshStandardMaterial({color:'#d3c6a3',roughness:.7}));
   const oilDetail=new Group(); oilDetail.position.set(-.72,-.09,-.23); table.add(oilDetail); oilDetail.visible=false;
-  lathe(oilDetail,[[.055,0],[.08,0],[.08,.025],[.055,.025],[.055,0]],glassMat);
-  const oilLevel=mesh(oilDetail,new CylinderGeometry(.056,.056,.002,36),oilMat,[0,.018,0]);
+  const oilDetailBottle=new Group();
+  // Reuse the complete bottle silhouette in the macro view; the old detail
+  // contained only a ring and a flat disk, which read as no bottle at all.
+  oil.children.forEach((part)=>{if(part!==oilFill)oilDetailBottle.add(part.clone(true));});
+  oilDetail.add(oilDetailBottle);
+  const oilDetailFill=lathe(oilDetailBottle,[[0,.025],[.05,.025],[.052,.12],[.045,.125],[0,.125]],oilMat,[0,0,0],36);
+  const oilLevel=mesh(oilDetailBottle,new CylinderGeometry(.049,.049,.002,36),oilMat,[0,.126,0]);
 
   const guava=new Group(); guava.position.set(compact ? .78 : .91,0,-.36); table.add(guava); anchors.guava=guava;
-  const guavaWhole=produce(guava,'#789747',[.105,.085,.091],0x1453); guavaWhole.position.set(-.07,.125,0); guavaWhole.material=new MeshPhysicalMaterial({color:'#819b4c',roughness:.7,clearcoat:.045,clearcoatRoughness:.6, sheen:.12, sheenColor:'#b9d178'});
+  const guavaWhole=produce(guava,'#789747',[.105,.085,.091],0x1453); guavaWhole.position.set(-.07,.125,0); guavaWhole.material=new MeshPhysicalMaterial({color:'#fff',map:guavaSkin,bumpMap:guavaSkin,bumpScale:.0028,roughness:.66,clearcoat:.05,clearcoatRoughness:.58,sheen:.12,sheenColor:'#b9d178'});
   // Cut face presented as an attached segment with pale flesh and small central seeds.
-  const guavaCut=new Group(); guavaCut.position.set(.085,.105,.015); guava.add(guavaCut);
+  const guavaCut=new Group(); guavaCut.position.set(.085,.105,.015); guavaCut.rotation.x=Math.PI/2; guava.add(guavaCut);
   const fruitBase=mesh(guavaCut,new SphereGeometry(1,24,16),new MeshPhysicalMaterial({color:'#789746',roughness:.72})); fruitBase.scale.set(.065,.067,.054);
   const flesh=mesh(guavaCut,new SphereGeometry(1,24,16),new MeshStandardMaterial({color:'#f0dfb5',roughness:.8})); flesh.scale.set(.057,.008,.047); flesh.position.y=.058;
   const seeds:{p:Vector3;s:Vector3}[]=[]; for(let i=0;i<13;i++){const a=i*2.4,r=.014+(i%4)*.005;seeds.push({p:new Vector3(Math.cos(a)*r,.068,Math.sin(a)*r),s:new Vector3(.003,.002,.003)});}
   instanced(guavaCut,new SphereGeometry(1,6,4),new MeshStandardMaterial({color:'#b99a61',roughness:.9}),seeds);
-  const guavaDetail=new Group(); guavaDetail.position.set(1.02,-.09,-.22); table.add(guavaDetail); guavaDetail.visible=false; guavaDetail.add(guavaCut.clone(true));
+  const guavaDetail=new Group(); guavaDetail.position.set(1.02,-.09,-.22); table.add(guavaDetail); guavaDetail.visible=false;
+  // Re-center the cut section on the detail-camera target. Keeping its overview
+  // offset made the enlarged cross-section drift off the right edge on phones.
+  const guavaCrossSection=guavaCut.clone(true); guavaCrossSection.position.set(0,0,0); guavaDetail.add(guavaCrossSection);
 
   const salt=new Group(); salt.position.set(-.28,.02,-.39); table.add(salt); anchors.salt=salt;
   dish(salt,0,0,.125,.045,.009);
@@ -339,8 +384,12 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
   instanced(salt,new SphereGeometry(1,5,4),saltMat,saltGrains);
   const saltDetail=new Group(); saltDetail.position.set(-.07,-.09,-.3); table.add(saltDetail); saltDetail.visible=false;
   dish(saltDetail,0,0,.1,.025,.006);
-  const saltBig:{p:Vector3;s:Vector3}[]=[];for(let i=0;i<30;i++){const a=i*2.4,r=Math.sqrt(i/30)*.055;saltBig.push({p:new Vector3(Math.cos(a)*r,.03+(i%5)*.004,Math.sin(a)*r),s:new Vector3(.01,.006,.009)});}
-  instanced(saltDetail,new SphereGeometry(1,6,5),saltMat,saltBig);
+  // Fine, irregular crystals make the close view read as coarse salt rather
+  // than a pile of oversized stones. Keep the grains above the dish's inner
+  // surface so the authored quantity remains visible in the macro.
+  const saltBig:{p:Vector3;s:Vector3}[]=[];for(let i=0;i<110;i++){const a=i*2.399,r=Math.sqrt((i+.5)/110)*.061;saltBig.push({p:new Vector3(Math.cos(a)*r,.081+(i%5)*.0018,Math.sin(a)*r),s:new Vector3(.0038+(i%3)*.0008,.0032+(i%2)*.0007,.0038+((i*7)%3)*.0007)});}
+  const saltCrystalGeo=new DodecahedronGeometry(1,0), saltCrystalMats=['#faf9f5','#dfdfd9','#eeece4'].map((color)=>new MeshStandardMaterial({color,roughness:.84}));
+  for(let i=0;i<saltCrystalMats.length;i++)instanced(saltDetail,saltCrystalGeo,saltCrystalMats[i]!,saltBig.filter((_,n)=>n%3===i));
 
   const water=new Group(); water.position.set(.02,.04,-.38); table.add(water); anchors.water=water;
   lathe(water,[[.048,0],[.065,0],[.065,.13],[.061,.13],[.061,.012],[.048,.012]],glassMat);
@@ -348,18 +397,21 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
   const meniscus=mesh(water,new CylinderGeometry(.058,.058,.0015,36),new MeshPhysicalMaterial({color:'#eaf2ef',roughness:.16,transparent:true,opacity:.34}),[0,.108,0]);
   const waterDetail=new Group();waterDetail.position.set(.2,-.09,-.32);table.add(waterDetail);waterDetail.visible=false;
   lathe(waterDetail,[[.058,0],[.075,0],[.075,.095],[.069,.095],[.069,.008],[.058,.008]],glassMat);
-  mesh(waterDetail,new CylinderGeometry(.069,.069,.002,36),waterMat,[0,.061,0]);
-  mesh(waterDetail,new TorusGeometry(.068,.002,6,36),new MeshStandardMaterial({color:'#c5d8d7',roughness:.25}),[0,.064,0]);
+  const waterDetailFill=mesh(waterDetail,new CylinderGeometry(.068,.068,.055,36),waterMat,[0,.032,0]);
+  const waterDetailSurface=mesh(waterDetail,new CylinderGeometry(.067,.067,.0015,36),new MeshPhysicalMaterial({color:'#eaf5f3',roughness:.16,transparent:true,opacity:.48}),[0,.06,0]);
+  const waterRim=mesh(waterDetail,new TorusGeometry(.071,.002,6,36),new MeshStandardMaterial({color:'#d8e7e3',roughness:.24}),[0,.094,0]);
+  waterRim.rotation.x=Math.PI/2;
 
+  const cucumberMat=new MeshPhysicalMaterial({color:'#fff',map:cucumberSkin,bumpMap:cucumberSkin,bumpScale:.002,roughness:.7,clearcoat:.055,clearcoatRoughness:.6,sheen:.1,sheenColor:'#9ebd69'});
   const cucumber=new Group(); cucumber.position.set(compact ? -.68 : -.82,.02,.48); cucumber.rotation.y=-.35; table.add(cucumber); anchors.cucumber=cucumber;
-  const body=mesh(cucumber,new SphereGeometry(1,28,18),new MeshPhysicalMaterial({color:'#477447',roughness:.68,clearcoat:.045,clearcoatRoughness:.62, sheen:.1, sheenColor:'#9ebd69'}),[0,.08,0]);body.scale.set(.24,.061,.063);body.rotation.z=.07;
+  const body=mesh(cucumber,new SphereGeometry(1,36,24),cucumberMat,[0,.08,0]);body.scale.set(.24,.061,.063);body.rotation.z=.07;
   // Subtle lengthwise ridges and pale cut end identify a skin-on cucumber.
   for(let i=0;i<7;i++){const a=i*Math.PI*2/7;const ridge=mesh(cucumber,new CylinderGeometry(.002,.002,.38,5),new MeshStandardMaterial({color:i%2?'#587f48':'#709251',roughness:.86}),[0,.08+Math.cos(a)*.04,Math.sin(a)*.04]);ridge.rotation.z=Math.PI/2;}
   const cut=mesh(cucumber,new CylinderGeometry(.06,.06,.012,28),new MeshStandardMaterial({color:'#d4df9e',roughness:.82}),[.237,.08,0]);cut.rotation.z=Math.PI/2;
   const seedMat=new MeshStandardMaterial({color:'#f0e8c2',roughness:.9});
   for(let i=0;i<5;i++){const a=i*Math.PI*2/5;mesh(cucumber,new SphereGeometry(.008,8,6),seedMat,[.244,.08+Math.cos(a)*.027,Math.sin(a)*.027]);}
-  const cucumberDetail=new Group();cucumberDetail.position.set(1,-.09,.42);table.add(cucumberDetail);cucumberDetail.visible=false;
-  const ctx=mesh(cucumberDetail,new SphereGeometry(1,24,16),new MeshPhysicalMaterial({color:'#477447',roughness:.75}));ctx.scale.set(.15,.055,.055);
+  const cucumberDetail=new Group();cucumberDetail.position.set(1,-.09,.42);cucumberDetail.rotation.y=-.95;table.add(cucumberDetail);cucumberDetail.visible=false;
+  const ctx=mesh(cucumberDetail,new SphereGeometry(1,36,24),cucumberMat);ctx.scale.set(.15,.055,.055);
   const face=mesh(cucumberDetail,new CylinderGeometry(.055,.055,.008,24),new MeshStandardMaterial({color:'#d4df9e',roughness:.82}),[.153,0,0]);face.rotation.z=Math.PI/2;
   for(let i=0;i<5;i++){const a=i*Math.PI*2/5;mesh(cucumberDetail,new SphereGeometry(.007,8,6),seedMat,[.159,Math.cos(a)*.026,Math.sin(a)*.026]);}
 
@@ -368,14 +420,21 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
 
   const physical=[anchors.rice,anchors.fish,oil,guava,salt,water,cucumber];
   const details:(Object3D|null)[]=[riceDetail,fishDetail,oilDetail,guavaDetail,saltDetail,waterDetail,cucumberDetail,null];
-  const detailFocusTargets:(Object3D|null)[]=[riceDetailAim,fishDetailAim,oilDetail,guavaDetail,saltDetail,waterDetail,cucumberDetail,null];
+  const detailFocusTargets:(Object3D|null)[]=[riceDetailAim,fishMacroAim,oilDetail,guavaDetail,saltDetail,waterDetail,cucumberDetail,null];
   // A portrait canvas has much less horizontal world-space than desktop. Keep
   // the anatomy close, but leave enough frame for the gill and attached
   // pectoral fin to remain visible together at the deepest reveal.
   // Tune against the canvas itself: portrait needs a closer food crop, while
   // desktop must preserve the named subject plus context without hitting the
   // bottom control band.
-  const detailScales=compact?[3.5,2.8,3.2,4,3.4,4.2,2.8]:[2.65,3,3.2,4,3.4,4.2,2.8];
+  // Keep the full fish silhouette inside the canvas at every breakpoint.
+  // It remains a clear close-up relative to the tableau, without cropping its
+  // tail on narrow mobile buffers or desktop split-pane layouts.
+  // Portrait props need a stronger camera-relative scale because the scene
+  // hero is deliberately smaller there. Landscape macros use separate sizes:
+  // the taller viewport otherwise crops bottles/glasses and turns the cucumber
+  // into an unrecognizable texture-only close-up.
+  const detailScales=compact?[3.5,1.3,3.2,5,3.4,4.2,2.8]:medium?[2.2,1.05,1.5,2.2,2.2,1.8,.65]:[2.2,1.05,1.6,2.4,2,1.9,.65];
   details.forEach((d,i)=>{if(d){d.name=`${FOOD_ITEM_IDS[i]}:detail`;d.userData.itemId=FOOD_ITEM_IDS[i];}});
   physical.forEach((o,i)=>{o.name=FOOD_ITEM_IDS[i];o.userData.itemId=FOOD_ITEM_IDS[i];o.userData.itemIndex=i;});
   anchors.energyDiagram.userData.itemIndex=7;
@@ -412,7 +471,14 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
       d.visible=i===itemIndex && reveal>=.5;
       // The authored feature must be legible as soon as this state starts;
       // reserve only a modest final enlargement for the remaining slider travel.
-      d.scale.setScalar(i===itemIndex ? detailScales[i]!*(.9+.1*detailProgress) : 1);
+      // Fish gets a third, progressive head/gill macro after the whole-fish
+      // study. The other food details keep their original restrained scale.
+      const fishMacroProgress=MathUtils.smoothstep(reveal,.66,1);
+      const fishMacroMagnification=compact?2.65:2.15;
+      const scale=i===1
+        ? detailScales[i]!*(1+(fishMacroMagnification-1)*fishMacroProgress)
+        : detailScales[i]!*(.9+.1*detailProgress);
+      d.scale.setScalar(i===itemIndex ? scale : 1);
     });
     // As soon as the enlarged teaching model appears, remove its full-size
     // source to prevent two food silhouettes occupying the same camera ray.
@@ -423,10 +489,14 @@ export function buildFoodTabletop(root: Group, compact = false): FoodTabletop {
     // The detail control compares low/high fill of the same fixed vessel.
     // It is not a drinking recommendation or serving-size target.
     oilFill.scale.y=.45+reveal*.5;
-    oilLevel.position.y=.01+reveal*.045;
+    oilDetailFill.scale.y=.45+reveal*.5;
+    oilLevel.position.y=.025+.1*(.45+reveal*.5);
     oilLevel.scale.y=.65+reveal*.7;
     waterFill.scale.y=.48+reveal*.8; waterFill.position.y=.025+reveal*.04;
     meniscus.position.y=.054+reveal*.08;
+    waterDetailFill.scale.y=.25+reveal*.7;
+    waterDetailFill.position.y=.006+.0275*waterDetailFill.scale.y;
+    waterDetailSurface.position.y=.006+.055*waterDetailFill.scale.y;
     // Preserve both authored alternatives and interpolate only the defined quantity examples.
     if(itemIndex===0) { /* bowl remains fixed; the grain cluster detail is the authored close view */ }
     if(itemIndex===3) guavaCut.visible=reveal>.5;
