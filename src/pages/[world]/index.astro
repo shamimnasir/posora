@@ -318,6 +318,19 @@ const schema = [
           </div>
           <p class="model-note">ধারণা বোঝানোর মডেল · মাপ ও দূরত্ব একই অনুপাতে নয়</p>
           {w.slug === 'food' && <p class="food-detail-note" id="food-detail-note" hidden><span id="food-detail-copy"></span><button type="button" id="food-detail-return" hidden>পুরো টেবিলে ফেরো</button></p>}
+          {/* The model used to come apart in silence everywhere except the Food
+              pilot.  This is deliberately next to the canvas (not buried in
+              the reading rail): an exploded part now gives the child a small,
+              accurate reason to look at it.  Copy comes from the same reviewed
+              per-item data that powers the reading card, so the visual and
+              text cannot drift into two different lessons. */}
+          <section class="explode-note" id="explode-note" hidden aria-live="polite" aria-labelledby="explode-note-title">
+            <p class="lbl">খুলে দেখার সূত্র</p>
+            <h3 id="explode-note-title"></h3>
+            <p id="explode-note-copy"></p>
+            <p class="explode-note-fun"><span class="lbl">মজার তথ্য</span><span id="explode-note-fun"></span></p>
+            <button type="button" id="explode-note-return">পুরো মডেলে ফেরো</button>
+          </section>
 
           <div class="items" id="c-items">
             <div class="items-h">
@@ -819,6 +832,14 @@ const schema = [
   .food-detail-note[hidden] { display: none; }
   .food-detail-note button { display: inline-flex; margin: 0.45rem 0 0; padding: 0.35rem 0.75rem; border: 1px solid color-mix(in oklab,#5fc4b4 55%,var(--line)); border-radius: 999px; background: var(--panel); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
   .food-detail-note button[hidden] { display: none; }
+  .explode-note { position: relative; z-index: 3; max-width: 68ch; margin: 0.55rem 0.9rem 0; padding: 0.8rem 0.9rem; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); border-left: 4px solid var(--w); border-radius: 0 14px 14px 0; background: color-mix(in oklab, var(--panel) 88%, var(--w)); box-shadow: 0 10px 22px color-mix(in oklab, #061022 22%, transparent); color: var(--ink-2); }
+  .explode-note[hidden] { display: none; }
+  .explode-note h3 { margin: 0.15rem 0 0.28rem; color: var(--ink); font-size: clamp(16px, 1.55vw, 20px); }
+  .explode-note p { margin: 0; font-size: 14px; line-height: 1.6; }
+  .explode-note-fun { display: flex; gap: 0.45rem; margin-top: 0.5rem !important; padding-top: 0.48rem; border-top: 1px solid color-mix(in oklab, var(--line) 72%, transparent); color: var(--ink-2); }
+  .explode-note-fun .lbl { flex: none; color: var(--w); }
+  .explode-note button { display: inline-flex; margin-top: 0.65rem; padding: 0.4rem 0.8rem; border: 1px solid color-mix(in oklab, var(--w) 62%, var(--line)); border-radius: 999px; background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .explode-note button:hover, .explode-note button:focus-visible { background: var(--w); color: #fff; }
   #world[data-slug="food"] .host { z-index: 2; }
   #world[data-slug="food"] .fx { z-index: 1; }
   #world[data-slug="food"] .scene { background: radial-gradient(ellipse at 52% 42%, rgba(239, 225, 195, .16), transparent 38%), radial-gradient(ellipse at 50% 88%, #315653 0%, #193843 46%, #11182e 100%); }
@@ -1292,12 +1313,17 @@ const schema = [
     host.setAttribute('aria-label', authoredFood ? 'খাবারের থ্রিডি মডেল - খাবার বেছে নাও, টেনে ঘোরাও, খুঁটিনাটি খুলে দেখো' : 'থ্রিডি মডেল - টেনে ঘোরাও');
     $('#hero-hint').textContent = authoredFood
       ? 'যেকোনো খাবার বেছে নাও · টেনে দৃশ্য ঘোরাও · খুঁটিনাটি খুলে দেখো'
-      : 'গোল ছবিগুলোয় ক্লিক করো · টেনে ঘোরাও · খুলে দেখো টানো';
+      : 'গোল ছবিতে ক্লিক করো · টেনে ঘোরাও · খুলে দেখো টানলে তথ্য আসবে';
     $('#ctl-x-label').textContent = authoredFood ? 'খুঁটিনাটি' : 'খুলে দেখো';
   };
   const foodDetailNote = root.querySelector<HTMLElement>('#food-detail-note');
   const foodDetailCopy = root.querySelector<HTMLElement>('#food-detail-copy');
   const foodDetailReturn = root.querySelector<HTMLButtonElement>('#food-detail-return');
+  const explodeNote = root.querySelector<HTMLElement>('#explode-note');
+  const explodeNoteTitle = root.querySelector<HTMLElement>('#explode-note-title');
+  const explodeNoteCopy = root.querySelector<HTMLElement>('#explode-note-copy');
+  const explodeNoteFun = root.querySelector<HTMLElement>('#explode-note-fun');
+  const explodeNoteReturn = root.querySelector<HTMLButtonElement>('#explode-note-return');
   const foodDetailText = [
     'ভাতের কিছু রান্না-করা দানা বড় করে দেখা যায়; দানার আকার জাত ও রান্নাভেদে বদলাতে পারে। এটি কোনো পরিমাণ বা পুষ্টিমান মাপ নয়।',
     'মাছের গায়ের আঁশ, চোখ ও পাখনা দেখো। আরও টানলে চোখ আর ফুলকার পাশের অংশ কাছে আসবে। এটি শেখার মডেল: সব মাছের আকৃতি এক নয়।',
@@ -1319,6 +1345,23 @@ const schema = [
     if (foodDetailReturn) foodDetailReturn.hidden = !isDetail;
   };
   foodDetailReturn?.addEventListener('click', () => { ctlX.value = '0'; ctlX.dispatchEvent(new Event('input', { bubbles: true })); });
+  /**
+   * Every non-Food scene uses the generic explosion runtime.  Its previous
+   * behaviour was mechanically consistent but educationally empty: a planet,
+   * organ or machine could move apart with no explanation at the moment the
+   * child was looking at it.  Reuse the reviewed item record here instead of
+   * inventing a second miniature dataset beside every scene builder.
+   */
+  const syncExplodeNote = () => {
+    const detail = cats[curCat]?.detail?.[curItem];
+    const show = slug !== 'food' && Number(ctlX.value) >= 30 && !!detail;
+    if (explodeNote) explodeNote.hidden = !show;
+    if (!show || !detail) return;
+    if (explodeNoteTitle) explodeNoteTitle.textContent = `${cats[curCat]!.items[curItem]}: কী দেখছ?`;
+    if (explodeNoteCopy) explodeNoteCopy.textContent = detail.l1;
+    if (explodeNoteFun) explodeNoteFun.textContent = detail.fun;
+  };
+  explodeNoteReturn?.addEventListener('click', () => { ctlX.value = '0'; ctlX.dispatchEvent(new Event('input', { bubbles: true })); });
   const foodEnergyPanel = root.querySelector<HTMLElement>('#food-energy');
   const syncFoodEnergyPanel = () => {
     if (foodEnergyPanel) foodEnergyPanel.hidden = !(slug === 'food' && curCat === 0 && curItem === 7);
@@ -1446,7 +1489,7 @@ const schema = [
     ctl.value = String(v);
     hero?.setParam(v / 100);
   }
-  ctlX.addEventListener('input', () => { hero?.setExplode(+ctlX.value / 100); syncFoodDetailNote(); countPlay(); });
+  ctlX.addEventListener('input', () => { hero?.setExplode(+ctlX.value / 100); syncFoodDetailNote(); syncExplodeNote(); countPlay(); });
   host.addEventListener('pointerdown', countPlay);
 
   /* ---- the player bar: points, title, days in a row, today's three things ---- */
@@ -2053,10 +2096,15 @@ const schema = [
   function selectItem(ii: number, mark = true) {
     const c = cats[curCat];
     if (!readable(c)) return;
-    if (slug === 'food' && curCat === 0) ctlX.value = '0';
+    // Selecting a different lesson starts that lesson whole. Keeping a stale
+    // 100% value here previously made the generic fact card describe an item
+    // that was no longer visibly exploded.
+    ctlX.value = '0';
+    hero?.setExplode(0);
     curItem = ii;
     syncFoodEnergyPanel();
     syncFoodDetailNote();
+    syncExplodeNote();
     rememberSpot(curCat, ii);
     chips.querySelectorAll<HTMLButtonElement>('.chip[data-di]').forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.di! === ii)));
     if (hero) hero.focus(ii);
@@ -2107,6 +2155,7 @@ const schema = [
     const c = cats[i];
     syncHeroCopy();
     syncFoodDetailNote();
+    syncExplodeNote();
     trackCategory(slug, c.n);
     $('#c-no').textContent = pad2(i + 1);
     $('#c-name').textContent = c.n;
