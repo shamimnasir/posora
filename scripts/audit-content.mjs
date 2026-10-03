@@ -27,6 +27,14 @@ for (const path of files(join(ROOT, 'src'))) {
   const rel = relative(ROOT, path);
   const text = readFileSync(path, 'utf8');
   if (text.includes('—') && !EXEMPT_EM_DASH.has(rel)) failures.push(`${rel}: forbidden em dash`);
+  // `tool` is an exclusive coverage bucket: it only counts lab-backed items
+  // that do not also have a reading record. Once Math measurement gained its
+  // lessons, that number correctly became zero internally but public copy
+  // incorrectly advertised "০টি চালু টুল". Public claims must use the
+  // independently counted live labs/missions instead.
+  if (rel !== 'src/lib/coverage.ts' && text.includes('COVERAGE.tool')) {
+    failures.push(`${rel}: public copy uses the exclusive tool coverage bucket`);
+  }
   for (const [label, pattern] of banned) {
     if (pattern.test(text)) failures.push(`${rel}: ${label}`);
   }
