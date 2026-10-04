@@ -36,6 +36,8 @@ export type Post = {
   pillar?: boolean;
   /** When the text was last true. ISO date, no invented precision. */
   updated: string;
+  /** Uses an original title-specific SVG cover served from /blog/cover/. */
+  generatedCover?: boolean;
   /** The opening, before the first heading. */
   intro: string[];
   sections: Section[];

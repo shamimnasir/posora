@@ -23,14 +23,13 @@ const ORIGIN = 'https://posora.com';
 const HOST = 'posora.com';
 const ENDPOINT = 'https://api.indexnow.org/indexnow';
 
-/** The key is whatever `<key>.txt` in public/ is named, so the two cannot drift. */
+/** Use the first verified key file; deployments may retain a rotated key too. */
 function findKey() {
   const hit = readdirSync('public').filter((f) => /^[a-f0-9]{16,128}\.txt$/.test(f));
-  if (hit.length !== 1) throw new Error(`expected exactly one IndexNow key file in public/, found ${hit.length}`);
-  const name = hit[0].replace(/\.txt$/, '');
-  const body = readFileSync(`public/${hit[0]}`, 'utf8').trim();
-  if (body !== name) throw new Error(`public/${hit[0]} must contain exactly its own name`);
-  return name;
+  if (!hit.length) throw new Error('expected an IndexNow key file in public/');
+  const valid = hit.sort().filter((file) => readFileSync(`public/${file}`, 'utf8').trim() === file.replace(/\.txt$/, ''));
+  if (!valid.length) throw new Error('no IndexNow key file contains its own key');
+  return valid[0].replace(/\.txt$/, '');
 }
 
 async function sitemapUrls() {

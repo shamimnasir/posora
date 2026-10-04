@@ -47,6 +47,10 @@ for (const name of readdirSync(join(ROOT, 'src/data/posts'))) {
   if (!name.endsWith('.ts')) continue;
   const text = readFileSync(join(ROOT, 'src/data/posts', name), 'utf8');
   for (const match of text.matchAll(/slug:\s*'([^']+)'/g)) {
+    if (name === 'search-questions.ts') {
+      if (!text.includes('generatedCover: true')) failures.push(`${match[1]}: generated blog cover is not enabled`);
+      continue;
+    }
     const image = join(ROOT, 'public/images/blog', `${match[1]}.jpg`);
     if (!existsSync(image)) failures.push(`public/images/blog/${match[1]}.jpg: missing blog image`);
   }

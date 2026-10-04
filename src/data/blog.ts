@@ -19,6 +19,7 @@ import food from './posts/food';
 import math from './posts/math';
 import social from './posts/social';
 import discovery from './posts/discovery';
+import searchQuestions from './posts/search-questions';
 
 export * from './blog-types';
 
@@ -94,6 +95,7 @@ export const CLUSTERS: Cluster[] = [
 export const POSTS: Post[] = [
   ...physics, ...nature, ...language, ...money,
   ...space, ...chemistry, ...life, ...food, ...math, ...social, ...discovery,
+  ...searchQuestions,
 ];
 
 {
@@ -101,6 +103,10 @@ export const POSTS: Post[] = [
   for (const p of POSTS) {
     if (seen.has(p.slug)) throw new Error(`duplicate blog slug: ${p.slug}`);
     seen.add(p.slug);
+  }
+  for (const cluster of CLUSTERS) {
+    const count = POSTS.filter((post) => post.cluster === cluster.id).length;
+    if (count < 10) throw new Error(`blog coverage incomplete for ${cluster.id}: ${count} posts`);
   }
 }
 
@@ -110,5 +116,9 @@ export const postsIn = (cluster: string): Post[] =>
 export const clusterOf = (id: string): Cluster | undefined => CLUSTERS.find((c) => c.id === id);
 /** The accent colour of the world a cluster belongs to, so the two match. */
 export const clusterHue = (c: Cluster): string => worlds.find((w) => w.slug === c.world)?.hue ?? '#2E7EA8';
-export const postImage = (p: Post): string => `/images/blog/${p.slug}.jpg`;
-export const postImageAlt = (p: Post): string => `${p.title} বিষয়ের বাস্তবধর্মী শিক্ষামূলক ছবি`;
+export const postImage = (p: Post): string => p.generatedCover
+  ? `/blog/cover/${p.slug}.svg`
+  : `/images/blog/${p.slug}.jpg`;
+export const postImageAlt = (p: Post): string => p.generatedCover
+  ? `${p.title} বিষয়ের রঙিন ধারণাচিত্র`
+  : `${p.title} বিষয়ের বাস্তবধর্মী শিক্ষামূলক ছবি`;

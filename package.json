@@ -12,6 +12,7 @@
     "audit": "node scripts/audit-content.mjs",
     "digital-packs": "node --experimental-strip-types scripts/generate-digital-packs.mjs",
     "test:smoke": "node scripts/browser-smoke.mjs",
+    "test:blog-coverage": "node scripts/blog-coverage-smoke.mjs",
     "test:interaction": "node scripts/interaction-smoke.mjs",
     "test:exploded-facts": "node scripts/exploded-facts-smoke.mjs",
     "test:food": "node scripts/food-pilot-smoke.mjs",
