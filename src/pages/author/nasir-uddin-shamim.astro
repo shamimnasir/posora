@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import { POSORA_AUTHOR } from '../../data/authors';
+import { POSTS } from '../../data/blog';
+
+const articles = POSTS;
+const schema = [{
+  '@type': 'Person',
+  '@id': 'https://posora.com/author/nasir-uddin-shamim/#person',
+  name: POSORA_AUTHOR.name,
+  url: 'https://posora.com/author/nasir-uddin-shamim/',
+  image: { '@type': 'ImageObject', url: `https://posora.com${POSORA_AUTHOR.image}` },
+  description: POSORA_AUTHOR.bio,
+  worksFor: { '@id': 'https://posora.com/#org' },
+  mainEntityOfPage: 'https://posora.com/author/nasir-uddin-shamim/',
+}];
+---
+
+<Base
+  title={`${POSORA_AUTHOR.name} — লেখক পরিচিতি`}
+  description="নাসির উদ্দিন শামীমের পরিচিতি, Posora-র ইন্টার‍্যাক্টিভ ও ভিজুয়াল শিক্ষার লক্ষ্য এবং তাঁর লেখা।"
+  schema={schema}
+  image={POSORA_AUTHOR.image}
+  imageAlt={POSORA_AUTHOR.imageAlt}
+  crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }, { name: 'লেখা', url: 'https://posora.com/blog/' }]}
+>
+  <main class="wrap author-page">
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> <a href="/blog/">লেখা</a> <span>/</span> লেখক</p>
+    <header class="profile">
+      <img src={POSORA_AUTHOR.image} alt={POSORA_AUTHOR.imageAlt} width="176" height="176" fetchpriority="high" decoding="async" />
+      <div><p class="eyebrow">লেখক ও পসরা-র শিক্ষামূলক উদ্যোগ</p><h1>{POSORA_AUTHOR.name}</h1><p class="bio">{POSORA_AUTHOR.bio}</p></div>
+    </header>
+    <section class="editorial">
+      <h2>লেখা ও তথ্যসূত্র সম্পর্কে</h2>
+      <p>পসরা-র লেখাগুলো শিশু ও পরিবারের জন্য বাংলা ভাষায় ধারণা বোঝা, উদাহরণ দেখা এবং হাতে-কলমে অনুশীলনের পথ দেখানোর উদ্দেশ্যে তৈরি। প্রয়োজনমতো AI-সহায়ক লেখার সরঞ্জাম ব্যবহার হতে পারে; কোনো প্রাতিষ্ঠানিক শিক্ষাগত যোগ্যতা বা বিষয়বিশেষজ্ঞ পর্যালোচনা এখানে দাবি করা হচ্ছে না।</p>
+      <p>বিজ্ঞান, স্বাস্থ্য, অর্থ, দুর্যোগ ও নিরাপত্তার মতো বিষয়ে নিবন্ধে দেওয়া নির্ভরযোগ্য সূত্র এবং প্রযোজ্য সরকারি/বিশেষজ্ঞ নির্দেশনা মিলিয়ে দেখুন। এই লেখাগুলো ব্যক্তিগত চিকিৎসা, আর্থিক বা জরুরি নিরাপত্তা-পরামর্শের বিকল্প নয়। ভুল বা অস্পষ্টতা চোখে পড়লে <a href="/contact/">পসরাকে জানান</a>—সংশোধনের জন্য বিষয়টি পর্যালোচনা করা হবে।</p>
+    </section>
+    <section class="works" aria-labelledby="works-title">
+      <p class="eyebrow">ভুবন ধরে লেখা</p><h2 id="works-title">নাসির উদ্দিন শামীমের সব লেখা ({articles.length})</h2>
+      <div class="article-list">{articles.map((article) => <a href={`/blog/${article.slug}/`}><b>{article.title}</b><span>{article.description}</span></a>)}</div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .author-page { max-width: 980px; padding-block: 1rem 3rem; }
+  .crumbs { color: var(--muted); font-size: 13px; margin: 0 0 1rem; }
+  .crumbs span { margin-inline: .35rem; }
+  .profile { display: grid; grid-template-columns: 176px minmax(0,1fr); gap: 1.5rem; align-items: center; padding: 1.5rem; border: 1px solid var(--line-soft); border-radius: 24px; background: color-mix(in oklab, var(--brand) 8%, var(--panel)); }
+  .profile img { width: 176px; height: 176px; object-fit: cover; border-radius: 50%; border: 3px solid color-mix(in oklab, var(--brand) 50%, white); }
+  h1 { margin: .2rem 0 .6rem; font-size: clamp(1.8rem, 5vw, 2.8rem); }
+  .bio { margin: 0; color: var(--ink-2); line-height: 1.9; }
+  .editorial { max-width: 75ch; padding: 1.2rem 0; }
+  .editorial h2, .works h2 { font-size: 1.3rem; }
+  .editorial p { color: var(--ink-2); line-height: 1.9; }
+  .article-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .6rem; }
+  .article-list a { display: grid; gap: .25rem; min-width: 0; padding: .8rem; border: 1px solid var(--line-soft); border-radius: 13px; background: var(--panel); text-decoration: none; }
+  .article-list b { color: var(--brand-ink); font-size: 14px; }
+  .article-list span { color: var(--muted); font-size: 12px; line-height: 1.6; }
+  @media(max-width:600px) { .profile { grid-template-columns: 88px minmax(0,1fr); gap: .9rem; padding: 1rem; } .profile img { width: 88px; height: 88px; } .bio { font-size: 14px; line-height: 1.75; } .article-list { grid-template-columns: 1fr; } }
+</style>

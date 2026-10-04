@@ -21,6 +21,12 @@ export type Section = {
   p: string[];
   /** Optional topic-specific visual; shown within the section, not as another hero. */
   image?: { src: string; alt: string; caption?: string };
+  /** A compact comparison/data table, authored specifically for this topic. */
+  table?: { caption: string; headers: string[]; rows: string[][] };
+  /** Short, scannable points that complement (rather than repeat) the prose. */
+  bullets?: string[];
+  /** Ordered steps for an activity, worked method, or safe procedure. */
+  steps?: string[];
 };
 export type Faq = { q: string; a: string };
 /** A link out to the real thing, and why it is worth a click from here. */
@@ -58,7 +64,7 @@ export type Cluster = {
 /** Bangla reads at roughly 150 words a minute for an adult; a word is ~5.5 characters. */
 export const readMinutes = (p: Post): number => {
   const chars = p.intro.join('').length
-    + p.sections.reduce((s, x) => s + x.h.length + x.p.join('').length, 0)
+    + p.sections.reduce((s, x) => s + x.h.length + x.p.join('').length + (x.bullets ?? []).join('').length + (x.steps ?? []).join('').length + (x.table?.rows.flat().join('') ?? '').length, 0)
     + (p.faq ?? []).reduce((s, f) => s + f.q.length + f.a.length, 0);
   return Math.max(2, Math.round(chars / 5.5 / 150));
 };
