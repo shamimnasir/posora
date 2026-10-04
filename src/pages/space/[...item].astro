@@ -6,6 +6,7 @@ import { getBodies, getWorld } from '../../lib/content';
 import { bn, bnOf } from '../../lib/bn';
 import { spaceExplorer, beltExtras } from '../../data/space-explorer';
 import { worlds } from '../../data/worlds';
+import RelatedReading from '../../components/RelatedReading.astro';
 
 export const prerender = false;
 
@@ -77,7 +78,7 @@ const schema = [
         thing, and a search result or an assistant has something to quote. */}
     {isHub ? (
       <section class="body-text">
-        <h2>সৌরজগতের {bn(bodies.length)}টি জগৎ</h2>
+        <h2 id="space-category-0">সৌরজগতের {bn(bodies.length)}টি জগৎ</h2>
         <p class="bt-tag">প্রত্যেকটিকে উপরে ঘুরিয়ে দেখা যায়, আর নাম চাপলে তার নিজের পাতায় পুরো লেখা।</p>
         <div class="bt-branches">
           {bodies.map((b) => (
@@ -96,9 +97,11 @@ const schema = [
           ))}
         </div>
 
+        <RelatedReading world="space" worldName="মহাকাশ" category={spaceCats[0].n} items={spaceCats[0].items} />
+
         {written.map(({ cat, detail }) => (
           <>
-            <h3 class="bt-h">{cat.n}</h3>
+            <h3 class="bt-h" id={`space-category-${spaceCats.indexOf(cat)}`}>{cat.n}</h3>
             <p class="bt-tag">{cat.play}</p>
             <div class="bt-branches">
               {cat.items.map((it, j) => (
@@ -111,6 +114,7 @@ const schema = [
                 </details>
               ))}
             </div>
+            <RelatedReading world="space" worldName="মহাকাশ" category={cat.n} items={cat.items} compact />
           </>
         ))}
       </section>
@@ -125,6 +129,8 @@ const schema = [
           <article><h3>বড় <small>বয়স ১৩+</small></h3><p>{cur.l3}</p></article>
         </div>
         <p class="bt-fun"><span class="lbl">মজার তথ্য</span>{cur.fun}</p>
+
+        <RelatedReading world="space" worldName="মহাকাশ" category={spaceCats[0].n} items={[cur.bn, cur.en, ...spaceCats[0].items]} />
 
         <h3 class="bt-h">{bnOf(cur.bn)} সংখ্যা</h3>
         <dl class="bt-stats">

@@ -12,6 +12,7 @@ import { bn, pad2 } from '../../../lib/bn';
 import { catDetail, isReadable } from '../../../lib/explorers';
 import { buildWorksheet } from '../../../lib/worksheet';
 import { getMember, hasPlan } from '../../../lib/members';
+import RelatedReading from '../../../components/RelatedReading.astro';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'private, no-store');
@@ -91,6 +92,8 @@ const modelHref = `/${w.slug}/?cat=${cat}&item=0#model-stage`;
         </div>
       </section>
     )}
+
+    <RelatedReading world={w.slug} worldName={w.bn} category={c.n} items={c.items} />
   </div>
 </Base>
 

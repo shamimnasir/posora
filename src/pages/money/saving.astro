@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
+import CategoryReading from '../../components/CategoryReading.astro';
 
 export const prerender = true;
 
@@ -129,6 +130,7 @@ const HUE = '#6E8C2F';
 
     <p class="back"><a href="/money/">← ব্যবসা ও টাকা ভুবনে ফিরে যাও</a></p>
   </div>
+  <CategoryReading world="money" category={3} />
 </Base>
 
 <style>

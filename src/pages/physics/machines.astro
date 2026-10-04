@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
+import CategoryReading from '../../components/CategoryReading.astro';
 
 export const prerender = true;
 
@@ -157,6 +158,7 @@ const items = [
 
     <p class="back"><a href="/physics/">← পদার্থবিজ্ঞান ভুবনে ফিরে যাও</a></p>
   </div>
+  <CategoryReading world="physics" category={2} />
 </Base>
 
 <style>

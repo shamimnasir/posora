@@ -135,3 +135,66 @@ export const postImage = (p: Post): string => p.generatedCover
 export const postImageAlt = (p: Post): string => p.generatedCover
   ? `${p.title} বিষয়ের রঙিন ধারণাচিত্র`
   : `${p.title} বিষয়ের বাস্তবধর্মী শিক্ষামূলক ছবি`;
+
+/**
+ * Match a real article to a world category, preferring articles that name the
+ * category or its actual items. If the library has no sufficiently specific
+ * article yet, return the world's pillar explicitly as a broad introduction
+ * rather than pretending an unrelated article is an exact match.
+ */
+export function relatedPostsForTopic(worldSlug: string, categoryName: string, items: string[], limit = 2) {
+  const topic = normalizeTopic(categoryName);
+  const topicWords = meaningfulWords(topic);
+  const ranked = POSTS
+    .filter((post) => post.cluster === worldSlug)
+    .map((post) => {
+      const title = normalizeTopic(post.title);
+      const body = normalizeTopic([
+        post.featuredAnswer ?? '', ...post.intro,
+        ...post.sections.flatMap((section) => [section.h, ...section.p, ...(section.bullets ?? []), ...(section.steps ?? [])]),
+      ].join(' '));
+      let score = title.includes(topic) ? 18 : body.includes(topic) ? 5 : 0;
+      for (const rawItem of items) {
+        const item = normalizeTopic(rawItem);
+        if (item.length < 3) continue;
+        if (title.includes(item)) score += 7;
+        else if (body.includes(item)) score += 1.5;
+      }
+      for (const word of topicWords) {
+        if (word.length > 2 && title.includes(word)) score += 1.5;
+      }
+      return { post, score };
+    })
+    .sort((a, b) => b.score - a.score || Number(!!b.post.pillar) - Number(!!a.post.pillar));
+
+  const specific = ranked.filter((entry) => entry.score >= 4).slice(0, limit)
+    .map((entry) => ({ ...entry, isOverview: false }));
+  if (specific.length) return specific;
+  const overview = ranked.find((entry) => entry.post.pillar) ?? ranked[0];
+  return overview ? [{ ...overview, isOverview: true }] : [];
+}
+
+/** Find the best category deep-link for a given article. */
+export function topicForPost(post: Post) {
+  const world = worlds.find((entry) => entry.slug === post.cluster);
+  if (!world) return null;
+  const best = world.cats
+    .map((category, index) => ({
+      category,
+      index,
+      match: relatedPostsForTopic(world.slug, category.n, category.items, POSTS.length)
+        .find((entry) => entry.post.slug === post.slug),
+    }))
+    .filter((entry) => !!entry.match && !entry.match.isOverview)
+    .sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0))[0];
+  return best ?? null;
+}
+
+function normalizeTopic(value: string): string {
+  return value.toLocaleLowerCase('bn').replace(/[।,:;!?()[\]{}\-–—/\\]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function meaningfulWords(value: string): string[] {
+  const ignored = new Set(['এবং', 'অথবা', 'করে', 'কীভাবে', 'কাকে', 'বলে', 'নিয়ে', 'থেকে', 'জন্য', 'ও', 'আর', 'the', 'and']);
+  return value.split(' ').filter((word) => word.length > 1 && !ignored.has(word));
+}

@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { getLanguage } from '../../lib/content';
 import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
+import CategoryReading from '../../components/CategoryReading.astro';
 
 export const prerender = false;
 
@@ -119,6 +120,7 @@ const payload = { consonants, kars, folas, conjuncts, slug: SLUG, folaSlug: FOLA
     <p class="back"><a href="/language/">← ভাষা ভুবনে ফিরে যাও</a></p>
   </div>
   <script is:inline type="application/json" id="lang-data" set:html={JSON.stringify(payload)}></script>
+  <CategoryReading world="language" category={1} />
 </Base>
 
 <style>

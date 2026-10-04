@@ -24,6 +24,7 @@ import { labFor } from '../data/labs';
 import { cardId, labItems } from '../data/lab-parts';
 import type { AdminWorld } from '../lib/db';
 import ModelReturnLink from './explorer/ModelReturnLink.astro';
+import RelatedReading from './RelatedReading.astro';
 
 interface Props { world: AdminWorld; cat: number }
 const { world: w, cat } = Astro.props;
@@ -98,6 +99,8 @@ const schema = [{
         </section>
       ))}
     </div>
+
+    <RelatedReading world={w.slug} worldName={w.bn} category={c.n} items={c.items} />
 
     <p class="back">
       <a href={modelHref}>← {c.n} মডেলে ফিরে যাও</a> · <a href="/#worlds">সব ভুবন</a>

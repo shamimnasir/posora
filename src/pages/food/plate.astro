@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
+import CategoryReading from '../../components/CategoryReading.astro';
 
 export const prerender = true;
 
@@ -129,6 +130,7 @@ const payload = { groups: GROUPS, foods: FOODS, meals: MEALS };
     <p class="back"><a href="/food/">← খাদ্য ও পুষ্টি ভুবনে ফিরে যাও</a></p>
   </div>
   <script is:inline type="application/json" id="food-data" set:html={JSON.stringify(payload)}></script>
+  <CategoryReading world="food" category={1} />
 </Base>
 
 <style>

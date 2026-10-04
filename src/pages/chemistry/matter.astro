@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ModelReturnLink from '../../components/explorer/ModelReturnLink.astro';
+import CategoryReading from '../../components/CategoryReading.astro';
 
 export const prerender = true;
 
@@ -138,6 +139,7 @@ const HUE = '#7E56C2';
 
     <p class="back"><a href="/chemistry/">← রসায়ন ভুবনে ফিরে যাও</a></p>
   </div>
+  <CategoryReading world="chemistry" category={0} />
 </Base>
 
 <style>

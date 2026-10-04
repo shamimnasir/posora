@@ -1,0 +1,11 @@
+---
+import { worlds } from '../data/worlds';
+import RelatedReading from './RelatedReading.astro';
+
+interface Props { world: string; category: number }
+const { world: slug, category: index } = Astro.props;
+const world = worlds.find((entry) => entry.slug === slug);
+const topic = world?.cats[index];
+---
+
+{world && topic && <div class="wrap"><RelatedReading world={world.slug} worldName={world.bn} category={topic.n} items={topic.items} /></div>}

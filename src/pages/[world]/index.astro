@@ -24,6 +24,7 @@ import { missionSpec } from '../../data/missions';
 import { sheets } from '../../data/printables';
 import MissionPanel from '../../components/explorer/MissionPanel.astro';
 import NatureCinema from '../../components/explorer/NatureCinema.astro';
+import RelatedReading from '../../components/RelatedReading.astro';
 import { natureChapters } from '../../data/nature-cinema';
 
 export const prerender = false;
@@ -603,7 +604,7 @@ const schema = [
           hundred pixels up, each with its size and how far this browser has
           got, so this line was the same list said worse, twice on one page. */}
       {payload.map((c, ci) => (
-        <div class="index-cat" style={`--o:${shade(ci)}`}>
+        <div class="index-cat" id={`category-${ci}`} style={`--o:${shade(ci)}`}>
           <h3>
             <span class="ix-e" aria-hidden="true">{catEmoji(w.slug, c.n)}</span>
             <span class="lbl">বিভাগ {pad2(ci + 1)}</span>{c.n}
@@ -634,6 +635,7 @@ const schema = [
           ) : (
             <p class="index-note">এই বিভাগের লেখা এখনও তৈরি হয়নি। বিষয়গুলো হলো {c.items.join(', ')}।</p>
           )}
+          <RelatedReading world={w.slug} worldName={w.bn} category={c.n} items={c.items} compact />
         </div>
       ))}
       <p class="ix-none" id="ix-none" hidden></p>

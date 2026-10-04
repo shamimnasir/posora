@@ -13,6 +13,7 @@ import { bn, pad2 } from '../../../lib/bn';
 import { catDetail, isReadable } from '../../../lib/explorers';
 import { buildQuiz, passMark } from '../../../lib/quiz';
 import { getMember, hasPlan, activeChild } from '../../../lib/members';
+import RelatedReading from '../../../components/RelatedReading.astro';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'private, no-store');
@@ -87,6 +88,8 @@ const payload = { world: w.slug, cat, questions: unlocked ? questions : question
         </div>
       </section>
     )}
+
+    <RelatedReading world={w.slug} worldName={w.bn} category={c.n} items={c.items} />
 
     <script is:inline type="application/json" id="quiz-data" set:html={JSON.stringify(payload)}></script>
   </div>

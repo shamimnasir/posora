@@ -9,9 +9,10 @@
  */
 import Base from '../../layouts/Base.astro';
 import BlogSectionVisual from '../../components/BlogSectionVisual.astro';
-import { postBySlug, postsIn, clusterOf, clusterHue, readMinutes, postImage, postImageAlt, CLUSTERS } from '../../data/blog';
+import { postBySlug, postsIn, clusterOf, clusterHue, readMinutes, postImage, postImageAlt, CLUSTERS, topicForPost } from '../../data/blog';
 import { bn } from '../../lib/bn';
 import { POSORA_AUTHOR } from '../../data/authors';
+import { labFor } from '../../data/labs';
 
 export const prerender = false;
 
@@ -46,6 +47,15 @@ const relatedArticles = (relatedWorldIds[p.cluster] ?? [])
   .flatMap((id) => postsIn(id).filter((post) => post.slug !== p.slug).slice(0, 1));
 const ownWorld = CLUSTERS.find((cluster) => cluster.id === p.cluster)!;
 const worldHref = (world: (typeof CLUSTERS)[number]) => `/${world.world}/${world.world === 'space' ? '' : '#all'}`;
+const matchedTopic = topicForPost(p);
+const topicLab = matchedTopic ? labFor(ownWorld.world, matchedTopic.index) : null;
+const topicToolHref = matchedTopic
+  ? topicLab
+    ? `/${ownWorld.world}/lab/${matchedTopic.index}/`
+    : ownWorld.world === 'space'
+      ? `/space/#space-category-${matchedTopic.index}`
+      : `/${ownWorld.world}/#category-${matchedTopic.index}`
+  : null;
 const words = (p.featuredAnswer?.length ?? 0) + p.intro.join('').length + p.sections.reduce((s, x) => s + x.h.length + x.p.join('').length + (x.bullets ?? []).join('').length + (x.steps ?? []).join('').length + (x.table?.rows.flat().join('') ?? '').length, 0);
 const image = new URL(postImage(p), Astro.site).href;
 const imageAlt = postImageAlt(p);
@@ -219,6 +229,13 @@ if (p.faq?.length) {
             <span>সম্পর্কিত ভুবন</span><b>{world.n}</b><small>আরও জানো ও হাতে-কলমে দেখো →</small>
           </a>
         ))}
+        {matchedTopic && topicToolHref && (
+          <a class="next-card topic-next" href={topicToolHref}>
+            <span>{topicLab ? 'হাতে-কলমে দেখো' : 'ঠিক এই বিষয়টি খুঁজে নাও'}</span>
+            <b>{matchedTopic.category.n}</b>
+            <small>{matchedTopic.category.items.slice(0, 3).join(' · ')}{matchedTopic.category.items.length > 3 ? '…' : ''} →</small>
+          </a>
+        )}
       </div>
       {siblings.length > 0 && (
         <div class="related-reading">
