@@ -20,6 +20,7 @@ import math from './posts/math';
 import social from './posts/social';
 import discovery from './posts/discovery';
 import searchQuestions from './posts/search-questions';
+import legacyFeaturedAnswers from './posts/legacy-featured-answers';
 
 export * from './blog-types';
 
@@ -92,11 +93,17 @@ export const CLUSTERS: Cluster[] = [
   },
 ];
 
-export const POSTS: Post[] = [
+const articleDrafts: Post[] = [
   ...physics, ...nature, ...language, ...money,
   ...space, ...chemistry, ...life, ...food, ...math, ...social, ...discovery,
   ...searchQuestions,
 ];
+
+export const POSTS: Post[] = articleDrafts.map((post) => {
+  const featuredAnswer = post.featuredAnswer ?? legacyFeaturedAnswers[post.slug];
+  if (!featuredAnswer) throw new Error(`missing direct answer for blog article: ${post.slug}`);
+  return { ...post, featuredAnswer };
+});
 
 {
   const seen = new Set<string>();

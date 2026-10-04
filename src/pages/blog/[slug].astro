@@ -45,7 +45,7 @@ const relatedArticles = (relatedWorldIds[p.cluster] ?? [])
   .flatMap((id) => postsIn(id).filter((post) => post.slug !== p.slug).slice(0, 1));
 const ownWorld = CLUSTERS.find((cluster) => cluster.id === p.cluster)!;
 const worldHref = (world: (typeof CLUSTERS)[number]) => `/${world.world}/${world.world === 'space' ? '' : '#all'}`;
-const words = p.intro.join('').length + p.sections.reduce((s, x) => s + x.p.join('').length, 0);
+const words = (p.featuredAnswer?.length ?? 0) + p.intro.join('').length + p.sections.reduce((s, x) => s + x.p.join('').length, 0);
 const image = new URL(postImage(p), Astro.site).href;
 const imageAlt = postImageAlt(p);
 
@@ -66,7 +66,7 @@ const schema: Record<string, unknown>[] = [
     isAccessibleForFree: true,
     articleSection: c.n,
     wordCount: Math.round(words / 5.5),
-    abstract: p.intro.join(' '),
+    abstract: p.featuredAnswer,
     image: { '@type': 'ImageObject', url: image, width: 1200, height: 675, caption: imageAlt },
     about: [{ '@type': 'Thing', name: c.n }, { '@type': 'Thing', name: p.title }],
   },
@@ -106,10 +106,14 @@ if (p.faq?.length) {
         <span>·</span>
         <span>হালনাগাদ <time datetime={p.updated}>{p.updated}</time></span>
       </p>
+      <section class="featured-answer" aria-labelledby="featured-answer-title">
+        <h2 id="featured-answer-title">সরাসরি উত্তর</h2>
+        <p>{p.featuredAnswer}</p>
+      </section>
       <figure class="cover">
         <img src={postImage(p)} alt={imageAlt} width="1200" height="675" fetchpriority="high" decoding="async" />
       </figure>
-      {p.intro.map((t) => <p class="lede">{t}</p>)}
+      {p.intro.filter((t) => t !== p.featuredAnswer).map((t) => <p class="lede">{t}</p>)}
     </header>
 
     {p.sections.map((s, index) => (
@@ -189,6 +193,9 @@ if (p.faq?.length) {
   .head { padding-bottom: 1.3rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.6rem; }
   .head h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin: 0.2rem 0 0.5rem; line-height: 1.35; }
   .meta { display: flex; gap: 0.5rem; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-bottom: 1rem; }
+  .featured-answer { margin: 0 0 1.1rem; padding: 1rem 1.1rem; border: 1px solid color-mix(in oklab, var(--w) 42%, var(--line)); border-left: 4px solid var(--w); border-radius: 14px; background: color-mix(in oklab, var(--w) 11%, var(--panel)); }
+  .featured-answer h2 { margin: 0 0 .35rem; color: var(--brand-ink); font-size: 15px; }
+  .featured-answer p { margin: 0; color: var(--ink); font-size: 16px; line-height: 1.85; }
   .cover { margin: 0 0 1.2rem; overflow: hidden; border-radius: 18px; border: 1px solid var(--line-soft); background: var(--panel); aspect-ratio: 16 / 9; }
   .cover img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .lede { color: var(--ink-2); font-size: 16px; line-height: 1.9; margin-bottom: 0.8rem; }

@@ -32,13 +32,26 @@ try {
         await page.waitForFunction(() => [...document.querySelectorAll('article img')].some((img) => img.complete && img.naturalWidth > 0), { timeout: 10000 }).catch(() => {});
         const result = await page.evaluate(() => ({
           title: document.querySelector('h1')?.textContent?.trim() ?? '',
+          answer: document.querySelector('.featured-answer p')?.textContent?.trim() ?? '',
+          structuredAnswer: (() => {
+            const script = document.querySelector('script[type="application/ld+json"]');
+            try {
+              const graph = JSON.parse(script?.textContent ?? '{}')['@graph'] ?? [];
+              return graph.find((node) => node['@type'] === 'Article')?.abstract ?? '';
+            } catch { return ''; }
+          })(),
+          answerBeforeCover: (() => {
+            const answer = document.querySelector('.featured-answer');
+            const cover = document.querySelector('figure.cover');
+            return Boolean(answer && cover && (answer.compareDocumentPosition(cover) & Node.DOCUMENT_POSITION_FOLLOWING));
+          })(),
           metaDescription: Boolean(document.querySelector('meta[name="description"]')?.content),
           worldLink: Boolean(document.querySelector('.refs a[href^="/"]')),
           image: [...document.querySelectorAll('article img')].some((img) => img.complete && img.naturalWidth > 0),
           overflow: document.documentElement.scrollWidth > innerWidth + 2,
           bodyLength: document.querySelector('article')?.innerText.trim().length ?? 0,
         }));
-        if (!result.title || !result.metaDescription || !result.worldLink || !result.image || result.bodyLength < 500) {
+        if (!result.title || result.answer.length < 70 || result.structuredAnswer !== result.answer || !result.answerBeforeCover || !result.metaDescription || !result.worldLink || !result.image || result.bodyLength < 600) {
           failures.push(`${article.href}: incomplete article output (${JSON.stringify(result)})`);
         }
         if (result.overflow) failures.push(`${article.href}: horizontal overflow at 390px`);

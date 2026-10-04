@@ -130,9 +130,9 @@ function build(seed: ArticleSeed): Post {
   return {
     slug: seed.slug, title: seed.title, description: seed.description,
     cluster: seed.cluster, updated: '2026-10-04', generatedCover: true,
-    intro: [seed.intro, seed.answer],
+    intro: [seed.intro], featuredAnswer: seed.answer,
     sections: [
-      { h: 'সহজ করে ধারণাটি', p: [seed.answer, seed.why] },
+      { h: 'কেন বিষয়টি জানা দরকার', p: [seed.why] },
       { h: 'একটি পরিচিত উদাহরণ', p: [seed.example] },
       { h: 'নিজে দেখে শেখো', p: [seed.tryIt] },
     ],

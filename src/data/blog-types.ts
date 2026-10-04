@@ -40,6 +40,8 @@ export type Post = {
   generatedCover?: boolean;
   /** The opening, before the first heading. */
   intro: string[];
+  /** A concise, self-contained answer shown directly below the title. */
+  featuredAnswer?: string;
   sections: Section[];
   faq?: Faq[];
   refs: Ref[];
