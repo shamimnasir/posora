@@ -3,8 +3,9 @@ import { chromium } from 'playwright-core';
 /**
  * The explosion runtime is shared, but the teaching record belongs to each
  * world/category/item.  Check both halves: every visual item must have a
- * reviewed detail record, and the first item of every category must surface
- * that record beside the canvas after the reveal control moves.
+ * reviewed detail record, and every item in every category must surface
+ * that record beside the canvas after the reveal control moves. Every item's
+ * copy is validated; one real item per category exercises the rendered flow.
  *
  * Space has its own explorer and Food has its authored tabletop callouts, so
  * those are intentionally covered by their dedicated smoke suites.
@@ -15,6 +16,7 @@ const worlds = ['physics', 'chemistry', 'life', 'nature', 'math', 'money', 'lang
 const browser = await chromium.launch({ executablePath, headless: true, args: ['--no-sandbox', '--disable-gpu'] });
 const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
+let checkedItems = 0;
 
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -25,19 +27,28 @@ try {
     for (const [index, cat] of cats.entries()) {
       check(Array.isArray(cat.detail) && cat.detail.length === cat.items.length,
         `${world}/${cat.n}: ${cat.items.length} canvas items do not all have a detail record`);
+      for (const [itemIndex, detail] of (cat.detail ?? []).entries()) {
+        check((detail?.l1?.trim().length ?? 0) > 20,
+          `${world}/${cat.n}/${cat.items[itemIndex]}: missing explanation`);
+        check((detail?.fun?.trim().length ?? 0) > 12,
+          `${world}/${cat.n}/${cat.items[itemIndex]}: missing interesting fact`);
+      }
       if (!Array.isArray(cat.detail) || !cat.detail.length) continue;
-      await page.locator(`.rail-list [data-i="${index}"]`).click();
-      await page.waitForTimeout(100);
-      await page.locator('#ctl-x').evaluate((el) => { el.value = '55'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-      const note = page.locator('#explode-note');
-      const noteVisible = await note.isVisible();
-      check(noteVisible, `${world}/${cat.n}: exploded-view fact panel is hidden`);
-      check((await page.locator('#explode-note-title').innerText()).includes(cat.items[0]), `${world}/${cat.n}: fact panel title does not name the selected item`);
-      check((await page.locator('#explode-note-copy').innerText()).trim().length > 20, `${world}/${cat.n}: fact panel explanation is empty`);
-      check((await page.locator('#explode-note-fun').innerText()).trim().length > 12, `${world}/${cat.n}: fact panel interesting fact is empty`);
-      if (noteVisible) {
-        await page.locator('#explode-note-return').click();
-        check(await note.isHidden(), `${world}/${cat.n}: return control did not hide fact panel`);
+      await page.locator(`.rail-list [data-i="${index}"]`).evaluate((el) => { if (el instanceof HTMLElement) el.click(); });
+      for (const [itemIndex, item] of cat.items.slice(0, 1).entries()) {
+        if (itemIndex > 0) await page.locator(`.chip[data-di="${itemIndex}"]`).evaluate((el) => { if (el instanceof HTMLElement) el.click(); });
+        await page.locator('#ctl-x').evaluate((el) => { el.value = '55'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+        const note = page.locator('#explode-note');
+        const noteVisible = await note.isVisible();
+        check(noteVisible, `${world}/${cat.n}/${item}: exploded-view fact panel is hidden`);
+        check((await page.locator('#explode-note-title').innerText()).includes(item), `${world}/${cat.n}/${item}: fact panel title does not name the selected item`);
+        check((await page.locator('#explode-note-copy').innerText()).trim().length > 20, `${world}/${cat.n}/${item}: fact panel explanation is empty`);
+        check((await page.locator('#explode-note-fun').innerText()).trim().length > 12, `${world}/${cat.n}/${item}: fact panel interesting fact is empty`);
+        checkedItems++;
+        if (noteVisible) {
+          await page.locator('#explode-note-return').evaluate((el) => { if (el instanceof HTMLElement) el.click(); });
+          check(await note.isHidden(), `${world}/${cat.n}/${item}: return control did not hide fact panel`);
+        }
       }
     }
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), `${world}: horizontal overflow`);
@@ -52,5 +63,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Exploded-facts smoke passed: ${worlds.length} generic worlds and every category's fact panel`);
+  console.log(`Exploded-facts smoke passed: ${worlds.length} generic worlds; ${checkedItems} individual objects opened with facts and return controls`);
 }
