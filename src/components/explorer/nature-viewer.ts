@@ -39,7 +39,10 @@ export function mountHero(host: HTMLElement, spec:HeroSpec, onFrame?:(info:{yawD
   function syncUI() {
     shell.setAttribute('data-nature-category',String(category));shell.setAttribute('data-nature-depth',String(depth));
     $('#nc-title').textContent=chapter().title;$('#nc-kicker').textContent=chapter().kicker;
-    $('.model-note').textContent=chapter().note;
+    // The note is rendered beside (not inside) `.scene`, while the canvas is
+    // inside it. Looking only inside `shell` returned null and threw on the
+    // first frame, so Nature showed its generic WebGL fallback on every visit.
+    host.closest<HTMLElement>('#world')!.querySelector<HTMLElement>('.model-note')!.textContent=chapter().note;
     const mappedTarget=chapter().map[item]??0;
     targetButtons.querySelectorAll('button').forEach((b,i)=>{
       b.setAttribute('aria-pressed',String(i===selected&&depth>0));

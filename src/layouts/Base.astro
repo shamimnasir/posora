@@ -34,8 +34,10 @@ interface Props {
   /** Page-specific social/search image. Falls back to the site-wide cover. */
   image?: string;
   imageAlt?: string;
+  /** Open Graph content type; article pages should not be mislabeled as generic websites. */
+  ogType?: 'website' | 'article';
 }
-const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [], image, imageAlt } = Astro.props;
+const { title, description, hue, bare = false, noindex = false, schema = [], crumbs = [], image, imageAlt, ogType = 'website' } = Astro.props;
 const paletteParam = Astro.url.searchParams.get('palette');
 const palette = paletteParam && ['cosmic', 'toybox', 'storybook', 'jungle', 'sunset', 'daylight', 'mint', 'sky'].includes(paletteParam) ? paletteParam : 'toybox';
 const themeColor = ({ daylight: '#fffaf0', mint: '#f2fbf5', sky: '#f2f8ff', storybook: '#25132c', jungle: '#071e24', sunset: '#17143b', cosmic: '#070b2c', toybox: '#17102e' } as Record<string, string>)[palette] ?? '#17102e';
@@ -46,14 +48,12 @@ const ogImageAlt = imageAlt ?? 'পসরা - বাংলায় ইন্�
 const ogImageHeight = image ? 675 : 630;
 
 /**
- * Meta descriptions, cut where a search engine would cut them.
+ * Meta descriptions kept to a consistent editorial length.
  *
- * Google shows about 155 characters and drops the rest mid-word. Several
- * pages ran to 197, so what a searcher saw ended in a broken Bangla word and
- * no full stop. Clamping here rather than at each page means a long
- * description written later cannot reintroduce it, and the cut lands on a
- * space so no conjunct is severed. The full text stays in the JSON-LD, which
- * has no such limit.
+ * Search engines do not promise a fixed snippet length and may choose page
+ * text instead. This 155-character cap is only our own consistency limit: it
+ * avoids unfinished Bangla words in the description we provide, while the
+ * full authored description remains in JSON-LD.
  */
 /**
  * Google Search Console ownership token, when verifying by meta tag.
@@ -157,7 +157,7 @@ const graph = [
     <meta name="theme-color" content={themeColor} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={metaDescription} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="bn_BD" />
     <meta property="og:site_name" content="পসরা" />

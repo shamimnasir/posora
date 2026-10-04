@@ -1403,6 +1403,8 @@ const schema = [
       hero.focus(-1);
     }
     if (loading) { loading.classList.add('gone'); setTimeout(() => loading.remove(), 400); }
+    spinBtn.hidden = false; resetBtn.hidden = false;
+    ctl.closest('label')!.hidden = false; ctlX.closest('label')!.hidden = false;
     const worldStart = root.querySelector<HTMLButtonElement>('#world-start');
     if (worldStart) worldStart.hidden = true;
     syncGrove(curItem);
@@ -1414,14 +1416,24 @@ const schema = [
       window.addEventListener('pagehide', () => hero?.destroy(), { once: true });
     }
     host.addEventListener('pointerdown', () => { $('#hero-hint').style.opacity = '0'; }, { once: true });
-  }).catch(() => {
+  }).catch((error) => {
+    // Keep the fallback usable, but preserve the actual failure in browser
+    // diagnostics; silently swallowing this made broken world canvases hard to
+    // tell apart from an unsupported device.
+    console.error(`[Posora 3D] ${slug} scene initialization failed`, error);
     const loading = root.querySelector<HTMLElement>('#hero-loading');
     if (loading) {
       loading.replaceChildren();
       const title = document.createElement('p'); title.textContent = 'এই ফোনে থ্রিডি দৃশ্যটি খোলা যায়নি।';
       const help = document.createElement('p'); help.textContent = 'নিচের বিষয়ের নাম চাপলে একই পাঠ, মজার তথ্য আর হাতে-কলমে কাজ পাওয়া যাবে।';
-      loading.append(title, help); loading.classList.add('fallback');
+      const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = 'আবার চেষ্টা করো';
+      retry.addEventListener('click', () => {
+        loading.classList.remove('fallback'); loading.classList.remove('gone'); loading.replaceChildren(document.createTextNode('দৃশ্য তৈরি হচ্ছে…'));
+        void initHero();
+      }, { once: true });
+      loading.append(title, help, retry); loading.classList.add('fallback'); loading.removeAttribute('aria-hidden');
     }
+    heroInitPromise = null;
     spinBtn.hidden = true; resetBtn.hidden = true; ctl.closest('label')!.hidden = true; ctlX.closest('label')!.hidden = true;
   });
   // Don't build heavy procedural 3D scenes during a phone's initial page load.

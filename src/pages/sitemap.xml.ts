@@ -14,34 +14,37 @@ import { POSTS } from '../data/blog';
 
 export const prerender = false;
 
-type Entry = { loc: string; priority: string };
+type Entry = { loc: string };
 
 export const GET: APIRoute = async ({ site }) => {
   const origin = (site ?? new URL('https://posora.com')).origin;
 
   const entries: Entry[] = [
-    { loc: '/', priority: '1.0' },
-    { loc: '/today/', priority: '0.9' },
-    { loc: '/space/', priority: '0.9' },
-    { loc: '/family/', priority: '0.9' },
-    { loc: '/collection/', priority: '0.7' },
-    { loc: '/ladder/', priority: '0.8' },
-    { loc: '/printables/', priority: '0.9' },
-    { loc: '/schools/', priority: '0.8' },
-    { loc: '/blog/', priority: '0.8' },
-    { loc: '/contact/', priority: '0.5' },
+    { loc: '/' },
+    { loc: '/today/' },
+    { loc: '/space/' },
+    { loc: '/family/' },
+    { loc: '/collection/' },
+    { loc: '/ladder/' },
+    { loc: '/printables/' },
+    { loc: '/schools/' },
+    { loc: '/blog/' },
+    { loc: '/contact/' },
+    // Public product landing page; checkout and confirmation are intentionally
+    // excluded because they are transactional/noindex routes.
+    { loc: '/digital-pack/' },
   ];
 
   try {
     const worlds = await getWorlds();
     // `open` worlds have their own bespoke routes, added separately below.
-    for (const w of worlds) if (!w.open) entries.push({ loc: `/${w.slug}/`, priority: '0.8' });
+    for (const w of worlds) if (!w.open) entries.push({ loc: `/${w.slug}/` });
 
     const bodies = await getBodies();
-    for (const b of bodies) entries.push({ loc: `/space/${b.id}/`, priority: '0.7' });
+    for (const b of bodies) entries.push({ loc: `/space/${b.id}/` });
 
-    for (const s of sheets) entries.push({ loc: `/printables/${s.slug}/`, priority: '0.7' });
-    for (const p of POSTS) entries.push({ loc: `/blog/${p.slug}/`, priority: '0.7' });
+    for (const s of sheets) entries.push({ loc: `/printables/${s.slug}/` });
+    for (const p of POSTS) entries.push({ loc: `/blog/${p.slug}/` });
 
     /**
      * Every hands-on lab, derived rather than listed.
@@ -55,21 +58,22 @@ export const GET: APIRoute = async ({ site }) => {
      */
     const labs = new Set<string>();
     for (const w of worlds) for (const c of w.cats) if (c.lab) labs.add(c.lab);
-    for (const loc of labs) entries.push({ loc, priority: '0.7' });
+    for (const loc of labs) entries.push({ loc });
   } catch {
     // A content-layer failure must not take the sitemap down; the fixed pages
     // above are still worth serving.
   }
 
-  // One date for the whole file. Per-page dates would be a guess: content comes
-  // from D1 and the data modules, neither of which records when a given page's
-  // text last changed, and a made-up lastmod is worse than none.
-  const lastmod = new Date().toISOString().slice(0, 10);
+  // Deliberately omit lastmod: the content sources do not expose trustworthy
+  // per-page edit dates. A sitemap request time is not a content update time.
+  // URLs are canonicalized and deduplicated before output in case a lab is
+  // also listed as a bespoke route.
+  const uniqueEntries = [...new Map(entries.map((entry) => [entry.loc, entry])).values()];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries
-  .map((e) => `  <url><loc>${origin}${e.loc}</loc><lastmod>${lastmod}</lastmod><priority>${e.priority}</priority></url>`)
+${uniqueEntries
+  .map((e) => `  <url><loc>${origin}${e.loc}</loc></url>`)
   .join('\n')}
 </urlset>
 `;
