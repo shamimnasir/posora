@@ -100,7 +100,9 @@ const schema = [{
     transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   }
   .post:hover { transform: translateY(-2px); background: color-mix(in oklab, var(--w) 6%, var(--panel)); }
-  .p-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--panel-2); }
+  /* Explicit height:auto overrides the HTML height hint on narrow cards. Without
+     it, browsers keep the 675px height while shrinking width, cropping every cover. */
+  .p-img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--panel-2); }
   .p-copy { display: block; padding: 0.85rem 1rem 0.95rem; }
   .p-t { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .p-t b { font-size: 16.5px; font-family: var(--font-display); color: var(--ink); }
