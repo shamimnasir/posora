@@ -51,6 +51,27 @@ function pageText(html) {
 
 const { response: sitemapResponse, text: sitemap } = await fetchText(new URL('/sitemap.xml', base));
 if (!sitemapResponse.ok) throw new Error(`Sitemap returned HTTP ${sitemapResponse.status}`);
+const [robotsResult, llmsResult, feedResult] = await Promise.all([
+  fetchText(new URL('/robots.txt', base)),
+  fetchText(new URL('/llms.txt', base)),
+  fetchText(new URL('/blog/rss.xml', base)),
+]);
+if (!robotsResult.response.ok || !/text\/plain/i.test(robotsResult.response.headers.get('content-type') ?? '')) failures.push('/robots.txt is unavailable or has an unexpected content type');
+if (!robotsResult.text.includes(new URL('/sitemap.xml', base).href)) failures.push('/robots.txt does not advertise the sitemap');
+for (const bot of ['GPTBot', 'OAI-SearchBot', 'ClaudeBot', 'Claude-SearchBot', 'PerplexityBot']) {
+  if (!new RegExp(`User-agent:\\s*${bot}`, 'i').test(robotsResult.text)) warnings.push(`/robots.txt has no explicit ${bot} rule`);
+}
+if (!llmsResult.response.ok || !/text\/plain/i.test(llmsResult.response.headers.get('content-type') ?? '')) failures.push('/llms.txt is unavailable or has an unexpected content type');
+if (!llmsResult.text.includes('## Worlds') || !llmsResult.text.includes('## Written answers')) warnings.push('/llms.txt is missing its world/article map');
+if (!feedResult.response.ok || !/application\/rss\+xml/i.test(feedResult.response.headers.get('content-type') ?? '')) failures.push('/blog/rss.xml is unavailable or has an unexpected content type');
+if (!/<rss\b[^>]*version="2\.0"/i.test(feedResult.text)) failures.push('/blog/rss.xml is not an RSS 2.0 feed');
+const feedItems = [...feedResult.text.matchAll(/<item>([\s\S]*?)<\/item>/gi)].map((m) => m[1]);
+const feedLinks = feedItems.map((item) => item.match(/<link>([\s\S]*?)<\/link>/i)?.[1] ?? '');
+if (feedItems.length < 20) failures.push(`/blog/rss.xml contains only ${feedItems.length} article entries`);
+if (new Set(feedLinks).size !== feedLinks.length) failures.push('/blog/rss.xml contains duplicate article URLs');
+for (const link of feedLinks) {
+  if (!link.startsWith(`${base.origin}/blog/`) || link.endsWith('/rss.xml')) failures.push(`/blog/rss.xml has an invalid article URL: ${link}`);
+}
 const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => decode(match[1]));
 if (!urls.length) throw new Error('Sitemap contains no <loc> entries');
 if (new Set(urls).size !== urls.length) failures.push(`Sitemap has ${urls.length - new Set(urls).size} duplicate URL(s)`);
@@ -83,6 +104,8 @@ await eachLimit(urls, concurrency, async (url) => {
     const ogDescription = metaValues(html, 'og:description');
     const ogImage = metaValues(html, 'og:image');
     const ogType = metaValues(html, 'og:type');
+    const rssAlternates = [...head.matchAll(/<link\b[^>]*>/gi)].map((m) => attrs(m[0]))
+      .filter((item) => item.rel === 'alternate' && item.type === 'application/rss+xml');
     const ldJson = [...html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
 
     if (titles.length !== 1 || !titles[0]) failures.push(`${path} has ${titles.length} title tags`);
@@ -94,6 +117,8 @@ await eachLimit(urls, concurrency, async (url) => {
     if (ogTitle.length !== 1 || ogDescription.length !== 1 || ogImage.length !== 1) warnings.push(`${path} is missing/duplicating an Open Graph field`);
     const expectedOgType = path.startsWith('/blog/') && path !== '/blog/' ? 'article' : 'website';
     if (ogType.length !== 1 || ogType[0] !== expectedOgType) failures.push(`${path} has incorrect Open Graph type: ${ogType.join(', ') || 'missing'}`);
+    if ((path === '/blog/' || path.startsWith('/blog/') && path !== '/blog/rss.xml' && path !== '/blog/cover/')
+      && (rssAlternates.length !== 1 || rssAlternates[0].href !== '/blog/rss.xml')) warnings.push(`${path} does not advertise the article RSS feed`);
     if (!ldJson.length) warnings.push(`${path} has no JSON-LD graph`);
     for (const item of ldJson) {
       try { JSON.parse(item[1]); } catch { failures.push(`${path} has invalid JSON-LD`); }
@@ -140,7 +165,7 @@ await eachLimit(newLinks, concurrency, async (url) => {
   }
 });
 
-console.log(`SEO crawl ${base.origin}: ${pagesChecked}/${urls.length} sitemap pages, ${internalLinks.size} internal links, ${imagesChecked} images checked, ${noindexInSitemap} noindex URLs`);
+console.log(`SEO crawl ${base.origin}: ${pagesChecked}/${urls.length} sitemap pages, ${internalLinks.size} internal links, ${imagesChecked} images checked, ${noindexInSitemap} noindex URLs, ${feedItems.length} RSS entries`);
 console.log(`Unique titles: ${titleOwners.size}; unique descriptions: ${descriptionOwners.size}`);
 console.log(`Warnings: ${warnings.length}; failures: ${failures.length}`);
 for (const item of warnings) console.log(`WARN ${item}`);

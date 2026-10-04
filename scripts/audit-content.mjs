@@ -47,8 +47,12 @@ for (const name of readdirSync(join(ROOT, 'src/data/posts'))) {
   if (!name.endsWith('.ts')) continue;
   const text = readFileSync(join(ROOT, 'src/data/posts', name), 'utf8');
   for (const match of text.matchAll(/slug:\s*'([^']+)'/g)) {
-    if (name === 'search-questions.ts') {
-      if (!text.includes('generatedCover: true')) failures.push(`${match[1]}: generated blog cover is not enabled`);
+    if (name === 'search-questions.ts' || name === 'topic-gaps.ts') {
+      // These content builders set generatedCover: true and the SVG route
+      // creates a deterministic, title-specific image for every slug. They
+      // intentionally have no duplicate raster JPEG under /images/blog/.
+      if (!/generatedCover\s*:\s*true/.test(text)) failures.push(`${match[1]}: generated blog cover is not enabled`);
+      if (!existsSync(join(ROOT, 'src/pages/blog/cover/[slug].svg.ts'))) failures.push(`${match[1]}: generated cover route is missing`);
       continue;
     }
     const image = join(ROOT, 'public/images/blog', `${match[1]}.jpg`);

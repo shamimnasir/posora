@@ -191,7 +191,7 @@ export function topicForPost(post: Post) {
 }
 
 function normalizeTopic(value: string): string {
-  return value.toLocaleLowerCase('bn').replace(/[।,:;!?()[\]{}\-–—/\\]/g, ' ').replace(/\s+/g, ' ').trim();
+  return value.toLocaleLowerCase('bn').replace(/[।,:;!?()[\]{}\-–/\\]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function meaningfulWords(value: string): string[] {

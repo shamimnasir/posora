@@ -112,6 +112,7 @@ if (p.faq?.length) {
   image={postImage(p)}
   imageAlt={imageAlt}
   ogType="article"
+  rss
   crumbs={[
     { name: 'পসরা', url: 'https://posora.com/' },
     { name: 'লেখা', url: 'https://posora.com/blog/' },
@@ -208,7 +209,7 @@ if (p.faq?.length) {
     {sourceRefs.length > 0 && <section class="sec sources" aria-labelledby="sources-title">
       <h2 id="sources-title">আরও যাচাই করে পড়ো</h2>
       <p>নিচের সূত্রগুলো বিষয়টি আরও গভীরভাবে বুঝতে সাহায্য করবে। জরুরি, স্বাস্থ্য বা নিরাপত্তার সিদ্ধান্তে প্রযোজ্য স্থানীয় সরকারি নির্দেশও দেখো।</p>
-      <ul>{sourceRefs.map((r) => <li><a href={r.href} target="_blank" rel="noopener noreferrer"><b>{r.label}</b></a><span> — {r.note}</span></li>)}</ul>
+      <ul>{sourceRefs.map((r) => <li><a href={r.href} target="_blank" rel="noopener noreferrer"><b>{r.label}</b></a><span> – {r.note}</span></li>)}</ul>
     </section>}
 
     <aside class="author-card" aria-label="লেখক পরিচিতি">

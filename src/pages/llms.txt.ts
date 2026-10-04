@@ -116,6 +116,8 @@ question does not get less useful because it was written first.
 
 ${CLUSTERS.map((c) => `### ${c.n}\n${postsIn(c.id).map((p) => `- [${p.title}](${origin}/blog/${p.slug}/): ${p.description}`).join('\n')}`).join('\n\n')}
 
+[Subscribe to new Bangla articles (RSS)](${origin}/blog/rss.xml)
+
 ## Free printable sheets
 
 ${sheets.map((s) => `- [${s.bn}](${origin}/printables/${s.slug}/): ${s.tag}`).join('\n')}

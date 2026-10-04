@@ -36,6 +36,7 @@ const schema = [{
   title="লেখা"
   description={`বাংলায় ${bn(POSTS.length)}টি লেখা - মহাকাশ, বিজ্ঞান, প্রকৃতি, খাবার, গণিত, টাকা ও আরও বিষয় নিয়ে সহজ ব্যাখ্যা, উদাহরণ এবং হাতে-কলমে শেখার লিংক।`}
   schema={schema}
+  rss
   crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }]}
 >
   <div class="wrap page">
@@ -48,6 +49,7 @@ const schema = [{
         এই লেখাগুলো সেই কাজটা করে, আর ঠিক যেখানে হাতে নেড়ে দেখা কাজে লাগে,
         সেখানে টুলটার লিংক দেয়।
       </p>
+      <p class="feed-link"><a href="/blog/rss.xml">নতুন লেখা RSS ফিডে দেখুন ↗</a></p>
     </header>
 
     {CLUSTERS.map((c, ci) => {
@@ -88,6 +90,7 @@ const schema = [{
   .head { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line-soft); margin-bottom: 1.75rem; }
   .head h1 { font-size: clamp(1.9rem, 4vw, 2.7rem); margin: 0.2rem 0 0.7rem; }
   .lede { color: var(--ink-2); max-width: 64ch; font-size: 15.5px; line-height: 1.8; }
+  .feed-link { margin: 0.75rem 0 0; font-size: 13px; }
   .cluster { margin-bottom: 2.2rem; }
   .c-h { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
   .c-h h2 { font-size: 21px; margin: 0; }
