@@ -7,6 +7,28 @@ dist/
 .DS_Store
 .commandcode/
 
+# Superseded Food-animation capture iterations. Keep the local visual history,
+# but version the canonical, task-scoped review set instead of every 5–11 MB
+# experiment. These directories are intentionally preserved on the developer's
+# machine and can be force-added if a specific comparison is needed.
+docs/animation-remake/evidence/food-cc0-bellydown/
+docs/animation-remake/evidence/food-cc0-contact/
+docs/animation-remake/evidence/food-cc0-contact-v2/
+docs/animation-remake/evidence/food-cc0-contact-v3/
+docs/animation-remake/evidence/food-cc0-contact-v4/
+docs/animation-remake/evidence/food-cc0-contact-v5/
+docs/animation-remake/evidence/food-cc0-contact-v6/
+docs/animation-remake/evidence/food-cc0-contact-v7/
+docs/animation-remake/evidence/food-cc0-contact-v8/
+docs/animation-remake/evidence/food-cc0-contact-v9/
+docs/animation-remake/evidence/food-cc0-contact-v10b/
+docs/animation-remake/evidence/food-cc0-macro-v11b/
+docs/animation-remake/evidence/food-cc0-macro-v12b/
+docs/animation-remake/evidence/food-cc0-macro-v13/
+docs/animation-remake/evidence/food-cc0-macro-v14/
+docs/animation-remake/evidence/food-cc0-macro-v15/
+docs/animation-remake/evidence/food-pilot-release-check/
+
 # Paid PDFs are uploaded to the private R2 bucket, never served from Git.
 private-downloads/
 

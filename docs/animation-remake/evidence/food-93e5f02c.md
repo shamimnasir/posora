@@ -28,6 +28,10 @@ Canonical captures in this directory cover overview, focus, whole-fish detail, d
 
 Against the final local Worker build, `npm run test:interaction` passed keyboard, reduced-motion, WebGL fallback, quiz and payment-boundary checks; serial `npm run test:smoke` passed 17 routes × 3 viewports. An earlier parallel smoke attempt failed due navigation-context destruction and a `/space/` timeout while multiple browsers were running, so final route validation was run serially. Build still reports the existing >500 kB chunk warning.
 
+## Automated QA refresh — 2026-10-07
+
+`npm run test:food` passed again after the latest capture refresh: all eight ingredient selections and selection/detail/return/calorie controls worked at mobile, tablet and desktop viewports, with zero page errors. The refreshed 57-image set is retained here as the canonical task review set. This confirms the tested interactions and screenshot capture flow only; visual acceptance by an independent reviewer and real-device touch/performance checks remain open.
+
 ## Open acceptance gates
 
 - Independent art-direction review of the final non-deformed contact pose and macro. The available reviewer reached its usage limit before reviewing the final screenshots; current visual approval is internal, not independent.
