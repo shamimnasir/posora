@@ -1267,8 +1267,17 @@ const seedTravel = facts && facts.nearestKm > 0
 
   /* ---- wiring ---- */
   rail.forEach((b) => b.addEventListener('click', () => select(b.dataset.id!)));
-  crumbSystem.addEventListener('click', () => { cosmos?.showSystem(); toggleBranches(false); $('#subtopic').hidden = true; });  // the strip belongs to a body, not the whole system
-  crumbBody.addEventListener('click', () => { cosmos?.focusBody(cur.id); $('#subtopic').hidden = true; });
+  crumbSystem.addEventListener('click', () => {
+    cosmos?.showSystem();
+    toggleBranches(false);
+    $('#subtopic').hidden = true;
+    renderCrumbs('system');
+  });
+  crumbBody.addEventListener('click', () => {
+    cosmos?.focusBody(cur.id);
+    $('#subtopic').hidden = true;
+    renderCrumbs('body');
+  });
   branchChips.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-br]'); if (b) openBranch(b.dataset.br!);
   });
