@@ -37,7 +37,30 @@ export type WorldOpts = {
 export async function getWorlds({ includeDrafts = false, fresh = false }: WorldOpts = {}): Promise<AdminWorld[]> {
   const all = await loadAllWorlds(fresh || includeDrafts);
   const list = includeDrafts ? all : all.filter((w) => w.status === 'published');
-  return list.map(withKitLabs);
+  return list.map((w) => withKitLabs(includeDrafts ? w : withReviewedIntro(w)));
+}
+
+// D1 is editable and remains the source of truth. Its original seed still
+// carries a few prototype descriptions that promise interactions never built.
+// Replace only those identifiable legacy strings on public pages; a newly
+// edited introduction in the admin panel continues to take effect normally.
+const legacyIntroMarkers: Record<string, string> = {
+  space: 'রেফারেন্স স্ক্রিনটি',
+  physics: 'প্রতিটি আইটেম একেকটি ছোট পরীক্ষাগার',
+  chemistry: 'নিখুঁত উদাহরণ',
+  life: 'মানুষের চামড়া সরিয়ে',
+  food: 'হিরো এখানে একটি খালি থালা',
+  math: 'ম্যানিপুলেটিভ',
+  money: 'হিরো এখানে একটি ছোট দোকান',
+  language: '৫০টি ঘর',
+  social: 'পরিস্থিতি-কার্ড',
+  discovery: 'বাকি নয়টিকে জুড়ে দেয়',
+};
+function withReviewedIntro(w: AdminWorld): AdminWorld {
+  const marker = legacyIntroMarkers[w.slug];
+  if (!marker || !w.intro.includes(marker)) return w;
+  const reviewed = staticWorlds.find((candidate) => candidate.slug === w.slug);
+  return reviewed ? { ...w, intro: reviewed.intro } : w;
 }
 
 /**
