@@ -28,7 +28,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'life:ঔষধি ও মশলা গাছ': {
     fallback: 'herbGreen',
     items: {
-      'তুলসী': 'herbDark', 'নিম': 'mango', 'অ্যালোভেরা': 'herbPale',
+      'তুলসী': 'herbDark', 'নিম': 'neem', 'অ্যালোভেরা': 'herbPale',
       'আদা': 'herbGreen', 'হলুদ': 'turmeric', 'দারুচিনি': 'cinnamon',
       'এলাচ': 'cardamom', 'পুদিনা': 'herbGreen', 'থানকুনি': 'shrubGreen',
     },
@@ -36,7 +36,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'life:প্রাণীর শ্রেণি': {
     fallback: 'tiger',
     items: {
-      'স্তন্যপায়ী': 'tiger', 'পাখি': 'doel', 'সরীসৃপ': 'croc', 'উভচর': 'turtle',
+      'স্তন্যপায়ী': 'tiger', 'পাখি': 'doel', 'সরীসৃপ': 'croc', 'উভচর': 'frog',
       'মাছ': 'fishSmall', 'পতঙ্গ': 'bee', 'মেরুদণ্ডী': 'dolphin',
       'অমেরুদণ্ডী': 'coral', 'শীতল রক্ত': 'turtle', 'উষ্ণ রক্ত': 'monkey',
     },

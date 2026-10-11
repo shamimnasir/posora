@@ -526,7 +526,10 @@ const SCENES: Record<string, Builder> = {
     const perRow = arcPerRow(figures.length, narrow);
     for (let i = 0; i < figures.length; i++) {
       const spec = figures[i]!;
-      const build = FIGURES[spec.figure] ?? FIGURES[Object.keys(FIGURES)[0]!]!;
+      // A missing figure should never turn an unrelated learning item into a
+      // smiling face. The content audit catches static misses; this neutral
+      // marker also covers items added through the admin panel at runtime.
+      const build = FIGURES[spec.figure] ?? FIGURES.bubble!;
       const g = new Group();
       build(g);
       const home = arc(figures.length, i, narrow);

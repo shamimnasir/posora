@@ -701,6 +701,21 @@ const turtle: Figure = (g) => {
   }
   cone(g, skin, 0.04, 0.11, -0.3, 0.13, 0, Math.PI / 2);
 };
+/** A frog is an amphibian; a turtle belongs to the reptiles. */
+const frog: Figure = (g) => {
+  const skin = '#6b9d4b', shade = '#4b7539';
+  const body = ball(g, skin, 0.22, 0, 0.19); body.scale.set(1.25, 0.7, 1);
+  const head = ball(g, skin, 0.17, 0.18, 0.22); head.scale.set(1.15, 0.75, 1);
+  for (const s of [1, -1]) {
+    ball(g, skin, 0.07, 0.22, 0.32, s * 0.11);
+    ball(g, '#f4ecd2', 0.042, 0.245, 0.345, s * 0.11);
+    ball(g, '#17291c', 0.019, 0.266, 0.349, s * 0.11);
+    const thigh = ball(g, shade, 0.12, -0.15, 0.12, s * 0.19);
+    thigh.scale.set(1.3, 0.7, 0.8);
+    const foot = ball(g, skin, 0.09, 0.02, 0.035, s * 0.31);
+    foot.scale.set(1.5, 0.32, 0.65);
+  }
+};
 /** A striped abdomen with wings: the honeybee. */
 const bee: Figure = (g) => {
   const gold = '#f0b429', black = '#2b2b2b';
@@ -2498,6 +2513,7 @@ export const FIGURES: Record<string, Figure> = {
   jute: culms('#7f9e4a', '#6f8e3a', 21), lily,
   kodom: broadleaf('#3f7a42', '#6b4a2a', 0.6, 0.4, 31), hijol: broadleaf('#2f6b4a', '#6b4a2a', 0.5, 0.44, 37),
   herbGreen: herb('#4b8f4f'), herbDark: herb('#2f6b3f'), herbPale: herb('#8fae5a'),
+  neem: broadleaf('#547944', '#6c5741', 0.7, 0.35, 41),
   shrubGreen: shrub('#3f7a42'), shrubPale: shrub('#8fae5a'),
   // animals
   tiger: quadruped('#e08a2b', { stripe: '#2a2118', tail: 0.34, ear: 'round' }),
@@ -2505,7 +2521,7 @@ export const FIGURES: Record<string, Figure> = {
   leopardCat: quadruped('#d8b070', { spot: '#5b4630', tail: 0.32, ear: 'round' }),
   hilsa: fish('#c9d3dc', '#9fb0c0'), fishSmall: fish('#8fae5a'), doel: bird('#1d232b', '#f4f8fc'),
   kingfisher: bird('#2f6b9e', '#e8a33d'), vulture,
-  dolphin, croc, turtle, bee, monkey,
+  dolphin, croc, turtle, frog, bee, monkey,
   flyingBird: flyingBird(), coral: coral(),
   // food and kitchen
   riceBowl, pot: pot(), glassWater: glass(), oilDrop: drop('#e8c86a'), waterDrop: drop('#79b6e8'),

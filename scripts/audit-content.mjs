@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
+import ts from 'typescript';
 
 const ROOT = new URL('../', import.meta.url).pathname;
 const INCLUDE = new Set(['.ts', '.astro', '.css', '.md', '.mjs']);
@@ -23,6 +24,49 @@ const banned = [
 ];
 
 const failures = [];
+
+// Keep the labels in collection scenes tied to real figures. Without this
+// check, a renamed or removed figure silently displayed an unrelated face.
+const loadData = async (path) => {
+  const source = readFileSync(join(ROOT, path), 'utf8');
+  const code = ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 },
+  }).outputText;
+  return import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+};
+const { worlds } = await loadData('src/data/worlds.ts');
+const { COLLECTIONS } = await loadData('src/data/collections.ts');
+const figuresSource = ts.createSourceFile(
+  'figures.ts', readFileSync(join(ROOT, 'src/components/explorer/figures.ts'), 'utf8'),
+  ts.ScriptTarget.Latest, true,
+);
+const figureKeys = new Set();
+for (const statement of figuresSource.statements) {
+  if (!ts.isVariableStatement(statement)) continue;
+  for (const declaration of statement.declarationList.declarations) {
+    if (declaration.name.getText(figuresSource) !== 'FIGURES' || !declaration.initializer || !ts.isObjectLiteralExpression(declaration.initializer)) continue;
+    for (const property of declaration.initializer.properties) {
+      if (ts.isShorthandPropertyAssignment(property) || ts.isPropertyAssignment(property)) {
+        figureKeys.add(property.name.getText(figuresSource).replace(/^['"]|['"]$/g, ''));
+      }
+    }
+  }
+}
+if (!figureKeys.size) failures.push('figures.ts: could not read the figure registry');
+for (const [key, collection] of Object.entries(COLLECTIONS)) {
+  const divider = key.indexOf(':');
+  const world = worlds.find((w) => w.slug === key.slice(0, divider));
+  const category = world?.cats.find((c) => c.n === key.slice(divider + 1));
+  if (!category) { failures.push(`${key}: collection does not match a world category`); continue; }
+  if (!figureKeys.has(collection.fallback)) failures.push(`${key}: unknown fallback figure ${collection.fallback}`);
+  for (const item of category.items) {
+    if (!(item in collection.items)) failures.push(`${key}/${item}: no explicit figure mapping`);
+  }
+  for (const [item, figure] of Object.entries(collection.items)) {
+    if (!category.items.includes(item)) failures.push(`${key}/${item}: mapping has no matching item`);
+    if (!figureKeys.has(figure)) failures.push(`${key}/${item}: unknown figure ${figure}`);
+  }
+}
 for (const path of files(join(ROOT, 'src'))) {
   const rel = relative(ROOT, path);
   const text = readFileSync(path, 'utf8');
