@@ -1,7 +1,7 @@
 /**
- * Procedural 3D heroes for every category. One renderer, ~30 small scene builders,
- * all built from Three.js primitives - no models, no textures shipped.
- * Each scene reads a 0–1 `param` from the page slider so every hero is something to play with.
+ * Interactive 3D heroes for every category. One renderer shares authored
+ * Three.js scenes with lazily loaded, locally licensed models where available.
+ * Each scene reads a 0–1 `param` from the page slider so every hero is playable.
  */
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Object3D, Color, Vector3, MathUtils, Raycaster, Vector2,
@@ -16,6 +16,7 @@ import { dressScene, castShadows, stylise } from './render';
 import { loadLicensedModel } from './model-loader';
 import { LICENSED_FIGURES } from './licensed-figures';
 import { buildFoodTabletop } from './food-tabletop';
+import { visibleBounds } from './cinematic-camera';
 import { iconFont, withIconFont } from '../../lib/icon-font';
 
 export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
@@ -23,7 +24,7 @@ export type HeroSpec = { type: string; hue: string; v?: string; p?: number;
   figures?: { label: string; figure: string }[] };
 /** One thing in the category, shown as a badge orbiting the category's model. */
 export type HeroItem = { label: string; emoji?: string; caption?: string };
-type Ctx = { root: Group; hue: Color; v: string; font: string; figures: { label: string; figure: string }[] };
+type Ctx = { root: Group; hue: Color; v: string; font: string; figures: { label: string; figure: string }[]; onAssetLoaded(): void };
 /**
  * A scene may expose `anchors`: a marker object per item label, attached to the
  * part of the model that item is about. Badges then sit on the model instead of
@@ -91,6 +92,8 @@ type SceneObj = {
   still?: boolean;
   /** Optional emphasis multiplier used by the shared hero framing template. */
   heroScale?: number;
+  /** Tighten/loosen the generic explode travel without changing the model. */
+  explodeSpreadMultiplier?: number;
   /** Scene-authored target meshes enable direct object selection without icon overlays. */
   pickTargets?: Object3D[];
   /** When true, accessible DOM item buttons replace floating badge sprites. */
@@ -101,6 +104,8 @@ type SceneObj = {
   detailTargets?: (Object3D | null)[];
   detailFocusTargets?: (Object3D | null)[];
   setReveal?: (level: number, itemIndex: number) => void;
+  /** A specimen can swap from an intact render to its labeled teaching pieces. */
+  setExplode?: (amount: number) => void;
   focusZoomFactor?: number;
   detailZoomFactor?: number;
   /** Preserve a scene's authored elevation while the camera dollies into detail. */
@@ -290,11 +295,12 @@ const SCENES: Record<string, Builder> = {
     };
   },
   /** গাছের অংশ: every part is its own group with a direction to explode along, and an anchor for its badge. */
-  treeparts({ root, hue }) {
+  treeparts({ root, hue, onAssetLoaded }) {
     const brown = new Color('#7a4f2a'), bark = new Color('#5c3a1e'), leaf = hue, leaf2 = lighten(hue, 0.25);
     const parts: { g: Group; base: Vector3; dir: Vector3 }[] = [];
+    const partGroups: Group[] = [];
     const anchors: Record<string, Object3D> = {};
-    const part = (base: Vector3, dir: Vector3) => { const g = new Group(); g.position.copy(base); root.add(g); parts.push({ g, base: base.clone(), dir: dir.clone().normalize() }); return g; };
+    const part = (base: Vector3, dir: Vector3) => { const g = new Group(); g.position.copy(base); root.add(g); parts.push({ g, base: base.clone(), dir: dir.clone().normalize() }); partGroups.push(g); return g; };
     const mark = (name: string, parent: Object3D, x: number, y: number, z: number) => { const m = new Object3D(); m.position.set(x, y, z); parent.add(m); anchors[name] = m; };
 
     // The soil the tree is rooted in. It is a low mound rather than the flat
@@ -338,9 +344,24 @@ const SCENES: Record<string, Builder> = {
     const flowers = part(new Vector3(0, 1.6, 0), new Vector3(0.3, 0.6, 1));
     for (let i = 0; i < 7; i++) { const f = new Mesh(new SphereGeometry(0.11, 10, 8), std('#f4a7c3', { emissive: '#f4a7c3', emissiveIntensity: 0.25 })); const a = i * 1.7; f.position.set(Math.cos(a) * 0.9, Math.sin(a * 1.3) * 0.4, 0.7 + Math.sin(a) * 0.3); flowers.add(f); }
     mark('ফুল', flowers, 0.9, 0.2, 0.9);
-    // A real botanical specimen gives the child a recognisable reference for
-    // leaves and flowers. The procedural exploded parts remain visible while
-    // it loads and are the fallback if the model cannot be fetched.
+    // A full, licensed tree model is the intact-state hero. The authored pieces
+    // remain the exploded teaching view, so the child sees a real tree first
+    // and the labeled anatomy only when they choose to open it.
+    const realisticTree = new Group();
+    realisticTree.position.y = -1.76;
+    root.add(realisticTree);
+    void loadLicensedModel('/models/tree_small_02/tree_small_02_1k.glb', realisticTree, {
+      height: 4.8,
+      accept: () => root.parent !== null,
+    }).then((model) => {
+      if (!model) return;
+      partGroups.forEach((group) => { group.visible = false; });
+      onAssetLoaded();
+    });
+
+    // A real botanical specimen gives the child a recognisable leaf/flower
+    // reference alongside the full tree. It is supplementary, not a stand-in
+    // for the tree itself.
     const realPlant = new Group();
     realPlant.position.set(-1.25, -1.72, 0.65);
     realPlant.rotation.y = -0.28;
@@ -358,7 +379,11 @@ const SCENES: Record<string, Builder> = {
     // the slider grows the tree; the engine's খুলে দেখো control pulls it apart.
     // No shared ground: this scene brought its own mound, and two floors a hair
     // apart is the z-fighting stripe that spoiled the collection scene.
-    return { label: 'বড় হও', anchors, heroScale: 1.05, aim: { y: 1.72, eye: 1.25 }, update(t, _dt, p) {
+    return { label: 'বড় হও', anchors, heroScale: 1.05, explodeSpreadMultiplier: 0.4, aim: { y: 1.72, eye: 1.25 }, setExplode(amount) {
+      const opened = amount > 0.06;
+      realisticTree.visible = !opened;
+      partGroups.forEach((group) => { group.visible = opened; });
+    }, update(t, _dt, p) {
       const g = 0.3 + p * 0.7;
       canopy.scale.setScalar(g); flowers.scale.setScalar(Math.max(0.001, (p - 0.35) / 0.65));
       fruit.scale.setScalar(Math.max(0.001, (p - 0.6) / 0.4)); leafG.scale.setScalar(0.4 + p * 0.6);
@@ -1663,6 +1688,7 @@ export function mountHero(
   // error, and it takes the whole scene out. The initial resize runs on its
   // own a moment later; every later scene change goes through this flag.
   let framed = false;
+  let onAssetLoaded = () => {};
   let focusNode: Object3D | null = null, focusZoom = 0;
   const focusPos = new Vector3(), detailPos = new Vector3();
   const aimCamera = () => {
@@ -1838,7 +1864,7 @@ export function mountHero(
       if (boxTmp.isEmpty()) return;
       boxTmp.getBoundingSphere(sphTmp);
       modelCentre = sphTmp.center.clone(); modelRadius = Math.max(0.4, sphTmp.radius);
-      spread = modelRadius * 0.5;
+      spread = modelRadius * (cur?.explodeSpreadMultiplier ?? 0.5);
       for (const n of nodes) {
         const parent = n.parent;
         if (!parent) continue;
@@ -1902,7 +1928,7 @@ export function mountHero(
     root.traverse((o) => { const m = o as Mesh; if (!m.geometry?.userData?.shared) m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
     user.remove(root); root = new Group(); user.add(root); parts = [];
     hueNow = new Color(s.hue);
-    const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font, figures: s.figures ?? [] }); param = s.p ?? 0.5; popStart = performance.now();
+    const builder = SCENES[s.type] ?? SCENES.atom; cur = builder({ root, hue: hueNow, v: s.v ?? '', font, figures: s.figures ?? [], onAssetLoaded: () => onAssetLoaded() }); param = s.p ?? 0.5; popStart = performance.now();
     // One call after the scene is built, rather than a flag inside ninety
     // builders that a ninety-first would forget.
     castShadows(root);
@@ -2162,6 +2188,7 @@ export function mountHero(
     cur?.update(t, run ? dt : 0, param);
     // the explode rides on top of whatever the scene just did to its own parts
     explodeNow += (explodeTo - explodeNow) * 0.16;
+    cur?.setExplode?.(explodeNow);
     if (parts.length) for (const p of parts) p.wrap.position.copy(p.dir).multiplyScalar(explodeNow * spread);
     // the camera eases back as the model opens up, so nothing leaves the frame
     focusZoom += ((active >= 0 ? 1 : 0) - focusZoom) * 0.1;
@@ -2174,6 +2201,26 @@ export function mountHero(
     raf = visible && !document.hidden ? requestAnimationFrame(frame) : 0;
   }
   const start = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } };
+  // An async GLB changes the measured bounds after the fallback scene was
+  // framed. Re-fit when it arrives, or a tall real specimen can sit at the
+  // bottom edge while the camera still thinks it is framing the small fallback.
+  onAssetLoaded = () => {
+    if (!framed) return;
+    const keepRot = user.rotation.clone(), keepPos = user.position.clone(), keepScale = root.scale.clone();
+    user.rotation.set(0, 0, 0); user.position.set(0, 0, 0); root.scale.setScalar(1);
+    cur?.update(t, 0, param);
+    cur?.setExplode?.(explodeNow);
+    root.updateMatrixWorld(true);
+    boxTmp.copy(visibleBounds(root));
+    if (!boxTmp.isEmpty()) { fitMin.copy(boxTmp.min); fitMax.copy(boxTmp.max); }
+    if (cur?.fit) {
+      fitMin.x = -cur.fit.x; fitMax.x = cur.fit.x;
+      fitMin.z = -cur.fit.z; fitMax.z = cur.fit.z;
+    }
+    user.rotation.copy(keepRot); user.position.copy(keepPos); root.scale.copy(keepScale);
+    root.updateMatrixWorld(true);
+    resize(); start();
+  };
   const io = new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) start(); }); io.observe(host);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); }); start();
   void firstLabel;

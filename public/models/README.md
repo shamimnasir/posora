@@ -24,3 +24,13 @@ must keep a source record here before they are used in a scene.
 - Source and license: [model record](avocado/README.md)
 - License: CC0 1.0 (Khronos glTF Sample Assets)
 - Format: GLB, lazy-loaded for the fruit example in Food
+
+## `tree_small_02`
+
+- Source: [Poly Haven — Tree Small 02](https://polyhaven.com/a/tree_small_02)
+- Creator: Rico Cilliers
+- License: CC0 1.0
+- Format: GLB with 1K PBR textures; optimized from the 8K geometry using
+  glTF-Transform (quantization, mesh simplification, and WebP textures)
+- Use: intact-state tree specimen in the Life world; the authored anatomy view
+  remains available when visitors use the explode control
