@@ -18,3 +18,9 @@ must keep a source record here before they are used in a scene.
 - License: CC0 1.0 (Poly Haven asset)
 - Format: glTF 2.0, 1K textures
 - Use: exact-object lightbulb figure in the shared collection renderer
+
+## `avocado`
+
+- Source and license: [model record](avocado/README.md)
+- License: CC0 1.0 (Khronos glTF Sample Assets)
+- Format: GLB, lazy-loaded for the fruit example in Food

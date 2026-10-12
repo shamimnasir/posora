@@ -4,4 +4,6 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number }> =
   // The Food pilot's CC0 Barramundi is also a faithful model for generic fish
   // examples. Species-specific figures such as ইলিশ remain distinct.
   fishSmall: { url: '/models/remake/food-93e5f02c/barramundi-fish-1024-webp.glb', height: 1.15 },
+  // Shown as a concrete fruit example for the generic vitamin-rich fruit tile.
+  greenFruit: { url: '/models/avocado/avocado.glb', height: 1.05 },
 };
