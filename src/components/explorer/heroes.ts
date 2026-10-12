@@ -1694,6 +1694,7 @@ export function mountHero(
   const user = new Group(); scene.add(user); let root = new Group(); user.add(root);
   let cur: SceneObj | null = null, param = spec.p ?? 0.5, popStart = performance.now();
   let sceneType = spec.type;
+  let currentSpec = spec;
 
   /* ---- the item orbit: every item of the category as a badge around the model ---- */
   const ORBIT_R = 3.05;
@@ -1897,6 +1898,7 @@ export function mountHero(
 
   function build(s: HeroSpec) {
     sceneType = s.type;
+    currentSpec = s;
     root.traverse((o) => { const m = o as Mesh; if (!m.geometry?.userData?.shared) m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
     user.remove(root); root = new Group(); user.add(root); parts = [];
     hueNow = new Color(s.hue);
@@ -2179,7 +2181,14 @@ export function mountHero(
     // A new scene decides for itself whether it turns, the way it decides its
     // own camera: switching from a planet to a crowd must not leave the crowd
     // spinning because the planet was.
-    set: (s) => { const l = build(s); auto = !reduced && !wantsStill; previewUntil = auto ? performance.now() + 6000 : 0; start(); return l; },
+    // mountHero has already built its initial spec. The world page calls set
+    // once after mount to synchronise its controls; rebuilding an identical
+    // spec there invalidates any asynchronous licensed-model load in flight.
+    set: (s) => {
+      const same = s.type === currentSpec.type && s.v === currentSpec.v && s.hue === currentSpec.hue && s.p === currentSpec.p && s.figures === currentSpec.figures;
+      const l = same ? cur?.label ?? '' : build(s);
+      auto = !reduced && !wantsStill; previewUntil = auto ? performance.now() + 6000 : 0; start(); return l;
+    },
     setItems: (items, act) => { setItems(items, act); resize(); start(); },
     focus: (i) => { focus(i); start(); },
     setParam: (v) => { param = v; start(); },

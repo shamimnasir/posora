@@ -38,6 +38,9 @@ export function loadLicensedModel(
       });
       parent.add(model);
       resolve(model);
-    }, undefined, () => resolve(null));
+    }, undefined, (error) => {
+      console.warn(`[Posora 3D] Could not load ${url}`, error);
+      resolve(null);
+    });
   });
 }
