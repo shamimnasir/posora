@@ -11,16 +11,23 @@ const loader = new GLTFLoader();
 export function loadLicensedModel(
   url: string,
   parent: Object3D,
-  options: { height?: number; position?: Vector3; rotationY?: number } = {},
+  options: { height?: number; position?: Vector3; rotationY?: number; centerOnFloor?: boolean; accept?: () => boolean } = {},
 ): Promise<Group | null> {
   return new Promise((resolve) => {
     loader.load(url, (gltf) => {
       const model = gltf.scene;
+      if (options.accept && !options.accept()) { resolve(null); return; }
       const box = new Box3().setFromObject(model);
       const size = box.getSize(new Vector3());
       const targetHeight = options.height ?? 2;
       if (size.y > 0) model.scale.setScalar(targetHeight / size.y);
       model.position.copy(options.position ?? new Vector3());
+      if (options.centerOnFloor) {
+        const fitted = new Box3().setFromObject(model);
+        model.position.x -= (fitted.min.x + fitted.max.x) / 2;
+        model.position.y -= fitted.min.y;
+        model.position.z -= (fitted.min.z + fitted.max.z) / 2;
+      }
       if (options.rotationY) model.rotation.y = options.rotationY;
       model.traverse((node) => {
         const mesh = node as Mesh;

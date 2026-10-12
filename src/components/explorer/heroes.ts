@@ -14,6 +14,7 @@ import {
 import { FIGURES, arc, arcPerRow } from './figures';
 import { dressScene, castShadows, stylise } from './render';
 import { loadLicensedModel } from './model-loader';
+import { LICENSED_FIGURES } from './licensed-figures';
 import { buildFoodTabletop } from './food-tabletop';
 import { iconFont, withIconFont } from '../../lib/icon-font';
 
@@ -531,7 +532,28 @@ const SCENES: Record<string, Builder> = {
       // marker also covers items added through the admin panel at runtime.
       const build = FIGURES[spec.figure] ?? FIGURES.bubble!;
       const g = new Group();
-      build(g);
+      const fallback = new Group();
+      build(fallback);
+      g.add(fallback);
+      const licensed = LICENSED_FIGURES[spec.figure];
+      if (licensed) {
+        void loadLicensedModel(licensed.url, g, {
+          height: licensed.height,
+          centerOnFloor: true,
+          accept: () => root.parent !== null,
+        }).then((model) => {
+          if (!model) return;
+          // The simple shape exists only while the exact-object model loads.
+          fallback.removeFromParent();
+          fallback.traverse((node) => {
+            const mesh = node as Mesh;
+            if (!mesh.isMesh) return;
+            if (!mesh.geometry.userData?.shared) mesh.geometry.dispose();
+            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            materials.forEach((material) => material.dispose());
+          });
+        });
+      }
       const home = arc(figures.length, i, narrow);
       g.position.copy(home);
       root.add(g);
@@ -1671,6 +1693,7 @@ export function mountHero(
   scene.add(stage.ground);
   const user = new Group(); scene.add(user); let root = new Group(); user.add(root);
   let cur: SceneObj | null = null, param = spec.p ?? 0.5, popStart = performance.now();
+  let sceneType = spec.type;
 
   /* ---- the item orbit: every item of the category as a badge around the model ---- */
   const ORBIT_R = 3.05;
@@ -1873,6 +1896,7 @@ export function mountHero(
   }
 
   function build(s: HeroSpec) {
+    sceneType = s.type;
     root.traverse((o) => { const m = o as Mesh; if (!m.geometry?.userData?.shared) m.geometry?.dispose?.(); const mats = Array.isArray(m.material) ? m.material : [m.material]; mats.forEach((mt) => { (mt as MeshStandardMaterial)?.map?.dispose?.(); mt?.dispose?.(); }); });
     user.remove(root); root = new Group(); user.add(root); parts = [];
     hueNow = new Color(s.hue);
@@ -2081,6 +2105,12 @@ export function mountHero(
           // pinned to its part: follow the part, hover slightly, face the camera
           b.marker.getWorldPosition(wp); user.worldToLocal(wp);
           b.sp.position.copy(wp); b.sp.position.y += pinScale * 0.33 + Math.sin(t * 1.7 + i) * 0.065;
+          // A collection's object is the picture. Keep its selected marker
+          // beside the object so the badge cannot cover the actual geometry.
+          if (sceneType === 'collection' && on) {
+            b.sp.position.x += 0.72 * sprK();
+            b.sp.position.y += 0.34 * sprK();
+          }
           /**
            * One label at a time.
            *
@@ -2092,7 +2122,7 @@ export function mountHero(
            * of every one of them is a tap or a slider nudge away, and the
            * reading panel beside the stage has it in full.
            */
-          const target = (on ? 1 : pinScale * 0.72) * sprK() * beckonAt(i, t);
+          const target = (on ? (sceneType === 'collection' ? 0.58 : 1) : pinScale * 0.72) * sprK() * beckonAt(i, t);
           b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
           (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.42;
           b.label.position.copy(b.sp.position); b.label.position.y -= 0.42 * sprK() + 0.3;
@@ -2104,7 +2134,7 @@ export function mountHero(
           // is written as one.
           b.label.visible = on;
           (b.label.material as SpriteMaterial).opacity = 1;
-          b.label.scale.set(2.6 * sprK(), 0.52 * sprK(), 1);
+          b.label.scale.set((sceneType === 'collection' ? 1.85 : 2.6) * sprK(), 0.52 * sprK(), 1);
           return;
         }
         const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera

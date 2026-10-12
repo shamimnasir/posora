@@ -21,6 +21,8 @@ import {
   CanvasTexture, Sprite, SpriteMaterial, TorusGeometry, PlaneGeometry,
 } from 'three';
 import { FIGURES } from './figures';
+import { LICENSED_FIGURES } from './licensed-figures';
+import { loadLicensedModel } from './model-loader';
 import { dressScene, castShadows } from './render';
 import { iconFont, withIconFont } from '../../lib/icon-font';
 
@@ -136,6 +138,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
   type Cell = { g: Group; body: Group | null; got: boolean; y0: number; spin: number; flat: boolean };
   let cells: Cell[] = [];
   let rows = 1, hue = new Color('#15544c'), active = -1;
+  let generation = 0;
 
   const plankGeo = new CylinderGeometry(0.72, 0.78, 0.16, 18);
   const ghostMat = new MeshStandardMaterial({ color: '#b9c4d0', roughness: 0.9, transparent: true, opacity: 0.32 });
@@ -155,6 +158,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
   }
 
   function clear() {
+    generation++;
     stage.traverse((o) => {
       const m = o as Mesh;
       // `userData.shared` marks a cached geometry that figures.ts hands out to
@@ -187,6 +191,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
 
   function set(slots: ShelfSlot[], hueHex: string) {
     clear();
+    const currentGeneration = generation;
     hue = new Color(hueHex);
     rows = Math.max(1, Math.ceil(slots.length / COLS));
     const w = (COLS - 1) * GAP_X;
@@ -212,6 +217,26 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
         // it is still unmistakably not yours yet. Nothing is locked either way.
         if (!slot.got) ghostify(g);
         body = fit(g);
+        const licensed = slot.figure && LICENSED_FIGURES[slot.figure];
+        if (licensed && slot.got) {
+          const replacement = new Group();
+          void loadLicensedModel(licensed.url, replacement, {
+            height: 1.05,
+            centerOnFloor: true,
+            accept: () => generation === currentGeneration,
+          }).then((model) => {
+            if (!model || generation !== currentGeneration || !body) return;
+            g.removeFromParent();
+            g.traverse((node) => {
+              const mesh = node as Mesh;
+              if (!mesh.isMesh) return;
+              if (!mesh.geometry.userData?.shared) mesh.geometry.dispose();
+              const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+              mats.forEach((mat) => mat.dispose());
+            });
+            body.add(replacement);
+          });
+        }
       } else if (slot.got) {
         body = emojiTile(slot.emoji || '✨', hue);
       }

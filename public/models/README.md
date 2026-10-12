@@ -11,3 +11,10 @@ must keep a source record here before they are used in a scene.
 - Downloaded: 2026-09-17
 - Files: `anthurium_botany_01_1k.gltf`, `anthurium_botany_01.bin`, and the three
   referenced 1K JPG textures
+
+## `lightbulb_led`
+
+- Source and checksums: [model record](lightbulb_led/README.md)
+- License: CC0 1.0 (Poly Haven asset)
+- Format: glTF 2.0, 1K textures
+- Use: exact-object lightbulb figure in the shared collection renderer
