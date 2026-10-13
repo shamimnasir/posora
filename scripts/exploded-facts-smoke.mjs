@@ -39,6 +39,10 @@ try {
         if (itemIndex > 0) await page.locator(`.chip[data-di="${itemIndex}"]`).evaluate((el) => { if (el instanceof HTMLElement) el.click(); });
         await page.locator('#ctl-x').evaluate((el) => { el.value = '55'; el.dispatchEvent(new Event('input', { bubbles: true })); });
         const note = page.locator('#explode-note');
+        // The selected-depth panel is transitioned in by the shared explorer;
+        // wait for its content instead of reading during the same render tick.
+        await note.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+        await page.waitForFunction(() => (document.querySelector('#explode-note-fun')?.textContent?.trim().length ?? 0) > 12, null, { timeout: 3000 }).catch(() => {});
         const noteVisible = await note.isVisible();
         check(noteVisible, `${world}/${cat.n}/${item}: exploded-view fact panel is hidden`);
         check((await page.locator('#explode-note-title').innerText()).includes(item), `${world}/${cat.n}/${item}: fact panel title does not name the selected item`);

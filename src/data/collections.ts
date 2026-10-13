@@ -29,7 +29,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     fallback: 'herbGreen',
     items: {
       'তুলসী': 'herbDark', 'নিম': 'neem', 'অ্যালোভেরা': 'herbPale',
-      'আদা': 'herbGreen', 'হলুদ': 'turmeric', 'দারুচিনি': 'cinnamon',
+      'আদা': 'gingerRoot', 'হলুদ': 'turmeric', 'দারুচিনি': 'cinnamon',
       'এলাচ': 'cardamom', 'পুদিনা': 'herbGreen', 'থানকুনি': 'shrubGreen',
     },
   },
@@ -73,6 +73,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'food:মশলার জগৎ': {
     fallback: 'turmeric',
     items: {
+      'আদা': 'gingerRoot',
       'হলুদ': 'turmeric', 'জিরা': 'cumin', 'ধনে': 'coriander',
       'মরিচ': 'chilliPod', 'এলাচ': 'cardamom', 'দারুচিনি': 'cinnamon',
       'তেজপাতা': 'bayLeaf', 'সরিষা': 'mustard', 'মেথি': 'fenugreek',
@@ -131,7 +132,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     fallback: 'gear',
     items: {
       'চাকা': 'wheel', 'লিখন': 'book', 'কাগজ': 'sheet', 'ছাপাখানা': 'book',
-      'বাষ্পীয় ইঞ্জিন': 'gear', 'বিদ্যুৎ': 'bulb', 'টেলিফোন': 'phone',
+      'বাষ্পীয় ইঞ্জিন': 'gear', 'বিদ্যুৎ': 'bulb', 'টেলিফোন': 'telephone',
       'উড়োজাহাজ': 'flyingBird', 'টিকা': 'flask', 'পেনিসিলিন': 'flask',
       'কম্পিউটার': 'monitor', 'ইন্টারনেট': 'monitor',
     },
@@ -178,7 +179,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'language:শব্দভাণ্ডার': {
     fallback: 'bubble',
     items: {
-      'ছবি ও শব্দ': 'bubble', 'রং': 'swatches', 'ফল': 'mangoFruit',
+      'ছবি ও শব্দ': 'bubble', 'রং': 'swatches', 'ফল': 'bananaFruit',
       'সবজি': 'greenFruit', 'প্রাণী': 'tiger', 'পরিবার': 'family',
       'শরীরের অংশ': 'palmHand', 'পোশাক': 'shirt', 'যানবাহন': 'bus',
       'বিপরীত শব্দ': 'opposites', 'সমার্থক শব্দ': 'bubble', 'ধ্বনি-শব্দ': 'bubble',

@@ -1120,9 +1120,34 @@ const SCENES: Record<string, Builder> = {
 
   seasonwheel({ root, v, font }) {
     const cols = ['#f0b429', '#3b82f6', '#9fd3e6', '#d9822b', '#cfd8e3', '#e88fb0']; const names = ['গ্রীষ্ম', 'বর্ষা', 'শরৎ', 'হেমন্ত', 'শীত', 'বসন্ত'];
-    const fruits = ['🥭', '🍈', '🍌', '🥥', '🥕', '🍓'];
-    const wheel = new Group(); wheel.rotation.x = 0.5; root.add(wheel);
-    cols.forEach((c, i) => { const s = sector(2.6, (i / 6) * Math.PI * 2, Math.PI / 3, c, 0.2); wheel.add(s); const a = (i + 0.5) / 6 * Math.PI * 2; const sp = v === 'fruit' ? emojiSprite(fruits[i]!, 0.9) : textSprite(names[i]!, font, '#eef4fb', 1.1); sp.position.set(Math.cos(a) * 2, 0.4, -Math.sin(a) * 2); wheel.add(sp); });
+    // Use the Bengali names for the six visible samples. Generic emoji are
+    // easy to mistake for exact specimens (e.g. a banana pictured for জাম).
+    const fruits = ['আম', 'লিচু', 'জাম', 'কাঁঠাল', 'পেয়ারা', 'কুল'];
+    // The fruit wheel was sitting too low in its canvas; lift just this Food
+    // variant so the complete wheel and its realistic specimens stay in frame.
+    const fruitLift = v === 'fruit' ? 2.1 : 0;
+    const wheel = new Group(); wheel.rotation.x = 0.5; wheel.position.y = fruitLift; root.add(wheel);
+    const focusTargets: Object3D[] = [];
+    cols.forEach((c, i) => {
+      const s = sector(2.6, (i / 6) * Math.PI * 2, Math.PI / 3, c, 0.2); wheel.add(s);
+      const a = (i + 0.5) / 6 * Math.PI * 2;
+      // Place the named produce on the near rim, not behind the wheel. A
+      // far-side specimen was hidden by perspective and looked like its emoji
+      // fallback even though the licensed GLB had downloaded successfully.
+      const host = new Group(); host.position.set(Math.cos(a) * 1.82, 0.3, Math.sin(a) * 1.82); wheel.add(host);
+      focusTargets.push(host);
+      const sp = textSprite(v === 'fruit' ? fruits[i]! : names[i]!, font, '#eef4fb', 1.1);
+      if (v === 'fruit') { sp.position.y = 0.72; sp.scale.multiplyScalar(0.64); }
+      host.add(sp);
+      // The lychee is the second item in the Bengali fruit list. Do not show a
+      // banana model in the third slot: that slot represents জাম, not কলা.
+      const fruitModel = v === 'fruit' && i === 1
+        ? { url: '/models/food_lychee_01/food_lychee_01.glb', height: 0.92 }
+        : null;
+      if (fruitModel) void loadLicensedModel(fruitModel.url, host, {
+        height: fruitModel.height, centerOnFloor: true, accept: () => root.parent !== null,
+      });
+    });
     // a rim and a raised hub, so the wheel is a made object and not six flat
     // pie slices sharing an edge
     wheel.add(new Mesh(new TorusGeometry(2.61, 0.075, 8, 64), std('#f0f4f8', { roughness: 0.5 })).rotateX(Math.PI / 2));
@@ -1130,8 +1155,11 @@ const SCENES: Record<string, Builder> = {
     wheel.add(new Mesh(new CylinderGeometry(0.2, 0.2, 0.42, 24), metal('#b6bec6')));
     // the marker that says which season is at the front right now
     const pointer = new Mesh(new ConeGeometry(0.22, 0.5, 4), std(GOLD, { roughness: 0.4, metalness: 0.4 }));
-    pointer.position.set(0, 0.42, 2.95); pointer.rotation.x = Math.PI; root.add(pointer);
-    return { label: 'ঋতু ঘোরাও', aim: { y: 0.05, eye: 1.45 }, update(t, _dt, p) { wheel.rotation.y += (p * Math.PI * 2 - wheel.rotation.y) * 0.08; wheel.rotation.z = 0.5 + Math.sin(t * 0.4) * 0.025; pointer.position.y = 0.42 + Math.sin(t * 2) * 0.04; } };
+    pointer.position.set(0, 0.42 + fruitLift, 2.95); pointer.rotation.x = Math.PI; root.add(pointer);
+    // Keep the camera's look target at the stage horizon. A raised model with
+    // a raised look target cancels its own lift and leaves the wheel behind the
+    // bottom controls; the composed wheel must remain visible above them.
+    return { label: 'ঋতু ঘোরাও', focusTargets, preserveFocusAngle: true, focusZoomFactor: v === 'fruit' ? 0.62 : undefined, aim: { y: 0.05, eye: 1.45 }, update(t, _dt, p) { wheel.rotation.y += (p * Math.PI * 2 - wheel.rotation.y) * 0.08; wheel.rotation.z = 0.5 + Math.sin(t * 0.4) * 0.025; pointer.position.y = 0.42 + fruitLift + Math.sin(t * 2) * 0.04; } };
   },
 
   plate({ root, hue, v }) {

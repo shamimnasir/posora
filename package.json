@@ -14,6 +14,7 @@
     "digital-packs": "node --experimental-strip-types scripts/generate-digital-packs.mjs",
     "test:smoke": "node scripts/browser-smoke.mjs",
     "test:world-render": "node scripts/world-render-smoke.mjs",
+    "test:licensed-models": "node scripts/licensed-models-smoke.mjs",
     "test:blog-coverage": "node scripts/blog-coverage-smoke.mjs",
     "test:internal-backlinks": "node scripts/internal-backlinks-smoke.mjs",
     "test:interaction": "node scripts/interaction-smoke.mjs",

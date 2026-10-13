@@ -2527,6 +2527,7 @@ export const FIGURES: Record<string, Figure> = {
   riceBowl, pot: pot(), glassWater: glass(), oilDrop: drop('#e8c86a'), waterDrop: drop('#79b6e8'),
   salt: crystal('#f4f8fc'), sugarFruit: fruit('#f0b429'), mangoFruit: fruit('#f5a623'),
   greenFruit: fruit('#5f9e4a'), redFruit: fruit('#c0392b'),
+  bananaFruit: fruit('#e3c242'), lycheeFruit: fruit('#d94e47'), gingerRoot: herb('#b78a58'),
   turmeric: bowl('#e8a33d'), chilliPowder: bowl('#c0392b'), cumin: seeds('#8a6a44'),
   coriander: seeds('#c9b98f'), mustard: seeds('#d9b44a'), fenugreek: seeds('#c8a24a'),
   cinnamon: quills('#8a5a33'), bayLeaf: leaves('#4b7a3a'),
@@ -2541,7 +2542,7 @@ export const FIGURES: Record<string, Figure> = {
   personSlate: person('#4c5867'),
   thermometer, balance, ruler, microscope, telescope, compass,
   clockFace, stopwatch, barometer,
-  gear: gear(), bulb, wheel, book: book(), monitor, robot,
+  gear: gear(), bulb, wheel, book: book(), monitor, robot, telephone: phone(),
   // places and weather
   house: house(), cloudDrop, soil: soil(), sunDisc,
 };
