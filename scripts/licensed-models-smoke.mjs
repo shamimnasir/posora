@@ -48,6 +48,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 3, expected: ['realistic_axolotl_01/axolotl.glb'], shot: 'life-amphibian-axolotl.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 5, expected: ['realistic_bee_01/bee.glb'], shot: 'life-bee-specimen.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 7, expected: ['octopus_scan_01/octopus.glb'], shot: 'life-invertebrate-octopus.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 5, expected: ['saltwater_crocodile_01/saltwater-crocodile.glb'], shot: 'life-saltwater-crocodile.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="2"]', expected: ['rock_07/rock_07.glb'], shot: 'discovery-rock.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', expected: ['korean_public_payphone_01/korean_public_payphone_01.glb'], shot: 'discovery-telephone.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', itemIndex: 1, expected: ['binder_notebook/binder_notebook_1k.gltf'], shot: 'discovery-notebook.png' },
@@ -147,8 +148,12 @@ try {
     if (test.category) {
       const currentCategory = await page.locator('#crumb-cat').textContent();
       if (currentCategory?.trim() !== test.category) {
-        await page.locator(test.selector).evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
-        await page.waitForFunction((name) => document.querySelector('#crumb-cat')?.textContent?.trim() === name, test.category, { timeout: 10000 });
+        // Use a real locator click so mobile scrolls the category into view and
+        // exercises the same pointer path as a learner. A synthetic DOM click
+        // could fire while the previous heavy WebGL scene was still settling,
+        // then leave the next item assertion on the stale category.
+        await page.locator(test.selector).click({ timeoutMs: 15000 });
+        await page.waitForFunction((name) => document.querySelector('#crumb-cat')?.textContent?.trim() === name, test.category, { timeout: 15000 });
       }
     } else {
       await page.locator(test.selector).evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
@@ -208,6 +213,27 @@ try {
       }, null, { timeout: 10000 });
       const credit = await page.locator('#model-credit-tiger').innerText();
       check(credit.includes('francescolima74') && credit.includes('CC BY 4.0') && credit.includes('যাচাই'), `${test.world}: tiger credit or subspecies limitation is missing`);
+    }
+    if (test.expected.some((asset) => asset.startsWith('saltwater_crocodile_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-crocodile');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-crocodile').innerText();
+      check(credit.includes('VoltVeigh') && credit.includes('CC BY 4.0') && credit.includes('নির্দিষ্ট প্রাণীর স্ক্যান নয়'), `${test.world}: crocodile source, license, or limitation disclosure is incomplete`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        const title = document.querySelector('#explode-note-title')?.textContent ?? '';
+        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+        const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
+        return note instanceof HTMLElement && !note.hidden && title.includes('কুমির') && copy.includes('বড় সরীসৃপ শিকারি') && fact.length > 15;
+      }, null, { timeout: 10000 });
     }
     if (test.expected.some((asset) => asset.startsWith('rice_oryza_sativa_01/'))) {
       const credit = page.locator('#model-credit');

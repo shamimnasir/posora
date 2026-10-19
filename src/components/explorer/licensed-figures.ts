@@ -82,6 +82,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   cinnamonStickScan: { url: '/models/cinnamon_stick_scan_01/cinnamon-stick.glb', height: 1.2, fitAxis: 'longest', colorBoost: 1.45 },
   redChilliScan: { url: '/models/red_chilli_scan_01/red-chilli.glb', height: 0.84, fitAxis: 'longest' },
   whiteThroatedKingfisherScan: { url: '/models/white_throated_kingfisher_01/white-throated-kingfisher.glb', height: 1.05, fitAxis: 'longest', rotationY: Math.PI / 2 },
+  // Saltwater crocodile listed as native to India’s east coast/Southeast Asia;
+  // the lesson identifies it as the Sundarbans example, not a local specimen scan.
+  saltwaterCrocodileScan: { url: '/models/saltwater_crocodile_01/saltwater-crocodile.glb', height: 1.55, fitAxis: 'longest', focusY: 0.14 },
   // Asian elephant specimen by planeta-elefante (CC BY 4.0). Its idle clip is
   // used for the selected fauna figure; the source provides walk and spray
   // clips too, but those are not implied as an interaction or behavior fact.
