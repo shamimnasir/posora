@@ -61,7 +61,7 @@ const cases = [
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', expected: ['industrial_microscope/industrial_microscope.glb', 'seadogs_compass/seadogs_compass.glb', 'digital_wrist_watch/digital_wrist_watch_1k.gltf'], shot: 'discovery-instruments.png' },
   { world: 'social', selector: '#world .rail-list [data-i="7"]', itemIndex: 5, expected: ['classic_laptop/classic_laptop_1k.gltf'], shot: 'social-screen-time.png' },
   { world: 'social', selector: '#world .rail-list [data-i="6"]', category: 'নিরাপত্তা', itemIndex: 8, expected: ['medical_box/medical_box_1k.gltf'], shot: 'social-medicine-safety.png' },
-  { world: 'language', selector: '#world .rail-list [data-i="3"]', expected: ['food_apple_01/food_apple_01_1k.gltf'], shot: 'language-fruit.png' },
+  { world: 'language', selector: '#world .rail-list [data-i="3"]', expected: ['jackfruit_pixabay_01/jackfruit.glb'], shot: 'language-fruit.png' },
   { world: 'social', selector: '#world .rail-list [data-i="7"]', itemIndex: 6, expected: ['gamepad/gamepad_1k.gltf'], shot: 'social-gamepad.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 4, expected: ['binoculars/binoculars_1k.gltf'], shot: 'discovery-binoculars.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 2, expected: ['ruler/ruler.glb'], shot: 'discovery-ruler.png' },
@@ -76,7 +76,7 @@ const cases = [
   { world: 'money', selector: '#world .rail-list [data-i="8"]', category: 'বাজার ও অর্থনীতি', itemIndex: 8, expected: ['rice_oryza_sativa_01/oryza-sativa.glb'], shot: 'money-agriculture-rice.png' },
   { world: 'nature', selector: '#world .rail-list [data-i="5"]', itemIndex: 2, expected: ['fern_02/fern_02_1k.gltf', 'potted_plant_01/potted_plant_01_1k.gltf'], shot: 'nature-producer.png' },
   { world: 'language', selector: '#world .rail-list [data-i="3"]', itemIndex: 3, expected: ['sweet_potato/sweet_potato_1k.gltf'], shot: 'language-vegetable.png' },
-  { world: 'language', selector: '#world .rail-list [data-i="3"]', itemIndex: 2, expected: ['food_apple_01/food_apple_01_1k.gltf'], shot: 'language-apple.png' },
+  { world: 'language', selector: '#world .rail-list [data-i="3"]', itemIndex: 2, expected: ['jackfruit_pixabay_01/jackfruit.glb'], shot: 'language-jackfruit.png' },
 ];
 const worldCases = process.env.MODEL_SMOKE_ONLY
   ? cases.filter((test) => test.world === process.env.MODEL_SMOKE_ONLY)
@@ -262,6 +262,14 @@ try {
         console.error(`RICE DETAIL DEBUG ${viewport.name}`, await page.locator('#crumb-cat,#crumb-item,#explode-note').allTextContents(), await page.locator('#ctl-x').inputValue());
         throw new Error(`${viewport.name}: rice-plant detail/fact did not appear when the view was opened`);
       });
+    }
+    if (test.expected.some((asset) => asset.startsWith('jackfruit_pixabay_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-jackfruit');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-jackfruit').innerText();
+      check(credit.includes('-PromptPlay-') && credit.includes('Pixabay Content License') && credit.includes('AI-তৈরি') && credit.includes('বাস্তব স্ক্যান'), `${test.world}: jackfruit creator/license/AI disclosure is incomplete`);
     }
     if (test.expected.some((asset) => asset.startsWith('asian_elephant_01/'))) {
       await page.waitForFunction(() => {
