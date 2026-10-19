@@ -22,6 +22,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 6, expected: ['white_throated_kingfisher_01/white-throated-kingfisher.glb'], shot: 'life-white-throated-kingfisher.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 3, expected: ['asian_elephant_01/asian-elephant.glb'], shot: 'life-asian-elephant.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 11, expected: ['realistic_bee_01/bee.glb'], shot: 'life-bangladesh-honeybee.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 10, expected: ['green_sea_turtle_01/green-sea-turtle.glb'], shot: 'life-green-sea-turtle.png' },
   { world: 'food', selector: '#world .rail-list [data-i="6"]', category: 'রান্নার বিজ্ঞান', itemIndex: 0, expected: ['pot_enamel_01/pot_enamel_01_1k.gltf'], shot: 'food-boiling-pot.png' },
   { world: 'food', selector: '#world .rail-list [data-i="6"]', category: 'রান্নার বিজ্ঞান', itemIndex: 1, expected: ['brass_pan_01/brass_pan_01_1k.gltf'], shot: 'food-frying-pan.png' },
   { world: 'food', selector: '#world .rail-list [data-i="7"]', category: 'নিরাপদ খাবার ও অভ্যাস', itemIndex: 1, expected: ['pot_enamel_01/pot_enamel_01_1k.gltf'], shot: 'food-safe-water-pot.png' },
@@ -570,6 +571,31 @@ try {
           && (isHoneybee ? title.includes('মধুমক্ষিকা') && copy.includes('মৌচাক') : title.includes('পতঙ্গ') && copy.includes('ছয়'))
           && fact.length > 15;
       }, test.category === 'বাংলাদেশের প্রাণী' && test.itemIndex === 11, { timeout: 10000 });
+    }
+    if (test.expected.some((asset) => asset.startsWith('green_sea_turtle_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-green-turtle');
+        const path = '/models/green_sea_turtle_01/green-sea-turtle.glb';
+        return note instanceof HTMLElement && !note.hidden
+          && window.__posoraModelAnimations[path]?.includes('Turtle_idle_2')
+          && window.__posoraPlayingAnimations[path] === true;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-green-turtle').innerText();
+      check(credit.includes('jgrabo20') && credit.includes('CC BY 4.0') && credit.includes('বাংলাদেশের নির্দিষ্ট'), `${viewport.name}: turtle source, license, or identity caveat is incomplete`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        const title = document.querySelector('#explode-note-title')?.textContent ?? '';
+        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+        const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
+        return note instanceof HTMLElement && !note.hidden && title.includes('কচ্ছপ')
+          && copy.includes('সবুজ সামুদ্রিক কাছিম') && fact.includes('২০১৪ সালের');
+      }, null, { timeout: 10000 });
     }
     if (test.expected.some((asset) => asset.startsWith('realistic_red_fox_01/'))) {
       const credit = page.locator('#model-credit');

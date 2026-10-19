@@ -105,6 +105,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // Pasha's CC BY animated bee, based on Irfan's CC BY original. Use only as
   // one visually concrete insect example, not as a verified local bee species.
   beeSpecimen: { url: '/models/realistic_bee_01/bee.glb', height: 0.72, fitAxis: 'longest', playAnimations: true, animationClip: '_bee_hover' },
+  // Animated green sea turtle specimen, CC BY 4.0. This is a species example,
+  // not a scan of a turtle observed in Bangladesh.
+  greenSeaTurtle: { url: '/models/green_sea_turtle_01/green-sea-turtle.glb', height: 1.85, fitAxis: 'longest', focusY: 0.38, playAnimations: true, animationClip: 'Turtle_idle_2' },
   // CC BY 4.0 octopus specimen used as one example of an invertebrate; it is
   // not presented as a Bangladesh species or as a stand-in for coral.
   octopusSpecimen: { url: '/models/octopus_scan_01/octopus.glb', height: 1.22, fitAxis: 'longest' },

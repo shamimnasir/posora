@@ -344,6 +344,7 @@ const schema = [
             <span id="model-credit-peafowl" hidden>ভারতীয় ময়ূরের ৩ডি নমুনা · <a href="https://1designtool.com/3d/models/indian-peacock" target="_blank" rel="noopener noreferrer">মডেল ও লাইসেন্স</a> · পেখমের তথ্য: <a href="https://animals.sandiegozoo.org/animals/peafowl" target="_blank" rel="noopener noreferrer">San Diego Zoo</a> · এটি বাংলাদেশের পাখির তালিকার অংশ নয়</span>
             <span id="model-credit-axolotl" hidden>অ্যাক্সোলটলের ৩ডি নমুনা · <a href="https://1designtool.com/3d/models/axolotl" target="_blank" rel="noopener noreferrer">মডেল ও লাইসেন্স</a> · ফুলকার তথ্য: <a href="https://animals.sandiegozoo.org/animals/axolotl" target="_blank" rel="noopener noreferrer">San Diego Zoo</a> · এটি বাংলাদেশের প্রাণী নয়</span>
             <span id="model-credit-octopus" hidden>অক্টোপাসের ৩ডি মডেল: <a href="https://sketchfab.com/3d-models/octopus-d08195133942442dae870ede04e3d7f1" target="_blank" rel="noopener noreferrer">rayleighsyafiq-এর “Octopus”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি অমেরুদণ্ডী প্রাণীর একটি উদাহরণ, বাংলাদেশের নির্দিষ্ট প্রজাতি নয় · তথ্য: <a href="https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives" target="_blank" rel="noopener noreferrer">Smithsonian Ocean</a></span>
+            <span id="model-credit-green-turtle" hidden>সবুজ সামুদ্রিক কাছিম (*Chelonia mydas*)-এর ৩ডি নমুনা: <a href="https://sketchfab.com/3d-models/green-sea-turtle-d3dc6a6a4ff74465a59105fd7c66b32b" target="_blank" rel="noopener noreferrer">jgrabo20-এর “Green Sea Turtle”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি বাংলাদেশের নির্দিষ্ট কোনো কাছিমের স্ক্যান নয় · তথ্য: <a href="https://sufal.bforest.gov.bd/redlist/wp-content/uploads/2023/03/Volume-4-Reptiles-and-Amphibians-Full-Book.pdf" target="_blank" rel="noopener noreferrer">বাংলাদেশের সরীসৃপ লাল তালিকা (২০১৪ মূল্যায়ন)</a> ও <a href="https://www.fisheries.noaa.gov/species/green-turtle" target="_blank" rel="noopener noreferrer">NOAA Fisheries</a></span>
           </p>
           {w.slug === 'food' && <p class="food-detail-note" id="food-detail-note" hidden><span id="food-detail-copy"></span><button type="button" id="food-detail-return" hidden>পুরো টেবিলে ফেরো</button></p>}
           {/* The model used to come apart in silence everywhere except the Food
@@ -1438,6 +1439,7 @@ const schema = [
       'model-credit-peafowl': slug === 'life' && category === 'প্রাণীর শ্রেণি' && ['পাখি', 'উষ্ণ রক্ত'].includes(item) ? 'peafowl' : null,
       'model-credit-axolotl': slug === 'life' && category === 'প্রাণীর শ্রেণি' && item === 'উভচর' ? 'axolotl' : null,
       'model-credit-octopus': slug === 'life' && category === 'প্রাণীর শ্রেণি' && item === 'অমেরুদণ্ডী' ? 'octopus' : null,
+      'model-credit-green-turtle': slug === 'life' && category === 'বাংলাদেশের প্রাণী' && item === 'কচ্ছপ' ? 'green-turtle' : null,
     };
     let visible = false;
     for (const [id, key] of Object.entries(credits)) {
