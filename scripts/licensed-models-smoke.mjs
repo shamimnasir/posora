@@ -31,6 +31,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 0, expected: ['running_tiger_01/running-tiger.glb'], shot: 'life-tiger-running.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 2, expected: ['aloe_vera_scan_01/aloe-vera.glb'], shot: 'life-aloe-vera.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 1, expected: ['neem_tree_scan_01/neem-tree.glb'], shot: 'life-neem-tree.png' },
+  { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 0, expected: ['tulsi_tree_01/tulsi.glb'], shot: 'life-tulsi-plant.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 4, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'life-turmeric-rhizome.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
@@ -366,25 +367,6 @@ try {
         return note instanceof HTMLElement && !note.hidden && title.includes('দাঁড়িপাল্লা') && copy.includes('ওজন') && fact.length > 15;
       }, null, { timeout: 10000 });
     }
-    if (test.expected.some((asset) => asset.startsWith('ikan_goreng_scan_01/'))) {
-      await page.waitForFunction(() => {
-        const note = document.querySelector('#model-credit-fried-fish');
-        return note instanceof HTMLElement && !note.hidden;
-      }, null, { timeout: 10000 });
-      const credit = await page.locator('#model-credit-fried-fish').innerText();
-      check(credit.includes('wox080xow') && credit.includes('CC BY 4.0') && credit.includes('ইন্দোনেশীয়') && credit.includes('বাংলাদেশের নির্দিষ্ট মাছ'), `${test.world}: fried-fish source/license/origin caveat is incomplete`);
-      await page.locator('#ctl-x').evaluate((element) => {
-        if (element instanceof HTMLInputElement) {
-          element.value = '55';
-          element.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      });
-      await page.waitForFunction(() => {
-        const note = document.querySelector('#food-detail-note');
-        const copy = document.querySelector('#food-detail-copy')?.textContent ?? '';
-        return note instanceof HTMLElement && !note.hidden && copy.includes('ইন্দোনেশিয়া') && copy.includes('নির্দিষ্ট মাছ');
-      }, null, { timeout: 10000 });
-    }
     if (test.expected.some((asset) => asset.startsWith('neem_tree_scan_01/'))) {
       await page.waitForFunction(() => {
         const note = document.querySelector('#model-credit-neem');
@@ -404,6 +386,27 @@ try {
         const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
         const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
         return note instanceof HTMLElement && !note.hidden && title.includes('নিম') && copy.includes('পাতা') && fact.length > 15;
+      }, null, { timeout: 10000 });
+    }
+    if (test.expected.some((asset) => asset.startsWith('tulsi_tree_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-tulsi');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-tulsi').innerText();
+      check(credit.includes('Prakash.Chatterjee') && credit.includes('CC BY 4.0'), `${test.world}: Tulsi creator/license credit is incomplete`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        const title = document.querySelector('#explode-note-title')?.textContent ?? '';
+        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+        const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
+        return note instanceof HTMLElement && !note.hidden && title.includes('তুলসী') && copy.includes('সুগন্ধি') && fact.length > 15;
       }, null, { timeout: 10000 });
     }
     if (test.expected.some((asset) => asset.startsWith('turmeric_root_scan_01/'))) {

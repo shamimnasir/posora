@@ -15,6 +15,8 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   bananaFruit: { url: '/models/bananas/bananas.glb', height: 1.05 },
   lycheeFruit: { url: '/models/food_lychee_01/food_lychee_01.glb', height: 0.95 },
   gingerRoot: { url: '/models/food_ginger_01/food_ginger_01.glb', height: 0.82 },
+  // CC BY 4.0 photogrammetry specimen of Tulsi in its cement planter.
+  tulsiSpecimen: { url: '/models/tulsi_tree_01/tulsi.glb', height: 1.08, fitAxis: 'longest', focusY: 0.2 },
   rock: { url: '/models/rock_07/rock_07.glb', height: 1.35 },
   microscope: { url: '/models/industrial_microscope/industrial_microscope.glb', height: 1.5 },
   compass: { url: '/models/seadogs_compass/seadogs_compass.glb', height: 0.72 },

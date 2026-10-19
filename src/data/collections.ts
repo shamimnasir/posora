@@ -27,7 +27,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'life:ঔষধি ও মশলা গাছ': {
     fallback: 'herbGreen',
     items: {
-      'তুলসী': 'herbDark', 'নিম': 'neem', 'অ্যালোভেরা': 'aloeVeraScan',
+      'তুলসী': 'tulsiSpecimen', 'নিম': 'neem', 'অ্যালোভেরা': 'aloeVeraScan',
       'আদা': 'gingerRoot', 'হলুদ': 'turmericRootScan', 'দারুচিনি': 'cinnamonStickScan',
       'এলাচ': 'cardamom', 'পুদিনা': 'herbGreen', 'থানকুনি': 'shrubGreen',
     },
