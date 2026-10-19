@@ -44,14 +44,13 @@ try {
   await mission.focus();
   check(await page.evaluate(() => document.activeElement?.matches('#miss-card button.mission-play')), 'keyboard: mission did not receive focus');
   await page.keyboard.press('Enter');
-  const closeMission = page.locator('button[aria-label="মিশন বন্ধ করো"]');
-  const openedByEnter = await closeMission.waitFor({ state: 'attached', timeout: 5000 }).then(() => true).catch(() => false);
-  if (!openedByEnter) {
+  await page.waitForTimeout(250);
+  if (await page.locator('button[aria-label="মিশন বন্ধ করো"]').count() === 0) {
     await page.keyboard.press('Space');
-    await closeMission.waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(250);
   }
-  check(await closeMission.count() > 0, 'keyboard: mission did not open');
-  if (await closeMission.count() > 0) await closeMission.click();
+  check(await page.locator('button[aria-label="মিশন বন্ধ করো"]').count() > 0, 'keyboard: mission did not open');
+  await page.locator('button[aria-label="মিশন বন্ধ করো"]').click();
   await reduced.close();
 
   // WebGL fallback: disable WebGL and assert the page remains usable.

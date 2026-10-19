@@ -62,9 +62,6 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   waterLilySpecimen: { url: '/models/water_lily_nymphaea_01/water-lily.glb', height: 1.15, fitAxis: 'longest', focusY: 0.12 },
   // Exact mango-tree specimen; CC BY 4.0 credit is recorded with the asset.
   mango: { url: '/models/mango_tree_01/mango_tree.glb', height: 1.3, colorBoost: 1.22, leafShadows: false },
-  // AI-generated jackfruit illustration by -PromptPlay- (Pixabay Content
-  // License). It is labelled illustrative, not a botanical cross-section scan.
-  jackfruitModel: { url: '/models/jackfruit_ai_01/jackfruit.glb', height: 1.3, fitAxis: 'longest' },
   // Detailed Delonix regia specimen (CC BY 4.0); height-fit keeps its wide crown inside the canvas.
   krishnachura: { url: '/models/krishnachura_delonix_01/krishnachura.glb', height: 1.45, fitAxis: 'y', leafShadows: false },
   // Neem tree scan by Rohit Pawar (CC BY 4.0); optimized to a small mobile GLB.

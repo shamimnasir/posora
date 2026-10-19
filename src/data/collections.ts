@@ -18,7 +18,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'life:বাংলাদেশের গাছপালা': {
     fallback: 'mango',
     items: {
-      'আম': 'mango', 'কাঁঠাল': 'jackfruitModel', 'বট': 'banyan', 'তাল': 'palm',
+      'আম': 'mango', 'কাঁঠাল': 'jackfruit', 'বট': 'banyan', 'তাল': 'palm',
       'শিমুল': 'simul', 'কৃষ্ণচূড়া': 'krishnachura', 'সুন্দরী': 'sundari',
       'গোলপাতা': 'golpata', 'বাঁশ': 'bamboo', 'ধান': 'paddyPlant', 'পাট': 'jute',
       'শাপলা': 'waterLilySpecimen', 'কদম': 'kodom', 'হিজল': 'hijol',

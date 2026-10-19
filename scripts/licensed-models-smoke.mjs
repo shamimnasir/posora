@@ -34,7 +34,6 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 4, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'life-turmeric-rhizome.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
-  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 1, expected: ['jackfruit_ai_01/jackfruit.glb'], shot: 'life-jackfruit-model.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 8, expected: ['bamboo_botany_01/bamboo.glb'], shot: 'life-bamboo.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 9, expected: ['rice_oryza_sativa_01/oryza-sativa.glb'], shot: 'life-paddy-rice.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 11, expected: ['water_lily_nymphaea_01/water-lily.glb'], shot: 'life-shapla-water-lily.png' },
@@ -201,27 +200,6 @@ try {
       const credit = page.locator('#model-credit');
       check(await credit.isVisible(), `${test.world}: visible CC BY attribution is missing for the mango-tree model`);
       check((await credit.innerText()).includes('stealth86') && (await credit.innerText()).includes('CC BY 4.0'), `${test.world}: mango-tree attribution is incomplete`);
-    }
-    if (test.expected.some((asset) => asset.startsWith('jackfruit_ai_01/'))) {
-      await page.waitForFunction(() => {
-        const note = document.querySelector('#model-credit-jackfruit');
-        return note instanceof HTMLElement && !note.hidden;
-      }, null, { timeout: 10000 });
-      const credit = await page.locator('#model-credit-jackfruit').innerText();
-      check(credit.includes('-PromptPlay-') && credit.includes('Pixabay Content License') && credit.includes('AI-তৈরি'), `${test.world}: jackfruit creator/license/AI disclosure is incomplete`);
-      await page.locator('#ctl-x').evaluate((element) => {
-        if (element instanceof HTMLInputElement) {
-          element.value = '55';
-          element.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      });
-      await page.waitForFunction(() => {
-        const note = document.querySelector('#explode-note');
-        const title = document.querySelector('#explode-note-title')?.textContent ?? '';
-        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
-        const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
-        return note instanceof HTMLElement && !note.hidden && title.includes('কাঁঠাল') && copy.includes('জাতীয় ফল') && fact.length > 15;
-      }, null, { timeout: 10000 });
     }
     if (test.expected.some((asset) => asset.startsWith('running_tiger_01/'))) {
       await page.waitForFunction(() => {
