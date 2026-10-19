@@ -588,3 +588,11 @@ Current coverage remains **63/222**, with **38** exact-object gaps and **65** lo
 - Commit `90c1e77` is pushed to `main` and live on `posora.com`; Cloudflare version `dcd96f12-3cea-4827-a343-a7bcaf9b77d7`. Live GLB returned HTTP 200 with the expected 4,582,936-byte response.
 
 Current generated audit after this accepted mapping: **67/223** licensed exact-object/example mappings; **35** concrete exact-object gaps remain; **70** local GLB/glTF files have source/license records. The broader model-replacement task is still unfinished. Do not describe this single-world increment as sitewide completion.
+
+## Additional licensed-asset search — 2026-10-19
+
+- The signed-in Sketchfab search with Downloadable enabled returned **no results** for “hilsa”. Fresh web searches also did not expose a verifiable free downloadable *Tenualosa ilisha* model. Generic fish, unrelated search matches, and genome datasets are not acceptable substitutes for the Hilsa lesson.
+- Cardamom searches surfaced a commercial cardamom model (Royalty Free, not a permissive public license) and a Meshy-generated Sketchfab model whose page reports roughly 696k triangles and a device-too-heavy warning. Neither was integrated. Cumin/coriander/fenugreek results were recipes, datasets, or paid assets rather than verified, suitable CC0/CC BY GLBs.
+- Innerscene lists a CC0 “Palm, detailed” asset, but its own description calls it a species-inspired pinnate palm and makes no botanical identity claim. That is not a valid stand-in for Bangladesh’s fan-leaved Palmyra palm (*Borassus flabellifer*), nor for the locally listed mangrove species.
+
+No new model was accepted in this search. The audit remains **67/223** licensed exact-object/example mappings, **35** exact-object gaps, and **70** local GLB/glTF files with source/license records. Keep paid assets, account-gated assets, nonmatching species, and technically unsuitable models out of the coverage count until a suitable source has been reviewed and visually tested.
