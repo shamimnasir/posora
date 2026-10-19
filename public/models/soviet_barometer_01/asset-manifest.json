@@ -1,0 +1,18 @@
+{
+  "name": "Soviet aneroid barometer",
+  "file": "barometer.glb",
+  "source": "https://sketchfab.com/3d-models/barometer-dd87314e5add48d68e1bd037e60be44f",
+  "creator": "darkmoral",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Discovery measurement lesson: concrete vintage aneroid barometer example.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account as the 1K GLB converted format.",
+  "sha256": "c89b4326826228678f2a1ae725d2529530fee050575fea4d37b348a64f79a16d",
+  "geometry": {
+    "sourceFaces": 12256,
+    "sourceVertices": 6828,
+    "texture": "1K GLB texture option",
+    "animations": 0,
+    "bytes": 3106904
+  }
+}

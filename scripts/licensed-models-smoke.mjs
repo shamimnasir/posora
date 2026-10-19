@@ -66,6 +66,7 @@ const cases = [
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 2, expected: ['ruler/ruler.glb'], shot: 'discovery-ruler.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 6, expected: ['digital_wrist_watch/digital_wrist_watch_1k.gltf'], shot: 'discovery-digital-watch.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 8, expected: ['soviet_stopwatch_01/stopwatch.glb'], shot: 'discovery-stopwatch.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 7, expected: ['soviet_barometer_01/barometer.glb'], shot: 'discovery-barometer.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 0, expected: ['clinical_thermometer_01/oral-thermometer.glb'], shot: 'discovery-oral-thermometer.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="1"]', category: 'ঘরে বসে পরীক্ষা', itemIndex: 1, expected: ['lemon/lemon_1k.gltf'], shot: 'discovery-lemon-battery.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 9, expected: ['measuring_tape_01/measuring_tape_01_1k.gltf'], shot: 'discovery-measuring-tape-exact.png' },
@@ -490,6 +491,27 @@ try {
       }, null, { timeout: 10000 });
       const credit = await page.locator('#model-credit-stopwatch').innerText();
       check(credit.includes('mantledmoon') && credit.includes('CC BY 4.0') && credit.includes('যান্ত্রিক'), `${test.world}: analog stopwatch identity/creator/license credit is incomplete`);
+    }
+    if (test.expected.some((asset) => asset.startsWith('soviet_barometer_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-barometer');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-barometer').innerText();
+      check(credit.includes('darkmoral') && credit.includes('CC BY 4.0') && credit.includes('অ্যানেরয়েড'), `${test.world}: barometer identity/creator/license credit is incomplete`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        const title = document.querySelector('#explode-note-title')?.textContent ?? '';
+        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+        const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
+        return note instanceof HTMLElement && !note.hidden && title.includes('ব্যারোমিটার') && copy.includes('চাপ') && fact.length > 15;
+      }, null, { timeout: 10000 });
     }
     if (test.expected.some((asset) => asset.startsWith('clinical_thermometer_01/'))) {
       await page.waitForFunction(() => {

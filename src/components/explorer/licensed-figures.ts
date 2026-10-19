@@ -90,6 +90,8 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // clips too, but those are not implied as an interaction or behavior fact.
   asianElephant: { url: '/models/asian_elephant_01/asian-elephant.glb', height: 1.9, fitAxis: 'longest', focusY: 0.55, playAnimations: true, animationClip: 'Idle' },
   analogStopwatch: { url: '/models/soviet_stopwatch_01/stopwatch.glb', height: 0.9, fitAxis: 'longest', rotationX: Math.PI / 2 },
+  // Vintage Soviet aneroid barometer, CC BY 4.0; sourced as a complete object.
+  barometer: { url: '/models/soviet_barometer_01/barometer.glb', height: 0.92, fitAxis: 'longest', focusY: 0.42 },
   // Licensed CC BY balance-scale example; meshopt-compressed for mobile delivery.
   balanceScale: { url: '/models/balance_scale_01/balance-scale.glb', height: 1.05, fitAxis: 'longest', leafShadows: false },
   // Medical.Gallery Graphics' CC BY oral thermometer, shown as one concrete
