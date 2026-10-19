@@ -150,7 +150,23 @@ try {
         await page.locator(test.selector).evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
         await page.waitForFunction((name) => document.querySelector('#crumb-cat')?.textContent?.trim() === name, test.category, { timeout: 10000 });
       }
-    } else await page.locator(test.selector).evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+    } else {
+      await page.locator(test.selector).evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+      // A category's chips are rebuilt by the hydrated explorer. Waiting only
+      // for the click to dispatch is racy on the production edge, where the
+      // prior category's chip row disappears before the next one is mounted.
+      const categoryIndex = test.selector.match(/data-i=["'](\d+)["']/)?.[1];
+      if (categoryIndex !== undefined) {
+        const expectedCategory = await page.locator('#world-data').evaluate((node, index) => {
+          const categories = JSON.parse(node.textContent ?? '[]');
+          return categories[Number(index)]?.n ?? '';
+        }, categoryIndex);
+        if (expectedCategory) {
+          await page.waitForFunction((name) => document.querySelector('#crumb-cat')?.textContent?.trim() === name,
+            expectedCategory, { timeout: 10000 });
+        }
+      }
+    }
     if (test.shot === 'food-fruit-wheel.png') {
       await page.locator('.chip[data-di="1"]').evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
     }
