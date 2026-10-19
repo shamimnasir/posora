@@ -1,0 +1,17 @@
+{
+  "name": "Jackfruit, Fruit, Tropical (AI-generated illustration)",
+  "file": "jackfruit.glb",
+  "source": "https://pixabay.com/3d-models/jackfruit-fruit-tropical-botanical-1803/",
+  "creator": "-PromptPlay-",
+  "license": "Pixabay Content License",
+  "licenseUrl": "https://pixabay.com/service/license-summary/",
+  "usage": "Life → বাংলাদেশের গাছপালা → কাঁঠাল. Illustrative only; not a botanical anatomy scan.",
+  "provenance": "Downloaded from Pixabay and optimized locally with glTF Transform 4.5.1. Source listing marks the model AI generated. Posora credits the creator and discloses this limitation in-page.",
+  "originalSha256": "781f0ad7e3d86f10023fd27caf01717d8b0255fc5812c106438c58f1a868497f",
+  "sha256": "2ceac140110ad268d4b75cca14e2948e4ef471519e3947af0c7d857477523958",
+  "geometry": {
+    "sourceVertexCount": 271980,
+    "texture": "WebP, up to 2048px",
+    "bytes": 3072616
+  }
+}
