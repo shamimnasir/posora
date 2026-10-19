@@ -596,3 +596,24 @@ Current generated audit after this accepted mapping: **67/223** licensed exact-o
 - Innerscene lists a CC0 “Palm, detailed” asset, but its own description calls it a species-inspired pinnate palm and makes no botanical identity claim. That is not a valid stand-in for Bangladesh’s fan-leaved Palmyra palm (*Borassus flabellifer*), nor for the locally listed mangrove species.
 
 No new model was accepted in this search. The audit remains **67/223** licensed exact-object/example mappings, **35** exact-object gaps, and **70** local GLB/glTF files with source/license records. Keep paid assets, account-gated assets, nonmatching species, and technically unsuitable models out of the coverage count until a suitable source has been reviewed and visually tested.
+
+## Free-only source search follow-up — 2026-10-19
+
+- A Sketchfab search result titled “Cat (leopard cat)” resolves to a model page that labels the asset AI-generated and sends buyers to a paid Fab listing; the page does not offer a free licensed download. It is also not verified as *Prionailurus bengalensis*. Rejected for the leopard-cat lesson.
+- A Fab listing for a photorealistic *Neolamarckia cadamba* (Kadam) tree has species-specific botanical details and a GLB format, but is a paid asset with license selection at checkout. The owner confirmed free sources only, so it was not acquired.
+- Rhesus macaque candidates surfaced in this search are skull/mandible museum scans or paid models, not a free living-animal model suitable to replace the monkey figure. Vulture results were unrelated king-vulture skulls, a horror-styled bird, or unidentified models; none verifies a Bangladesh-relevant vulture specimen.
+- Searches for a free jute plant, *Corchorus olitorius*, and *Barringtonia acutangula* (Hijol) surfaced no verifiable downloadable CC0/CC BY whole-plant GLB in this pass. Search results without a matching species, download rights, and previewable geometry remain leads only.
+
+No production model mapping changed. The current audited count remains **67/223** licensed exact-object/example mappings, **35** concrete exact-object gaps, and **70** local GLB/glTF files with source/license evidence. Per the owner's instruction, paid candidates are excluded from the acquisition path; continue searching permissive sources and do not substitute unrelated living species or skeletal study objects for the intended subject.
+
+Additional source checks on 2026-10-19:
+
+- [Sketchfab — CC0 Malayan banyan (*Ficus microcarpa*)](https://sketchfab.com/3d-models/cc0-malayan-banyan-ficus-microcarpa-038bae6f4bfe4a4f804b63efa2155481) is a downloadable CC0 model, but it is *F. microcarpa*, not the lesson's Bengal banyan (*F. benghalensis*), and its page reports 2.4M triangles. It is not mapped as the exact Bengal banyan.
+- [Meshy — Banyan Tree](https://www.meshy.ai/3d-models/Banyan-Tree-v2-019f1a8a-3d3e-7b93-8e59-300670b05369) is marked CC0 but appears AI-generated and stylized/low-poly, so it does not meet the realistic specimen bar.
+- [Sketchfab — Fish](https://sketchfab.com/3d-models/fish-5a2b7976ef5c44658de22e98bf381277) is downloadable under CC BY and includes four animated fish, but its author describes a generic low-poly fish set; it does not identify hilsa (*Tenualosa ilisha*) and cannot substantiate a hilsa label.
+- [Sketchfab — Spices Asset Pack](https://sketchfab.com/3d-models/spices-asset-pack-0c62dfd291a045e0b3869e860ee02a54) is offered as a free download under Sketchfab's Free Standard license, not CC0. The listing describes a small generic spice collection and salt bowl, not a verified set of the seven spices in the lesson; no mapping was changed. Sketchfab states that downloadable models are offered under their displayed Creative Commons terms or platform license; check the asset-specific terms and embedding/redistribution limits before using any Free Standard file.
+- [Innerscene CC0 bowl set](https://www.innerscene.com/tools/library/3d-parts/bowl-set-large-original-tableware-and-food-prop-0cbe8c89) is a useful prop, but it is tableware without the food it would need to represent. It cannot replace a dish model by itself.
+- A [TurboSquid Ilish (*Tenualosa ilisha*) model](https://www.turbosquid.com/it/3d-models/3d-ilish-female-model-2338480) is species-specific, but costs US$59 and has no free source license. It was not purchased, per the owner's free-only constraint.
+- Additional Sketchfab rice-bowl searches found a Korean heritage vessel, a Malaysian vegetarian rice bowl, an undescribed generic bowl, and a low-poly healthy-food prop pack. The vessel is an empty serving object; the prepared dish examples are not Bangladeshi rice-and-dal, and the healthy-food pack is low-poly. None is being mapped as a precise Bengali meal.
+
+These are research leads/rejections only, not production assets. The generated coverage audit remains the sole source of counts.
