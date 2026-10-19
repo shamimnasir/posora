@@ -577,3 +577,14 @@ with **38** exact-object gaps and **65** rights-recorded local model files.
 - The exact rice file is already counted; none of these follow-up candidates closes a coverage gap. After the fish-scan rollback, `npm run test:licensed-models` passed **57 model states** across desktop and mobile. This verifies parsing, attachment, and test assertions—not a fresh visual review of every screenshot.
 
 Current coverage remains **63/222**, with **38** exact-object gaps and **65** local model files carrying source/license evidence. No source was added, so the model backlog remains unfinished.
+
+## Green sea turtle specimen accepted — 2026-10-19
+
+- Source: [jgrabo20 — Green Sea Turtle](https://sketchfab.com/3d-models/green-sea-turtle-d3dc6a6a4ff74465a59105fd7c66b32b), CC BY 4.0. The downloaded GLB embeds the author, source, title, and license metadata; the local copy is 4.4 MB and retains the original geometry and textures.
+- Integrated as a species example in Life → বাংলাদেশের প্রাণী → কচ্ছপ. The visible attribution explicitly says it is not a scan of a particular Bangladeshi animal. The GLB's `Turtle_idle_2` clip plays in the model scene.
+- Replaced the overgeneralized claim that all turtles retract their limbs: sea turtles cannot pull their head and flippers into the shell. The item now identifies *Chelonia mydas*, gives the Bangladesh Forest Department's dated 2014 assessment caveat, and links the Bangladesh Red List and NOAA Fisheries references.
+- Focused browser test passed at 1440×900 and 390×844, checking the GLB parses and attaches, the authored idle clip plays, the attribution appears, and the item-specific exploded fact is shown. The same focused test passed against production after deployment.
+- `npm run check`, content audit, SEO audit (264/264 sitemap routes; zero warnings/failures), model-rights audit, production route smoke (17 routes × 3 viewports), all-world render smoke (11 worlds × 2 viewports), interaction smoke, and exploded-facts smoke (74 objects) passed. Build/deploy retains the pre-existing >500 kB Three.js bundle warning.
+- Commit `90c1e77` is pushed to `main` and live on `posora.com`; Cloudflare version `dcd96f12-3cea-4827-a343-a7bcaf9b77d7`. Live GLB returned HTTP 200 with the expected 4,582,936-byte response.
+
+Current generated audit after this accepted mapping: **67/223** licensed exact-object/example mappings; **35** concrete exact-object gaps remain; **70** local GLB/glTF files have source/license records. The broader model-replacement task is still unfinished. Do not describe this single-world increment as sitewide completion.
