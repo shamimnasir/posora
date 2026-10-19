@@ -1,0 +1,22 @@
+{
+  "name": "Animated bee specimen",
+  "file": "bee.glb",
+  "source": "https://sketchfab.com/3d-models/realistic-bee-0ea8f5f4a2a5496aa177faf637868443",
+  "originalSource": "https://sketchfab.com/3d-models/bee-7a43e360d7ac4f9a8006733b0589c9a4",
+  "creator": "Pasha (modified/animated model), based on Irfan's Bee",
+  "license": "CC BY 4.0 (both Sketchfab source listings)",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "One example insect in Life animal-class lesson only; not the Bangladesh honeybee species entry.",
+  "provenance": "Downloaded as Sketchfab's 1K converted GLB; converted from specular/glossiness to metallic/roughness PBR and PNG textures locally with glTF Transform CLI 4.3.0 after WebP derivative rendered white in Three.js.",
+  "originalSha256": "4cb0fa903961ef74b44eab677404c4bb1c820e76151952457c7ccb74be564cb7",
+  "sha256": "d9f47ba8950eda9edcb2df344f003afe1c07c554ab09b6ac017df7a54079d5c1",
+  "geometry": {
+    "sourceTriangles": 51700,
+    "sourceVertices": 27400,
+    "simplifyRatio": 0.55,
+    "texture": "512x512 PNG maps (metallic/roughness PBR conversion)",
+    "animations": ["_bee_idle", "_bee_hover", "_bee_take_off_and_land"],
+    "activeAnimation": "_bee_hover",
+    "bytes": 1660000
+  }
+}

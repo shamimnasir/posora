@@ -1,0 +1,39 @@
+{
+  "name": "Axolotl",
+  "species": "Ambystoma mexicanum",
+  "source": "https://1designtool.com/3d/models/axolotl",
+  "directSource": "https://assets.stoicsoft.com/1designtool/3d/models/axolotl/7843338603/model.glb",
+  "license": "1DesignTool 3D Library License — commercial website use and in-product embedding permitted; standalone file/model-pack redistribution prohibited.",
+  "licenseUrl": "https://1designtool.com/3d/license",
+  "format": "glTF 2.0 GLB",
+  "localMainFile": "axolotl.glb",
+  "downloadedDate": "2026-10-16",
+  "original": {
+    "bytes": 4714560,
+    "sha256": "17e4ebf1269f8423ccb95b60c644566e6c700335a229004aa494c16065152793"
+  },
+  "files": [
+    {
+      "path": "axolotl.glb",
+      "bytes": 1760108,
+      "sha256": "d125ffaa0f588ad7429486483b7d71940473f9d3f4d9bcf7210659a719ddd78f"
+    }
+  ],
+  "geometry": {
+    "triangles": 107718,
+    "vertices": 61100,
+    "meshes": 11,
+    "materials": 4
+  },
+  "educationalRole": "A clearly named axolotl example for the general amphibian-class lesson only; not a Bangladesh-fauna claim.",
+  "modifications": [
+    "Textures resized to a 512 px maximum and encoded as WebP at quality 82.",
+    "Geometry quantized using standard KHR_mesh_quantization; no WASM-based compression."
+  ],
+  "limitations": [
+    "Static; no authored animation.",
+    "The model is code-built and described by its source as realistic, not photogrammetry.",
+    "External gills, feet and fins are separate overlapping meshes; the source notes close-up seams and a flat translucent fin.",
+    "Do not present it as a Bangladesh native-fauna example or redistribute the GLB as a standalone file."
+  ]
+}

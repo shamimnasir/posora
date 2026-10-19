@@ -1,0 +1,76 @@
+{
+  "name": "Long Life Food",
+  "source": "https://polyhaven.com/a/long_life_food",
+  "creator": "Mia Pecina Zorko",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    523.7634181976318,
+    113.55656012892723,
+    237.57458478212357
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 4712,
+  "meshNames": [
+    "Cube.003",
+    "Cylinder.002",
+    "Cylinder.004",
+    "Cube.006"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-16",
+  "categories": [
+    "collection: project_lighthouse",
+    "food",
+    "containers",
+    "props"
+  ],
+  "localMainFile": "long_life_food_1k.gltf",
+  "files": [
+    {
+      "path": "textures/long_life_food_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/long_life_food/long_life_food_nor_gl_1k.jpg",
+      "bytes": 296773,
+      "md5": "230043dc547be2c3be0d7895f317d36e",
+      "sha256": "45f09b13b6932903e258e43c07a0578f0ed579446c1120f122994997b1ba08b8"
+    },
+    {
+      "path": "textures/long_life_food_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/long_life_food/long_life_food_diff_1k.jpg",
+      "bytes": 715844,
+      "md5": "572a480d7cf1b01e99c7b98dd21969dd",
+      "sha256": "18ef2f29f8cec3ebc3cc05717809bc32b6ec58ebedbce7de3c9401c09b9e7162"
+    },
+    {
+      "path": "textures/long_life_food_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/long_life_food/long_life_food_arm_1k.jpg",
+      "bytes": 853256,
+      "md5": "417d9dc995b0aa98d18d8ff742a3ee6f",
+      "sha256": "7c5e8cd1d395525a74ec330c0c43d38b653ca84fe762eb4cfc488acbd255526d"
+    },
+    {
+      "path": "long_life_food.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/long_life_food/long_life_food.bin",
+      "bytes": 158640,
+      "md5": "c2920566fe14cea54121ba23450af26b",
+      "sha256": "efd51e3ea3aa7cb047c33792a484466e105f9ffd88cc1c508bf73dcafabed42e"
+    },
+    {
+      "path": "long_life_food_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/long_life_food/long_life_food_1k.gltf",
+      "bytes": 7394,
+      "md5": "fbdae30e5d57523abf1582a9c794ee79",
+      "sha256": "c96276210b99df049253fdb4541215439eff7e5e1fb960a0f20fe68f6bc12b07"
+    }
+  ],
+  "educationalRole": "Real packaged pantry foods used to make package-date reading concrete; the model labels should not be treated as legible date examples."
+}

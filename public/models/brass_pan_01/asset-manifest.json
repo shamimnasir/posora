@@ -1,0 +1,73 @@
+{
+  "name": "Brass Pan 01",
+  "source": "https://polyhaven.com/a/brass_pan_01",
+  "creator": "Rico Cilliers",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    191.2703588604927,
+    449.6646225452423,
+    52.509385510347784
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 4340,
+  "meshNames": [
+    "subtool1.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-14",
+  "categories": [
+    "props",
+    "containers",
+    "decorative",
+    "dishes"
+  ],
+  "localMainFile": "brass_pan_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/brass_pan_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/brass_pan_01/brass_pan_01_diff_1k.jpg",
+      "bytes": 595029,
+      "md5": "50d7fe9790c6ad162674e7b536ff3e49",
+      "sha256": "e8beb65e8a9e52207934d63a684d5104322238e2693e0f0447bd298c14bc3418"
+    },
+    {
+      "path": "textures/brass_pan_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/brass_pan_01/brass_pan_01_nor_gl_1k.jpg",
+      "bytes": 359170,
+      "md5": "a17f5ad48de5a433b793de3868580dc1",
+      "sha256": "d391d6970b7b2ede721a52d60953eac15afe96504c2316edee2a758f9bd8e2c1"
+    },
+    {
+      "path": "textures/brass_pan_01_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/brass_pan_01/brass_pan_01_arm_1k.jpg",
+      "bytes": 549721,
+      "md5": "3a01028fb8d35b065a02ed4f0e3a2414",
+      "sha256": "6ffa6a7690e2b3a302bff6f354763ebf3a6deae00b22f815223be4229abe5e60"
+    },
+    {
+      "path": "brass_pan_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/brass_pan_01/brass_pan_01.bin",
+      "bytes": 109336,
+      "md5": "3099c59ef46a50380487ad9b92d4dfbd",
+      "sha256": "8ece55dcbde3a1f81b9221b4fb0344a802117fa89c39b4ec9718bb1d9cba253f"
+    },
+    {
+      "path": "brass_pan_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/brass_pan_01/brass_pan_01_1k.gltf",
+      "bytes": 2676,
+      "md5": "4baf504c0b665858296de702f93beda5",
+      "sha256": "9860e0d10e9ef94c2b02e120f38f28a177af473759e4da05c74a564cfb0da5e1"
+    }
+  ],
+  "educationalRole": "Real brass frying pan used as the cooking vessel in the frying example; the model itself does not depict a finished dish."
+}

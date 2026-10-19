@@ -58,8 +58,8 @@ boardAlbedo.colorSpace = SRGBColorSpace; boardAlbedo.wrapS = RepeatWrapping; boa
 const tableMat = new MeshStandardMaterial({ color: '#fff', map: boardAlbedo, roughness: .82 });
 const fishAssetLoader = new GLTFLoader();
 let fishAssetPromise: Promise<Group | null> | null = null;
-const avocadoAssetLoader = new GLTFLoader();
-let avocadoAssetPromise: Promise<Group | null> | null = null;
+const limeAssetLoader = new GLTFLoader();
+let limeAssetPromise: Promise<Group | null> | null = null;
 
 function loadFishAsset() {
   fishAssetPromise ??= new Promise((resolve) => {
@@ -68,11 +68,11 @@ function loadFishAsset() {
   return fishAssetPromise;
 }
 
-function loadAvocadoAsset() {
-  avocadoAssetPromise ??= new Promise((resolve) => {
-    avocadoAssetLoader.load('/models/avocado/avocado.glb', ({ scene }) => resolve(scene), undefined, () => resolve(null));
+function loadLimeAsset() {
+  limeAssetPromise ??= new Promise((resolve) => {
+    limeAssetLoader.load('/models/food_lime_01/food_lime_01_1k.gltf', ({ scene }) => resolve(scene), undefined, () => resolve(null));
   });
-  return avocadoAssetPromise;
+  return limeAssetPromise;
 }
 
 function fishAssetInstance(source: Group, targetLength: number, supportY: number) {
@@ -376,12 +376,12 @@ export function buildFoodTabletop(root: Group, compact = false, medium = false):
 
   const guava=new Group(); guava.position.set(compact ? .78 : .91,0,-.36); table.add(guava); anchors.guava=guava;
   const guavaWhole=produce(guava,'#789747',[.105,.085,.091],0x1453); guavaWhole.position.set(-.07,.125,0); guavaWhole.material=new MeshPhysicalMaterial({color:'#fff',map:guavaSkin,bumpMap:guavaSkin,bumpScale:.0028,roughness:.66,clearcoat:.05,clearcoatRoughness:.58,sheen:.12,sheenColor:'#b9d178'});
-  let avocadoRequested=false;
-  let avocadoLoaded=false;
-  function requestAvocado() {
-    if (avocadoRequested) return;
-    avocadoRequested=true;
-    void loadAvocadoAsset().then((source) => {
+  let limeRequested=false;
+  let limeLoaded=false;
+  function requestLime() {
+    if (limeRequested) return;
+    limeRequested=true;
+    void loadLimeAsset().then((source) => {
       if (!source) return;
       const box=new Box3().setFromObject(source), size=box.getSize(new Vector3());
       const maxSize=Math.max(size.x,size.y,size.z,0.001);
@@ -389,21 +389,22 @@ export function buildFoodTabletop(root: Group, compact = false, medium = false):
       model.scale.setScalar(scale);
       const fitted=new Box3().setFromObject(model);
       model.position.set(-.07-(fitted.min.x+fitted.max.x)/2,-fitted.min.y+.02,-(fitted.min.z+fitted.max.z)/2);
-      model.name='cc0-avocado-fruit';
+      model.name='cc0-polyhaven-lime-fruit';
       model.traverse((node)=>{const mesh=node as Mesh;if(!mesh.isMesh)return;mesh.castShadow=true;mesh.receiveShadow=true;});
       guava.add(model); guavaWhole.visible=false;
       const macro=source.clone(true), macroScale=.34/maxSize;
       macro.scale.setScalar(macroScale);
       const macroBox=new Box3().setFromObject(macro), macroCenter=macroBox.getCenter(new Vector3());
       macro.position.set(-macroCenter.x,-macroCenter.y,-macroCenter.z);
-      macro.name='cc0-avocado-detail';
+      macro.name='cc0-polyhaven-lime-detail';
       macro.traverse((node)=>{const mesh=node as Mesh;if(!mesh.isMesh)return;mesh.castShadow=true;mesh.receiveShadow=true;});
       guavaDetail.add(macro);
       guavaCrossSection.visible=false;
-      avocadoLoaded=true;
+      limeLoaded=true;
       guavaCut.visible=false;
-      root.userData.foodAvocadoAsset='cc0-avocado';
-      document.documentElement.dataset.foodAvocadoAsset='ready';
+      root.userData.foodLimeAsset='cc0-polyhaven-lime';
+      document.documentElement.dataset.foodLimeAsset='ready';
+      window.dispatchEvent(new CustomEvent('posora:licensed-model-loaded', { detail: { url: '/models/food_lime_01/food_lime_01_1k.gltf' } }));
     });
   }
   // Cut face presented as an attached segment with pale flesh and small central seeds.
@@ -491,7 +492,7 @@ export function buildFoodTabletop(root: Group, compact = false, medium = false):
     // The existing front slider chooses a lesson target. Food stays planted;
     // only the camera/selection changes, never a portion or intake claim.
     selected=Math.min(7,Math.max(0,Math.round(Math.max(0,Math.min(1,param))*7)));
-    if (selected===3) requestAvocado();
+    if (selected===3) requestLime();
     void dt;
     // The reveal is canonical scene state. Re-applying visibility here matters:
     // update runs every frame, so one-shot visibility writes in setReveal were
@@ -500,7 +501,7 @@ export function buildFoodTabletop(root: Group, compact = false, medium = false):
     physical.forEach((o,i)=>{const h=homes[i]!;o.position.copy(h.position);o.scale.copy(h.scale);o.visible=!macroView;});
     slab.visible=!macroView; tableGrain.forEach((line)=>{line.visible=!macroView;});
     // Whole/cut produce alternatives change only in their authored groups.
-    if(revealIndex===3) guavaCut.visible=!avocadoLoaded && reveal>.5;
+    if(revealIndex===3) guavaCut.visible=!limeLoaded && reveal>.5;
     if(revealIndex===6) cut.visible=reveal>.5;
   }
   function setReveal(level:number,itemIndex:number) {
@@ -539,7 +540,7 @@ export function buildFoodTabletop(root: Group, compact = false, medium = false):
     waterDetailSurface.position.y=.006+.055*waterDetailFill.scale.y;
     // Preserve both authored alternatives and interpolate only the defined quantity examples.
     if(itemIndex===0) { /* bowl remains fixed; the grain cluster detail is the authored close view */ }
-    if(itemIndex===3) guavaCut.visible=!avocadoLoaded && reveal>.5;
+    if(itemIndex===3) guavaCut.visible=!limeLoaded && reveal>.5;
     if(itemIndex===6) cut.visible=reveal>.5;
     update(0,0,selected<0?0:selected/7);
   }

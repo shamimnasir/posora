@@ -1,0 +1,17 @@
+{
+  "name": "3d scanned Cinnamon stick",
+  "file": "cinnamon-stick.glb",
+  "source": "https://sketchfab.com/3d-models/3d-scanned-cinnamon-stick-013e3d5b3dd0483ba74e7abc1343a7d8",
+  "creator": "sfsen",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Harvested dried cinnamon bark in Food spice and Life medicinal/spice-plant lessons; clearly identify it as a plant part, not a growing tree, leaves, or powder.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account; optimized with glTF Transform 4.3.0 simplify.",
+  "originalSha256": "7043562adecda032d4b8a28cd1ab25b1719a0e792b011d7d1cfa170b8511051c",
+  "sha256": "790be0edd0c285af9de41d65d1271b93a33eae28932e817e7c0e03769e501c48",
+  "geometry": {
+    "trianglesApprox": 33024,
+    "meshes": 1,
+    "bytes": 1325960
+  }
+}

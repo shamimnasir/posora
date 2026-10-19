@@ -36,6 +36,7 @@ const loadData = async (path) => {
 };
 const { worlds } = await loadData('src/data/worlds.ts');
 const { COLLECTIONS } = await loadData('src/data/collections.ts');
+const { LICENSED_FIGURES } = await loadData('src/components/explorer/licensed-figures.ts');
 const figuresSource = ts.createSourceFile(
   'figures.ts', readFileSync(join(ROOT, 'src/components/explorer/figures.ts'), 'utf8'),
   ts.ScriptTarget.Latest, true,
@@ -58,13 +59,15 @@ for (const [key, collection] of Object.entries(COLLECTIONS)) {
   const world = worlds.find((w) => w.slug === key.slice(0, divider));
   const category = world?.cats.find((c) => c.n === key.slice(divider + 1));
   if (!category) { failures.push(`${key}: collection does not match a world category`); continue; }
-  if (!figureKeys.has(collection.fallback)) failures.push(`${key}: unknown fallback figure ${collection.fallback}`);
+  if (!figureKeys.has(collection.fallback) && !(collection.fallback in LICENSED_FIGURES)) {
+    failures.push(`${key}: unknown fallback figure ${collection.fallback}`);
+  }
   for (const item of category.items) {
     if (!(item in collection.items)) failures.push(`${key}/${item}: no explicit figure mapping`);
   }
   for (const [item, figure] of Object.entries(collection.items)) {
     if (!category.items.includes(item)) failures.push(`${key}/${item}: mapping has no matching item`);
-    if (!figureKeys.has(figure)) failures.push(`${key}/${item}: unknown figure ${figure}`);
+    if (!figureKeys.has(figure) && !(figure in LICENSED_FIGURES)) failures.push(`${key}/${item}: unknown figure ${figure}`);
   }
 }
 for (const path of files(join(ROOT, 'src'))) {

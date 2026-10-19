@@ -1,0 +1,71 @@
+{
+  "name": "Food Lime 01",
+  "source": "https://polyhaven.com/a/food_lime_01",
+  "creator": "Oliver Harries",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    60.0700993090868,
+    61.33793853223324,
+    75.4411633242853
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 8100,
+  "meshNames": [
+    "lime_50k_uv.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-16",
+  "categories": [
+    "food",
+    "nature"
+  ],
+  "localMainFile": "food_lime_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/food_lime_01_rough_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_lime_01/food_lime_01_rough_1k.jpg",
+      "bytes": 104346,
+      "md5": "35a46c889d58183885c945da9950d757",
+      "sha256": "d3cfc62bd5337f5bdafe5a07d8b550636b661c81a4f16e5221c43a0ceafe40fc"
+    },
+    {
+      "path": "textures/food_lime_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_lime_01/food_lime_01_nor_gl_1k.jpg",
+      "bytes": 132792,
+      "md5": "6faf3f2d419827472cb384d17c6a69aa",
+      "sha256": "badf6365c08a237dcb99dc881de4e697022db22d090496e9533aeb9216b30d6d"
+    },
+    {
+      "path": "food_lime_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/food_lime_01/food_lime_01.bin",
+      "bytes": 188600,
+      "md5": "6f5d8d5d07cc03d1a59b29bf3d85e977",
+      "sha256": "a504f452f8f94c3017e46e03851c4941efed4f5f4020afa3945fdf824d47aa8a"
+    },
+    {
+      "path": "textures/food_lime_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_lime_01/food_lime_01_diff_1k.jpg",
+      "bytes": 150868,
+      "md5": "c7499db31a1fec41e0378956dc2d65a2",
+      "sha256": "7091c1a130c317f13ff6c43c60b13d23b3303b687c90845f2d9d87e5bc043cc3"
+    },
+    {
+      "path": "food_lime_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/food_lime_01/food_lime_01_1k.gltf",
+      "bytes": 2696,
+      "md5": "1b24ddf8c097918e6e9c134c59bd852d",
+      "sha256": "a3287904a7b56acb806c00803b9c8e0b71163649e2c87a5db3d18ac23c68e3ce"
+    }
+  ],
+  "educationalRole": "A real lime used as a vitamin-C-rich fruit example; it is not presented as a specific Bangladeshi lemon cultivar."
+}

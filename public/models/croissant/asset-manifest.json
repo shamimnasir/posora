@@ -1,0 +1,71 @@
+{
+  "name": "Croissant",
+  "source": "https://polyhaven.com/a/croissant",
+  "creator": "Greg Zaal, Dario Barresi",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    200.00000298023224,
+    75.51151886582375,
+    61.99566961731762
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 1990,
+  "meshNames": [
+    "Croissant_croissant_10M_textured.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "props",
+    "food"
+  ],
+  "localMainFile": "croissant_1k.gltf",
+  "files": [
+    {
+      "path": "textures/croissant_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/croissant/croissant_nor_gl_1k.jpg",
+      "bytes": 844912,
+      "md5": "adc1a59a97372d92926e40b06e35f39e",
+      "sha256": "9706598c6aa7ec3f2311f3ab20eba3a2c2ea7dd1099a27ec269c19c8bd0411cf"
+    },
+    {
+      "path": "textures/croissant_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/croissant/croissant_diff_1k.jpg",
+      "bytes": 573933,
+      "md5": "4c60b005947f78e0b8049b017a5ce87d",
+      "sha256": "0eb9b98058f96f3c4f08f78c0a0b3cd6951edd24f9ca8347ff167e2d740d9405"
+    },
+    {
+      "path": "croissant.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/croissant/croissant.bin",
+      "bytes": 44932,
+      "md5": "8d343f5c5ea635334c05bd74a7f13fab",
+      "sha256": "d770a5ab7e3bcf3572343d74c7941e87eda87349fe414dd4ab206fa5e1e1524a"
+    },
+    {
+      "path": "textures/croissant_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/croissant/croissant_arm_1k.jpg",
+      "bytes": 632316,
+      "md5": "816e24b4ef3357893348ec279720786d",
+      "sha256": "5184d5ac5874484b541b1f6249d400db83da129e7c72fe497f91d1dea2bd8708"
+    },
+    {
+      "path": "croissant_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/croissant/croissant_1k.gltf",
+      "bytes": 2680,
+      "md5": "03127b1168ad97dd71f52032a286248f",
+      "sha256": "b6e1eb36f776e6b79500c51b57c0e29cd17598c2d8a20d0ec0513955a6cc3a2f"
+    }
+  ],
+  "educationalRole": "Baked pastry example for food-shape vocabulary; not presented as a Bangladeshi dish."
+}

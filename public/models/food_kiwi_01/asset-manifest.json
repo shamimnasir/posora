@@ -1,0 +1,71 @@
+{
+  "name": "Food Kiwi 01",
+  "source": "https://polyhaven.com/a/food_kiwi_01",
+  "creator": "Oliver Harries",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    69.51959803700447,
+    68.62715631723404,
+    90.06310164477327
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 7748,
+  "meshNames": [
+    "kiwi_lores.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "food",
+    "nature"
+  ],
+  "localMainFile": "food_kiwi_01_1k.gltf",
+  "files": [
+    {
+      "path": "food_kiwi_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/food_kiwi_01/food_kiwi_01.bin",
+      "bytes": 184504,
+      "md5": "ee331eb144cf08cef2453cffe71c63f4",
+      "sha256": "2349d262bb9207f4316d74f3ef69999db99c6c6be67a5818a1104ade6ef6a1d4"
+    },
+    {
+      "path": "textures/food_kiwi_01_rough_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_kiwi_01/food_kiwi_01_rough_1k.jpg",
+      "bytes": 223133,
+      "md5": "8ac49e82b1879ddc4474f4cf52b40e36",
+      "sha256": "2a6f2eeb5eab0848db45eff7d4bef1f89e261c786dd82bb631d8e94852f6b3de"
+    },
+    {
+      "path": "textures/food_kiwi_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_kiwi_01/food_kiwi_01_diff_1k.jpg",
+      "bytes": 227414,
+      "md5": "5ed3276a4a0ae6a49d6cb5c722b649f0",
+      "sha256": "92ac003a0475505d265712e5d9e8e36db3dd7c591cef74ff7432b41aba4e8786"
+    },
+    {
+      "path": "textures/food_kiwi_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_kiwi_01/food_kiwi_01_nor_gl_1k.jpg",
+      "bytes": 156902,
+      "md5": "0742c2fbc90fff7b9516d942d4e7b1c6",
+      "sha256": "8ad52c5ac4226e38bab45f49228fa4795cfeef1abb09d45c91c6f8669c48f3a8"
+    },
+    {
+      "path": "food_kiwi_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/food_kiwi_01/food_kiwi_01_1k.gltf",
+      "bytes": 2693,
+      "md5": "d0e08c2fd521e150b3956ae15eb2c402",
+      "sha256": "ba01ebeacdcb034501dc1743fd7278ee4c2dfd3e1860dcd192953fce6ff50b97"
+    }
+  ],
+  "educationalRole": "Real kiwi fruit example in generic fruit vocabulary."
+}

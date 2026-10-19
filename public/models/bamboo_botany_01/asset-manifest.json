@@ -1,0 +1,26 @@
+{
+  "name": "Bamboo",
+  "source": "https://pixor.art/en/library/trees/bamboo/",
+  "downloadSource": "https://pixor.art/library/files/bamboo/pixor-library-bamboo.glb",
+  "creator": "Pixor library",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "attributionRequired": false,
+  "format": "GLB 2.0",
+  "dimensionsUnit": "glTF units; source page describes real-world scale",
+  "polycount": 2348,
+  "meshNames": ["Bamboo canes"],
+  "materialNames": ["Bamboo green", "Dark leaf", "Leaf"],
+  "animationClips": ["Sway"],
+  "modifications": ["No mesh or material edits; original GLB retained."],
+  "localMainFile": "bamboo.glb",
+  "files": [
+    {
+      "path": "bamboo.glb",
+      "source": "https://pixor.art/library/files/bamboo/pixor-library-bamboo.glb",
+      "bytes": 380600,
+      "sha256": "21e0d2ea5a964c987b51b58127da6d45985a8067a62e495b84a05991c4691c87"
+    }
+  ],
+  "educationalRole": "General bamboo specimen for the bamboo lesson; not tied to a specific regional species."
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Red Chilli — 3d Scan — #AgisoftNatureChallenge",
+  "file": "red-chilli.glb",
+  "source": "https://sketchfab.com/3d-models/red-chilli-3d-scan-agisoftnaturechallenge-92b1bb0824ab4a238c5ec899729067b8",
+  "creator": "Muhammad Azim",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "One red chili fruit in Food spice lesson only; not a living plant or all chili varieties.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account; eight embedded textures resized with glTF Transform 4.3.0.",
+  "originalSha256": "3d76d25f237dd4e4614900909ee2b9c691b55d3939188660da262a1736ff9f97",
+  "sha256": "fc3a3a294173f0854f58397872e666f5ea13b564f6440067919684ec3ae82280",
+  "geometry": {
+    "trianglesApprox": 30676,
+    "meshes": 8,
+    "bytes": 990100
+  }
+}

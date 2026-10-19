@@ -1,0 +1,74 @@
+{
+  "name": "Classic Laptop",
+  "source": "https://polyhaven.com/a/classic_laptop",
+  "creator": "Arrangemonk",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    651.9346237182617,
+    485.9423041343689,
+    542.8108091000468
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 14450,
+  "meshNames": [
+    "cover_low",
+    "keyboard_low",
+    "lid_floaters_low"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "collection: project_lighthouse",
+    "office",
+    "electronics"
+  ],
+  "localMainFile": "classic_laptop_1k.gltf",
+  "files": [
+    {
+      "path": "textures/classic_laptop_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/classic_laptop/classic_laptop_nor_gl_1k.jpg",
+      "bytes": 445971,
+      "md5": "5039de6a8edd18f89dafbf77ab55b1cb",
+      "sha256": "9e47604dc75d7ffe4f1e2265b76f9b5c4cb1c7e98d72e16e4656fecc44e5d1dd"
+    },
+    {
+      "path": "textures/classic_laptop_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/classic_laptop/classic_laptop_diff_1k.jpg",
+      "bytes": 524918,
+      "md5": "b16478b0bfdaf836180867d26054435a",
+      "sha256": "0b0d4a2a991f8ee45effdb0c038af7348c6c731bc9a251e09095abde6cd34974"
+    },
+    {
+      "path": "textures/classic_laptop_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/classic_laptop/classic_laptop_arm_1k.jpg",
+      "bytes": 697150,
+      "md5": "bfdc7350cc006b818bb4163093fb1e28",
+      "sha256": "e7d74932e0d40bf91fa9ef11f441cc94d9597b5c72721572b49b03109d0fe171"
+    },
+    {
+      "path": "classic_laptop.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/classic_laptop/classic_laptop.bin",
+      "bytes": 508524,
+      "md5": "61282875872d1d523a02ecbf09627a8c",
+      "sha256": "0f1602f2fe856fd330e95df44af0fd9986aeac873343307c70e036041e789fb9"
+    },
+    {
+      "path": "classic_laptop_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/classic_laptop/classic_laptop_1k.gltf",
+      "bytes": 7496,
+      "md5": "7eeb1538a6b917c5e08a55a6c77695cf",
+      "sha256": "c78867ed92356fe03fd90b56438f3b141b5f8654672da52c6df7868eb820cf78"
+    }
+  ],
+  "educationalRole": "Computer example for Discovery and a device example for Social screen-time learning."
+}

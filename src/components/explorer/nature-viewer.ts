@@ -79,6 +79,14 @@ export function mountHero(host: HTMLElement, spec:HeroSpec, onFrame?:(info:{yawD
     targetButtons.replaceChildren(...chapter().targets.map((name,i)=>{const b=document.createElement('button');b.type='button';b.textContent=`${['১','২','৩'][i]} · ${name}`;b.dataset.target=String(i);return b;}));
     frame();
   }
+  // Some local glTFs arrive after the initial camera calculation. The first
+  // focus then measures an empty target and leaves the real subject tiny or
+  // outside the frame. Reframe only the currently focused, licensed Nature
+  // specimen once it has parsed and joined its target group.
+  listen(window,'posora:licensed-model-loaded',e=>{
+    const url=(e as CustomEvent<{url?:string}>).detail?.url??'';
+    if(category===5&&depth>0&&url.includes('/models/potted_plant_01/')) frame(true);
+  });
   function updateLighting() {
     if(category===4){key.position.set(-5+param*10,3+Math.sin(param*Math.PI)*6,5);key.intensity=1.6+Math.sin(param*Math.PI)*1.4;}
     else {key.position.set(-4,8,5);key.intensity=3;}

@@ -1,0 +1,18 @@
+{
+  "name": "Aloe vera plant",
+  "file": "aloe-vera.glb",
+  "source": "https://sketchfab.com/3d-models/aloe-vera-plant-66c6699e50ab4863989777f920a981dd",
+  "creator": "matousekfoto",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Potted Aloe vera plant in the Life medicinal-plants lesson only.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account; optimized with glTF Transform 4.3.0 weld and simplify.",
+  "originalSha256": "7bcc90d4c7f83f622080a40b100d57bf020fe519259b6d7c723dc195cef79175",
+  "sha256": "72bf11f334e622e5f3e26c31e3bbf97cceaf908d6ffcf33b34fb1a785ee06181",
+  "geometry": {
+    "triangles": 83597,
+    "meshes": 6,
+    "embeddedJpegTextures": 3,
+    "bytes": 4026356
+  }
+}

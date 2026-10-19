@@ -1,0 +1,39 @@
+{
+  "name": "Octopus specimen",
+  "species": "Octopus sp. (species not specified by creator)",
+  "source": "https://sketchfab.com/3d-models/octopus-d08195133942442dae870ede04e3d7f1",
+  "creator": "rayleighsyafiq",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "downloadedDate": "2026-10-18",
+  "format": "glTF 2.0 GLB",
+  "localMainFile": "octopus.glb",
+  "original": {
+    "bytes": 8649136,
+    "sha256": "876c5f6b0dee1bfbbb9ca79fe2e688cc35967d55bf27bf872c69653401b9d618"
+  },
+  "files": [
+    {
+      "path": "octopus.glb",
+      "bytes": 1392908,
+      "sha256": "86a384fda1f40ada40cbb47278ad3fbd3ed4d0c21c71f02df99a9d6d3128f935"
+    }
+  ],
+  "geometry": {
+    "sourceTriangles": 58900,
+    "sourceVertices": 29500,
+    "textureMaximum": "512x512 WebP",
+    "animations": []
+  },
+  "educationalRole": "One octopus example for the broad invertebrate concept. It is not a local-fauna claim and does not represent all invertebrates.",
+  "modifications": [
+    "Converted KHR_materials_pbrSpecularGlossiness to core metallic/roughness PBR so the site renderer preserves the source coloration.",
+    "Textures resized to a 512 px maximum and encoded as WebP at quality 82.",
+    "Geometry quantized with glTF Transform 4.5.1; no mesh reduction was applied."
+  ],
+  "limitations": [
+    "The Sketchfab listing does not identify an exact octopus species.",
+    "The model is static and should be animated with camera/lighting transitions rather than implying authored locomotion.",
+    "Source creator attribution is shown beside the lesson model."
+  ]
+}

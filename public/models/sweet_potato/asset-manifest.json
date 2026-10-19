@@ -1,0 +1,71 @@
+{
+  "name": "Sweet Potato",
+  "source": "https://polyhaven.com/a/sweet_potato",
+  "creator": "Jan Martens",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    58.12427029013634,
+    60.989297926425934,
+    100.46296194195747
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 2042,
+  "meshNames": [
+    "sweet_potato"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "food",
+    "nature"
+  ],
+  "localMainFile": "sweet_potato_1k.gltf",
+  "files": [
+    {
+      "path": "sweet_potato.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/sweet_potato/sweet_potato.bin",
+      "bytes": 50044,
+      "md5": "99cf4fdf834236f7bac73f432b42fb6e",
+      "sha256": "37608ecca6f9a9c2d25bc166819fb56f2a61076247e732852239662d75295f82"
+    },
+    {
+      "path": "textures/sweet_potato_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/sweet_potato/sweet_potato_diff_1k.jpg",
+      "bytes": 633542,
+      "md5": "eaa396dc2a730e603024b55bc18dee02",
+      "sha256": "f236b36b78fd82fa6861c7e256435885bb72c4f4d7c8137989061cdda14a3d69"
+    },
+    {
+      "path": "textures/sweet_potato_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/sweet_potato/sweet_potato_nor_gl_1k.jpg",
+      "bytes": 617315,
+      "md5": "9432aeb9bf8cc3b1677419e4839657ea",
+      "sha256": "58e724f0cd776b898ab479f49edfae441b5f97d02a4941112f91106898135140"
+    },
+    {
+      "path": "textures/sweet_potato_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/sweet_potato/sweet_potato_arm_1k.jpg",
+      "bytes": 465796,
+      "md5": "bd400b4593c4c58a213a03ae1f20d94b",
+      "sha256": "74e4d5b33dd0ffa0217a3c65e99e7464d72b16d2c00aafe88d837dd606a6a37a"
+    },
+    {
+      "path": "sweet_potato_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/sweet_potato/sweet_potato_1k.gltf",
+      "bytes": 2778,
+      "md5": "b98aed418751d30349734b63b9c2803e",
+      "sha256": "36a226b95a63b2e22711d75e17818f33f99a17e54737e5469a8c7d2a41896097"
+    }
+  ],
+  "educationalRole": "Real edible root example for the generic vegetables vocabulary tile."
+}

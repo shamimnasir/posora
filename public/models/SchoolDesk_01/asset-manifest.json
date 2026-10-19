@@ -1,0 +1,70 @@
+{
+  "name": "School Desk 01",
+  "source": "https://polyhaven.com/a/SchoolDesk_01",
+  "creator": "Ethan Place",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    711.7760181427002,
+    545.9675788879395,
+    882.6298794883769
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 4162,
+  "meshNames": [
+    "Mesh"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "furniture"
+  ],
+  "localMainFile": "SchoolDesk_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/SchoolDesk_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolDesk_01/SchoolDesk_01_diff_1k.jpg",
+      "bytes": 71566,
+      "md5": "f6be3e2428c88c86c1a328798b592e5e",
+      "sha256": "4fed6d98265c6be27b9e6c9b010a5bba55a9aca4edfcc3fae9a12309ca6a5b94"
+    },
+    {
+      "path": "textures/SchoolDesk_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolDesk_01/SchoolDesk_01_nor_gl_1k.jpg",
+      "bytes": 85765,
+      "md5": "b79a0c557ecea2c7d79433ac70547a43",
+      "sha256": "64de8791fec46894945136190504127d194c1fc8d999e15c639dc94d053581be"
+    },
+    {
+      "path": "textures/SchoolDesk_01_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolDesk_01/SchoolDesk_01_arm_1k.jpg",
+      "bytes": 134042,
+      "md5": "34b3a4444d2a2b0266e3bf3a6dfc9b2c",
+      "sha256": "ee1e2ea17ca21471b8a4822400ddc6bd3a4d441822a7eb429bef8cb1ab6dd43d"
+    },
+    {
+      "path": "SchoolDesk_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/SchoolDesk_01/SchoolDesk_01.bin",
+      "bytes": 127564,
+      "md5": "af08b1337236d6b951ea9805032abd32",
+      "sha256": "80d0ece097fde9b1efe15a9babfb6bb1573d228bab6e02e3806cb5eca39c2c0c"
+    },
+    {
+      "path": "SchoolDesk_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/SchoolDesk_01/SchoolDesk_01_1k.gltf",
+      "bytes": 2686,
+      "md5": "f327b010a117ab6af3dec7538cdf23ee",
+      "sha256": "9d840b58a9e66ce9dc3d8d5396fb97cf954b12dc27adaf41b8cc78ae1a6404eb"
+    }
+  ],
+  "educationalRole": "School desk model for classroom and furniture concepts."
+}

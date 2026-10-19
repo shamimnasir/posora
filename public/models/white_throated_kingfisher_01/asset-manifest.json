@@ -1,0 +1,19 @@
+{
+  "name": "White-throated Kingfisher",
+  "scientificName": "Halcyon smyrnensis",
+  "file": "white-throated-kingfisher.glb",
+  "source": "https://sketchfab.com/3d-models/white-throated-kingfisher-eb654151f2d54b3a89169af96da09f89",
+  "creator": "RISD Nature Lab",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Taxidermy specimen with perch, used as a species example in Bangladesh fauna lesson; not a live bird or all kingfisher species.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account, 1K GLB option; optimized with glTF Transform 4.3.0 and Meshopt decoder support in Three.js.",
+  "originalSha256": "0b4d8ee52331d15d5e76800e4793de71ae1efbf5c5dbcd7085619a9584af8061",
+  "sha256": "a91089d1ebc35de498c4f081bd8edd91791019f5d8ff3af40ad8679c18bef7b6",
+  "geometry": {
+    "trianglesApprox": 499000,
+    "meshes": 23,
+    "bytes": 9421128,
+    "compression": "EXT_meshopt_compression"
+  }
+}

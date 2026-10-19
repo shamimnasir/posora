@@ -1,0 +1,73 @@
+{
+  "name": "Pot Enamel 01",
+  "source": "https://polyhaven.com/a/pot_enamel_01",
+  "creator": "Kuutti Siitonen",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    262.93012499809265,
+    180.4744154214859,
+    178.26278507709503
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 11416,
+  "meshNames": [
+    "Cylinder.001",
+    "Cube.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-14",
+  "categories": [
+    "props",
+    "decorative",
+    "dishes"
+  ],
+  "localMainFile": "pot_enamel_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/pot_enamel_01_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pot_enamel_01/pot_enamel_01_arm_1k.jpg",
+      "bytes": 497109,
+      "md5": "be7b3e6c51ac6cbead2496bd0db41d00",
+      "sha256": "e8ab66b9a9f3e136d78dc393d30a9436b53570a4aaea26d5ae46913752bf15fe"
+    },
+    {
+      "path": "textures/pot_enamel_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pot_enamel_01/pot_enamel_01_diff_1k.jpg",
+      "bytes": 538938,
+      "md5": "e530e70fc13aef9c595162b293b049a0",
+      "sha256": "b8b15e6cbdeebc49034f06418f5daf097fd954a4df1e63f1efbc85c96dec2c7d"
+    },
+    {
+      "path": "textures/pot_enamel_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/pot_enamel_01/pot_enamel_01_nor_gl_1k.jpg",
+      "bytes": 434214,
+      "md5": "8fc58dc6caa2036f83fed505acd66534",
+      "sha256": "e489edcf2014fa96c3dfca2c966a5b3bb8c0d02e88c9adeea96465d44662f56e"
+    },
+    {
+      "path": "pot_enamel_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/pot_enamel_01/pot_enamel_01.bin",
+      "bytes": 270448,
+      "md5": "d8845287663697c274192b8ba35cb7a1",
+      "sha256": "134771c9f71269f791ad9e52910f25542e94b5e83adff1c9acc620c93d486d13"
+    },
+    {
+      "path": "pot_enamel_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/pot_enamel_01/pot_enamel_01_1k.gltf",
+      "bytes": 4018,
+      "md5": "84ddd8d2e210d11788dbcb1670b0e530",
+      "sha256": "ca60a8399463429cf23e04784334cbe344886e5c8747860ad9ad44c044e03dde"
+    }
+  ],
+  "educationalRole": "Real enamel cooking pot used for boiling and boiled-food examples; the model itself does not imply that food is currently boiling."
+}

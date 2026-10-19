@@ -564,6 +564,13 @@ const SCENES: Record<string, Builder> = {
       if (licensed) {
         void loadLicensedModel(licensed.url, g, {
           height: licensed.height,
+          fitAxis: licensed.fitAxis,
+          rotationY: licensed.rotationY,
+          rotationX: licensed.rotationX,
+          colorBoost: licensed.colorBoost,
+          leafShadows: licensed.leafShadows,
+          playAnimations: licensed.playAnimations,
+          animationClip: licensed.animationClip,
           centerOnFloor: true,
           accept: () => root.parent !== null,
         }).then((model) => {
@@ -583,7 +590,11 @@ const SCENES: Record<string, Builder> = {
       g.position.copy(home);
       root.add(g);
       made.push({ g, home: home.clone(), row: Math.floor(i / perRow) });
-      const m = new Object3D(); m.position.set(0, 0.55, 0); g.add(m);
+      // Focus at the object's visual center, not a standard waist-height point.
+      // The ruler is deliberately laid flat, so a 0.55m pin framed empty sky
+      // while the ruler itself was cropped against the floor on phones.
+      const focusY = licensed?.focusY ?? (licensed?.fitAxis === 'longest' ? 0.14 : 0.55);
+      const m = new Object3D(); m.position.set(0, focusY, 0); g.add(m);
       anchors[spec.label] = m;
     }
     // No ground of its own any more: the shared one in render.ts catches the
@@ -618,6 +629,11 @@ const SCENES: Record<string, Builder> = {
      * allowed to run off the sides the way a crowd does.
      */
     return { label: 'সামনে আনো', anchors, groundY: 0, still: true,
+      // The wide group must fit at rest, but that fit distance is much too far
+      // away for a selected object on a portrait screen. Let the focus move
+      // decisively into the subject; the reveal/explode path adds its own
+      // pull-back so detached parts still get room when opened.
+      focusZoomFactor: 0.58,
       // The pocket the camera must hold. Narrower on a phone, where the frame
       // is taller than it is wide and insisting on a laptop's width would push
       // the camera back until the subject was a thumbnail again.
@@ -969,6 +985,30 @@ const SCENES: Record<string, Builder> = {
       bubbles.forEach((b, i) => { b.position.y += dt * (0.4 + rate * 1.6) * (0.6 + (i % 3) * 0.3); b.position.x += Math.sin(t * 3 + i) * 0.003; if (b.position.y > 0.35) b.position.y = -1.2; b.visible = i < 6 + rate * 20; });
       surf.position.y = 0.35 + Math.sin(t * 1.6) * 0.012 * (0.3 + rate);
     } };
+  },
+
+  chemistrykit({ root, onAssetLoaded }) {
+    // Science-method concepts share one grounded chemistry workspace. Unlike
+    // the old oversized synthetic beaker, this is an identifiable piece of
+    // laboratory equipment; the active lesson and facts remain item-specific.
+    const display = new Group();
+    display.position.y = -1.25;
+    root.add(display);
+    let model: Group | null = null;
+    void loadLicensedModel('/models/chemistry_set/chemistry_set_1k.gltf', display, {
+      height: 2.15, fitAxis: 'y', centerOnFloor: true,
+    }).then((loaded) => { model = loaded; if (loaded) onAssetLoaded(); });
+    return {
+      label: 'পরীক্ষার সরঞ্জাম',
+      groundY: -1.32,
+      aim: { y: -0.15, eye: 1.15 },
+      suppressBadges: true,
+      still: true,
+      heroScale: matchMedia('(max-width: 640px)').matches ? 0.72 : 1.55,
+      update(t, _dt, p) {
+        if (model) model.rotation.y = Math.sin(t * 0.18) * 0.08 + (p - 0.5) * 0.32;
+      },
+    };
   },
 
   molecule({ root, hue }) {
@@ -2164,8 +2204,12 @@ export function mountHero(
           // A collection's object is the picture. Keep its selected marker
           // beside the object so the badge cannot cover the actual geometry.
           if (sceneType === 'collection' && on) {
-            b.sp.position.x += 0.72 * sprK();
-            b.sp.position.y += 0.34 * sprK();
+            // Thin or flat objects (rulers, leaves, paper) disappear under a
+            // centered badge even when the camera is correctly focused. Move
+            // the callout farther to the side and slightly up so the real
+            // silhouette stays unobstructed on portrait canvases too.
+            b.sp.position.x += 1.18 * sprK();
+            b.sp.position.y += 0.28 * sprK();
           }
           /**
            * One label at a time.
@@ -2178,7 +2222,7 @@ export function mountHero(
            * of every one of them is a tap or a slider nudge away, and the
            * reading panel beside the stage has it in full.
            */
-          const target = (on ? (sceneType === 'collection' ? 0.58 : 1) : pinScale * 0.72) * sprK() * beckonAt(i, t);
+          const target = (on ? (sceneType === 'collection' ? 0.48 : 1) : pinScale * 0.72) * sprK() * beckonAt(i, t);
           b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
           (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.42;
           b.label.position.copy(b.sp.position); b.label.position.y -= 0.42 * sprK() + 0.3;

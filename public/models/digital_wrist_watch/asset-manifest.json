@@ -1,0 +1,75 @@
+{
+  "name": "Digital Wrist Watch",
+  "source": "https://polyhaven.com/a/digital_wrist_watch",
+  "creator": "Adrian C",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    36.49514354765415,
+    217.24141389131546,
+    8.34511243738234
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 10390,
+  "meshNames": [
+    "Plane.008",
+    "Plane.018",
+    "Plane.021",
+    "Plane.022"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-16",
+  "categories": [
+    "collection: project_lighthouse",
+    "props",
+    "electronics"
+  ],
+  "localMainFile": "digital_wrist_watch_1k.gltf",
+  "files": [
+    {
+      "path": "textures/digital_wrist_watch_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/digital_wrist_watch/digital_wrist_watch_nor_gl_1k.jpg",
+      "bytes": 509108,
+      "md5": "736799b74a49324648c6b6fff8eaafb9",
+      "sha256": "53d43c9fcfe584b6429deea1801b87b7f028907360ff17fcb7aa2484d92bed6e"
+    },
+    {
+      "path": "textures/digital_wrist_watch_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/digital_wrist_watch/digital_wrist_watch_diff_1k.jpg",
+      "bytes": 547337,
+      "md5": "17d2e6d2e1f7906e52337fa2db975a96",
+      "sha256": "37db96583c44a92a17873c9f2655b9fdfca000a4909480e5e0c2abcfdc3c7238"
+    },
+    {
+      "path": "textures/digital_wrist_watch_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/digital_wrist_watch/digital_wrist_watch_arm_1k.jpg",
+      "bytes": 670069,
+      "md5": "2972b3dc2b395a21247a1d1f9e08a49d",
+      "sha256": "5c6fb2f2a4a2151a395eed34cfb234f06ebc6b8cc97167ce99ff627358106673"
+    },
+    {
+      "path": "digital_wrist_watch.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/digital_wrist_watch/digital_wrist_watch.bin",
+      "bytes": 427780,
+      "md5": "54b64f23c8a83a9ef424d068a67151b3",
+      "sha256": "917fc86bcd8498e32298deb79cb0bf081bb83e7502003a576cb7a27be674da7c"
+    },
+    {
+      "path": "digital_wrist_watch_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/digital_wrist_watch/digital_wrist_watch_1k.gltf",
+      "bytes": 9414,
+      "md5": "2b8764e4f1a2169771cc118576d3bf0e",
+      "sha256": "2e3eca47617111f5a5fa585e63b1d6bd61131bf3de88ed6d97b8b7d27c396952"
+    }
+  ],
+  "educationalRole": "A digital wristwatch used as a real-world example of a clock for time measurement; it does not model a stopwatch or analog dial."
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Asian Elephant",
+  "scientificName": "Elephas maximus",
+  "file": "asian-elephant.glb",
+  "source": "https://sketchfab.com/3d-models/asian-elephant-2a7007e8bd2f45b89d1cc6ff75c5fed4",
+  "creator": "planeta-elefante",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Exact Asian elephant specimen for the Life world Bangladesh fauna collection; not claimed as a Bangladesh-specific subspecies.",
+  "provenance": "Downloaded from Sketchfab's signed-in model download dialog as the converted 512px-texture GLB. Detached three unrelated Scots-pine scene roots; elephant meshes, textures, rig, and animation clips are unchanged. Reproduction: node scripts/clean-asian-elephant-glb.mjs.",
+  "sha256": "e3b0c8475489f793c9e0d09b937de8920e03b28b511ed5e7a67dc77eeba53ae1",
+  "geometry": {
+    "trianglesApprox": 20982,
+    "meshes": 9,
+    "textures": 5,
+    "bytes": 4159812,
+    "animations": ["Idle", "Walk", "SprayWater 1", "SprayWater"]
+  }
+}

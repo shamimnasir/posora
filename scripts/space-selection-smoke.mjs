@@ -20,10 +20,13 @@ try {
       const start = page.locator('#space-start');
       if (await start.isVisible()) await start.click({ force: true });
     }
+    // This suite exercises the 3D selection contract, so do not swallow a
+    // renderer-start timeout and then misreport it as a breadcrumb failure.
+    // The world-render smoke separately covers the non-WebGL fallback.
     await page.waitForFunction(() => {
       const canvas = document.querySelector('#planet-host canvas');
-      return canvas && canvas.width > 100 && canvas.height > 100;
-    }, { timeout: 15000 }).catch(() => {});
+      return canvas?.dataset.engine && canvas.width > 100 && canvas.height > 100;
+    }, { timeout: 30000 });
 
     // Regression for /space/: Earth is the default record. Re-entering the
     // system and choosing that same record used to leave the globe at system

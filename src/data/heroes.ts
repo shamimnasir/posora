@@ -18,7 +18,7 @@ const MAP: Record<string, H[]> = {
   money:     [T('coins', undefined, 0.6), T('bars', undefined, 0.5), T('pie', undefined, 0.25), T('coins', undefined, 0.3), T('collection'), T('bars', 'compound', 0.5), T('bars', undefined, 0.8), T('rocket', undefined, 0.6), T('collection'), T('shield', undefined, 0.9)],
   language:  [T('letters', undefined, 0.2), T('letters', 'jukto'), T('letters', undefined, 0.5), T('collection'), T('letters', 'words', 0.7), T('letters', 'words', 0.3), T('letters', 'en'), T('minar')],
   social:    [T('collection'), T('heart', 'breath', 0.4), T('face', 'pair', 0.8), T('face', undefined, 0.9), T('face', 'pair', 0.6), T('scale', undefined, 0.5), T('collection'), T('collection'), T('clock', undefined, 0.6), T('face', 'pair', 0.9)],
-  discovery: [T('beaker', undefined, 0.5), T('collection'), T('collection'), T('collection'), T('collection'), T('circuit', 'network', 0.8), T('collection')],
+  discovery: [T('chemistrykit', undefined, 0.5), T('collection'), T('collection'), T('collection'), T('collection'), T('circuit', 'network', 0.8), T('collection')],
 };
 
 export function heroFor(slug: string, hue: string, i: number, catName?: string): HeroSpec {

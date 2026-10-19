@@ -1,0 +1,579 @@
+# Exact plant-model sourcing pass — 2026-10-16
+
+## Outcome
+
+One general bamboo specimen was imported in this pass. It is a useful, licensed
+replacement for the bamboo entry, but it is low-poly and is not visually
+photorealistic; mobile/desktop captures confirm that it reads as bamboo while
+also showing the quality gap that remains across the Life scene. It is not
+claimed to represent a specific Bangladeshi bamboo species. Other candidates
+were rejected where exact identity, commercial rights, or download permission
+could not be verified.
+
+The supplied mango-tree asset remains the only exact named tree specimen in
+`life:বাংলাদেশের গাছপালা`; its CC BY 4.0 attribution and local copy are already
+recorded with the asset. The shared Poly Haven inventory contains generic tree
+models, but none of the catalog IDs is a named Bangladeshi species such as
+jackfruit, banyan, palmyra palm, silk-cotton, sundari, golpata, paddy, jute,
+water lily, kadam, or hijol. The bamboo lesson is now backed by an explicitly
+general-purpose bamboo model; it does not close the paddy/rice-plant entry.
+
+## Candidates checked
+
+| Lesson subject | Candidate | Decision |
+| --- | --- | --- |
+| Jackfruit tree (`Artocarpus heterophyllus`) | [Sketchfab — Jackfruit Tree 3D Model](https://sketchfab.com/3d-models/jackfruit-tree-3d-model-ee10cbb8ae864ae7a2b11654957bc986) | Page search shows about 780k triangles; license was not verifiable from the accessible listing. Do not download or map until the creator’s license and the downloadable file are verified. |
+| Jackfruit tree | [ArtStation — Jackfruit Tree 3D Model](https://www.artstation.com/marketplace/p/w2OBo/jackfruit-tree-3d-model) | Commercial use is available under a paid Standard License limited to one commercial project and sales/views caps; Extended Commercial License is paid. No purchase was made, and redistribution/embedding terms need review before acquisition. |
+| Banyan (`Ficus benghalensis`) | [Sketchfab — Xfrog Ficus benghalensis](https://sketchfab.com/3d-models/as06-ficus-benghalensis-banyan-dd3c04d489b14663ac92063b3d235063) | Exact species, but CC BY-NC-ND is not suitable for this commercial site. Rejected. |
+| Banyan-like tree | [Sketchfab — Chinese Banyan (`Ficus microcarpa`)](https://sketchfab.com/3d-models/chinese-banyan-ficus-microcarpa-2a0dbcdf8f5d48f5ad79987c7a8170ce) | CC BY allows commercial use with attribution, but this is a different species from the lesson’s banyan. Rejected as an exact educational mapping. |
+| Generic tropical tree | [Poly Haven catalog](https://polyhaven.com/models) | CC0 assets such as `tree_small_02` can support neutral scenery, but do not identify a local species and cannot close a species-specific lesson gap. |
+| General bamboo specimen | [Pixor — Bamboo](https://pixor.art/en/library/trees/bamboo/) | CC0 GLB; imported at `public/models/bamboo_botany_01/bamboo.glb`. 2,348 triangles, 380.6 KB, includes a sway clip. The authored clip now plays in the Life world and is suppressed for reduced-motion users. Good enough to replace the bamboo procedural figure; intentionally not described as a specific regional species or as photorealistic. |
+| Rice plant (`Oryza sativa`) | [Sketchfab — Rice, Oryza sativa](https://sketchfab.com/3d-models/cc0-rice-oryza-sativa-c6715ec94cee4abfb6edbfaaa4390bea) | Listing says CC0 and is the exact crop, but its official download endpoint returned HTTP 401 without authentication. No access gate was bypassed and no asset was imported. |
+| Bengal tiger | [3DAssets.dev — Bengal tiger, prowling](https://3dassets.dev/assets/exotic-wildlife-hd-bengal-tiger-prowling-b1de9790) | Search-indexed listing describes the model as CC0 and links to a hosted GLB, but the source and CDN were unavailable to this environment during this pass (503/DNS failure). The file and visual quality therefore remain unverified; do not map it until both are independently checked. |
+
+## Next acquisition brief
+
+For the next asset, prefer a locally recognizable whole plant with leaf, bark,
+and fruit/flower details useful at close range. Require:
+
+- exact botanical identity confirmed by the source or a curator;
+- CC0 or explicit commercial reuse rights compatible with embedding in a
+  commercial website (not a license that only permits rendering the model in a
+  finished image/video);
+- a downloadable GLB/glTF with permission to redistribute as part of a web
+  experience, or written permission from the creator;
+- a mobile-friendly optimized version, with original source retained and a
+  record of any geometry/texture modifications;
+- visual acceptance captures at 360×800 and 1440×900, including intact and
+  close-up states, plus a measured asset payload.
+
+Do not purchase a candidate, treat a missing license label as permission, or
+reuse an expiring signed download URL as the source record. If a licensed model
+is not available, keep that lesson explicitly on the needs-assets list rather
+than presenting a different species as the answer.
+
+## Verification in this pass
+
+- `npm run audit:model-coverage`: reports 36/223 licensed object/example
+  mappings and 65 exact-object entries still awaiting a suitable licensed
+  model.
+- `npm run check`: passed with 0 errors, warnings, or hints.
+- `npm run test:licensed-models`: passed 30 registered model states at mobile
+  and desktop; each expected asset parsed and attached to its scene.
+- `npm run test:world-render`: passed all 11 worlds at mobile and desktop; the
+  WebGL canvas mounted and tested controls ran.
+- Bamboo visual captures: `licensed-models/desktop-life-bamboo.png` and
+  `licensed-models/mobile-life-bamboo.png`. The model loads and is identifiable,
+  but should be considered an interim coverage improvement, not a final
+  photorealism-quality acceptance.
+
+These checks establish loader/render health for registered models. They do not
+mean all real-world objects have exact models or that every model has passed
+human visual acceptance.
+
+## Follow-up: animal-class specimens — 2026-10-17
+
+Added distinct, source-documented GLBs for the broad **bird**, **reptile**, and
+**amphibian** classification lessons, alongside the previously added red-fox
+mammal example. These are not substitutions in `life:বাংলাদেশের প্রাণী`; that
+country-specific list remains unchanged because a nonlocal species must not be
+shown as Bangladeshi wildlife.
+
+| Lesson example | Model and source | License / role | Visual and content limits |
+| --- | --- | --- | --- |
+| Mammal | [Red Fox — 1DesignTool](https://1designtool.com/3d/models/red-fox) | Commercial website embedding permitted by [1DesignTool terms](https://1designtool.com/3d/license); representative class specimen only | Static, generated geometry/textures with fur cards; not photogrammetry; described explicitly as not a Bangladesh-fauna claim. |
+| Reptile / cold-blooded example | [Panther Chameleon — 1DesignTool](https://1designtool.com/3d/models/panther-chameleon) | Same terms; class specimen only | Static, code-built PBR model; not photogrammetry; explicitly non-Bangladeshi. Its independent-eye fact links to the [Smithsonian National Zoo](https://nationalzoo.si.edu/animals/news/new-zoo-meet-mellers-chameleon). |
+| Bird | [Indian Peafowl — 1DesignTool](https://1designtool.com/3d/models/indian-peacock) | Same terms; general bird-class example, not the local Doel | Static, generated geometry/textures; mobile framing needs continued monitoring because the creator warns that the display fan may crop at 390 px. Eyespot fact links to [San Diego Zoo](https://animals.sandiegozoo.org/animals/peafowl). |
+| Amphibian | [Axolotl — 1DesignTool](https://1designtool.com/3d/models/axolotl) | Same terms; general amphibian-class example only | Static, generated geometry/textures; source notes seams and a flat translucent fin; explicitly not a Bangladesh-fauna example. External-gill fact links to [San Diego Zoo](https://animals.sandiegozoo.org/animals/axolotl). |
+
+The source's commercial license allows models embedded in websites/products but
+prohibits standalone file or model-pack redistribution. The site exposes the
+model/source note only when that specimen is selected; no model is included in
+the paid printable download.
+
+The Khronos low-poly fox and mosquito-in-amber candidate were removed from the
+public model directory after visual testing: the first did not meet the target
+quality, and the second rendered as an opaque/milky amber mass with no readable
+insect. Their rejected candidate files were moved outside the repository and
+the obsolete download script/credit were removed.
+
+### Verification in this follow-up
+
+- `npm run audit:model-coverage`: 40/223 licensed exact-object/example mappings;
+  61 concrete exact-object mappings remain. This is not a claim of sitewide
+  realism: the exact Bangladesh-wildlife list and most local plants, spices,
+  Bengali dishes, insects, and measurement tools still need their own assets.
+- `npm run audit:model-rights`: 49 GLB/glTF files have local source/license
+  records.
+- `npm run check`: 0 errors, 0 warnings, 0 hints.
+- `npm run build`: passed; a fresh Wrangler preview was started from the build.
+- `npm run test:licensed-models` against that preview: passed 34 registered
+  model states at desktop (1440×900) and mobile (390×844), including the
+  fox, peafowl, chameleon, and axolotl selection/fact checks.
+- Desktop and mobile captures of the rotated axolotl were reviewed. The animal
+  now reads side-on rather than as an end-on pink shape; it remains small in the
+  wide overview because the shared scene keeps surrounding examples visible.
+- Rice-model candidate: the listing claims CC0, but the CDN lookup failed with
+  DNS resolution errors in this environment. It was not downloaded, mapped, or
+  counted; the unusable acquisition script was removed. This preserves the
+  existing 40/223 coverage count rather than silently accepting an unverified
+  model.
+
+These results prove the currently registered assets render and the four new
+animal-class examples display their documented facts. They do not complete the
+61 exact-object gaps or meet the requested sitewide realism target. In
+particular, the Bangladesh animal list, most named local plants, spices, and
+Bangladeshi dishes remain without exact licensed models. The external listing
+for a CC0 Bengal tiger was inspected, but its source CDN was also unavailable;
+it remains a candidate, not an integrated asset.
+
+### Follow-up: source recheck — 2026-10-17
+
+Rechecked open collections and the currently available browser session before
+adding any more files. This follow-up did not add or map an asset: each exact
+candidate was either the wrong object, gated, unverified, or below the
+photorealism bar.
+
+| Candidate | Evidence found | Decision |
+| --- | --- | --- |
+| [Sketchfab — Rice, *Oryza sativa*](https://sketchfab.com/3d-models/cc0-rice-oryza-sativa-c6715ec94cee4abfb6edbfaaa4390bea) | The page identifies the species and CC0; its viewer reports 95.7k triangles. Selecting the download action presents a Sketchfab login form in the available Chrome session. | Do not bypass the account gate or reuse a guessed download endpoint. Keep as a high-priority exact rice-plant candidate; resume after the owner restores the signed-in Sketchfab session or supplies a permitted file. |
+| [Smithsonian — *Elephas maximus*](https://3d.si.edu/object/3d/elephas-maximus%3Aebcd7a7d-4f5b-4daa-807b-e384c56ea286) | Smithsonian search metadata offers GLB derivatives, and its page describes Open Access reuse. The official medium preview depicts an isolated ridged, tooth-like specimen, not a whole living elephant. | Reject for the Bangladesh animal tile. The taxon title alone is not enough to claim that the file depicts a whole elephant. |
+| [3DAssets.dev — Jungle and Rainforest Animals](https://3dassets.dev/packs/rainforest-and-jungle-fauna) | Search listing advertises a CC0 pack and says all 40 files were AI-assisted; the tiger is listed around 5.5k triangles. A direct check of the source page returned HTTP 503. | Not integrated: the source file and visual quality cannot be verified, and the listing does not meet the requested realism bar on its own. |
+| [Pixabay — Jackfruit, Fruit, Tropical](https://pixabay.com/3d-models/jackfruit-fruit-tropical-botanical-1803/) | Listing identifies a GLB under Pixabay’s Content License and says it is AI-generated. Visual preview is a cut fruit with a simplified radial interior; it is a fruit model, not a jackfruit tree. | Reject for this realism pass: it does not meet the requested realistic look and cannot close the jackfruit plant/tree mapping. |
+| [Free3D Online — Bengal tiger](https://free3d.online/model/5868572-realistic-bengal-tiger-3d-model-with-detailed-textures) | Search listing advertises direct formats but does not expose a verifiable rights grant for embedding in Posora. | Reject until the asset-specific license and creator rights are clearly established. |
+
+The Smithsonian API search also returned unrelated specimens for broad text
+queries such as “banyan,” “mangrove,” and “Bengal tiger”; those are not treated
+as matches. The direct model preview was visually checked rather than trusting
+the taxon/title field alone. The official Smithsonian 3D API documentation is
+at <https://3d-api.si.edu/api-docs/>; the institution’s Open Access FAQ states
+that assets marked CC0 can be used, transformed, and shared, while asset-level
+rights metadata should still be checked.
+
+### Current verified state
+
+- `npm run audit:model-coverage` currently reports **40/223** licensed exact
+  object/example mappings and **61** exact-object mappings still awaiting a
+  suitable asset. Earlier 36/223 and 65-entry figures in this document are
+  historical snapshots, not the current count.
+- The remaining exact-object backlog still spans named Bangladesh plants and
+  wildlife, medicinal plants/spices, food spices and Bengali dishes, and four
+  measurement instruments. No new candidate above closes those gaps.
+- Current Chrome shows a Sketchfab login gate for the CC0 rice model. I did not
+  enter credentials, trigger third-party sign-in, or download through an
+  alternate endpoint.
+
+### Follow-up: supplied rice model and class-example verification — 2026-10-17
+
+The owner subsequently supplied the exact CC0 *Oryza sativa* GLB. It is now
+recorded under `public/models/rice_oryza_sativa_01/` and mapped to the paddy
+plant and agriculture lessons, not to cooked rice. Its own README and manifest
+contain the source, license, hash, and technical details. Desktop/mobile
+captures and the licensed-model smoke pass verified both placements.
+
+Three broad classification tiles now reuse already licensed, clearly identified
+examples: red fox for vertebrate, panther chameleon for cold-blooded animal,
+and Indian peafowl for warm-blooded animal. Their lesson copy says explicitly
+that these are examples rather than depictions of an entire animal class, and
+the selected-object source notes now appear for these tiles too. A browser test
+initially caught the hidden fox credit; the credit conditions were fixed and
+the Life smoke suite then passed all 11 registered model states at desktop and
+mobile sizes.
+
+`npm run audit:model-coverage` now reports **45/223** licensed exact-object or
+example mappings and **57** concrete exact-object gaps. The latter are not
+closed by changing labels: Bangladesh wildlife, most named plants, spices,
+instruments, and Bengali dishes still require accurate, rights-cleared assets.
+Sketchfab's official download API requires a signed-in account; the available
+Chrome session displayed a login gate during this pass. Smithsonian Open Access
+was queried for the remaining terms, but its results were either absent or
+specimens/objects different from the whole lesson subject. No new unsuitable
+model was mapped merely to increase the coverage count.
+
+The public Sketchfab metadata search surfaced candidates worth inspecting
+*after* authenticated access is restored. A search result is not proof that
+the geometry depicts the correct whole subject or meets the visual bar:
+
+| Lesson candidate | Public listing | Metadata evidence | Remaining gate |
+| --- | --- | --- | --- |
+| Kingfisher | [White-throated Kingfisher](https://sketchfab.com/3d-models/white-throated-kingfisher-eb654151f2d54b3a89169af96da09f89) | CC BY 4.0; creator describes a scanned *Halcyon smyrnensis*, 499k faces | Completed below; displayed as a taxidermy specimen scan, not a live bird. |
+| Aloe vera | [Aloe vera plant](https://sketchfab.com/3d-models/aloe-vera-plant-66c6699e50ab4863989777f920a981dd) | Downloadable listing, CC BY, about 219k faces | Inspect visual fidelity and actual botanical identity; retain creator attribution. |
+| Turmeric root | [Turmeric root (*Curcuma longa*)](https://sketchfab.com/3d-models/turmeric-root-curcuma-longa-d0755c2c95194946925c45993e8339c9) | Downloadable listing, CC BY, about 92k faces | Inspect geometry and ensure the root is not presented as a whole growing plant. |
+| Neem | [Neem Tree](https://sketchfab.com/3d-models/neem-tree-03edef8009d942d3a3db6fa64cecbe56) | Downloadable listing, CC BY, about 256k faces | Verify species and mobile performance; source may be too dense. |
+
+The official [Sketchfab Download API documentation](https://sketchfab.com/developers/download-api/downloading-models)
+states that the downloading user must be signed in; creator, source and
+license attribution is required under its [guidelines](https://sketchfab.com/developers/download-api/guidelines).
+
+### Follow-up: signed-in source acquisition — 2026-10-18
+
+The owner's Sketchfab account was signed in and the site offered its normal
+licensed downloads. I inspected each source page and visual preview before
+using a file. Two CC BY 4.0 scans were optimized, attributed on the lesson
+page, and tested at desktop and mobile sizes:
+
+| Lesson | Source | Web derivative | Test result |
+| --- | --- | --- | --- |
+| Life → ঔষধি ও মশলা গাছ → অ্যালোভেরা | [matousekfoto, Aloe vera plant](https://sketchfab.com/3d-models/aloe-vera-plant-66c6699e50ab4863989777f920a981dd) | `public/models/aloe_vera_scan_01/aloe-vera.glb`, 4.03 MB | Licensed-model smoke passed at 1440×900 and 390×844; both screenshots inspected. |
+| Food → মশলার জগৎ → হলুদ | [Keeszify, Turmeric root](https://sketchfab.com/3d-models/turmeric-root-curcuma-longa-d0755c2c95194946925c45993e8339c9) | `public/models/turmeric_root_scan_01/turmeric-root.glb`, 2.28 MB | Licensed-model smoke passed at 1440×900 and 390×844; both screenshots inspected. The lesson explicitly calls it a raw rhizome, not a plant or powder. |
+
+Each asset directory has its own source/license manifest and original/download
+hashes. `npm run audit:model-coverage` now reports **47/223** licensed exact
+object/example mappings and **55** exact-object gaps. The other 176 tiles
+include teaching diagrams and broad examples; that count must not be used to
+claim they all need literal whole-object scans.
+
+The [Neem Tree](https://sketchfab.com/3d-models/neem-tree-03edef8009d942d3a3db6fa64cecbe56)
+is CC BY but 2.3 million triangles and the source viewer itself warns that it
+is too heavy for the device, so it remains unmapped.
+
+One additional instrument is now mapped: [mantledmoon, Soviet Stopwatch](https://sketchfab.com/3d-models/soviet-stopwatch-ba815c83278e4271a92fcc018188664c),
+a CC BY 4.0 1K GLB at 3.11 MB, appears in Discovery → পরিমাপের যন্ত্র →
+স্টপওয়াচ. Initial desktop/mobile rendering exposed its flat-on-floor
+orientation; a per-model X rotation was added to the shared licensed-model
+loader and propagated through the collection/hero callers. Rebuilt desktop
+and mobile screenshots now show the dial facing the viewer; visible attribution
+and both responsive smoke cases pass. The site describes it as an older
+mechanical example, not the only form of stopwatch. Current coverage is
+**48/223**, with **54** concrete exact-object gaps remaining.
+
+The next Food spice candidate is [sfsen, 3d scanned Cinnamon stick](https://sketchfab.com/3d-models/3d-scanned-cinnamon-stick-013e3d5b3dd0483ba74e7abc1343a7d8),
+CC BY 4.0. Its 1K GLB was simplified from 82,562 to about 33,024
+triangles (3.13 MB to 1.33 MB), retaining the embedded texture. It is mapped
+only to Food → মশলার জগৎ → দারুচিনি as a *dried stick*, not the living tree,
+leaf, or ground powder. The lesson has visible creator/license/identity credit;
+desktop and 390px mobile screenshots were inspected and the model loaded in
+both. The rights record and both file hashes are in
+`public/models/cinnamon_stick_scan_01/`. The coverage audit now reports
+**49/223** licensed exact-object/example mappings and **53** concrete
+exact-object gaps.
+
+[Muhammad Azim's red-chili photogrammetry scan](https://sketchfab.com/3d-models/red-chilli-3d-scan-agisoftnaturechallenge-92b1bb0824ab4a238c5ec899729067b8)
+was also licensed CC BY 4.0 and mapped to Food → মশলার জগৎ → মরিচ.
+Eight source textures were reduced from 1K to 512px to lower compressed
+transfer from 2.44 MB to 0.99 MB and reduce mobile GPU texture demand.
+The detailed dried red pepper reads clearly in both desktop and 390px mobile
+screenshots; both targeted smoke cases passed with visible attribution. This
+is explicitly a fruit specimen, not a living plant. Current coverage is
+**50/223** licensed exact-object/example mappings with **52** concrete
+exact-object gaps remaining.
+
+### Follow-up: white-throated kingfisher — 2026-10-18
+
+The RISD Nature Lab [White-throated Kingfisher](https://sketchfab.com/3d-models/white-throated-kingfisher-eb654151f2d54b3a89169af96da09f89)
+scan is now mapped to Life → বাংলাদেশের প্রাণী → মাছরাঙা. The source is an
+Artec Spider scan of a taxidermy specimen, CC BY 4.0; it is not presented as a
+live bird. The 55.46 MB, roughly 499k-face source had little response to mesh
+simplification, so the web derivative preserves the scan geometry, downsizes
+textures to 512px, and uses Meshopt compression (9.42 MB). The source creator,
+RISD Nature Lab, license, and specimen caveat are shown beside the interactive
+view. Desktop and 390px mobile captures were visually inspected. A targeted
+smoke test confirms the asset parses and attaches at both breakpoints. This
+also required `wasm-unsafe-eval` in the mirrored CSP policies for WebAssembly
+Meshopt decoding; JavaScript `eval` remains disallowed. The full 45-state
+desktop/mobile licensed-model smoke suite passed; the kingfisher's desktop and
+mobile captures were inspected, and the focused test confirms selecting its
+close-up exposes the item-specific explanation and fun fact. Current coverage
+is **51/223** licensed
+exact-object/example mappings with **51** concrete exact-object gaps remaining.
+
+The [Banyan Tree of NCKU](https://sketchfab.com/3d-models/banyan-tree-of-ncku-692965e4f7e54f57abffb60ba6b3fb27)
+was inspected as a possible exact banyan replacement (CC BY, 189.5k triangles).
+It was rejected: the source page provides no species/identity notes beyond its
+title, its viewer reports the model as too heavy, and its rendered tree is a
+tiny fragment in a wide scene. A technically licensable file is not enough to
+meet the identity and presentation bar.
+
+Two more animal candidates were rejected after local desktop/mobile renders.
+The first WebP/specular-glossiness derivative of Pasha's [Realistic bee](https://sketchfab.com/3d-models/realistic-bee-0ea8f5f4a2a5496aa177faf637868443)
+rendered pale and undersized against the other specimens. Cleo3D's
+[Honey Bee](https://sketchfab.com/3d-models/honey-bee-aec20ef738a04b4284782443ccdcd0c5)
+has 1.3M triangles, and its creator says it is a sculpture made without
+textures; that candidate is not a good fit for a clear, child-friendly
+natural-history example. The Pasha model is revisited below with a corrected
+PBR pipeline and browser-verified source colors.
+
+The supplied [Collared kingfisher](https://sketchfab.com/3d-models/collared-kingfisher-5eb8eefc6f6d44959b750ecccf43d413)
+GLB has sound CC BY metadata and identifies *Todiramphus chloris*, but the
+local render placed the horizontal specimen directly on the floor, where it
+read as a fallen bird rather than a clear specimen. It was not shipped. The
+existing peafowl remains the stronger generic bird-class visual; the separate
+white-throated kingfisher remains the Bangladesh-fauna example. These checks
+prevented three licensed-but-poorly-presented assets from becoming regressions.
+
+### Follow-up: browser-corrected animated bee — 2026-10-18
+
+Reprocessed the Pasha/Irfan CC BY bee from the downloaded 1K GLB after visual
+testing exposed that its specular-glossiness + WebP output appeared white in
+Three.js. Converting the source materials to metallic/roughness PBR, using
+512px PNG maps, and keeping Meshopt-compressed geometry/animation produces a
+1.66 MB derivative with the original black/yellow markings intact. Desktop and
+390px mobile browser captures verify the markings, selected-object fact, and
+both creator credits. The model is still used only as a generic insect example,
+never as the Bangladesh-specific honeybee. The separately reviewed Cleo3D
+sculpture remains rejected because its author notes the lack of textures.
+
+Other candidates were not forced into mismatched slots: the RISD Nature Lab
+jackfruit pod is an accurate fruit scan but not a jackfruit-tree model, while a
+Natural History Museum Vienna jackfruit scan is CC BY-NC and unsuitable for the
+site's commercial context. The current coverage audit reports **54/223**
+licensed exact-object/example mappings and **48** concrete exact-object gaps;
+the detailed live list comes from `npm run audit:model-coverage`.
+
+### Follow-up: neem tree and tulsi candidates — 2026-10-18
+
+Added Rohit Pawar's [Neem Tree](https://sketchfab.com/3d-models/neem-tree-03edef8009d942d3a3db6fa64cecbe56),
+which the Sketchfab page labels CC BY 4.0 and identifies in the creator's
+description. The signed-in download is a 152 MB 1K GLB. It was reduced to a
+444,908-byte web derivative with four mesh definitions, GPU-instanced canopy
+geometry, Meshopt geometry compression, and a 512×512 WebP texture. It replaces
+only the neem object in Life → ঔষধি ও মশলা গাছ and carries visible creator and
+license credit. The new desktop/mobile captures are
+`licensed-models/desktop-life-neem-tree.png` and
+`licensed-models/mobile-life-neem-tree.png`. The 46-state licensed-model suite
+passed at desktop/mobile; an additional focused test confirms the Neem
+close-up's description/fact and the visible credit at both sizes.
+
+Two Tulsi candidates were reviewed but not mapped. Anandjha2499's [“a cloesup
+shot of tulsi plant”](https://sketchfab.com/3d-models/a-cloesup-shot-of-tulsi-plant-cfa1d5a4e84e4094937c79cd2e7c2c9d)
+is explicitly AI-generated, so the plant's species-specific morphology could
+not be treated as verified. Teju1's [“Tulsi plant”](https://sketchfab.com/3d-models/tulsi-plant-1c97b112900b4203bd30db4cf88447ce)
+has a CC BY 4.0 listing but no identity or geometry notes; the creator's page
+comment asks for someone to add color, and its preview was unavailable in the
+active viewer. It does not meet the visual/identity acceptance bar. Neither
+model is used.
+
+### Follow-up: oral thermometer — 2026-10-18
+
+Added Medical.Gallery Graphics' [Thermometer](https://sketchfab.com/3d-models/thermometer-5ef4251b270c4997aca6931a094f9621)
+to Discovery → পরিমাপের যন্ত্র → থার্মোমিটার. Sketchfab labels it a
+“Non-digital oral thermometer,” reports about 3,000 triangles/1,600 vertices,
+and the download dialog confirms CC BY 4.0 with commercial use allowed when
+credited. Used the 1K GLB converted file (99 KB; source hash recorded in its
+asset manifest); no further processing was needed for the web budget. The
+visible Bengali attribution explicitly says this is a clinical/oral example,
+not a weather or digital thermometer.
+
+Focused Playwright WebGL smoke passed on 1440×900 desktop and 390×844 mobile;
+the item loaded its local asset, attribution was visible, and opening the
+detail slider revealed the thermometer-specific explanation and fact. Visual
+captures are `licensed-models/desktop-discovery-oral-thermometer.png` and
+`licensed-models/mobile-discovery-oral-thermometer.png`; both were reviewed.
+
+### Follow-up: animated insect example — 2026-10-18
+
+Added Pasha's [Realistic bee](https://sketchfab.com/3d-models/realistic-bee-0ea8f5f4a2a5496aa177faf637868443)
+to Life → প্রাণীর শ্রেণি → পতঙ্গ only. Its description links the original
+[Bee by Irfan](https://sketchfab.com/3d-models/bee-7a43e360d7ac4f9a8006733b0589c9a4),
+which independently shows CC BY 4.0; both listings are linked/credited in the
+UI. The model remains a general insect example—not a claim about Bangladesh's
+specific honeybee species. Its 1K converted GLB is 1.66 MB after reducing
+geometry, converting specular/glossiness to metallic/roughness PBR, and keeping
+four 512px PNG maps plus Meshopt-compressed geometry/animation. The earlier
+682 KB WebP derivative rendered white in the actual Three.js scene; desktop and
+mobile captures now show the source's yellow/black markings. All three authored
+clips remain available, while Posora selects only `_bee_hover`, rather than
+blending its mutually exclusive idle and take-off animations.
+
+`npm run audit:model-coverage` now reports **52/223** licensed exact-object or
+example mappings and **50** concrete exact-object gaps. The detailed list is
+generated by the command; the earlier counts above remain historical snapshots.
+
+### Follow-up: octopus specimen — 2026-10-18
+
+Added rayleighsyafiq's [Octopus](https://sketchfab.com/3d-models/octopus-d08195133942442dae870ede04e3d7f1)
+as an explicitly general invertebrate specimen in Life → প্রাণীর শ্রেণি →
+অমেরুদণ্ডী. The Sketchfab page identifies CC BY and permits commercial use
+with attribution. The 1K source GLB was converted from specular/glossiness to
+metallic/roughness PBR, resized to 512px WebP maps, then visually checked in
+Three.js. The optimized derivative is 1.39 MB (58,912 triangles); its source
+and derivative hashes, author, license, processing, and limitations are in
+`public/models/octopus_scan_01/asset-manifest.json`. The UI credits the creator,
+states that this is an example and not a Bangladesh-specific species claim,
+and links Smithsonian Ocean for the eight-arm/sucker fact. Focused desktop and
+390px mobile smoke tests passed; the red/brown specimen and attribution panel
+were visually inspected in both captures. The coverage audit now reports
+**55/223** exact-object/example mappings and **47** remaining concrete gaps.
+
+The first 2.8 MB Meshopt derivative of the CC0 [Water Lily, Nymphaea cv.](https://sketchfab.com/3d-models/cc0-water-lily-nymphaea-cv-e7830f486a0248b6b894f3e7a63b8c16)
+was rejected after its output showed scan debris and a flower too small to read.
+That rejection applied to that derivative, not the source model forever. On
+2026-10-19 a fresh derivative was produced from the owner's 84.18 MB downloaded
+GLB, rebuilt with the source textures resized and encoded for the web, then tested
+again at desktop and mobile. The current 8.27 MB asset is accepted as a genus-level
+visual example for শাপলা, with a visible credit stating that it is not a verified
+local Bangladesh cultivar. The current file, processing details, and SHA-256 are
+recorded in `public/models/water_lily_nymphaea_01/asset-manifest.json`; desktop and
+mobile smoke evidence is in `evidence/licensed-models/`.
+
+Additional candidates reviewed during this follow-up were rejected rather than
+imported: Sketchfab's 2M-triangle Turmeric preview renders as a tiny speck and
+has no model description; the downloadable NCKU banyan scan is actually a
+campus-scale multi-tree scene; another CC BY banyan listing is visibly a
+simplified flat-canopy figure; the jackfruit-tree Sketchfab listing did not
+show a free-download control or a confirmed open license; and the available
+hilsa search results were generic fish or paid/editorial assets. None meets
+the exact-object, visual-quality, and redistribution checks together. The
+evidence for these listings is their current source page, not an assertion that
+they are unusable for every purpose.
+## Tulsi candidate review — 2026-10-19
+
+- Candidate: [Sketchfab — “a cloesup shot of tulsi plant”](https://sketchfab.com/3d-models/a-cloesup-shot-of-tulsi-plant-cfa1d5a4e84e4094937c79cd2e7c2c9d), by anandjha2499; CC BY 4.0, commercial use permitted with attribution. The listing identifies it as generated with Meshy AI.
+- Downloaded converted 1K GLB (1,404,184 bytes; 9,783 triangles) and tested it using the site's licensed-model smoke test at desktop (1440×900) and mobile (390×844). Both parsers attached the model and produced captures.
+- Rejected after visual review. The pale yellow-green geometry is spindly and visually inconsistent, with distracting foliage clusters and poor separation from surrounding objects. The small file size does not resolve the source viewer's “too heavy” warning, and the resulting appearance does not meet the realism target.
+- Decision: did not integrate. Existing Tulsi presentation remains unchanged until a visually reviewed, botanically credible candidate is found.
+
+## Tiger candidate — 2026-10-19
+
+- Candidate: [Sketchfab — Running Tiger](https://sketchfab.com/3d-models/running-tiger-fc2c7fd74dd04e39935803b884c77258), by Amil (francescolima74), CC BY 4.0. The source viewer shows a textured, animated tiger and lists a 1-second “Run” clip.
+- The converted 1K GLB is 1,996,448 bytes with an embedded 1024×1024 texture and about 4.7k triangles. It is integrated as an animated tiger example, not represented as a verified Bengal subspecies; the visible credit says so.
+- Posora desktop/mobile screenshots were reviewed after the smoke test passed at 1440×900 and 390×844. The tiger is clearly visible in both layouts; the 1-second run cycle changes pose in the live browser. Accepted as an illustrative tiger model, with the source's subspecies limitation disclosed in the visible credit. It must not be used as evidence that this particular scan is a verified Bengal tiger.
+
+## Collared kingfisher candidate review — 2026-10-19
+
+- Candidate: [Sketchfab — Collared kingfisher](https://sketchfab.com/3d-models/collared-kingfisher-5eb8eefc6f6d44959b750ecccf43d413), by itsmerolfzurc, CC BY 4.0. The downloaded GLB embeds the same author, source, title, and license metadata; Bangladesh Forest Department's bird Red List confirms the species is present in Bangladesh.
+- Desktop and 390px mobile model-smoke tests confirmed parsing and attachment. Visual review rejected it: the source's orientation/pose placed the bird flat across the stage; a runtime rotation made the image foreshortened and unclear. It does not meet the usable educational-pose bar, so the existing upright white-throated kingfisher remains in use.
+- Evidence remains in `evidence/licensed-models/desktop-life-collared-kingfisher.png` and `mobile-life-collared-kingfisher.png`. The test asset was removed from the production bundle; the original download in the owner's Downloads folder was not changed.
+
+## Asian elephant candidate review — 2026-10-19
+
+- Candidate: [Sketchfab — “elephant 3d model”](https://sketchfab.com/3d-models/elephant-3d-model-ce31a3a272c04287ae95bae738de67c9), by grodan; Sketchfab marks it CC BY 4.0 and the download panel explicitly permits commercial use with attribution. The creator identifies it as an AI-generated female Asian elephant (*Elephas maximus*).
+- The source viewer reports 860k triangles and warns that the model is too heavy for the current device; its visible render is a very small, distant figure. Although the species is a plausible broad match for the Bangladesh elephant lesson, the page preview alone is insufficient to judge texture/anatomical quality after optimization.
+- Decision: not integrated. It needs a local optimized desktop/mobile review before acceptance; this entry records a candidate, not an approved asset or a claim that the downloaded file is in the repository.
+
+## Jackfruit tree candidate review — 2026-10-19
+
+- Candidate: [Sketchfab — “Jackfruit Tree 3D Model”](https://sketchfab.com/3d-models/jackfruit-tree-3d-model-ee10cbb8ae864ae7a2b11654957bc986), by hkhalif. The model description claims a detailed tropical jackfruit tree with trunk, foliage and fruit; the viewer reports about 780k triangles.
+- The signed-in model page exposes no download action or license statement. Without a clear redistribution/embedding license and accessible source file, it cannot be used in Posora even if its subject appears suitable.
+- Decision: not integrated. Treat the jackfruit gap as open; do not infer permission from “free” or from a model page being publicly viewable.
+
+## Asian elephant accepted model — 2026-10-19
+
+- Candidate: [Sketchfab — Asian Elephant](https://sketchfab.com/3d-models/asian-elephant-2a7007e8bd2f45b89d1cc6ff75c5fed4), by planeta-elefante. The signed-in download dialog identifies CC BY 4.0 and explicitly permits commercial use with attribution.
+- The 1K converted GLB arrived with three unrelated Scots-pine rigs included in the scene. Their bounds shrank the elephant to a tiny speck in Posora. `scripts/clean-asian-elephant-glb.mjs` detaches those three named scene branches while preserving the elephant meshes, textures, rig, and clips; the edit is recorded in the local model manifest and visible site credit.
+- Integrated as Life → বাংলাদেশের প্রাণী → হাতি. It is identified as an Asian elephant (*Elephas maximus*), not a specific Bangladesh subspecies. Posora plays the authored `Idle` clip; movement and spray clips are not presented as happening in the lesson.
+- The focused Playwright test passed at 1440×900 desktop and 390×844 mobile: the GLB parsed, the idle clip played, credit appeared, and opening the exploded-view slider showed the elephant-specific explanation and matriarchal-group fact. Desktop and mobile captures were visually reviewed at `licensed-models/desktop-life-asian-elephant.png` and `mobile-life-asian-elephant.png`.
+- Rejected alternative: NHMW Vienna's [Jackfruit model scan](https://sketchfab.com/3d-models/jackfruit-nhmw-afw-ding-0046-010-93e723616eb244a5a7142038615e74d5) is CC BY-NC and therefore not suitable for Posora's commercial product. A CC BY “Stylized Fruit Lowpoly Free Pack” lists jackfruit among its contents, but its stated low-poly/stylized presentation fails the realism requirement. Jackfruit remains an open gap.
+
+## Additional candidate review — 2026-10-19
+
+- [Prakash.Chatterjee — Tulsi Tree on a cement tub](https://sketchfab.com/3d-models/tulsi-tree-on-a-cement-tub-29e20a3ac415461fa12930d04282163c) is listed CC BY 4.0; the signed-in download panel says commercial use is allowed with attribution. The listing reports 86.9k triangles. Its preview showed a very sparse, thin plant in a cement tub, and the Sketchfab viewer warned it was too heavy to render on the current device. It does not provide a strong, legible close-up Tulsi specimen for the lesson, so it was not integrated.
+- [Pixabay — Jackfruit, Fruit, Tropical](https://pixabay.com/3d-models/jackfruit-fruit-tropical-botanical-1803/) is downloadable as GLB under the [Pixabay Content License](https://pixabay.com/service/license-summary/), but the listing marks it AI-generated and describes it as a cut fruit. The rendered cut surface has regular citrus-like radial segmentation rather than recognizable jackfruit bulbs and fibrous core. It is rejected as a misleading jackfruit representation; its title and permissive content license do not establish biological accuracy.
+- [Natural History Museum Vienna — Jackfruit scan](https://sketchfab.com/3d-models/jackfruit-nhmw-afw-ding-0046-010-93e723616eb244a5a7142038615e74d5) remains unsuitable because its license is CC BY-NC, which does not permit this commercial use.
+
+No Tulsi or jackfruit mapping was changed in that pass. Its figures are historical. The current source-of-truth count is generated by `npm run audit:model-coverage`.
+
+## Life plant-part models and current audit — 2026-10-19
+
+- The accepted water-lily visual example is mapped to Life → বাংলাদেশের গাছপালা → শাপলা. Focused smoke checks confirmed the GLB request, attached model, visible source/license and local-cultivar caveat, and item-specific fact panel at desktop (1440×900) and mobile (390×844).
+- The existing CC BY 4.0 turmeric-root and cinnamon-stick scans are now also used in Life → ঔষধি ও মশলা গাছ, because those lesson entries explicitly teach the rhizome and bark/spice parts. Visible credits and model manifests explicitly say these are harvested plant parts, not whole living plants. Focused checks confirmed the rendered assets, visible attribution, and item-specific exploded-view explanations at desktop and mobile.
+- Visual evidence: `evidence/licensed-models/desktop-life-shapla-water-lily.png`, `mobile-life-shapla-water-lily.png`, `desktop-life-turmeric-rhizome.png`, `mobile-life-turmeric-rhizome.png`, `desktop-life-cinnamon-bark.png`, and `mobile-life-cinnamon-bark.png`.
+- Historical audit after these mappings: **61/222** licensed exact-object/example mappings; **41** concrete exact-object gaps. `npm run audit:model-rights` passed for 63 local GLB/glTF assets at that time. These checks do not mean all world assets are complete, and they are not a deployment sign-off.
+
+## Krishnachura tree specimen — 2026-10-19
+
+- Candidate: [PlantCatalog — Realistic HD Royal poinciana (15/40)](https://sketchfab.com/3d-models/realistic-hd-royal-poinciana-1540-9d44b435434942e283adb0754e5403dd), identified by the creator as *Delonix regia*. The signed-in Sketchfab download panel lists CC BY 4.0 and explicitly says commercial use is allowed with creator credit. The source describes an old, thriving 5.1 m specimen exported at 40% mesh resolution and 394.3k triangles.
+- Accepted as the species-specific visual example for Life → বাংলাদেশের গাছপালা → কৃষ্ণচূড়া. This is a static model from PlantCatalog, not a photogrammetry scan or an animated specimen; the lesson credit discloses that limitation. The source's spring flowering state is not asserted as year-round appearance.
+- The 1K source GLB was 26.82 MB and produced a “too heavy” warning in Sketchfab's browser viewer. Local processing simplified its mesh to a 0.35 target ratio with 0.001 error tolerance, resized textures to 512 px/WebP, quantized geometry, and applied `EXT_meshopt_compression`, reducing it to 3.32 MB. The site already configures Three.js `MeshoptDecoder`.
+- `gltf-transform validate` reported no errors or warnings for the quantized intermediate; smoke testing the final Meshopt asset passed at 1440×900 desktop and 390×844 mobile. Both screenshots were visually reviewed: the red-orange flowering canopy and branching trunk remain legible inside the scene, and the visible source/license note fits on mobile.
+- Evidence: `evidence/licensed-models/desktop-life-krishnachura.png` and `mobile-life-krishnachura.png`; source and derivative hashes/modifications are in `public/models/krishnachura_delonix_01/asset-manifest.json`.
+- Historical generated audit after this mapping: **62/222** licensed exact-object/example mappings; **40** concrete exact-object gaps remained. This is progress only, not a complete-world or deployment sign-off.
+
+## Balance scale specimen — 2026-10-19
+
+- Source: [Jean-Francois.Bonin — Balance Scale](https://sketchfab.com/3d-models/balance-scale-c880997ff2b3438c8e26600b57cf406b). The signed-in Sketchfab download panel identifies CC BY 4.0 and explicitly permits commercial use with attribution. The creator calls the object a “Legal Scale”; Posora uses it as an illustrative two-pan balance, not a calibrated instrument.
+- Added to Discovery → পরিমাপের যন্ত্র → দাঁড়িপাল্লা. Its item-specific facts describe equal-arm balance and explicitly avoid implying precision or calibration.
+- The 14.92 MB source was simplified toward a 0.45 mesh ratio, then Meshopt-compressed; final local GLB is 2.93 MB. Source/derivative hashes, transformations, and attribution are recorded in `public/models/balance_scale_01/asset-manifest.json`.
+- Focused browser test passed at 1440×900 and 390×844, including model attachment, visible credit, and the balance-specific fact panel. Both images were visually reviewed: `evidence/licensed-models/desktop-discovery-balance-scale.png` and `mobile-discovery-balance-scale.png`.
+- Historical generated audit after the balance mapping: **63/222** licensed exact-object/example mappings; **39** concrete exact-object gaps remained. The site is not ready for a “complete” or deployment claim while those gaps remained.
+
+## Fried-fish scan candidate rejected — 2026-10-19
+
+- Candidate: [wox080xow — Ikan Goreng](https://sketchfab.com/3d-models/ikan-goreng-833b9c3ec4284047ac0b4b5cc35e9928), CC BY 4.0 with commercial use and attribution. The author identifies it as Indonesian Ikan Goreng, not a Bangladeshi fish species or recipe.
+- The optimized scan was rendered in Posora at desktop and mobile. Both captures showed a fragmented, very small tray-like object with the food split into unclear shapes. It failed the readability/close-up bar and was removed from the production mapping; the original download in Downloads was not changed.
+- Evidence: `evidence/licensed-models/desktop-food-fried-fish-scan.png` and `mobile-food-fried-fish-scan.png`. The fried-fish gap remains open; do not count this candidate as an approved replacement.
+
+## Banyan candidates rejected — 2026-10-19
+
+- [National Cheng Kung University Museum — Banyan Tree of NCKU](https://sketchfab.com/3d-models/banyan-tree-of-ncku-692965e4f7e54f57abffb60ba6b3fb27) is CC BY 4.0 and downloadable, but its page preview is a broad campus/landscape scan with many trees rather than one legible banyan specimen; Sketchfab warns that the 189.5k-triangle model is too heavy to render on the current device.
+- [eternatrees24 — Banyan Tree (1)](https://sketchfab.com/3d-models/banyan-tree-1-640252b028b341fda7c5569b2e5b5682) is CC BY 4.0 and downloadable, but its 191.4k-triangle preview is a tiny, low-detail stylized tree; Sketchfab also warns it is too heavy to render on the current device.
+- [Dmytro Dokunov — Banyan Tree Goa](https://sketchfab.com/3d-models/banyan-tree-goa-c2c6d55237284c098fe6aa8504795cb5) is a scan of a bare cut trunk with no canopy, not a representative whole-tree specimen. No download control/license was available in the signed-in page.
+- All three were rejected; the banyan gap remains open.
+
+## Tulsi AI-generated model candidate rejected — 2026-10-19
+
+- [anandjha2499 — “a cloesup shot of tulsi plant”](https://sketchfab.com/3d-models/a-cloesup-shot-of-tulsi-plant-cfa1d5a4e84e4094937c79cd2e7c2c9d) is downloadable under CC BY 4.0. The creator discloses it was generated with Meshy AI.
+- Its Sketchfab preview shows a tiny sparse sprig without enough leaf/stem detail to teach Tulsi identification. It also receives a “too heavy” warning in Sketchfab despite only 9.8k triangles, making source preview quality suspect. The downloaded copy in Downloads was inspected but not integrated; the Tulsi gap remains open.
+
+## Current audited state after candidate rejections — 2026-10-19
+
+- `npm run audit:model-coverage`: **63/222** licensed exact-object/example mappings; **38** exact-object gaps remain. Rejected Ikan Goreng and Tulsi candidates are not counted.
+- `npm run audit:model-rights`: passes for **65** local GLB/glTF files with source/license evidence.
+- Build and Food pilot smoke pass. This remains an unfinished model-replacement backlog, not a sitewide deployment sign-off.
+
+## Additional exact-object source checks — 2026-10-19
+
+- **Cardamom bowl:** [go3452 — Cardamom Bowl](https://sketchfab.com/3d-models/cardamom-bowl-7e84837fa85c4b56b751f51dccb5aee0) is CC BY 4.0 and permits commercial use with attribution. The creator says it is Meshy AI generated; the viewer reports 240k triangles and displays a warning that it is too heavy to render on the current device. The source did not render sufficiently for a visual acceptance review, so it was not integrated or counted.
+- **Bengal banyan:** [vivasm — Banyan Tree](https://www.meshy.ai/posts/019f2802-00dd-7aa4-b66d-aeb61da0f02c) is marked CC0 and the page preview shows a whole canopy with aerial roots. The geometry reports 1,178,256 faces. Download opens a Meshy account-creation prompt and requires continuing under its Terms of Use; no account was created or terms accepted. It remains a candidate, not a local asset.
+- **Palmyra palm:** [PANDORAland — Borassus flabellifer](https://www.turbosquid.com/3d-models/3d-new-plant-high-detail-borassus-flabellifer-decorative-garden-2183034) is an exact-species four-tree scene and offers GLTF, but is listed at $5. No purchase was made; the exact Palmyra asset remains open pending an authorized purchase or free permissive source.
+- **3D Warehouse:** its current official FAQ says that incorporating Warehouse models into a website for members is impermissible aggregation. The exact [Palmyra Palm (Borassus flabellifer)](https://embed-3dwarehouse-classic.sketchup.com/model/c09686f0b41de786693afe255d42a62a/Palmyra-Palm-Borassus-flabellifer) listing therefore was not used. See [SketchUp's FAQ](https://help.sketchup.com/cs/3d-warehouse/3d-warehouse-terms-use-faq#) (section “Can I incorporate models from 3D Warehouse into my website for use by my members?”).
+- Exact searches for CC0/CC-BY GLBs for hilsa, doel, Ganges river dolphin, estuarine crocodile, Borassus, Sundari (*Heritiera fomes*), and nipa palm did not identify a verifiable free model suitable to integrate in this pass. Results without an actual downloadable model and compatible rights are not treated as assets.
+
+The audited backlog is unchanged at **63/222** licensed exact-object/example mappings and **38** concrete gaps. `npm run audit:model-rights` still covers 65 local model files. No asset was added from the candidates above, so the prior build/smoke evidence remains the last code verification; this research pass does not authorize a deploy.
+
+## Tulsi file recheck — 2026-10-19
+
+The local download `/Users/shamim/Downloads/a_cloesup_shot_of_tulsi_plant.glb`
+was rechecked against its embedded Sketchfab metadata (creator anandjha2499,
+source URL, CC BY 4.0). A temporary integration confirmed that it parses and
+renders, but the desktop/mobile captures still show the sparse, pale
+AI-generated sprig described above. Technical load success is not visual or
+botanical acceptance, so the temporary mapping and bundled copy were removed.
+The inspection captures remain at `licensed-models/desktop-life-tulsi.png` and
+`mobile-life-tulsi.png`; the asset in Downloads was left untouched. Tulsi stays
+an open exact-object gap and is not counted as covered.
+
+This recheck leaves the verified baseline at **63/222** licensed exact-object or
+example mappings, **38** exact-object gaps, and **65** rights-recorded local
+models. The temporary candidate run passed the general rendering smoke but is
+not part of the production test matrix. This remains an unfinished backlog, not
+a sitewide deployment sign-off.
+
+## Final source check in this pass — 2026-10-19
+
+- A public listing for an [aneroid barometer by 3DAssets.dev](https://3dassets.dev/assets/abandoned-weather-station-and-storm-shelter-aneroid-ba-b151829e)
+  advertises CC0 and describes a static model with a dial and pointer. Its
+  linked CDN could not be resolved in the local environment, and the publisher
+  page could not be opened in the connected browser, so no file or geometry was
+  verified and it remains a candidate only.
+- A second [Tulsi listing by KISHORE KUMAR G](https://sketchfab.com/3d-models/tulsi-tree-9683aa7f8d1440bdae47adc6f5bee585)
+  names *Ocimum tenuiflorum*, but the public listing did not show a license or
+  downloadable model in the accessible search result. It is not integrated.
+- The open-source search returned only generic fish for the Hilsa query and
+  unrelated/insufficiently licensed food objects for the Bangladeshi-dish
+  query. Generic fish cannot substitute for Hilsa; those searches close none of
+  the remaining mappings.
+
+No deployment was made. The remaining source availability and rights gaps still
+need an exact licensed file, or an owner-approved paid source/account workflow,
+before the sitewide asset replacement can be completed.
+
+## Continuation — 2026-10-19
+
+- Rechecked the exact [Jackfruit Tree 3D Model by hkhalif](https://sketchfab.com/3d-models/jackfruit-tree-3d-model-ee10cbb8ae864ae7a2b11654957bc986) while signed in. Its model inspector exposes a **Standard** paid license and a 239 MB download; the page reports 779.9k triangles, 36 materials, 45 textures, no PBR, and Sketchfab warns it is too heavy to render on this device. Do not download or use without an owner-approved purchase and an explicit review of the license/redistribution terms.
+- Rechecked the exact [Borassus flabellifer male plant](https://free3d.com/3d-model/borassus_flabellifer_male-plant-4681.html) listing. It costs $16 and offers Maya/OBJ rather than a web-ready GLB; no purchase was made.
+- The exact [Palmyra Palm in 3D Warehouse](https://embed-3dwarehouse-classic.sketchup.com/model/c09686f0b41de786693afe255d42a62a/Palmyra-Palm-Borassus-flabellifer) is 216 KB, but the previously checked official 3D Warehouse terms prohibit embedding member models as a website aggregation. It remains unusable for Posora.
+- A fresh Sketchfab search for downloadable “Hilsa”/“ilish” surfaced generic fish, not a species-identified *Tenualosa ilisha* specimen. A generic fish remains an inaccurate replacement for the local species lesson.
+- The downloaded [Ikan Goreng scan](https://sketchfab.com/3d-models/ikan-goreng-833b9c3ec4284047ac0b4b5cc35e9928) was temporarily mapped and run through the desktop/mobile smoke matrix (58 states passed technical loading), then visually rejected: both captures show a broken, hard-to-read scan too small to teach from. The temporary mapping and bundled derivative were removed; rejected visual captures are retained at `evidence/licensed-models/desktop-food-fried-fish.png`, `desktop-food-fried-fish-scan.png`, and `mobile-food-fried-fish-scan.png`. The original download remains untouched. This is a repeat of the earlier rejection, not new accepted coverage.
+
+No new model was accepted in this continuation. Coverage remains **63/222**,
+with **38** exact-object gaps and **65** rights-recorded local model files.
+
+## Continuation — 2026-10-19 (follow-up)
+
+- Rechecked the owner-provided Sketchfab-named GLB `c6715ec94cee4abfb6edbfaaa4390bea.glb` in Downloads. Its embedded metadata identifies it as the CC0 `Oryza sativa` rice-plant model from ffish.asia / floraZia.com. Its byte size and SHA-256 match `public/models/rice_oryza_sativa_01/oryza-sativa.glb`; it is already integrated only for paddy/crop examples. No duplicate was added, and it must not be presented as cooked rice or a rice dish.
+- The [Natural History Museum, University of Pisa Ganges River Dolphin scan](https://sketchfab.com/3d-models/ganges-river-dolphin-c5fbdf0ace47481eb25646a9c13debb5) is an exact-species skeleton scan, not a living dolphin model. Its listing reports 2.5 million triangles, a 94 MB OBJ source, no textures/PBR, and no animation; the viewer displays a device-too-heavy warning. The corresponding [Wikimedia Commons file](https://commons.wikimedia.org/wiki/File:Platanista_gangetica_3d_scan_Natural_History_Museum_University_of_Pisa_C_272.stl) is CC BY-SA 4.0 and is a 119.21 MB STL. It could only be considered as a separately labeled skeletal-anatomy layer after an optimized desktop/mobile visual test and with share-alike attribution; it is not an acceptable living-animal replacement, and was not downloaded or integrated in this pass.
+- A [1DesignTool spice-sacks model](https://1designtool.com/3d/models/silk-road-caravanserai-spice-sacks) was also checked. Although its library license permits embedded commercial use, the asset is explicitly static and low-poly, depicts saffron/sumac in market sacks rather than the Bengali spices in the lesson, and is not an accurate substitute for cumin, coriander, cardamom, bay leaf, mustard, fenugreek, or garam masala.
+- The exact rice file is already counted; none of these follow-up candidates closes a coverage gap. After the fish-scan rollback, `npm run test:licensed-models` passed **57 model states** across desktop and mobile. This verifies parsing, attachment, and test assertions—not a fresh visual review of every screenshot.
+
+Current coverage remains **63/222**, with **38** exact-object gaps and **65** local model files carrying source/license evidence. No source was added, so the model backlog remains unfinished.

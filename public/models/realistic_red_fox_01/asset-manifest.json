@@ -1,0 +1,37 @@
+{
+  "name": "Red Fox",
+  "source": "https://1designtool.com/3d/models/red-fox",
+  "directSource": "https://assets.stoicsoft.com/1designtool/3d/models/red-fox/ef36760168/model.glb",
+  "license": "1DesignTool 3D Library License — commercial use in websites permitted; no attribution required; standalone file/model-pack redistribution prohibited.",
+  "licenseUrl": "https://1designtool.com/3d/license",
+  "licenseEvidence": "SOURCE-LICENSE.md records the relevant site-published terms and intended scope of use.",
+  "format": "glTF 2.0 GLB",
+  "localMainFile": "red-fox.glb",
+  "downloadedDate": "2026-10-16",
+  "original": {
+    "bytes": 9320812,
+    "sha256": "2e7dea8d845ac7d23242aaaf30945dbe0824601ec32ec14b2212bbd95db11be2"
+  },
+  "files": [
+    {
+      "path": "red-fox.glb",
+      "bytes": 3416900,
+      "sha256": "4aa4169a0546c8bf11350c546413b5f045180c69e9e3c5197c49fda13b051554"
+    }
+  ],
+  "geometry": {
+    "triangles": 116808,
+    "vertices": 98586,
+    "meshes": 14,
+    "materials": 7
+  },
+  "educationalRole": "Detailed red-fox example for the broad mammal-class lesson only; not a local-fauna claim.",
+  "modifications": [
+    "Textures resized to a 512 px maximum and encoded as WebP at quality 82.",
+    "Geometry quantized using standard KHR_mesh_quantization; named mesh nodes retained, with no WASM-based compression."
+  ],
+  "limitations": [
+    "Static; it has no authored animation.",
+    "The fur uses texture and hair cards, not individual simulated strands."
+  ]
+}

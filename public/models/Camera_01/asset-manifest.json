@@ -1,0 +1,114 @@
+{
+  "name": "Camera 01",
+  "source": "https://polyhaven.com/a/Camera_01",
+  "creator": "Rajil Jose Macatangay",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    213.90153467655182,
+    262.82382383942604,
+    77.84665003418922
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 26987,
+  "meshNames": [
+    "Mesh.024",
+    "Mesh.016"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "props",
+    "electronics"
+  ],
+  "localMainFile": "Camera_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/Camera_01_lens_body_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_lens_body_arm_1k.jpg",
+      "bytes": 163109,
+      "md5": "41a93d1239e491fc29349ff73d72436c",
+      "sha256": "6fef8a44334428a8f095315fa8043678994abcc671473cf43f7ca63ec10eb98f"
+    },
+    {
+      "path": "textures/Camera_01_body_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_body_diff_1k.jpg",
+      "bytes": 175778,
+      "md5": "1ceb37036b60b4231c93d0cf383de3da",
+      "sha256": "89b77ec525e933f9f2702e2ccb0c8ba32ecef31dac241bc034e3eddc9481f4f7"
+    },
+    {
+      "path": "textures/Camera_01_strap_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_strap_arm_1k.jpg",
+      "bytes": 159433,
+      "md5": "c9421b18be3daa84224f8856ddfab5d7",
+      "sha256": "17beca6e0542a1a28146b52cff06aad2e404541359e452deca83b74d01505c50"
+    },
+    {
+      "path": "textures/Camera_01_lens_body_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_lens_body_nor_gl_1k.jpg",
+      "bytes": 147816,
+      "md5": "1098e1261b17084d081f32a6a05239de",
+      "sha256": "3d5e695a57ce38f0e35558f43f30497fff2f8cc844c903c95462d105b58cb333"
+    },
+    {
+      "path": "Camera_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Camera_01/Camera_01.bin",
+      "bytes": 845028,
+      "md5": "055c3af4c5dca45bfa4a3d9348563b88",
+      "sha256": "d3d2c78458a4823bc9821c2ba3994c95d15b044c7a1444ba089b163f74c3fcf2"
+    },
+    {
+      "path": "textures/Camera_01_lens_body_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_lens_body_diff_1k.jpg",
+      "bytes": 106198,
+      "md5": "45854840be875f1ea86cf8d830023922",
+      "sha256": "aafa05c5b106b960b21547ef9d4662083dfc7138261cbab1f10e143afe046b68"
+    },
+    {
+      "path": "textures/Camera_01_body_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_body_nor_gl_1k.jpg",
+      "bytes": 271892,
+      "md5": "51f1e690a469baddcbae1ee941a6acb4",
+      "sha256": "c7ec0d96ae9b5f16559069f1a4c9a006f3ec1d49a7707269a280fe23786db144"
+    },
+    {
+      "path": "textures/Camera_01_body_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_body_arm_1k.jpg",
+      "bytes": 228449,
+      "md5": "1476ee36f1af6b22f2b509963b710f9a",
+      "sha256": "a3b1928d258fdb23687fb005a3d764b008475abb13b47a2bb87ed81200274635"
+    },
+    {
+      "path": "textures/Camera_01_strap_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_strap_diff_1k.jpg",
+      "bytes": 132449,
+      "md5": "c8bf1a037fddbc8447ce491059a4e443",
+      "sha256": "3d4c9cb463b330b7ea4fc713f6dc90a0c5e6d9d3ba707b6921fe0a2d1f9ab146"
+    },
+    {
+      "path": "textures/Camera_01_strap_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_strap_nor_gl_1k.jpg",
+      "bytes": 199844,
+      "md5": "5e35df574e5ec7ef76f34a803c7bd847",
+      "sha256": "5d4d99d5b1640d5a4d3c2227c264c232279773b5c92e4a6c50d2f34217880202"
+    },
+    {
+      "path": "Camera_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Camera_01/Camera_01_1k.gltf",
+      "bytes": 9886,
+      "md5": "c3fa6a2e13db2b6c6802725306089139",
+      "sha256": "9c5ca3104579c84ffcebdee5c6e5e09821fe8d4a5cd9ce95ed32d81507450ee3"
+    }
+  ],
+  "educationalRole": "Camera model for image-making and media literacy concepts."
+}

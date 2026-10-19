@@ -9,7 +9,9 @@
  */
 export const CSP = [
   "default-src 'self'",
-  "script-src 'self' https://www.googletagmanager.com",
+  // The Three.js meshopt decoder compiles its bundled WASM module. Permit
+  // WebAssembly only; do not enable JavaScript eval/Function constructors.
+  "script-src 'self' 'wasm-unsafe-eval' https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
   // GLTFLoader creates short-lived blob URLs while decoding textures embedded
   // in a same-origin GLB. Blob remains disallowed for scripts and workers.

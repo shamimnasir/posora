@@ -1,0 +1,77 @@
+{
+  "name": "Calathea Orbifolia 01",
+  "source": "https://polyhaven.com/a/calathea_orbifolia_01",
+  "creator": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    2491.507411003113,
+    1193.592220544815,
+    424.2942640557885
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 16688,
+  "meshNames": [
+    "Plane.014",
+    "Plane.003",
+    "Cylinder.012",
+    "Plane.019",
+    "Cylinder.015"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "plants",
+    "nature",
+    "ground cover",
+    "collection: smugglers_cove"
+  ],
+  "localMainFile": "calathea_orbifolia_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/calathea_orbifolia_01_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/calathea_orbifolia_01/calathea_orbifolia_01_arm_1k.jpg",
+      "bytes": 421555,
+      "md5": "195b131e3812528555d2f8c18e148910",
+      "sha256": "df4ea4dfc74a6965476200cffea69886ac26d3c089f356a7b69518149ef585e0"
+    },
+    {
+      "path": "textures/calathea_orbifolia_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/calathea_orbifolia_01/calathea_orbifolia_01_diff_1k.jpg",
+      "bytes": 455819,
+      "md5": "a84ed342fdc66b44ddebdb1fd9bee1d5",
+      "sha256": "a105a093d74317a3853319a06fdc78cad2a13e353962298d2094195720b9b4a0"
+    },
+    {
+      "path": "calathea_orbifolia_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/calathea_orbifolia_01/calathea_orbifolia_01.bin",
+      "bytes": 407968,
+      "md5": "71dd2ea7aaba98bbd675db12ae382bbd",
+      "sha256": "df1668bcb44914abac046217bbdae9867a3702198f7c374135f2b4456df8b038"
+    },
+    {
+      "path": "textures/calathea_orbifolia_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/calathea_orbifolia_01/calathea_orbifolia_01_nor_gl_1k.jpg",
+      "bytes": 581558,
+      "md5": "93ff03e73a6483a29c272f8704f9d8dd",
+      "sha256": "52aac88c18bf42c369aad9b2b5e41dbe58b015ca2fac7ff6ed4cb21147cb49c8"
+    },
+    {
+      "path": "calathea_orbifolia_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/calathea_orbifolia_01/calathea_orbifolia_01_1k.gltf",
+      "bytes": 9309,
+      "md5": "7ff4de041509fbaa45f8f3dd52b3113d",
+      "sha256": "399130c01bfff6b493f885652112c3c841c3814b024a3d3c87773e0c5ab4f156"
+    }
+  ],
+  "educationalRole": "Real plant specimen illustrating a producer in an ecosystem."
+}

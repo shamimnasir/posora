@@ -1,0 +1,27 @@
+{
+  "name": "Mango Tree",
+  "source": "https://sketchfab.com/3d-models/mango-tree-4b186052228d43d8b3fbb63213677de8",
+  "creator": "stealth86",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "attribution": "Mango Tree by stealth86, licensed under CC BY 4.0.",
+  "format": "GLB 2.0, Sketchfab 1K texture download",
+  "downloadedDate": "2026-10-16",
+  "sourceStatistics": {
+    "bytes": 10982240,
+    "nodes": 8,
+    "meshes": 3,
+    "materials": 3,
+    "triangles": 130451,
+    "animations": 0
+  },
+  "files": [
+    {
+      "path": "mango_tree.glb",
+      "bytes": 10982240,
+      "sha256": "055e4cb9b5c1edb12830d21d1f74d1bbeb8db39054751e7793b8e918e2ac9683"
+    }
+  ],
+  "educationalRole": "Realistic mango-tree specimen for the আম collection object. It is not a claim about a specific cultivar or region."
+}

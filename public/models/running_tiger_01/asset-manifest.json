@@ -1,0 +1,19 @@
+{
+  "name": "Running Tiger",
+  "file": "running-tiger.glb",
+  "source": "https://sketchfab.com/3d-models/running-tiger-fc2c7fd74dd04e39935803b884c77258",
+  "creator": "Amil (francescolima74)",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Animated tiger example in Life → বাংলাদেশের প্রাণী. The source labels it only as a tiger; Bengal subspecies is not verified.",
+  "provenance": "Downloaded from Sketchfab using the owner's signed-in account. Original converted 1K GLB used without modification.",
+  "sha256": "6e152d1d98c6149d4241c292bf21cbc9e8ab16f81a456ea1515d174f7f7d1e40",
+  "geometry": {
+    "triangles": 4700,
+    "meshes": 1,
+    "embeddedPngTextures": 1,
+    "textureResolution": "1024x1024",
+    "bytes": 1996448,
+    "animations": ["Run"]
+  }
+}

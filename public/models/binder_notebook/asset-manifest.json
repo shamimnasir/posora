@@ -1,0 +1,73 @@
+{
+  "name": "Binder Notebook",
+  "source": "https://polyhaven.com/a/binder_notebook",
+  "creator": "DaDrood",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    584.0288400650024,
+    199.95832443237305,
+    25.289426557719707
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 18077,
+  "meshNames": [
+    "Cube.003",
+    "Cube.005"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "collection: project_lighthouse",
+    "books",
+    "props"
+  ],
+  "localMainFile": "binder_notebook_1k.gltf",
+  "files": [
+    {
+      "path": "textures/binder_notebook_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/binder_notebook/binder_notebook_nor_gl_1k.jpg",
+      "bytes": 319694,
+      "md5": "51af6519e740f1e53d33b8eb09def5dd",
+      "sha256": "24b18d9792c3816337d7d09b30aed400a887747ea6beb04b23612b6e1210a29e"
+    },
+    {
+      "path": "textures/binder_notebook_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/binder_notebook/binder_notebook_diff_1k.jpg",
+      "bytes": 533256,
+      "md5": "0c6bbb11b58934e7ed6b6a0729e20e8b",
+      "sha256": "8591cce815138bd737c252dc12a4d9bf41bceb499ace7dbfef0725e64dadda2d"
+    },
+    {
+      "path": "textures/binder_notebook_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/binder_notebook/binder_notebook_arm_1k.jpg",
+      "bytes": 507028,
+      "md5": "825aa742d0d2083656d8ebe636cde087",
+      "sha256": "c0bc38cd13e5ada9552c3a9b60f88c36acf9e672011d97d066a6c0148f01898a"
+    },
+    {
+      "path": "binder_notebook.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/binder_notebook/binder_notebook.bin",
+      "bytes": 525488,
+      "md5": "bade6e7ed1349d598b27018c61cf674d",
+      "sha256": "68e28e6fac708a6e172230c42debd990e48819566fa07f222415467b1034b9c0"
+    },
+    {
+      "path": "binder_notebook_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/binder_notebook/binder_notebook_1k.gltf",
+      "bytes": 4309,
+      "md5": "8d05e6a6436c12169debc073692b7f5e",
+      "sha256": "714596552fad383ae3ca76d42038b03a20b6864d6ef5bc6d12620ac21fef1b1e"
+    }
+  ],
+  "educationalRole": "Bound notebook model for writing and paper vocabulary."
+}

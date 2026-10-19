@@ -1,0 +1,78 @@
+{
+  "name": "Anthurium Botany 01",
+  "source": "https://polyhaven.com/a/anthurium_botany_01",
+  "creator": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    2806.4264059066772,
+    1800.9886145591736,
+    506.7181019112468
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 4134,
+  "meshNames": [
+    "Plane.016",
+    "Plane.026",
+    "Plane.032",
+    "Plane.039",
+    "Plane.019",
+    "Plane.020"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "plants",
+    "nature",
+    "collection: the_shed",
+    "collection: smugglers_cove"
+  ],
+  "localMainFile": "anthurium_botany_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/anthurium_botany_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/anthurium_botany_01/anthurium_botany_01_nor_gl_1k.jpg",
+      "bytes": 494107,
+      "md5": "b9f023a3bf6f30ed293a35722ab14f06",
+      "sha256": "f0cf940590733a2a5a9b0db362bd093c39b28405c66b1d084aa203efe6f0d3fc"
+    },
+    {
+      "path": "textures/anthurium_botany_01_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/anthurium_botany_01/anthurium_botany_01_arm_1k.jpg",
+      "bytes": 542795,
+      "md5": "2c48d7e4b92b422a68c2ce579351de50",
+      "sha256": "88d9ce05e4b301ae9cd5b479459262c4690a3ee2de80a8f5e18a288ff5e96bee"
+    },
+    {
+      "path": "anthurium_botany_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/anthurium_botany_01/anthurium_botany_01.bin",
+      "bytes": 1744256,
+      "md5": "121f1e490c98ea71ebb1a61a2246c585",
+      "sha256": "6a23daf128e297ad99e984bec11bdea3c6eab64e52d07cbdc948ace5a05b2e25"
+    },
+    {
+      "path": "textures/anthurium_botany_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/anthurium_botany_01/anthurium_botany_01_diff_1k.jpg",
+      "bytes": 448508,
+      "md5": "b78dfe5b3c265e5d9290c0f75a2801f3",
+      "sha256": "f759421f00e848d7d2915b409d98c6311cc601e4be17d4155e0852429fa4993e"
+    },
+    {
+      "path": "anthurium_botany_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/anthurium_botany_01/anthurium_botany_01_1k.gltf",
+      "bytes": 10675,
+      "md5": "2a55f9ff4645ec45971e4796acad5d1f",
+      "sha256": "6b3f6b8eda6cc0edfefd6a58f6758ef6538c35b2ca2a76189383f23b246dd8c6"
+    }
+  ],
+  "educationalRole": "Botanical Anthurium specimen used only for the generic flower/plant-part concept."
+}

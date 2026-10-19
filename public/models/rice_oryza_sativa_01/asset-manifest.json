@@ -1,0 +1,17 @@
+{
+  "name": "Rice (Oryza sativa)",
+  "file": "oryza-sativa.glb",
+  "source": "https://sketchfab.com/3d-models/cc0-rice-oryza-sativa-c6715ec94cee4abfb6edbfaaa4390bea",
+  "creator": "ffish.asia / floraZia.com",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "usage": "Life world paddy plant only; not processed or cooked rice.",
+  "provenance": "Provided by the project owner; retained without modification.",
+  "sha256": "2e9399a50130ddf0c26b2543e265bbf8099adae06d490a6083558f7f8b974c06",
+  "geometry": {
+    "triangles": 95704,
+    "meshes": 3,
+    "embeddedJpegTextures": 2,
+    "bytes": 6304248
+  }
+}

@@ -221,7 +221,14 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
         if (licensed && slot.got) {
           const replacement = new Group();
           void loadLicensedModel(licensed.url, replacement, {
-            height: 1.05,
+            height: licensed.height,
+            fitAxis: licensed.fitAxis,
+            rotationY: licensed.rotationY,
+            rotationX: licensed.rotationX,
+            colorBoost: licensed.colorBoost,
+            leafShadows: licensed.leafShadows,
+            playAnimations: licensed.playAnimations,
+            animationClip: licensed.animationClip,
             centerOnFloor: true,
             accept: () => generation === currentGeneration,
           }).then((model) => {

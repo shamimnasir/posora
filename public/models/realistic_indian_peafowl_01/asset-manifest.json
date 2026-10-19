@@ -1,0 +1,39 @@
+{
+  "name": "Indian Peafowl",
+  "species": "Pavo cristatus",
+  "source": "https://1designtool.com/3d/models/indian-peacock",
+  "directSource": "https://assets.stoicsoft.com/1designtool/3d/models/indian-peacock/e915b6ef69/model.glb",
+  "license": "1DesignTool 3D Library License — commercial website use and in-product embedding permitted; standalone file/model-pack redistribution prohibited.",
+  "licenseUrl": "https://1designtool.com/3d/license",
+  "format": "glTF 2.0 GLB",
+  "localMainFile": "indian-peafowl.glb",
+  "downloadedDate": "2026-10-16",
+  "original": {
+    "bytes": 7950404,
+    "sha256": "d7a4d3fe0871a187c7e6a597c4093c443c249f5ab8dc043ed24c22a5fa1d7385"
+  },
+  "files": [
+    {
+      "path": "indian-peafowl.glb",
+      "bytes": 2248012,
+      "sha256": "5704aae5a17340367f8962bb873fc0d4cd8513a5ce7c040a6e4a8cf05130fa36"
+    }
+  ],
+  "geometry": {
+    "triangles": 97796,
+    "vertices": 84637,
+    "meshes": 21,
+    "materials": 12
+  },
+  "educationalRole": "A clearly named male Indian peafowl example for the general bird-class lesson only; not a Bangladesh-fauna claim.",
+  "modifications": [
+    "Textures resized to a 512 px maximum and encoded as WebP at quality 82.",
+    "Geometry quantized using standard KHR_mesh_quantization; no WASM-based compression."
+  ],
+  "limitations": [
+    "Static; no authored animation.",
+    "The model is code-built and described by its source as realistic, not photogrammetry.",
+    "The creator notes that the display train may crop at 390 px portrait width; keep its mobile presentation contained.",
+    "Do not present it as a Bangladesh native-fauna example or redistribute the GLB as a standalone file."
+  ]
+}

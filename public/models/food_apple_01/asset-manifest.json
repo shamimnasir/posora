@@ -1,0 +1,71 @@
+{
+  "name": "Food Apple 01",
+  "source": "https://polyhaven.com/a/food_apple_01",
+  "creator": "Oliver Harries",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    97.56118059158325,
+    95.90170904994011,
+    85.38994403897959
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 7012,
+  "meshNames": [
+    "apple_50k_uv.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "food",
+    "nature"
+  ],
+  "localMainFile": "food_apple_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/food_apple_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_apple_01/food_apple_01_diff_1k.jpg",
+      "bytes": 183791,
+      "md5": "3ddf2b8313f20c95f3e04fb057b32d7b",
+      "sha256": "b7fc17cfb5013958167bbc089ea4d1c193fb1c61ea4f3c974a9894ed9ba82e8a"
+    },
+    {
+      "path": "food_apple_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/food_apple_01/food_apple_01.bin",
+      "bytes": 170680,
+      "md5": "26b23e40de43097b0185a0d93cd72d3b",
+      "sha256": "f14ff9647fdd9f5a59ef325f94154e91f1f14cc2563cd3fb572c4fe9ce5756ca"
+    },
+    {
+      "path": "textures/food_apple_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_apple_01/food_apple_01_nor_gl_1k.jpg",
+      "bytes": 63513,
+      "md5": "e456cb63d6a4c298c826b63be0adfaf7",
+      "sha256": "c81b1e51ce7e789b65bfde2f046dcb5ba5773b5c6be3e572313be0600c51721b"
+    },
+    {
+      "path": "textures/food_apple_01_rough_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/food_apple_01/food_apple_01_rough_1k.jpg",
+      "bytes": 53123,
+      "md5": "e46e242f52a3c2138a1e8c6ce0d82438",
+      "sha256": "2e5a503af38df7b570b0e81cc9563125f0913b466e01140d4e24ea5ebdbec587"
+    },
+    {
+      "path": "food_apple_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/food_apple_01/food_apple_01_1k.gltf",
+      "bytes": 2705,
+      "md5": "222a8e136b40f36c1acb87a6036c1106",
+      "sha256": "6a7dc1cda1271c8b08e36e2b9fd44371b7149cca6262c71bc36d971cdac4325f"
+    }
+  ],
+  "educationalRole": "Real apple fruit example for generic fruit vocabulary and food groups."
+}

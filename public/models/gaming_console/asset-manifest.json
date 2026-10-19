@@ -1,0 +1,79 @@
+{
+  "name": "Gaming Console",
+  "source": "https://polyhaven.com/a/gaming_console",
+  "creator": "Sean Buckley",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    325.0104486942291,
+    318.54312121868134,
+    100.2653255709447
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 31710,
+  "meshNames": [
+    "7th_gen_console_01.007",
+    "7th_gen_console_01.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "appliances",
+    "electronics"
+  ],
+  "localMainFile": "gaming_console_1k.gltf",
+  "files": [
+    {
+      "path": "textures/gaming_console_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gaming_console/gaming_console_nor_gl_1k.jpg",
+      "bytes": 412474,
+      "md5": "bced09cb2baa2f9d099a23d673bb4be2",
+      "sha256": "efdc99e1f54f449f1d385c74525dd517185e3c84b4e1c64550215d7d380e5ee7"
+    },
+    {
+      "path": "textures/gaming_console_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gaming_console/gaming_console_diff_1k.jpg",
+      "bytes": 456035,
+      "md5": "fee5e52cdb2a0e4cc66de267fd8919f2",
+      "sha256": "f065d27c1efcfff72fa37d450eb612d1c1142c2726c1433e75c4d03066c228cf"
+    },
+    {
+      "path": "textures/gaming_console_emissive_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gaming_console/gaming_console_emissive_1k.jpg",
+      "bytes": 19784,
+      "md5": "adebd040dd0686d41af98b64d13c36fa",
+      "sha256": "916e9fbe1886c2d92cafdc6df2b38a5a29d5b95e732d7d8c78b784f1218b9c5a"
+    },
+    {
+      "path": "gaming_console.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/gaming_console/gaming_console.bin",
+      "bytes": 1407028,
+      "md5": "3bd9ba4b7ce934dba5f2508e14c21625",
+      "sha256": "7118be3268cac74fd6f4d4e0f678599b34b94d9c9853f8a0b23dac54b311cbfc"
+    },
+    {
+      "path": "textures/gaming_console_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gaming_console/gaming_console_arm_1k.jpg",
+      "bytes": 679186,
+      "md5": "f905dfcf9e79d2f0db773edec8873c12",
+      "sha256": "548b7da2ca9945cf213f16b24f484522f92481d3540f48600017e92739200b4a"
+    },
+    {
+      "path": "gaming_console_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/gaming_console/gaming_console_1k.gltf",
+      "bytes": 4943,
+      "md5": "d9ca70584a88825338871d5fbfa014de",
+      "sha256": "66266eb600e227efb31bae36ea7587c000fcae3dd0955847a91089eb612eb2f9"
+    }
+  ],
+  "educationalRole": "Gaming console model for digital entertainment and device comparisons."
+}

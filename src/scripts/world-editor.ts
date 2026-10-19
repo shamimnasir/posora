@@ -4,7 +4,7 @@
  * Renders the repeatable sections (categories, key interactions, missions) from
  * the JSON the page embedded, tracks dirtiness, and posts the whole world back
  * as one document. Kept in a module rather than an inline script because the
- * site's CSP is `script-src 'self'`.
+ * site's CSP permits same-origin scripts while keeping inline JavaScript off.
  */
 
 type Cat = { n: string; items: string[]; play: string };

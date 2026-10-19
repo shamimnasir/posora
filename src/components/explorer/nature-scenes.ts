@@ -4,6 +4,7 @@ import {
   Color, CanvasTexture, RepeatWrapping, SRGBColorSpace, DoubleSide, InstancedMesh, Object3D,
   Vector3, TubeGeometry, CatmullRomCurve3, Points, PointsMaterial,
 } from 'three';
+import { loadLicensedModel } from './model-loader';
 
 export type NatureScene = {
   root: Group; targets: Group[]; details: Object3D[];
@@ -255,6 +256,23 @@ export function buildNatureScene(category:number,item:number):NatureScene {
   } else if(category===5) {
     b.add(wa.group);const fishes=[fish(b,0,1.4),fish(b,.2,.65),fish(b,-.15,2.1)];
     const fungi=mushrooms(c,-1.4,.25,2);details[1]=fishes[0];details[2]=fungi;
+    // The selected “producer” is a real botanical specimen, not a procedural
+    // cluster of generic leaves. Keep it isolated as target 1 for the authored
+    // close-up; if the local model cannot load, the scene remains usable.
+    canopy.visible=false;
+    const plant=new Group();plant.name='licensed-producer-plant';a.add(plant);
+    plant.position.set(-.55,tr.height(-.55,.6),.6);details[0]=plant;
+    void loadLicensedModel('/models/potted_plant_01/potted_plant_01_1k.gltf',plant,{
+      height:1.9,centerOnFloor:true,accept:()=>root.parent!==null,
+    });
+    // Fern 02 is a scanned ground-cover cluster, not a complete specimen.
+    // Use it in that proper role around the hero plant; the close-up isolates
+    // the potted producer above, so the fern never becomes floating foliage.
+    const groundcover=new Group();groundcover.name='licensed-fern-groundcover';a.add(groundcover);
+    groundcover.position.set(1.55,tr.height(1.55,-1.25),-1.25);groundcover.scale.setScalar(.72);
+    void loadLicensedModel('/models/fern_02/fern_02_1k.gltf',groundcover,{
+      height:.92,centerOnFloor:true,accept:()=>root.parent!==null,
+    });
     updates.push((t,p)=>fishes.forEach((f,i)=>{f.position.z=.8+i*.4+Math.sin(t*(.2+p*.4)+i)*.3;f.rotation.y=Math.cos(t*.3+i)*.4;}));
   } else if(category===6) {
     const solar=new Group();c.add(solar);solar.position.set(-1.35,.55,1.6);

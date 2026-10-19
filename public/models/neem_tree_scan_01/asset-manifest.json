@@ -1,0 +1,19 @@
+{
+  "name": "Neem Tree",
+  "file": "neem-tree.glb",
+  "source": "https://sketchfab.com/3d-models/neem-tree-03edef8009d942d3a3db6fa64cecbe56",
+  "creator": "Rohit Pawar",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Life medicinal-plants lesson: neem tree only.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account; optimized locally with glTF Transform 4.3.0, retaining attribution.",
+  "originalSha256": "041ad4676d785f230428b36aea411a34d52e077b0b21ab243182bcd9fa257fc5",
+  "sha256": "5065b6e135c6dc74270aaddbd76800f105f6e49597cdcedf8fd37d887fdc553d",
+  "geometry": {
+    "sourceTriangles": 2300000,
+    "meshDefinitions": 4,
+    "instancedLeafMaterials": 3,
+    "texture": "512x512 WebP",
+    "bytes": 444908
+  }
+}

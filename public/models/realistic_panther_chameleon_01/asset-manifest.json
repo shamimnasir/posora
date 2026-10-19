@@ -1,0 +1,38 @@
+{
+  "name": "Panther Chameleon",
+  "species": "Furcifer pardalis",
+  "source": "https://1designtool.com/3d/models/panther-chameleon",
+  "directSource": "https://assets.stoicsoft.com/1designtool/3d/models/panther-chameleon/6f71d2b7df/model.glb",
+  "license": "1DesignTool 3D Library License — commercial use in websites permitted; no attribution required; standalone file/model-pack redistribution prohibited.",
+  "licenseUrl": "https://1designtool.com/3d/license",
+  "format": "glTF 2.0 GLB",
+  "localMainFile": "panther-chameleon.glb",
+  "downloadedDate": "2026-10-16",
+  "original": {
+    "bytes": 8012904,
+    "sha256": "c57e5291f29aaf0fac87baeef27c48c4580c6baa96f505806ed4aa89cf4b15f3"
+  },
+  "files": [
+    {
+      "path": "panther-chameleon.glb",
+      "bytes": 1986896,
+      "sha256": "2d3b248092e13d8aa93ae7fda47004cfe02c447d85f280d42fbbf030c5e6247f"
+    }
+  ],
+  "geometry": {
+    "triangles": 115669,
+    "vertices": 61330,
+    "meshes": 17,
+    "materials": 5
+  },
+  "educationalRole": "A named non-Bangladeshi reptile specimen for the broad reptile-class lesson only.",
+  "modifications": [
+    "Textures resized to a 512 px maximum and encoded as WebP at quality 82.",
+    "Geometry quantized with standard KHR_mesh_quantization; no WASM-based compression."
+  ],
+  "limitations": [
+    "Static; it has no authored animation.",
+    "The source describes the model as code-built with PBR textures, not a photogrammetry scan.",
+    "It must not be presented as a Bangladeshi animal or offered as a standalone download."
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "Gamepad",
+  "source": "https://polyhaven.com/a/gamepad",
+  "creator": "Josh Dean",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    404.0517807006836,
+    434.9614977836609,
+    18.924321746453643
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 9546,
+  "meshNames": [
+    "gamepad_01_mesh_case"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "props"
+  ],
+  "localMainFile": "gamepad_1k.gltf",
+  "files": [
+    {
+      "path": "textures/gamepad_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gamepad/gamepad_diff_1k.jpg",
+      "bytes": 309469,
+      "md5": "481e2ef26e548cec00140a32dce30ddd",
+      "sha256": "d66b82f9790c304efaae5b0dc45a1dffd57ff64ec57d57d7e5a2fe1b1b067b5c"
+    },
+    {
+      "path": "gamepad.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/gamepad/gamepad.bin",
+      "bytes": 256796,
+      "md5": "06f345d9e959c3d265ff6f599b1640db",
+      "sha256": "f1bf4c355880932ae321d0ee7221767d0f9b9a0f3d00522424847ce21462b701"
+    },
+    {
+      "path": "textures/gamepad_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gamepad/gamepad_nor_gl_1k.jpg",
+      "bytes": 241556,
+      "md5": "0ee54f5549614917728ed1293cc63f64",
+      "sha256": "90b7eb4ce8578797c2e5386f979c306a247a8a280ba980eb5380828dcb42edd8"
+    },
+    {
+      "path": "textures/gamepad_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gamepad/gamepad_arm_1k.jpg",
+      "bytes": 510273,
+      "md5": "67c3c5c000441d0d79a9e14df40d93a3",
+      "sha256": "cb5481bb081c12a92213a5decbe41112788896fe4e1810ee74f086e45e4cf5f1"
+    },
+    {
+      "path": "gamepad_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/gamepad/gamepad_1k.gltf",
+      "bytes": 2728,
+      "md5": "86e6f546e948429591f8de7c3c9cc981",
+      "sha256": "30eabe08b4c76013efb27322ef8834ba915dd0ff46950ebf69390e7fbeef3dea"
+    }
+  ],
+  "educationalRole": "Game controller example for online game purchase safety."
+}

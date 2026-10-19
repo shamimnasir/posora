@@ -1,0 +1,71 @@
+{
+  "name": "School Chair 01",
+  "source": "https://polyhaven.com/a/SchoolChair_01",
+  "creator": "Ethan Place",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    565.8532977104187,
+    675.2548813819885,
+    1006.035539903678
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 5072,
+  "meshNames": [
+    "Mesh"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "furniture",
+    "seating"
+  ],
+  "localMainFile": "SchoolChair_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/SchoolChair_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolChair_01/SchoolChair_01_nor_gl_1k.jpg",
+      "bytes": 189532,
+      "md5": "223a0e5d115fb86cf1ae675fe73dc04a",
+      "sha256": "4ee930562ad26e8c98af75e8aa6577d01cb56f6d22628f4e95c385e5364f0623"
+    },
+    {
+      "path": "textures/SchoolChair_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolChair_01/SchoolChair_01_diff_1k.jpg",
+      "bytes": 52590,
+      "md5": "2d5c9c77d97ba2edd5084a9d72b5dd63",
+      "sha256": "f10ae4dbddfb056ef716770ebd96e0eff0aa6f0b5ad0f263ff51c5cade6e1d8f"
+    },
+    {
+      "path": "textures/SchoolChair_01_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolChair_01/SchoolChair_01_arm_1k.jpg",
+      "bytes": 104994,
+      "md5": "559daea007902aae5b5d5623a34b3a13",
+      "sha256": "ff773eb01c9d59130dc3cc0274951ac626d73fa1b2f7eee519af4ca80835568b"
+    },
+    {
+      "path": "SchoolChair_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/SchoolChair_01/SchoolChair_01.bin",
+      "bytes": 134912,
+      "md5": "d1f13f71f9f9979cde18c798e25dd9d3",
+      "sha256": "7d64d556ba88d3962778085b9a190f1adb0d84e667bca8ef032c0ae34b31a9fe"
+    },
+    {
+      "path": "SchoolChair_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/SchoolChair_01/SchoolChair_01_1k.gltf",
+      "bytes": 2695,
+      "md5": "dea922d55d029fb99085b50196d1eec0",
+      "sha256": "1db6aca4bf379c2d568b2068492dcfcda15d764c0c3d98a970055af25b46281e"
+    }
+  ],
+  "educationalRole": "School chair model for classroom and furniture concepts."
+}

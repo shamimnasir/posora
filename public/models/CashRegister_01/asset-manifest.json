@@ -1,0 +1,93 @@
+{
+  "name": "Cash Register 01",
+  "source": "https://polyhaven.com/a/CashRegister_01",
+  "creator": "Joe Seabuhr",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    600.4907041788101,
+    624.2051124572754,
+    621.3557496666908
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 9927,
+  "meshNames": [
+    "Cash_register",
+    "Cash_register.001"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "appliances",
+    "props"
+  ],
+  "localMainFile": "CashRegister_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/CashRegister_01_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_arm_1k.jpg",
+      "bytes": 207527,
+      "md5": "8f3266ec573baa42e166bf8f21062539",
+      "sha256": "b2d66b5fcb70ebba6803265936302889fe9d952dca904fb4a8dcd8d884af6d53"
+    },
+    {
+      "path": "textures/CashRegister_01_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_nor_gl_1k.jpg",
+      "bytes": 146745,
+      "md5": "c45f9c81b08964a27f62e20b142a4fd9",
+      "sha256": "80e75c35d47e2eb4910932866e66e921d38cd8fc88753eaca4b70f86252c8638"
+    },
+    {
+      "path": "textures/CashRegister_01_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_diff_1k.jpg",
+      "bytes": 133109,
+      "md5": "bfa598c754195bfd8e639f169c58a379",
+      "sha256": "0f048e68054f480d773a6d997a5a853610fde80ecb5bae1c3994ed434c02ce84"
+    },
+    {
+      "path": "textures/CashRegister_01_glass_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_glass_arm_1k.jpg",
+      "bytes": 72642,
+      "md5": "daf5fe84e6ef58508d6527088248609c",
+      "sha256": "bba4ed60cc9cf3df8862fc4ce6ed18d911013545b0928f3f8c20319819c14497"
+    },
+    {
+      "path": "CashRegister_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/CashRegister_01/CashRegister_01.bin",
+      "bytes": 356396,
+      "md5": "49c3cfeaf3b53d89cadab7875ffbd28a",
+      "sha256": "51cfd1329ae1700faaf4d1ce6116f73e795b6a31af7e86fbbb1047b57aa0fe3f"
+    },
+    {
+      "path": "textures/CashRegister_01_glass_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_glass_nor_gl_1k.jpg",
+      "bytes": 17077,
+      "md5": "6f835dd387298bbd5094706384e88a9e",
+      "sha256": "312e24f0f5d025a82bfb2fbc989ac239099ff8b4c46d3cd0125f07da18bd228a"
+    },
+    {
+      "path": "textures/CashRegister_01_glass_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_glass_diff_1k.jpg",
+      "bytes": 99676,
+      "md5": "1bf914670750e0a77cb21a84e0109807",
+      "sha256": "25607764f4956a2c59657b0eb4384a1623040ff7fa55acf18d69b2d6facfc1ec"
+    },
+    {
+      "path": "CashRegister_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/CashRegister_01/CashRegister_01_1k.gltf",
+      "bytes": 6300,
+      "md5": "8fdef843898a54d6638f140b9737873b",
+      "sha256": "323992ca49ac5527e62029ec8e554d2bd74b618784209b5abdf2abf50b941559"
+    }
+  ],
+  "educationalRole": "Point-of-sale example to support how a market transaction works."
+}

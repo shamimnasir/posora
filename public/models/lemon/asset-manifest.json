@@ -1,0 +1,71 @@
+{
+  "name": "Lemon",
+  "source": "https://polyhaven.com/a/lemon",
+  "creator": "Kuutti Siitonen",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    68.68193298578262,
+    68.2600848376751,
+    95.36931291222572
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 4012,
+  "meshNames": [
+    "lemon_01"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-16",
+  "categories": [
+    "props",
+    "food"
+  ],
+  "localMainFile": "lemon_1k.gltf",
+  "files": [
+    {
+      "path": "textures/lemon_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lemon/lemon_nor_gl_1k.jpg",
+      "bytes": 900796,
+      "md5": "967ac253c8a1bc3623f1ebac3c7e543a",
+      "sha256": "6b82679555281f5addc4b8ba8c89aa0a44163354bb3db906aeec79ff6ce478a4"
+    },
+    {
+      "path": "textures/lemon_arm_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lemon/lemon_arm_1k.jpg",
+      "bytes": 441578,
+      "md5": "53c105e1a00b864cd0d41fa488f48a1a",
+      "sha256": "35e70eae295a4ce3a2572101740da2db00d28ecfc59d529588ea167b99e58491"
+    },
+    {
+      "path": "textures/lemon_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lemon/lemon_diff_1k.jpg",
+      "bytes": 410970,
+      "md5": "86c47e7daf0f9ba4aa0563be6cb7297c",
+      "sha256": "8b77be29d3032852bc6c1e327aefcc83377c405dcd437f85d2aac8b33f921618"
+    },
+    {
+      "path": "lemon.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/lemon/lemon.bin",
+      "bytes": 95464,
+      "md5": "357973be23fd9b4bcf2a212ef30ecc31",
+      "sha256": "af5a040a7c14cf7d3537ed387ba2d2257feed2dbafb2f922ee566bf01abb859e"
+    },
+    {
+      "path": "lemon_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/lemon/lemon_1k.gltf",
+      "bytes": 3036,
+      "md5": "79ad40158b71f7d08d7dcc4efc060468",
+      "sha256": "b9cbb0cda757eee2e8f76b9fe9021b0ef208d10a61bae4ac73d5f2c1c20865e3"
+    }
+  ],
+  "educationalRole": "Real lemon used as the physical fruit in the lemon-battery demonstration; electrodes and circuit remain instructional additions."
+}

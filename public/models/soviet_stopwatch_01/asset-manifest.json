@@ -1,0 +1,16 @@
+{
+  "name": "Soviet Stopwatch",
+  "file": "stopwatch.glb",
+  "source": "https://sketchfab.com/3d-models/soviet-stopwatch-ba815c83278e4271a92fcc018188664c",
+  "creator": "mantledmoon",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "One mechanical stopwatch example in the Discovery measuring-instruments lesson.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account, converted GLB with 1K textures; no geometric edits.",
+  "sha256": "7502336690341df567ecab237eae3771482737e6e9db5d18bfa6d48b8f4c4f28",
+  "geometry": {
+    "trianglesApprox": 9807,
+    "meshes": 3,
+    "bytes": 3108796
+  }
+}

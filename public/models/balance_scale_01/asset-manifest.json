@@ -1,0 +1,32 @@
+{
+  "name": "Balance Scale",
+  "source": "https://sketchfab.com/3d-models/balance-scale-c880997ff2b3438c8e26600b57cf406b",
+  "creator": "Jean-Francois.Bonin",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "attribution": "Balance Scale by Jean-Francois.Bonin, licensed under CC BY 4.0.",
+  "format": "glTF 2.0 GLB with EXT_meshopt_compression",
+  "downloadedDate": "2026-10-19",
+  "sourceStatistics": {
+    "bytes": 14918348,
+    "triangles": 251200,
+    "vertices": 73800
+  },
+  "files": [
+    {
+      "path": "balance-scale.glb",
+      "bytes": 2928544,
+      "sha256": "45239924cdca0ddba21dfe9ace1126c7255880e898ee26b9f7e9f4067c6c9f0c"
+    }
+  ],
+  "modifications": [
+    "Attempted mesh simplification to 0.45 ratio with 0.001 error threshold; the error threshold limited reduction to preserve the shape.",
+    "Quantized and compressed geometry with EXT_meshopt_compression."
+  ],
+  "educationalRole": "A concrete balance-scale object for the weighing instrument lesson; the lesson text distinguishes older two-pan balance scales from modern digital scales.",
+  "limitations": [
+    "The source describes the object as a legal scale, so it is used only as a visual balance-scale example, not as a certified instrument or a claim about a specific local market scale.",
+    "Static model; no authored animation."
+  ]
+}

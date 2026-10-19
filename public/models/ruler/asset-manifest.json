@@ -1,0 +1,24 @@
+{
+  "name": "Measure Rule - Stationery",
+  "source": "https://www.innerscene.com/tools/library/3d-parts/measure-rule-stationery-3c74a8db",
+  "creator": "Innerscene (original model)",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "attributionRequired": false,
+  "format": "GLB 2.0 with embedded PBR materials",
+  "dimensions": [31.4, 3.6, 0.7],
+  "dimensionsUnit": "centimeters (as reported by source)",
+  "polycount": 2000,
+  "downloadedDate": "2026-10-15",
+  "modifications": ["No mesh or material edits; source GLB retained."],
+  "localMainFile": "ruler.glb",
+  "files": [
+    {
+      "path": "ruler.glb",
+      "source": "https://www.innerscene.com/api/library/measure-rule-stationery-3c74a8db/download",
+      "bytes": 840816,
+      "sha256": "8735ea2e05091660777c1261ce2fad05cda61ef953bd31eacc1f7dc417d92877"
+    }
+  ],
+  "educationalRole": "A 30 cm graduated ruler for measuring straight lengths."
+}

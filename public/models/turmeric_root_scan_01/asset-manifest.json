@@ -1,0 +1,17 @@
+{
+  "name": "Turmeric Root | Curcuma longa",
+  "file": "turmeric-root.glb",
+  "source": "https://sketchfab.com/3d-models/turmeric-root-curcuma-longa-d0755c2c95194946925c45993e8339c9",
+  "creator": "Keeszify",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Harvested turmeric rhizome in Food spice and Life medicinal/spice-plant lessons; clearly identify it as a harvested underground stem, not a growing plant or powder.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account; optimized with glTF Transform 4.3.0 simplify.",
+  "originalSha256": "5839646dedf2f7e357a4186be197e9c37526ee6b509c9c7578d684cb33c47edb",
+  "sha256": "3f3dee9b867a394416b1a3d9611811e1e299482d416dece620d0d1cdf6b7a8f1",
+  "geometry": {
+    "trianglesApprox": 46072,
+    "meshes": 2,
+    "bytes": 2284856
+  }
+}

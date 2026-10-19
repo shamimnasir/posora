@@ -1,0 +1,38 @@
+{
+  "name": "Realistic HD Royal poinciana (15/40)",
+  "species": "Delonix regia",
+  "commonName": "Krishnachura / Royal poinciana",
+  "source": "https://sketchfab.com/3d-models/realistic-hd-royal-poinciana-1540-9d44b435434942e283adb0754e5403dd",
+  "creator": "PlantCatalog",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "attribution": "Realistic HD Royal poinciana (15/40) by PlantCatalog, licensed under CC BY 4.0.",
+  "format": "glTF 2.0 GLB with EXT_meshopt_compression",
+  "downloadedDate": "2026-10-19",
+  "sourceStatistics": {
+    "bytes": 26823672,
+    "triangles": 394300,
+    "vertices": 284900,
+    "heightMeters": 5.1,
+    "textures": "1K download"
+  },
+  "files": [
+    {
+      "path": "krishnachura.glb",
+      "bytes": 3323296,
+      "sha256": "163ca7ef86e6a93ed04a439fa03fe3fa6294f9e23ed3ad34cc78db1fb3ef670d"
+    }
+  ],
+  "modifications": [
+    "Mesh simplified to a 0.35 target vertex ratio with a 0.001 error limit.",
+    "Textures resized to a 512 px maximum and encoded as WebP at quality 82.",
+    "Geometry quantized and compressed with EXT_meshopt_compression; the site GLTFLoader uses Three.js MeshoptDecoder."
+  ],
+  "educationalRole": "A species-identified Delonix regia specimen mapped to the Krishnachura tree tile. It is a model example, not a claim that every local cultivar has this exact canopy or flowering state.",
+  "limitations": [
+    "The source export is a static PlantCatalog plant model, not a photogrammetry scan and has no authored animation.",
+    "The Sketchfab viewer flagged the original as heavy; the local derivative was optimized from 26.82 MB to 3.32 MB for web delivery.",
+    "The source describes an old, thriving tree in spring. Seasonal appearance varies in Bangladesh."
+  ]
+}

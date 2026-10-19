@@ -1,0 +1,97 @@
+{
+  "name": "Potted Plant 01",
+  "source": "https://polyhaven.com/a/potted_plant_01",
+  "creator": "Rico Cilliers",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://polyhaven.com/license",
+  "attributionRequired": false,
+  "format": "glTF 2.0, Poly Haven 1K textures",
+  "dimensions": [
+    588.9185070991516,
+    636.6117596626282,
+    1350.7787585258484
+  ],
+  "dimensionsUnit": "Not stated in the Poly Haven API response; raw values preserved.",
+  "coordinateSystem": "Source glTF coordinates; runtime normalizes height and centers the model at floor level.",
+  "polycount": 96030,
+  "meshNames": [
+    "potted_plant_01_base_low",
+    "Circle.008",
+    "Circle.002",
+    "Plane.070"
+  ],
+  "animationClips": [],
+  "modifications": [
+    "No mesh or material edits; source 1K glTF and textures are retained."
+  ],
+  "lodVariants": [
+    "1K textures; no additional LOD variant bundled."
+  ],
+  "downloadedDate": "2026-10-13",
+  "categories": [
+    "decorative",
+    "plants",
+    "potted plants",
+    "nature"
+  ],
+  "localMainFile": "potted_plant_01_1k.gltf",
+  "files": [
+    {
+      "path": "textures/potted_plant_01_pot_rough_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_pot_rough_1k.jpg",
+      "bytes": 173192,
+      "md5": "8f2e400f94843a9239229bfe99d16688",
+      "sha256": "1256199fe3a88a0534bcd4c8bf141cfa9a28b68fce3f286193d0713796fd8561"
+    },
+    {
+      "path": "textures/potted_plant_01_leaves_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_leaves_nor_gl_1k.jpg",
+      "bytes": 177105,
+      "md5": "0a7ea996bb2a4e9e19a5299a5b654406",
+      "sha256": "2faa756e0ee2b8341c752b283b93599157bf56f4083a9f61b825cdfa0c7138ff"
+    },
+    {
+      "path": "textures/potted_plant_01_pot_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_pot_diff_1k.jpg",
+      "bytes": 204900,
+      "md5": "67114dcd68232a6da88c627e144e65c4",
+      "sha256": "51c9d80e8abe585bd3dbcebe7cba1d3ed1a22b137c7cb66baf0e462c08dca312"
+    },
+    {
+      "path": "potted_plant_01.bin",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/potted_plant_01/potted_plant_01.bin",
+      "bytes": 5345188,
+      "md5": "18377bd8d99b20a8d5fc5cf03cbf94b2",
+      "sha256": "a8dd1f7ce75f50dc25bbedc20809da02ee4193815c155b883a329925fa5548f7"
+    },
+    {
+      "path": "textures/potted_plant_01_leaves_rough_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_leaves_rough_1k.jpg",
+      "bytes": 91706,
+      "md5": "6251bfd59ced0360c16d9c286adbb131",
+      "sha256": "765e3bd1bfdad39dd0d1cd755eafd1f9f1d46cbbb6013988cbfd1197de27a1f9"
+    },
+    {
+      "path": "textures/potted_plant_01_pot_nor_gl_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_pot_nor_gl_1k.jpg",
+      "bytes": 200349,
+      "md5": "7388c8cba421175fd70969df077988a1",
+      "sha256": "ec02e51751e0822d229d48bea1373b06e2675c3725ff04fd1f87ac516719e620"
+    },
+    {
+      "path": "textures/potted_plant_01_leaves_diff_1k.jpg",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_leaves_diff_1k.jpg",
+      "bytes": 124730,
+      "md5": "8cbaaa24c18c61be4201c473773dbffc",
+      "sha256": "b73891a0a606e139d0fcdd9e6fe503cd1210be3fc9c55fbd033941288231ccaa"
+    },
+    {
+      "path": "potted_plant_01_1k.gltf",
+      "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/potted_plant_01/potted_plant_01_1k.gltf",
+      "bytes": 7969,
+      "md5": "199e9e3d68f5447142db4066d60ae3f0",
+      "sha256": "23b30294407684b02f14800d6685bd8938da5d2111e17753ac8dd3c37d8c88a0"
+    }
+  ],
+  "educationalRole": "Complete potted tropical plant used as an intact example of a photosynthetic producer."
+}

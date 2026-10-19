@@ -1,0 +1,33 @@
+{
+  "name": "CC0 Water Lily, Nymphaea cv.",
+  "species": "Nymphaea cultivar (source taxonomy: Nymphaea cv.)",
+  "source": "https://sketchfab.com/3d-models/cc0-water-lily-nymphaea-cv-e7830f486a0248b6b894f3e7a63b8c16",
+  "creator": "ffish.asia / floraZia.com",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "format": "glTF 2.0 GLB",
+  "localMainFile": "water-lily.glb",
+  "downloadedDate": "2026-10-19",
+  "original": {
+    "file": "cc0__water_lily_nymphaea_cv..glb",
+    "bytes": 84177724
+  },
+  "files": [
+    {
+      "path": "water-lily.glb",
+      "bytes": 8271172,
+      "sha256": "791e5493de7af62ec48d214e04a11bb24303430d7cfe135f91b7563f0978d916"
+    }
+  ],
+  "educationalRole": "A genus-level example of Nymphaea leaves and flower in the Bangladesh flora collection. Do not claim that the source establishes a local species or cultivar identity.",
+  "modifications": [
+    "Welded vertices and simplified with glTF Transform 4.5.1 (target ratio 0.12, error limit 0.003).",
+    "Resized textures to a maximum 512 px and encoded supported textures as WebP at quality 78.",
+    "Quantized supported geometry attributes with glTF Transform; texture coordinates outside the normalized range were left unchanged."
+  ],
+  "limitations": [
+    "The source model is a Nymphaea cultivar, not a verified local Bangladesh শাপলা cultivar.",
+    "The model is static and does not include authored animation.",
+    "The original 84.2 MB GLB was too large for routine mobile delivery; the optimized 7.9 MB model is about 90% smaller."
+  ]
+}

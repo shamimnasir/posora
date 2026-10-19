@@ -3,7 +3,8 @@
  * Google Analytics (GA4), property G-H4ESLZMRCW.
  *
  * Two external scripts only - no inline script anywhere (the site's CSP is
- * `script-src 'self' https://www.googletagmanager.com`, no 'unsafe-inline'):
+ * `script-src 'self' 'wasm-unsafe-eval' https://www.googletagmanager.com`,
+ * no 'unsafe-inline'):
  * gtag.js itself, and this component's own <script> body, which Astro
  * compiles to a separate same-origin module file (NOT `define:vars`, which
  * Astro always inlines and the CSP would silently block).

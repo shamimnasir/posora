@@ -1,0 +1,18 @@
+{
+  "name": "Non-digital oral thermometer",
+  "file": "oral-thermometer.glb",
+  "source": "https://sketchfab.com/3d-models/thermometer-5ef4251b270c4997aca6931a094f9621",
+  "creator": "Medical.Gallery Graphics",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Discovery measurement lesson: one clinical/oral thermometer example; not a digital or weather instrument.",
+  "provenance": "Downloaded through the owner's signed-in Sketchfab account as the 1K GLB converted format.",
+  "sha256": "3feba60c13210aa346a17c693391780eb6819ba48970574ca92220442db60d5e",
+  "geometry": {
+    "sourceTriangles": 3000,
+    "sourceVertices": 1587,
+    "texture": "1024x256 PNG",
+    "animations": 0,
+    "bytes": 101484
+  }
+}
