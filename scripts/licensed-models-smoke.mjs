@@ -19,6 +19,7 @@ const cases = [
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 1, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'food-turmeric.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 6, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'food-cinnamon.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 4, expected: ['red_chilli_scan_01/red-chilli.glb'], shot: 'food-red-chilli.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 1, expected: ['ikan_goreng_01/ikan-goreng.glb'], shot: 'food-fried-fish-photogrammetry.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 6, expected: ['white_throated_kingfisher_01/white-throated-kingfisher.glb'], shot: 'life-white-throated-kingfisher.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 3, expected: ['asian_elephant_01/asian-elephant.glb'], shot: 'life-asian-elephant.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 11, expected: ['realistic_bee_01/bee.glb'], shot: 'life-bangladesh-honeybee.png' },
@@ -713,6 +714,35 @@ try {
         const playing = await page.evaluate((path) => window.__posoraPlayingAnimations[path] === true, url);
         check(playing, `${viewport.name}: bamboo's authored animation is not playing (or reduced-motion was incorrectly detected)`);
       }
+    }
+    if (test.expected.some((asset) => asset.startsWith('ikan_goreng_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-fried-fish');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-fried-fish').innerText();
+      check(credit.includes('wox080xow') && credit.includes('CC BY 4.0') && credit.includes('নির্দিষ্ট মাছের জাত বা রেসিপি'), `${viewport.name}: fried-fish source, license, or identity limitation is missing`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#food-detail-note');
+        return note instanceof HTMLElement && !note.hidden
+          && document.querySelector('#food-detail-copy')?.textContent?.includes('ভাজার আগে মাছ');
+      }, null, { timeout: 10000 });
+      if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') {
+        await page.waitForTimeout(600);
+        await page.screenshot({ path: path.join(evidenceDir, `${viewport.name}-food-fried-fish-exploded.png`), fullPage: false });
+      }
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '0';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
     }
       await page.waitForTimeout(1000);
       const canvas = page.locator('#hero-host canvas');

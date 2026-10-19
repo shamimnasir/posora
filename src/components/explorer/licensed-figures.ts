@@ -4,6 +4,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // The Food pilot's CC0 Barramundi is also a faithful model for generic fish
   // examples. Species-specific figures such as ইলিশ remain distinct.
   fishSmall: { url: '/models/remake/food-93e5f02c/barramundi-fish-1024-webp.glb', height: 1.15 },
+  // CC BY 4.0 photogrammetry scan of a whole fried fish. This is a generic
+  // fried-fish example, not a Bangladesh recipe- or species-specific claim.
+  friedFishScan: { url: '/models/ikan_goreng_01/ikan-goreng.glb', height: 1.25, fitAxis: 'longest' },
   // Broad-class specimens are explicitly named; neither is presented as local fauna.
   mammalSpecimen: { url: '/models/realistic_red_fox_01/red-fox.glb', height: 1.28 },
   reptileSpecimen: { url: '/models/realistic_panther_chameleon_01/panther-chameleon.glb', height: 2.1, fitAxis: 'longest' },

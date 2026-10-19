@@ -1,0 +1,34 @@
+{
+  "name": "Ikan Goreng (fried fish)",
+  "file": "ikan-goreng.glb",
+  "source": "https://sketchfab.com/3d-models/ikan-goreng-833b9c3ec4284047ac0b4b5cc35e9928",
+  "creator": "wox080xow",
+  "creatorUrl": "https://sketchfab.com/wox080xow001",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "A generic whole fried-fish example. Do not present it as a Bangladesh-specific species or recipe.",
+  "provenance": "Downloaded from the creator's Sketchfab page through the owner's signed-in account, then optimized for Posora web delivery with glTF Transform 4.5.1.",
+  "downloadedDate": "2026-10-19",
+  "original": {
+    "bytes": 15060832,
+    "sha256": "13bdf91b9c0750016b9eaebb30268dfeee0d955a94b7cd156138bf848807cae5",
+    "trianglesApprox": 338000
+  },
+  "web": {
+    "file": "ikan-goreng.glb",
+    "bytes": 2246100,
+    "sha256": "c9dbe7e64c3f1ac92eab6e1ae87f8a2840157e43c3708345494c76eee94e48b6",
+    "trianglesApprox": 219698,
+    "meshes": 4
+  },
+  "modifications": [
+    "Simplified geometry to ratio 0.65 with error 0.001.",
+    "Converted the 1024 × 1024 JPEG texture to WebP at quality 88.",
+    "Quantized vertex attributes and applied EXT_meshopt_compression."
+  ],
+  "limitations": [
+    "Static photogrammetry; the source has no animation clips.",
+    "The creator labels the model Ikan Goreng / fried fish but does not identify the fish species or a Bangladesh-specific recipe.",
+    "The CC BY attribution and scope limitation are shown in the Food page model credit."
+  ]
+}

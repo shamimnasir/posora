@@ -178,7 +178,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'food:বাংলার খাবার': {
     fallback: 'riceDal',
     items: {
-      'ভাত ও ডাল': 'riceDal', 'মাছ ভাজা': 'friedFish', 'ভর্তা': 'bhorta',
+      'ভাত ও ডাল': 'riceDal', 'মাছ ভাজা': 'friedFishScan', 'ভর্তা': 'bhorta',
       'খিচুড়ি': 'khichuri', 'পিঠা': 'pitha', 'পায়েস': 'payesh',
       'মিষ্টি': 'sweet', 'হালিম': 'haleem', 'ইফতার': 'dateBowl', 'পান্তা ভাত': 'panta',
     },
