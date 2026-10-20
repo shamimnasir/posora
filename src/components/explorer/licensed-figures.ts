@@ -69,6 +69,8 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // The selected-object camera magnifies licensed figures. Keep the pot below
   // the control shelf, while the pan's long handle needs a larger long-axis fit.
   polyEnamelPot: { url: '/models/pot_enamel_01/pot_enamel_01_1k.gltf', height: 0.68, focusY: 0.2 },
+  // A cooked-rice bowl specimen for the carbohydrate example; not a rice-and-dal meal.
+  riceBowlScan: { url: '/models/rice_in_bowl_01/rice-in-bowl.glb', height: 0.72, fitAxis: 'longest' },
   polyBrassPan: { url: '/models/brass_pan_01/brass_pan_01_1k.gltf', height: 1.02, fitAxis: 'longest', rotationY: Math.PI / 2 },
   polyMedicalBox: { url: '/models/medical_box/medical_box_1k.gltf', height: 1.12, fitAxis: 'longest' },
   polyPantryFoods: { url: '/models/long_life_food/long_life_food_1k.gltf', height: 0.88, fitAxis: 'longest' },

@@ -73,3 +73,10 @@ Discovery's instruments and inventions collections:
 
 All are Poly Haven CC0 1.0 models, bundled as optimized GLB files with 1K PBR
 textures. Individual records are in their model folders.
+
+## Cooked rice bowl
+
+- [Rice in bowl](rice_in_bowl_01/README.md), by Frid.blend, CC BY 4.0.
+- Used only as the cooked-rice/carbohydrate example, not as a rice-and-dal meal.
+- GLB is loaded on the Food tabletop; the authored rice-grain close-up remains
+  available for teaching individual grain shape.

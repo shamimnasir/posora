@@ -60,6 +60,8 @@ const fishAssetLoader = new GLTFLoader();
 let fishAssetPromise: Promise<Group | null> | null = null;
 const limeAssetLoader = new GLTFLoader();
 let limeAssetPromise: Promise<Group | null> | null = null;
+const riceAssetLoader = new GLTFLoader();
+let riceAssetPromise: Promise<Group | null> | null = null;
 
 function loadFishAsset() {
   fishAssetPromise ??= new Promise((resolve) => {
@@ -73,6 +75,13 @@ function loadLimeAsset() {
     limeAssetLoader.load('/models/food_lime_01/food_lime_01_1k.gltf', ({ scene }) => resolve(scene), undefined, () => resolve(null));
   });
   return limeAssetPromise;
+}
+
+function loadRiceAsset() {
+  riceAssetPromise ??= new Promise((resolve) => {
+    riceAssetLoader.load('/models/rice_in_bowl_01/rice-in-bowl.glb', ({ scene }) => resolve(scene), undefined, () => resolve(null));
+  });
+  return riceAssetPromise;
 }
 
 function fishAssetInstance(source: Group, targetLength: number, supportY: number) {
@@ -222,18 +231,36 @@ export function buildFoodTabletop(root: Group, compact = false, medium = false):
   const tableGrain: Mesh[]=[];
 
   anchors.rice=new Group(); anchors.rice.position.set(-.57,.025,.22); table.add(anchors.rice);
-  const bowl=dish(anchors.rice,0,0,.31,.15,.018);
+  const riceFallback=new Group(); riceFallback.name='procedural-rice-bowl-fallback'; anchors.rice.add(riceFallback);
+  const bowl=dish(riceFallback,0,0,.31,.15,.018);
   // A low, shaded core supports the mound without swallowing the visible grains.
   // Keep the hidden support well inside the grain envelope. The old broad,
   // darker core showed through as smooth beige wedges in the desktop close-up.
-  mesh(anchors.rice,new SphereGeometry(1,24,16),riceCoreMaterial(),[0,.105,0]).scale.set(.232,.06,.22);
+  mesh(riceFallback,new SphereGeometry(1,24,16),riceCoreMaterial(),[0,.105,0]).scale.set(.232,.06,.22);
   let seed=0x341a; const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
   const grains:{p:Vector3;s:Vector3;q:Quaternion}[]=[];
   for(let i=0;i<3400;i++) { const a=rand()*Math.PI*2, rr=Math.sqrt(rand())*.232, cl=.77+.23*Math.sin(a*7+rr*19); const x=Math.cos(a)*rr*cl,z=Math.sin(a)*rr*cl; const y=.103+.074*Math.sqrt(Math.max(0,1-(x*x+z*z)/(.25*.25))); grains.push({p:new Vector3(x,y,z),s:new Vector3(.006+rand()*.001,.009+rand()*.003,.0055+rand()*.001),q:riceGrainOrientation(rand()*Math.PI*2,.08+rand()*.46,rand()*Math.PI*2)}); }
-  for(let i=0;i<3;i++) instanced(anchors.rice,riceGeometry(),riceMats[i],grains.filter((_,n)=>n%3===i));
+  for(let i=0;i<3;i++) instanced(riceFallback,riceGeometry(),riceMats[i],grains.filter((_,n)=>n%3===i));
   // Rice bowl geometry is a true open vessel with an inner surface and foot;
   // keeping it inside this target lets clicks on the visible ceramic pick rice.
   anchors.rice.userData.vessel=bowl;
+  // The CC BY bowl supplies a realistic cooked-rice serving in the overview.
+  // Keep the authored grains as a reliable fallback and retain the macro
+  // close-up, which teaches individual grain shape rather than bowl detail.
+  void loadRiceAsset().then((source)=>{
+    if(!source)return;
+    const model=source.clone(true), box=new Box3().setFromObject(model), size=box.getSize(new Vector3());
+    const scale=.64/Math.max(size.x,size.y,size.z,.001);
+    model.scale.setScalar(scale);
+    const fitted=new Box3().setFromObject(model), center=fitted.getCenter(new Vector3());
+    model.position.set(-center.x,-fitted.min.y+.012,-center.z);
+    model.name='cc-by-cooked-rice-bowl';
+    model.traverse((node)=>{const mesh=node as Mesh;if(!mesh.isMesh)return;mesh.castShadow=true;mesh.receiveShadow=true;});
+    anchors.rice.add(model); riceFallback.visible=false; anchors.rice.userData.vessel=model;
+    root.userData.foodRiceModel='cc-by-frid-blend';
+    document.documentElement.dataset.foodRiceModel='ready';
+    window.dispatchEvent(new CustomEvent('posora:licensed-model-loaded',{detail:{url:'/models/rice_in_bowl_01/rice-in-bowl.glb',itemId:FOOD_ITEM_IDS[0]}}));
+  });
   const riceDetail=new Group(); riceDetail.position.set(-.37,-.09,.16); table.add(riceDetail); riceDetail.visible=false;
   // The detail camera must aim at the food, not the group's origin. Otherwise
   // the plate lip dominates the macro frame and the rice sits just below it.

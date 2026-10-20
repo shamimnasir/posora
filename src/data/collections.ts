@@ -64,7 +64,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'food:খাদ্যের ছয় উপাদান': {
     fallback: 'riceBowl',
     items: {
-      'শর্করা': 'riceBowl', 'আমিষ': 'fishSmall', 'স্নেহ': 'oilDrop',
+      'শর্করা': 'riceBowlScan', 'আমিষ': 'fishSmall', 'স্নেহ': 'oilDrop',
       'ভিটামিন': 'polyLime', 'খনিজ লবণ': 'salt', 'পানি': 'glassWater',
       'আঁশ': 'shrubPale', 'ক্যালরি': 'sunDisc',
     },

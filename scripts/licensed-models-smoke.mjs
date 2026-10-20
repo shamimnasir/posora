@@ -14,6 +14,7 @@ const evidenceDir = path.resolve('docs/animation-remake/evidence/licensed-models
 if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') await mkdir(evidenceDir, { recursive: true });
 const check = (ok, message) => { if (!ok) failures.push(message); };
 const cases = [
+  { world: 'food', selector: '#world .rail-list [data-i="0"]', category: 'খাদ্যের ছয় উপাদান', itemIndex: 0, expected: ['rice_in_bowl_01/rice-in-bowl.glb'], shot: 'food-cooked-rice-bowl.png' },
   { world: 'food', selector: '#world .rail-list [data-i="3"]', expected: ['food_lychee_01/food_lychee_01.glb'], shot: 'food-fruit-wheel.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', expected: ['food_ginger_01/food_ginger_01.glb'], shot: 'food-ginger.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 1, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'food-turmeric.png' },
