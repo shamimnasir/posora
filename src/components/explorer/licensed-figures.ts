@@ -29,6 +29,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   bananaFruit: { url: '/models/bananas/bananas.glb', height: 1.05 },
   lycheeFruit: { url: '/models/food_lychee_01/food_lychee_01.glb', height: 0.95 },
   gingerRoot: { url: '/models/food_ginger_01/food_ginger_01.glb', height: 0.82 },
+  // Free CC BY scan of a mint-leaf cluster; depict the leaf specimen, not a
+  // whole mint plant. The 256px texture and low polygon count keep it light.
+  mintLeavesSpecimen: { url: '/models/mint_leaves_01/mint-leaves.glb', height: 1.15, fitAxis: 'longest' },
   // CC BY 4.0 photogrammetry specimen of Tulsi in its cement planter.
   tulsiSpecimen: { url: '/models/tulsi_tree_01/tulsi.glb', height: 1.08, fitAxis: 'longest', focusY: 0.2 },
   rock: { url: '/models/rock_07/rock_07.glb', height: 1.35 },

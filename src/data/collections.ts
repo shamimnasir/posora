@@ -29,7 +29,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     items: {
       'তুলসী': 'tulsiSpecimen', 'নিম': 'neem', 'অ্যালোভেরা': 'aloeVeraScan',
       'আদা': 'gingerRoot', 'হলুদ': 'turmericRootScan', 'দারুচিনি': 'cinnamonStickScan',
-      'এলাচ': 'cardamom', 'পুদিনা': 'herbGreen', 'থানকুনি': 'shrubGreen',
+      'এলাচ': 'cardamom', 'পুদিনা': 'mintLeavesSpecimen', 'থানকুনি': 'shrubGreen',
     },
   },
   'life:প্রাণীর শ্রেণি': {

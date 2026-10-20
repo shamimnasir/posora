@@ -37,6 +37,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 0, expected: ['tulsi_tree_01/tulsi.glb'], shot: 'life-tulsi-plant.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 4, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'life-turmeric-rhizome.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
+  { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 7, expected: ['mint_leaves_01/mint-leaves.glb'], shot: 'life-mint-leaves.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 8, expected: ['bamboo_botany_01/bamboo.glb'], shot: 'life-bamboo.png' },
@@ -606,6 +607,29 @@ try {
         const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
         return note instanceof HTMLElement && !note.hidden && title.includes('কচ্ছপ')
           && copy.includes('সবুজ সামুদ্রিক কাছিম') && fact.includes('২০১৪ সালের');
+      }, null, { timeout: 10000 });
+    }
+    if (test.expected.some((asset) => asset.startsWith('mint_leaves_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-mint-leaves');
+        return note instanceof HTMLElement && !note.hidden
+          && window.__posoraLoadedModels?.includes('/models/mint_leaves_01/mint-leaves.glb');
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-mint-leaves').innerText();
+      check(credit.includes('Zinaida.Kovrova') && credit.includes('CC BY 4.0') && credit.includes('পাতার নমুনা') && credit.includes('সম্পূর্ণ পুদিনা গাছ নয়'), `${viewport.name}: mint-leaf source, license, or scope disclosure is incomplete`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        const title = document.querySelector('#explode-note-title')?.textContent ?? '';
+        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+        const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
+        return note instanceof HTMLElement && !note.hidden && title.includes('পুদিনা')
+          && copy.includes('ঠান্ডা অনুভূতি') && fact.length > 15;
       }, null, { timeout: 10000 });
     }
     if (test.expected.some((asset) => asset.startsWith('realistic_red_fox_01/'))) {

@@ -1,0 +1,32 @@
+{
+  "name": "Mint Leaves",
+  "commonName": "Mint leaves / পুদিনা পাতা",
+  "source": "https://sketchfab.com/3d-models/mint-leaves-25837c82537c46e3ade674e0b8e99864",
+  "creator": "Zinaida.Kovrova",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "attribution": "Mint Leaves by Zinaida.Kovrova, licensed under CC BY 4.0.",
+  "format": "glTF 2.0 GLB",
+  "downloadedDate": "2026-10-20",
+  "sourceStatistics": {
+    "bytes": 391704,
+    "triangles": 1400,
+    "vertices": 847,
+    "textureSize": 256
+  },
+  "files": [
+    {
+      "path": "mint-leaves.glb",
+      "bytes": 391704,
+      "sha256": "5091d4346bf17352e5b9f120ce1286df499a11100f98b0b53b72a26d60e8089a"
+    }
+  ],
+  "modifications": [],
+  "educationalRole": "A close-up specimen of mint leaves, not a complete living mint plant.",
+  "limitations": [
+    "The source listing describes realistic textures but supplies a 256px texture and a small, low-poly mesh.",
+    "The model does not identify a Bangladesh-specific mint cultivar."
+  ],
+  "integratedAt": "Life → ঔষধি ও মশলা গাছ → পুদিনা"
+}
