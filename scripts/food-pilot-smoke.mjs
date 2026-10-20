@@ -14,6 +14,15 @@ const browser = await chromium.launch({
 const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
 const foodCaptureIds = ['carbohydrate', 'protein', 'fat', 'vitamin', 'minerals', 'water', 'fiber', 'energy'];
+const viewports = [
+  { name: 'mobile', width: 360, height: 800, start: true },
+  { name: 'tablet', width: 768, height: 1024, start: false },
+  { name: 'desktop', width: 1440, height: 900, start: false },
+];
+const activeViewports = process.env.FOOD_SMOKE_VIEWPORT
+  ? viewports.filter(({ name }) => name === process.env.FOOD_SMOKE_VIEWPORT)
+  : viewports;
+if (!activeViewports.length) throw new Error(`Unknown FOOD_SMOKE_VIEWPORT: ${process.env.FOOD_SMOKE_VIEWPORT}`);
 const frameHostBelowStickyHeader = async (page) => page.evaluate(() => {
   const host = document.querySelector('#hero-host');
   const header = document.querySelector('.hdr');
@@ -24,11 +33,7 @@ const frameHostBelowStickyHeader = async (page) => page.evaluate(() => {
 });
 
 try {
-  for (const viewport of [
-    { name: 'mobile', width: 360, height: 800, start: true },
-    { name: 'tablet', width: 768, height: 1024, start: false },
-    { name: 'desktop', width: 1440, height: 900, start: false },
-  ]) {
+  for (const viewport of activeViewports) {
     const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
@@ -53,15 +58,22 @@ try {
 
     if (viewport.start) {
       await page.locator('#world-start').waitFor({ state: 'visible', timeout: 10000 });
+      // The mobile opt-in is attached by the page module after the SSR button
+      // exists. Wait for hydration so the tap actually starts the renderer.
+      await page.waitForFunction(
+        () => document.querySelector('#world-start')?.getAttribute('data-interactive') === 'true',
+        null,
+        { timeout: 10000 },
+      );
       await page.locator('#world-start').click({ force: true });
     }
     await page.waitForFunction(() => {
       const canvas = document.querySelector('#hero-host canvas');
       return canvas && canvas.width > 300 && canvas.height > 500;
-    }, { timeout: 15000 }).catch(() => {});
+    }, null, { timeout: 15000 }).catch(() => {});
     const drawingBuffer = await page.locator('#hero-host canvas').evaluate((canvas) => [canvas.width, canvas.height]).catch(() => [0, 0]);
     check(drawingBuffer[0] > 300 && drawingBuffer[1] > 500, `${viewport.name}: interactive Food scene did not initialize (${drawingBuffer.join('×')})`);
-    await page.waitForFunction(() => document.documentElement.dataset.foodFishAsset === 'ready', { timeout: 15000 }).catch(() => {});
+    await page.waitForFunction(() => document.documentElement.dataset.foodFishAsset === 'ready', null, { timeout: 15000 }).catch(() => {});
     const fishAssetState = await page.evaluate(() => document.documentElement.dataset.foodFishAsset ?? 'pending');
     check(fishAssetState === 'ready', `${viewport.name}: licensed fish asset did not become ready (${fishAssetState})`);
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), `${viewport.name}: horizontal overflow`);

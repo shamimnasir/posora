@@ -894,7 +894,10 @@ try {
       await page.waitForTimeout(1000);
       const canvas = page.locator('#hero-host canvas');
       check(await canvas.count() === 1, `${viewport.name} /${test.world}: focused scene canvas missing after selecting ${test.selector}`);
-      await canvas.scrollIntoViewIfNeeded();
+      // The 3D scene may animate continuously, so Playwright's stability wait
+      // inside scrollIntoViewIfNeeded can time out even when the canvas is
+      // present and rendering. Use an immediate DOM scroll instead.
+      await canvas.evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await page.waitForTimeout(1000);
       if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') {
         await page.screenshot({
