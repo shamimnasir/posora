@@ -52,16 +52,19 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 8, expected: ['realistic_panther_chameleon_01/panther-chameleon.glb'], shot: 'life-cold-blooded-chameleon.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 9, expected: ['realistic_indian_peafowl_01/indian-peafowl.glb'], shot: 'life-warm-blooded-peafowl.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 3, expected: ['realistic_axolotl_01/axolotl.glb'], shot: 'life-amphibian-axolotl.png' },
+  { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 4, expected: ['remake/food-93e5f02c/barramundi-fish-1024-webp.glb'], shot: 'life-class-fish-barramundi.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 5, expected: ['realistic_bee_01/bee.glb'], shot: 'life-bee-specimen.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 7, expected: ['octopus_scan_01/octopus.glb'], shot: 'life-invertebrate-octopus.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 5, expected: ['saltwater_crocodile_01/saltwater-crocodile.glb'], shot: 'life-saltwater-crocodile.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="2"]', expected: ['rock_07/rock_07.glb'], shot: 'discovery-rock.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', expected: ['korean_public_payphone_01/korean_public_payphone_01.glb'], shot: 'discovery-telephone.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', itemIndex: 1, expected: ['binder_notebook/binder_notebook_1k.gltf'], shot: 'discovery-notebook.png' },
-  // The scientific-method chapter is a dedicated interactive beaker scene,
-  // not a collection scene; selecting “observation” must not be expected to
-  // request a magnifying-glass model. This case checks the scene and selection.
-  { world: 'discovery', selector: '#world .rail-list [data-i="0"]', category: 'বিজ্ঞানের পদ্ধতি', itemIndex: 3, expected: [], shot: 'discovery-observation.png' },
+  // The scientific-method chapter is a dedicated interactive chemistry
+  // workspace. These stages select content in that scene; they are not a
+  // collection of magnifier, bulb, or clock models.
+  { world: 'discovery', selector: '#world .rail-list [data-i="0"]', category: 'বিজ্ঞানের পদ্ধতি', itemIndex: 3, expected: ['chemistry_set/chemistry_set_1k.gltf'], shot: 'discovery-observation.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="0"]', category: 'বিজ্ঞানের পদ্ধতি', itemIndex: 5, expected: ['chemistry_set/chemistry_set_1k.gltf'], shot: 'discovery-method-conclusion.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="0"]', category: 'বিজ্ঞানের পদ্ধতি', itemIndex: 6, expected: ['chemistry_set/chemistry_set_1k.gltf'], shot: 'discovery-method-repeat.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="0"]', category: 'বিজ্ঞানের পদ্ধতি', itemIndex: 2, expected: ['chemistry_set/chemistry_set_1k.gltf'], shot: 'discovery-chemistry-set.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', expected: ['industrial_microscope/industrial_microscope.glb', 'seadogs_compass/seadogs_compass.glb', 'digital_wrist_watch/digital_wrist_watch_1k.gltf'], shot: 'discovery-instruments.png' },
   { world: 'social', selector: '#world .rail-list [data-i="7"]', itemIndex: 5, expected: ['classic_laptop/classic_laptop_1k.gltf'], shot: 'social-screen-time.png' },
@@ -77,6 +80,7 @@ const cases = [
   { world: 'discovery', selector: '#world .rail-list [data-i="1"]', category: 'ঘরে বসে পরীক্ষা', itemIndex: 1, expected: ['lemon/lemon_1k.gltf'], shot: 'discovery-lemon-battery.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 9, expected: ['measuring_tape_01/measuring_tape_01_1k.gltf'], shot: 'discovery-measuring-tape-exact.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', category: 'আবিষ্কার ও আবিষ্কারক', itemIndex: 10, expected: ['classic_laptop/classic_laptop_1k.gltf'], shot: 'discovery-laptop.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="3"]', category: 'আবিষ্কার ও আবিষ্কারক', itemIndex: 5, expected: ['lightbulb_led/lightbulb_led_1k.gltf'], shot: 'discovery-history-electricity-bulb.png' },
   { world: 'money', selector: '#world .rail-list [data-i="8"]', itemIndex: 0, expected: ['CashRegister_01/CashRegister_01_1k.gltf'], shot: 'money-market-register.png' },
   { world: 'money', selector: '#world .rail-list [data-i="8"]', category: 'বাজার ও অর্থনীতি', itemIndex: 8, expected: ['rice_oryza_sativa_01/oryza-sativa.glb'], shot: 'money-agriculture-rice.png' },
   { world: 'nature', selector: '#world .rail-list [data-i="5"]', itemIndex: 2, expected: ['fern_02/fern_02_1k.gltf', 'potted_plant_01/potted_plant_01_1k.gltf'], shot: 'nature-producer.png' },
