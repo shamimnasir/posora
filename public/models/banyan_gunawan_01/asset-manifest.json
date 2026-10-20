@@ -1,0 +1,35 @@
+{
+  "name": "BANYAN TREE",
+  "source": "https://sketchfab.com/3d-models/banyan-tree-704d83ff28c84dd487ef7dbfdbcdf2fb",
+  "creator": "Jimmy Gunawan",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "BANYAN TREE by Jimmy Gunawan, licensed under CC BY 4.0.",
+  "usage": "Close-up scan of the lower trunk and aerial roots, used for the banyan item in Life → বাংলাদেশের গাছপালা → বট. It is not a whole-tree scan; the source does not specify scientific species or location.",
+  "downloadedDate": "2026-10-20",
+  "original": {
+    "file": "banyan_tree.glb",
+    "bytes": 6112892,
+    "sha256": "83712c200a731eb321d056e716f16ceb456472abb1f797476cc78892074db6b4",
+    "trianglesApprox": 50000,
+    "texture": "1024x1024 JPEG textures"
+  },
+  "web": {
+    "file": "banyan-tree.glb",
+    "bytes": 1733916,
+    "sha256": "b56bcedd12612e137a2dcf143a04f7148474e0a1a2cf06b03d2c97f346f93edc",
+    "uploadVertices": 28920,
+    "renderVerticesApprox": 150000,
+    "texture": "1024x1024 WebP textures"
+  },
+  "modifications": [
+    "Welded duplicate vertices.",
+    "Converted textures to WebP quality 85.",
+    "Quantized supported vertex attributes using glTF Transform 4.5.1; mesh UVs were preserved."
+  ],
+  "limitations": [
+    "Close-up of the trunk base and aerial roots; it does not include the complete canopy or whole tree.",
+    "The scan was reconstructed from 12 photos; its source has no scientific-species identification or geographic location.",
+    "Static scan with no authored animation."
+  ]
+}

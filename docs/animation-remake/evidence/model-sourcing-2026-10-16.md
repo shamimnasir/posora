@@ -636,3 +636,17 @@ These are research leads/rejections only, not production assets. The generated c
 - Replaced the AI-generated Pixabay illustration in Language → শব্দভাণ্ডার → ফল with the real scan. Attribution is visible in the page's model-credit area; it explicitly describes this as a fruit specimen, not a tree. The old unused Pixabay GLB and its asset record were removed from the repository.
 - Focused visual smoke passed on desktop (1440×900) and mobile (390×844): GLB parsed and attached, the expected local asset returned successfully, and the attribution/specimen limitation appeared. Both captures were visually reviewed at `licensed-models/desktop-language-jackfruit.png` and `licensed-models/mobile-language-jackfruit.png`.
 - This replaces an illustrative asset rather than closing one of the exact-object backlog rows. `npm run audit:model-coverage` remains **69/223** licensed exact-object/example mappings with **33** exact-object gaps.
+
+## Banyan candidate rejected — 2026-10-20
+
+- Inspected and downloaded the 1K CC BY 4.0 [Banyan Tree of NCKU](https://sketchfab.com/3d-models/banyan-tree-of-ncku-692965e4f7e54f57abffb60ba6b3fb27) by National Cheng Kung University Museum. The download panel confirms attribution is required and commercial use is allowed.
+- The optimized file parsed and attached in desktop/mobile browser tests, but visual review showed that it is a broad aerial campus/landscape scan rather than an individual banyan tree model. It was rejected and is not included in the site. Review evidence: `licensed-models/rejected-banyan-ncku-desktop.png` and `licensed-models/rejected-banyan-ncku-mobile.png`.
+- The banyan remains an open exact-object gap; a title/license match alone is insufficient without the pictured object matching the teaching subject.
+
+## Banyan root/trunk scan accepted — 2026-10-20
+
+- Source: [BANYAN TREE by Jimmy Gunawan](https://sketchfab.com/3d-models/banyan-tree-704d83ff28c84dd487ef7dbfdbcdf2fb). The signed-in model page identifies the object as a banyan, describes 12-photo photogrammetry, tags it “banyan,” and lists 50k triangles. Its download panel confirms CC BY 4.0, required creator attribution, and commercial use allowed.
+- The 1K GLB is 6.11 MB; after welding, converting textures to 1024px WebP quality 85 and quantizing supported vertex attributes, the site asset is 1.73 MB with the original 50k-triangle geometry retained.
+- Replaced the procedural “বট” figure in Life → বাংলাদেশের গাছপালা. The scan is a lower-trunk/aerial-root close-up rather than a whole tree; that limitation and the lack of source geolocation/species identification are disclosed next to the model so it is not presented as a Bangladesh-specific tree or complete canopy.
+- Focused browser smoke passed at desktop (1440×900) and mobile (390×844); both captures were visually reviewed at `licensed-models/desktop-life-banyan.png` and `licensed-models/mobile-life-banyan.png`. The asset parsed, attached, and showed its visible creator/license/scope disclosure.
+- `npm run audit:model-coverage` should now report one fewer exact-object gap; only that audited result will be used as the updated count.

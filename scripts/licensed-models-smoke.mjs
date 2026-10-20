@@ -38,6 +38,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 4, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'life-turmeric-rhizome.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 8, expected: ['bamboo_botany_01/bamboo.glb'], shot: 'life-bamboo.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 9, expected: ['rice_oryza_sativa_01/oryza-sativa.glb'], shot: 'life-paddy-rice.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 11, expected: ['water_lily_nymphaea_01/water-lily.glb'], shot: 'life-shapla-water-lily.png' },
@@ -273,6 +274,14 @@ try {
       }, null, { timeout: 10000 });
       const credit = await page.locator('#model-credit-jackfruit').innerText();
       check(credit.includes('RISD Nature Lab') && credit.includes('CC BY 4.0') && credit.includes('গাছ নয়'), `${test.world}: jackfruit creator/license/specimen limitation is incomplete`);
+    }
+    if (test.expected.some((asset) => asset.startsWith('banyan_gunawan_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-banyan');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-banyan').innerText();
+      check(credit.includes('Jimmy Gunawan') && credit.includes('CC BY 4.0') && credit.includes('পুরো গাছ নয়') && credit.includes('নির্দিষ্ট বাংলাদেশি গাছ'), `${test.world}: banyan creator/license/model-scope/geographic limitation credit is incomplete`);
     }
     if (test.expected.some((asset) => asset.startsWith('asian_elephant_01/'))) {
       await page.waitForFunction(() => {
