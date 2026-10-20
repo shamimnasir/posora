@@ -20,6 +20,7 @@ const cases = [
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 1, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'food-turmeric.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 6, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'food-cinnamon.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 4, expected: ['red_chilli_scan_01/red-chilli.glb'], shot: 'food-red-chilli.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 5, expected: ['cardamom_bowl_01/cardamom-bowl.glb'], shot: 'food-cardamom-bowl.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 1, expected: ['ikan_goreng_01/ikan-goreng.glb'], shot: 'food-fried-fish-photogrammetry.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 6, expected: ['white_throated_kingfisher_01/white-throated-kingfisher.glb'], shot: 'life-white-throated-kingfisher.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 4, expected: ['ganges_dolphin_skeleton_01/ganges-dolphin-skeleton.glb'], shot: 'life-ganges-dolphin-skeleton.png' },
@@ -40,6 +41,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 7, expected: ['mint_leaves_01/mint-leaves.glb'], shot: 'life-mint-leaves.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 3, expected: ['palmyra_tree_01/palmyra.glb'], shot: 'life-palmyra-tree.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 1, expected: ['jackfruit_risd_scan_01/jackfruit-pod.glb'], shot: 'life-jackfruit-pod.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 4, expected: ['bombax_ceiba_scan_01/bombax-ceiba.glb'], shot: 'life-shimul-bombax-ceiba.png' },
@@ -785,6 +787,45 @@ try {
         const playing = await page.evaluate((path) => window.__posoraPlayingAnimations[path] === true, url);
         check(playing, `${viewport.name}: bamboo's authored animation is not playing (or reduced-motion was incorrectly detected)`);
       }
+    }
+    if (test.expected.some((asset) => asset.startsWith('palmyra_tree_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-palmyra');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-palmyra').innerText();
+      check(credit.includes('MidNoon') && credit.includes('CC BY 4.0') && credit.includes('ভিয়েতনাম'), `${viewport.name}: Palmyra source, license, or Vietnam specimen disclosure is missing`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        return note instanceof HTMLElement && !note.hidden
+          && document.querySelector('#explode-note-title')?.textContent?.includes('তাল')
+          && (document.querySelector('#explode-note-copy')?.textContent?.length ?? 0) > 20
+          && (document.querySelector('#explode-note-fun')?.textContent?.length ?? 0) > 15;
+      }, null, { timeout: 10000 });
+      if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') {
+        await page.waitForTimeout(1000);
+        await page.screenshot({ path: path.join(evidenceDir, `${viewport.name}-life-palmyra-tree-closeup.png`), fullPage: false });
+      }
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '0';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    }
+    if (test.expected.some((asset) => asset.startsWith('cardamom_bowl_01/'))) {
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#model-credit-cardamom-bowl');
+        return note instanceof HTMLElement && !note.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-cardamom-bowl').innerText();
+      check(credit.includes('go3452') && credit.includes('CC BY 4.0') && credit.includes('AI-সহায়তায় তৈরি'), `${viewport.name}: cardamom source, license, or AI-generation disclosure is missing`);
     }
     if (test.expected.some((asset) => asset.startsWith('ikan_goreng_01/'))) {
       await page.waitForFunction(() => {

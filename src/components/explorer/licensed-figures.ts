@@ -88,6 +88,12 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   waterLilySpecimen: { url: '/models/water_lily_nymphaea_01/water-lily.glb', height: 1.15, fitAxis: 'longest', focusY: 0.12 },
   // Exact mango-tree specimen; CC BY 4.0 credit is recorded with the asset.
   mango: { url: '/models/mango_tree_01/mango_tree.glb', height: 1.3, colorBoost: 1.22, leafShadows: false },
+  // Palmyra palm specimen by MidNoon (CC BY 4.0). The source tree was
+  // photographed in An Giang, Vietnam; it is a species model, not a Bangladesh scan.
+  palmyraTree: { url: '/models/palmyra_tree_01/palmyra.glb', height: 1.5, fitAxis: 'y', leafShadows: false },
+  // CC BY 4.0 bowl of green cardamom pods; source marks this model as AI-generated.
+  // It illustrates the spice product only, never a cardamom plant or harvest scan.
+  cardamomBowl: { url: '/models/cardamom_bowl_01/cardamom-bowl.glb', height: 0.82, fitAxis: 'longest' },
   // Detailed Delonix regia specimen (CC BY 4.0); height-fit keeps its wide crown inside the canvas.
   krishnachura: { url: '/models/krishnachura_delonix_01/krishnachura.glb', height: 1.45, fitAxis: 'y', leafShadows: false },
   // Neem tree scan by Rohit Pawar (CC BY 4.0); optimized to a small mobile GLB.

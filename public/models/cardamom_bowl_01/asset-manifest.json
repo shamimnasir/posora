@@ -1,0 +1,15 @@
+{
+  "name": "Cardamom Bowl",
+  "file": "cardamom-bowl.glb",
+  "source": "https://sketchfab.com/3d-models/cardamom-bowl-7e84837fa85c4b56b751f51dccb5aee0",
+  "creator": "go3452",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "usage": "Food / মশলার জগৎ / এলাচ only. AI-generated illustration of a bowl of green cardamom pods; not a plant or scan.",
+  "provenance": "Downloaded Sketchfab GLB; optimized with @gltf-transform/cli 4.5.1: dedup, weld, simplify ratio 0.7/error 0.002, WebP texture compression capped at 1024px, Meshopt compression.",
+  "originalSha256": "a7cf745fe9831121d00cd15f1f97e488ec404263ac06f19c23c045962e9ae6bd",
+  "sha256": "e43f52296d6dbe3eab44ba013c4fbbe0d15332f650db6a77fb39927c748e3e40",
+  "sourceBytes": 8450944,
+  "bytes": 1264048,
+  "embeddedTextures": "WebP, maximum 1024px"
+}

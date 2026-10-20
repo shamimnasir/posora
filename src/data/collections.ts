@@ -18,7 +18,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'life:বাংলাদেশের গাছপালা': {
     fallback: 'mango',
     items: {
-      'আম': 'mango', 'কাঁঠাল': 'jackfruitScan', 'বট': 'banyanTreeScan', 'তাল': 'palm',
+      'আম': 'mango', 'কাঁঠাল': 'jackfruitScan', 'বট': 'banyanTreeScan', 'তাল': 'palmyraTree',
       'শিমুল': 'bombaxCeibaScan', 'কৃষ্ণচূড়া': 'krishnachura', 'সুন্দরী': 'sundari',
       'গোলপাতা': 'golpata', 'বাঁশ': 'bamboo', 'ধান': 'paddyPlant', 'পাট': 'jute',
       'শাপলা': 'waterLilySpecimen', 'কদম': 'kodom', 'হিজল': 'hijol',
@@ -74,7 +74,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     items: {
       'আদা': 'gingerRoot',
       'হলুদ': 'turmericRootScan', 'জিরা': 'cumin', 'ধনে': 'coriander',
-      'মরিচ': 'redChilliScan', 'এলাচ': 'cardamom', 'দারুচিনি': 'cinnamonStickScan',
+      'মরিচ': 'redChilliScan', 'এলাচ': 'cardamomBowl', 'দারুচিনি': 'cinnamonStickScan',
       'তেজপাতা': 'bayLeaf', 'সরিষা': 'mustard', 'মেথি': 'fenugreek',
       'গরম মশলা': 'garamMasala',
     },
