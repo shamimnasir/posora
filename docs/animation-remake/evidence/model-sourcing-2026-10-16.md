@@ -711,3 +711,9 @@ These are research leads/rejections only, not production assets. The generated c
 - Inspected a search result titled [Cat (leopard cat)](https://sketchfab.com/models/52e8f0b7b1af4e0498ac40b771bd5cb4). The Sketchfab page shows it is AI-generated and directs buyers to a Fab listing; it provides no visible downloadable control or reusable license terms. It is excluded rather than treated as free or cleared.
 - The present blocker is source availability, not implementation: for each remaining exact-object slot we require a free-to-use model, explicit commercial rights, a verifiable subject match, manageable geometry, and a successful desktop/mobile render. Generic lookalikes, noncommercial files, paywalled files, and scans that fail mobile rendering do not satisfy that bar.
 - No mapping changed in this cross-check. `npm run audit:model-coverage` remains **72/223** mapped examples and **30** exact-object gaps; no runtime change or deployment is claimed.
+
+## Broad free-catalog screening — 2026-10-20
+
+- Checked the [CodeLove GLB catalog](https://models.codelove.in/developers/), which states that its direct GLBs are free for commercial use under per-model MIT, CC0, public-domain, or CC BY terms. I searched its public 6,792-model JSON index against the remaining exact-object labels.
+- Near matches include generic palm-tree kit assets, a 918-triangle cube-pet monkey, a 233-triangle generic fish, and a 104-triangle “rice ball.” These are stylized low-poly stand-ins, not realistic *Borassus* / *Nypa* / local species, *Tenualosa ilisha*, or a bowl of cooked rice. They are rejected for the requested visual and subject-accuracy bar.
+- No exact target among the remaining 30 gaps was present in the catalog. This provides another catalog-wide check but does not change model coverage; `npm run audit:model-coverage` remains **72/223** mapped examples with **30** exact-object gaps. No asset or runtime mapping was changed.
