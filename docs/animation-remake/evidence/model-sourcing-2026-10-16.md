@@ -649,4 +649,16 @@ These are research leads/rejections only, not production assets. The generated c
 - The 1K GLB is 6.11 MB; after welding, converting textures to 1024px WebP quality 85 and quantizing supported vertex attributes, the site asset is 1.73 MB with the original 50k-triangle geometry retained.
 - Replaced the procedural “বট” figure in Life → বাংলাদেশের গাছপালা. The scan is a lower-trunk/aerial-root close-up rather than a whole tree; that limitation and the lack of source geolocation/species identification are disclosed next to the model so it is not presented as a Bangladesh-specific tree or complete canopy.
 - Focused browser smoke passed at desktop (1440×900) and mobile (390×844); both captures were visually reviewed at `licensed-models/desktop-life-banyan.png` and `licensed-models/mobile-life-banyan.png`. The asset parsed, attached, and showed its visible creator/license/scope disclosure.
-- `npm run audit:model-coverage` should now report one fewer exact-object gap; only that audited result will be used as the updated count.
+- `npm run audit:model-coverage` reports **70/223** licensed exact-object/example mappings and **32** remaining exact-object gaps after this replacement.
+
+## Cumin seed scan checked — 2026-10-20
+
+- Inspected [Cumin seed by Benoît Rogez](https://sketchfab.com/3d-models/cumin-seed-3b2e7aba040a487bb4e767f9ecb0a971), a photogrammetric scan described as one approximately 5 mm seed made from 82 photographs. The subject itself is an accurate cumin seed specimen.
+- Rejected for production: the signed-in public page exposes no download control or license terms, and the viewer warns that the model is too heavy for the device. Its 60.3k triangles are also excessive for a single seed in this scene. A visible model and a plausible scan do not establish reuse rights or acceptable runtime cost.
+- No collection mapping changed. Continue looking for a downloadable, permissively licensed, optimized cumin specimen or a small group of seeds.
+
+## Site-wide licensed model smoke — 2026-10-20
+
+- Ran `MODEL_SMOKE_SCREENSHOTS=1 npm run test:licensed-models`. All **64 model/device states** passed across desktop and mobile: every tested asset parsed and attached in its actual world page, with no failed GLB requests or load errors.
+- Reviewed the fresh desktop/mobile captures for the banyan scan, the green sea turtle, and representative Food and Social models. They rendered in-frame; the banyan scan's lower-trunk-only limitation remains visible beside the scene. Full-suite output is an integration/render smoke, not a claim that every legacy object is already realistic or every teaching diagram should be replaced.
+- The test refreshed the pre-existing screenshot files because the scene animation is time-dependent. Those transient rewrites are not product changes and are not being treated as a visual redesign; retain the prior stable evidence set and add only the previously missing green-sea-turtle pair.
