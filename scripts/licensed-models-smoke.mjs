@@ -21,6 +21,7 @@ const cases = [
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 4, expected: ['red_chilli_scan_01/red-chilli.glb'], shot: 'food-red-chilli.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 1, expected: ['ikan_goreng_01/ikan-goreng.glb'], shot: 'food-fried-fish-photogrammetry.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 6, expected: ['white_throated_kingfisher_01/white-throated-kingfisher.glb'], shot: 'life-white-throated-kingfisher.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 4, expected: ['ganges_dolphin_skeleton_01/ganges-dolphin-skeleton.glb'], shot: 'life-ganges-dolphin-skeleton.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 3, expected: ['asian_elephant_01/asian-elephant.glb'], shot: 'life-asian-elephant.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 11, expected: ['realistic_bee_01/bee.glb'], shot: 'life-bangladesh-honeybee.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 10, expected: ['green_sea_turtle_01/green-sea-turtle.glb'], shot: 'life-green-sea-turtle.png' },
@@ -736,6 +737,41 @@ try {
       if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') {
         await page.waitForTimeout(600);
         await page.screenshot({ path: path.join(evidenceDir, `${viewport.name}-food-fried-fish-exploded.png`), fullPage: false });
+      }
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '0';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    }
+    if (test.expected.some((asset) => asset.startsWith('ganges_dolphin_skeleton_01/'))) {
+      await page.waitForFunction(() => {
+        const credit = document.querySelector('#model-credit-ganges-dolphin-skeleton');
+        return credit instanceof HTMLElement && !credit.hidden;
+      }, null, { timeout: 10000 });
+      const credit = await page.locator('#model-credit-ganges-dolphin-skeleton').innerText();
+      check(credit.includes('Patrizia17') && credit.includes('CC BY-SA 4.0') && credit.includes('কঙ্কাল, জীবন্ত শুশুক নয়'), `${viewport.name}: Ganges dolphin skeleton attribution or limitation is missing`);
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          element.value = '55';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        const title = document.querySelector('#explode-note-title')?.textContent ?? '';
+        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+        return note instanceof HTMLElement && !note.hidden && title.includes('শুশুক') && copy.includes('বাংলাদেশের নদীতে');
+      }, null, { timeout: 10000 });
+      // On this Chrome/SwiftShader setup, desktop page captures during the
+      // moving reveal can return a solid-black frame even though the same
+      // scene renders normally before/after it. Keep interaction assertions
+      // on desktop; save the reveal screenshot from the mobile viewport where
+      // the browser capture is stable.
+      if (process.env.MODEL_SMOKE_SCREENSHOTS === '1' && viewport.name === 'mobile') {
+        await page.waitForTimeout(1200);
+        await page.screenshot({ path: path.join(evidenceDir, `${viewport.name}-life-ganges-dolphin-skeleton-exploded.png`), fullPage: false });
       }
       await page.locator('#ctl-x').evaluate((element) => {
         if (element instanceof HTMLInputElement) {

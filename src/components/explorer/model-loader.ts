@@ -13,12 +13,18 @@ loader.setMeshoptDecoder(MeshoptDecoder);
 export function loadLicensedModel(
   url: string,
   parent: Object3D,
-  options: { height?: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; position?: Vector3; rotationX?: number; rotationY?: number; colorBoost?: number; leafShadows?: boolean; centerOnFloor?: boolean; playAnimations?: boolean; animationClip?: string; accept?: () => boolean } = {},
+  options: { height?: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; position?: Vector3; rotationX?: number; rotationY?: number; rotationZ?: number; colorBoost?: number; leafShadows?: boolean; centerOnFloor?: boolean; playAnimations?: boolean; animationClip?: string; accept?: () => boolean } = {},
 ): Promise<Group | null> {
   return new Promise((resolve) => {
     loader.load(url, (gltf) => {
       const model = gltf.scene;
       if (options.accept && !options.accept()) { resolve(null); return; }
+      // Apply the presentation orientation before measuring. That way a
+      // sideways museum scan is fitted and grounded in its final pose rather
+      // than being centered correctly and then rotated through the floor.
+      if (options.rotationX) model.rotation.x = options.rotationX;
+      if (options.rotationY) model.rotation.y = options.rotationY;
+      if (options.rotationZ) model.rotation.z = options.rotationZ;
       const box = new Box3().setFromObject(model);
       const size = box.getSize(new Vector3());
       const targetHeight = options.height ?? 2;
@@ -34,8 +40,6 @@ export function loadLicensedModel(
         model.position.y -= fitted.min.y;
         model.position.z -= (fitted.min.z + fitted.max.z) / 2;
       }
-      if (options.rotationX) model.rotation.x = options.rotationX;
-      if (options.rotationY) model.rotation.y = options.rotationY;
       const colorBoost = options.colorBoost ?? 1;
       model.traverse((node) => {
         const mesh = node as Mesh;

@@ -44,7 +44,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     fallback: 'tiger',
     items: {
       'রয়েল বেঙ্গল টাইগার': 'runningTiger', 'ইলিশ': 'hilsa', 'দোয়েল': 'doel',
-      'হাতি': 'asianElephant', 'শুশুক': 'dolphin', 'কুমির': 'saltwaterCrocodileScan',
+      'হাতি': 'asianElephant', 'শুশুক': 'gangesDolphinSkeleton', 'কুমির': 'saltwaterCrocodileScan',
       'মাছরাঙা': 'whiteThroatedKingfisherScan', 'চিতা বিড়াল': 'leopardCat', 'বানর': 'monkey',
       'শকুন': 'vulture', 'কচ্ছপ': 'greenSeaTurtle', 'মধুমক্ষিকা': 'beeSpecimen',
     },

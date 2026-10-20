@@ -1,0 +1,35 @@
+{
+  "name": "Ganges river dolphin skeleton, museum specimen C 272",
+  "file": "ganges-dolphin-skeleton.glb",
+  "source": "https://commons.wikimedia.org/wiki/File:Platanista_gangetica_3d_scan_Natural_History_Museum_University_of_Pisa_C_272.stl",
+  "alternateSource": "https://sketchfab.com/3d-models/ganges-river-dolphin-c5fbdf0ace47481eb25646a9c13debb5",
+  "creator": "Patrizia17 / Natural History Museum of the University of Pisa",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "usage": "Life world shushuk anatomy example only. It is a museum skeleton scan, not a living dolphin or a full-body soft-tissue depiction.",
+  "provenance": "Downloaded from Wikimedia Commons. Converted from binary STL to GLB, normalized and simplified for web delivery; the adapted asset remains CC BY-SA 4.0.",
+  "specimen": "Platanista gangetica, accession C 272",
+  "original": {
+    "file": "Platanista_gangetica_3d_scan_Natural_History_Museum_University_of_Pisa_C_272.stl",
+    "bytes": 125002884,
+    "sha256": "12b0f5fc3d805621645225fc02dd9b0453987e2f7d1d4d51bf768015701bb541",
+    "triangles": 2500056
+  },
+  "web": {
+    "bytes": 1890460,
+    "sha256": "3e73ca8a02c77caff9141d823d5b77e41f5d92e598c8b3967f34975c085c1390",
+    "triangles": 114962,
+    "vertices": 49980
+  },
+  "modifications": [
+    "Converted binary STL to a single-mesh GLB.",
+    "Normalized the longest source dimension to 1.7 scene units.",
+    "Simplified the triangle mesh with Meshoptimizer to 114,962 triangles; reported relative error 0.0033989.",
+    "Recomputed smooth vertex normals and assigned a neutral bone material."
+  ],
+  "limitations": [
+    "The scan represents bones only; it does not show skin, fins, organs, color, movement, or a live animal.",
+    "The source is a museum specimen scan, not a specimen collected in Bangladesh.",
+    "The source and adapted mesh are distributed under CC BY-SA 4.0 with attribution."
+  ]
+}

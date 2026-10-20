@@ -567,6 +567,7 @@ const SCENES: Record<string, Builder> = {
           fitAxis: licensed.fitAxis,
           rotationY: licensed.rotationY,
           rotationX: licensed.rotationX,
+          rotationZ: licensed.rotationZ,
           colorBoost: licensed.colorBoost,
           leafShadows: licensed.leafShadows,
           playAnimations: licensed.playAnimations,

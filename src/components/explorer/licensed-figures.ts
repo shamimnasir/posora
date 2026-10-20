@@ -1,9 +1,14 @@
 /** Exact-object licensed models. The key is a figure identity, never a vague category. */
-export const LICENSED_FIGURES: Record<string, { url: string; height: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; focusY?: number; rotationX?: number; rotationY?: number; colorBoost?: number; leafShadows?: boolean; playAnimations?: boolean; animationClip?: string }> = {
+export const LICENSED_FIGURES: Record<string, { url: string; height: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; focusY?: number; rotationX?: number; rotationY?: number; rotationZ?: number; colorBoost?: number; leafShadows?: boolean; playAnimations?: boolean; animationClip?: string }> = {
   bulb: { url: '/models/lightbulb_led/lightbulb_led_1k.gltf', height: 1.45 },
   // The Food pilot's CC0 Barramundi is also a faithful model for generic fish
   // examples. Species-specific figures such as ইলিশ remain distinct.
   fishSmall: { url: '/models/remake/food-93e5f02c/barramundi-fish-1024-webp.glb', height: 1.15 },
+  // Museum scan of a Ganges river dolphin skeleton, not a living animal model.
+  // The UI shows that limitation beside the model and preserves CC BY-SA attribution.
+  // The source scan is displayed mounted upright; roll it onto its side for
+  // the natural horizontal swimming/anatomy pose used by this stage.
+  gangesDolphinSkeleton: { url: '/models/ganges_dolphin_skeleton_01/ganges-dolphin-skeleton.glb', height: 1.25, fitAxis: 'longest', rotationZ: -Math.PI / 2 },
   // CC BY 4.0 photogrammetry scan of a whole fried fish. This is a generic
   // fried-fish example, not a Bangladesh recipe- or species-specific claim.
   friedFishScan: { url: '/models/ikan_goreng_01/ikan-goreng.glb', height: 1.25, fitAxis: 'longest' },
