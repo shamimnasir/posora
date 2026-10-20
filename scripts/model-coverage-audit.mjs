@@ -19,7 +19,7 @@ let total = 0;
 let licensed = 0;
 let exact = 0;
 let analogies = 0;
-const visualAnalogyOnly = new Set(['datePalmAnalogy']);
+const visualAnalogyOnly = new Set();
 for (const [category, collection] of Object.entries(COLLECTIONS)) {
   const policy = policies[category];
   const rows = Object.entries(collection.items);

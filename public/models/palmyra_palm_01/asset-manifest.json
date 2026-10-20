@@ -1,0 +1,26 @@
+{
+  "name": "Palmyra palm",
+  "source": "https://sketchfab.com/3d-models/palmyra-675c51ed065348ac846fe52098868a0b",
+  "creator": "P.S.Thng (MidNoon)",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "attribution": "Palmyra by P.S.Thng, licensed under CC BY 4.0.",
+  "format": "GLB 2.0",
+  "downloadedDate": "2026-10-20",
+  "statistics": {
+    "bytes": 6984420,
+    "nodes": 115,
+    "meshes": 51,
+    "triangles": 192284,
+    "textureResolution": "1K"
+  },
+  "files": [
+    {
+      "path": "palmyra-palm.glb",
+      "bytes": 6984420,
+      "sha256": "0425f5bd57ed6f956304750fefaa409aa72d0e42f4d08ce5e4ba940a9638ddd1"
+    }
+  ],
+  "educationalRole": "Palmyra palm model for Life / বাংলাদেশের গাছপালা / তাল. The source does not document a particular Bangladesh field specimen."
+}

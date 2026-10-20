@@ -88,9 +88,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   waterLilySpecimen: { url: '/models/water_lily_nymphaea_01/water-lily.glb', height: 1.15, fitAxis: 'longest', focusY: 0.12 },
   // Exact mango-tree specimen; CC BY 4.0 credit is recorded with the asset.
   mango: { url: '/models/mango_tree_01/mango_tree.glb', height: 1.3, colorBoost: 1.22, leafShadows: false },
-  // CC0 date-palm model used only as a clearly disclosed visual comparison;
-  // it is not Borassus flabellifer and must not be described as a তালগাছ scan.
-  datePalmAnalogy: { url: '/models/date_palm_analogy_01/date-palm.glb', height: 1.5, fitAxis: 'y', leafShadows: false },
+  // Sketchfab model titled "Palmyra", credited under CC BY 4.0. The page
+  // credits the model source and avoids describing it as a Bangladesh field scan.
+  palmyraPalm: { url: '/models/palmyra_palm_01/palmyra-palm.glb', height: 1.5, fitAxis: 'longest', leafShadows: false },
   // CC BY 4.0 bowl of green cardamom pods; source marks this model as AI-generated.
   // It illustrates the spice product only, never a cardamom plant or harvest scan.
   cardamomBowl: { url: '/models/cardamom_bowl_01/cardamom-bowl.glb', height: 0.82, fitAxis: 'longest' },
