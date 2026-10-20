@@ -27,6 +27,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // 12-photo photogrammetry of a banyan tree by Jimmy Gunawan; no location or
   // scientific species is claimed because the source does not specify either.
   banyanTreeScan: { url: '/models/banyan_gunawan_01/banyan-tree.glb', height: 1.55, fitAxis: 'longest' },
+  // Photogrammetry of Bombax ceiba; the scan retains a small amount of its
+  // roadside setting, so show it as a real place/specimen rather than a cutout.
+  bombaxCeibaScan: { url: '/models/bombax_ceiba_scan_01/bombax-ceiba.glb', height: 1.45, fitAxis: 'y', leafShadows: false },
   // Exact CC0 specimens used in the Food and Life collections and fruit wheel.
   bananaFruit: { url: '/models/bananas/bananas.glb', height: 1.05 },
   lycheeFruit: { url: '/models/food_lychee_01/food_lychee_01.glb', height: 0.95 },

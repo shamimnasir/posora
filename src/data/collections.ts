@@ -19,7 +19,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     fallback: 'mango',
     items: {
       'আম': 'mango', 'কাঁঠাল': 'jackfruitScan', 'বট': 'banyanTreeScan', 'তাল': 'palm',
-      'শিমুল': 'simul', 'কৃষ্ণচূড়া': 'krishnachura', 'সুন্দরী': 'sundari',
+      'শিমুল': 'bombaxCeibaScan', 'কৃষ্ণচূড়া': 'krishnachura', 'সুন্দরী': 'sundari',
       'গোলপাতা': 'golpata', 'বাঁশ': 'bamboo', 'ধান': 'paddyPlant', 'পাট': 'jute',
       'শাপলা': 'waterLilySpecimen', 'কদম': 'kodom', 'হিজল': 'hijol',
     },

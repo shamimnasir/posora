@@ -1,0 +1,37 @@
+{
+  "name": "Bombax ceiba L Roadsite Tree",
+  "scientificName": "Bombax ceiba",
+  "source": "https://sketchfab.com/3d-models/bombax-ceiba-l-roadsite-tree-c00ae9fe9369441289d295400c363ae0",
+  "creator": "Yu Kai Him Otto",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Bombax ceiba L Roadsite Tree by Yu Kai Him Otto, licensed under CC BY 4.0.",
+  "usage": "Exact species example for Life → বাংলাদেশের গাছপালা → শিমুল. Roadside photogrammetry scan; not a specific Bangladesh tree.",
+  "format": "GLB 2.0",
+  "downloadedDate": "2026-10-20",
+  "original": {
+    "file": "bombax_ceiba_l_roadsite_tree.glb",
+    "bytes": 31979940,
+    "sha256": "764d7f49c6dc6fe7f413947e72579de2aad3e51a52f01ba0dd4557ff368f6739",
+    "uploadVertices": 1140029
+  },
+  "web": {
+    "file": "bombax-ceiba.glb",
+    "bytes": 1115868,
+    "sha256": "874f238e83955e0b7e05fcca58a134aa6005c9a17d2a628e0c2a6cf80dd35950",
+    "renderVerticesApprox": 136467,
+    "textureMaxResolution": 768,
+    "textureFormat": "WebP",
+    "compression": "EXT_meshopt_compression"
+  },
+  "modifications": [
+    "Simplified with glTF Transform 4.5.1 at 12% target ratio and 0.004 error.",
+    "Resized supported textures to at most 768px and encoded them as WebP.",
+    "Meshopt-compressed and quantized supported attributes."
+  ],
+  "limitations": [
+    "The scan includes roadside context and is not an isolated tree cutout.",
+    "The source does not identify a Bangladesh location or a specific local cultivar.",
+    "The source model is static with no authored animation."
+  ]
+}
