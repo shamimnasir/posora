@@ -21,7 +21,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   greenFruit: { url: '/models/avocado/avocado.glb', height: 1.05 },
   // RISD Nature Lab museum scan of one jackfruit pod. It is a fruit specimen,
   // not a growing tree or a claim that every jackfruit has the same shape.
-  jackfruitScan: { url: '/models/jackfruit_risd_scan_01/jackfruit-pod.glb', height: 0.88, fitAxis: 'longest' },
+  // The source scan lies on its side; rotate the elongated fruit upright so
+  // it reads like the tree-hanging jackfruit specimen rather than a slab.
+  jackfruitScan: { url: '/models/jackfruit_risd_scan_01/jackfruit-pod.glb', height: 0.88, fitAxis: 'longest', rotationZ: Math.PI / 2 },
   // 12-photo photogrammetry of a banyan tree by Jimmy Gunawan; no location or
   // scientific species is claimed because the source does not specify either.
   banyanTreeScan: { url: '/models/banyan_gunawan_01/banyan-tree.glb', height: 1.55, fitAxis: 'longest' },

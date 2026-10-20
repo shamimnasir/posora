@@ -1425,7 +1425,7 @@ const schema = [
       'model-credit-paddy': (slug === 'life' && category === 'বাংলাদেশের গাছপালা' && item === 'ধান') || (slug === 'money' && category === 'বাজার ও অর্থনীতি' && item === 'কৃষি') ? 'paddy' : null,
       'model-credit-aloe': slug === 'life' && category === 'ঔষধি ও মশলা গাছ' && item === 'অ্যালোভেরা' ? 'aloe' : null,
       'model-credit-tulsi': slug === 'life' && category === 'ঔষধি ও মশলা গাছ' && item === 'তুলসী' ? 'tulsi' : null,
-      'model-credit-jackfruit': slug === 'language' && category === 'শব্দভাণ্ডার' && item === 'ফল' ? 'jackfruit' : null,
+      'model-credit-jackfruit': (slug === 'language' && category === 'শব্দভাণ্ডার' && item === 'ফল') || (slug === 'life' && category === 'বাংলাদেশের গাছপালা' && item === 'কাঁঠাল') ? 'jackfruit' : null,
       'model-credit-banyan': slug === 'life' && category === 'বাংলাদেশের গাছপালা' && item === 'বট' ? 'banyan' : null,
       'model-credit-water-lily': slug === 'life' && category === 'বাংলাদেশের গাছপালা' && item === 'শাপলা' ? 'water-lily' : null,
       'model-credit-krishnachura': slug === 'life' && category === 'বাংলাদেশের গাছপালা' && item === 'কৃষ্ণচূড়া' ? 'krishnachura' : null,

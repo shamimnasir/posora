@@ -39,6 +39,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 7, expected: ['mint_leaves_01/mint-leaves.glb'], shot: 'life-mint-leaves.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 1, expected: ['jackfruit_risd_scan_01/jackfruit-pod.glb'], shot: 'life-jackfruit-pod.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 8, expected: ['bamboo_botany_01/bamboo.glb'], shot: 'life-bamboo.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 9, expected: ['rice_oryza_sativa_01/oryza-sativa.glb'], shot: 'life-paddy-rice.png' },
@@ -279,6 +280,21 @@ try {
       }, null, { timeout: 10000 });
       const credit = await page.locator('#model-credit-jackfruit').innerText();
       check(credit.includes('RISD Nature Lab') && credit.includes('CC BY 4.0') && credit.includes('গাছ নয়'), `${test.world}: jackfruit creator/license/specimen limitation is incomplete`);
+      if (test.world === 'life') {
+        await page.locator('#ctl-x').evaluate((element) => {
+          if (element instanceof HTMLInputElement) {
+            element.value = '55';
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+        await page.waitForFunction(() => {
+          const note = document.querySelector('#explode-note');
+          const title = document.querySelector('#explode-note-title')?.textContent ?? '';
+          const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+          const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
+          return note instanceof HTMLElement && !note.hidden && title.includes('কাঁঠাল') && copy.includes('কাঁঠাল') && fact.length > 15;
+        }, null, { timeout: 10000 });
+      }
     }
     if (test.expected.some((asset) => asset.startsWith('banyan_gunawan_01/'))) {
       await page.waitForFunction(() => {
