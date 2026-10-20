@@ -1,0 +1,18 @@
+{
+  "title": "Nypa fruticans fruit cluster",
+  "creator": "zefruitlivingbeingidk (Devin Truong)",
+  "source": "https://sketchfab.com/3d-models/nypa-fruticans-bb6dfbb59cb447cb83b29a48a3fe9b64",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "scope": "fruit cluster only; not a whole plant and not a specimen scan",
+  "optimization": {
+    "simplifyTargetRatio": 0.05,
+    "textureMaxDimension": 512,
+    "textureFormat": "WebP",
+    "textureQuality": 80
+  },
+  "verifiedViewports": [
+    { "name": "desktop", "width": 1440, "height": 900 },
+    { "name": "mobile", "width": 390, "height": 844 }
+  ]
+}

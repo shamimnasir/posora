@@ -27,6 +27,11 @@ try {
     for (const [index, cat] of cats.entries()) {
       check(Array.isArray(cat.detail) && cat.detail.length === cat.items.length,
         `${world}/${cat.n}: ${cat.items.length} canvas items do not all have a detail record`);
+      if (world === 'life' && cat.n === 'বাংলাদেশের গাছপালা') {
+        const golpata = cat.detail?.[7];
+        check(golpata?.l2?.includes('ফুলের গুচ্ছের ডাঁটা') && !golpata.l2.includes('ফল থেকে'),
+          'life/বাংলাদেশের গাছপালা/গোলপাতা: sap source must be the inflorescence stalk, not the fruit');
+      }
       for (const [itemIndex, detail] of (cat.detail ?? []).entries()) {
         check((detail?.l1?.trim().length ?? 0) > 20,
           `${world}/${cat.n}/${cat.items[itemIndex]}: missing explanation`);

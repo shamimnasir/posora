@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { COLLECTIONS } from '../src/data/collections.ts';
-import { LICENSED_FIGURES } from '../src/components/explorer/licensed-figures.ts';
+import { LICENSED_FIGURES, LICENSED_FIGURE_SUPPLEMENTS } from '../src/components/explorer/licensed-figures.ts';
 import { MODEL_CATEGORY_POLICIES } from '../src/data/model-category-policies.ts';
 
 const smokeSource = await readFile(new URL('./licensed-models-smoke.mjs', import.meta.url), 'utf8');
@@ -16,10 +16,12 @@ for (const [category, collection] of Object.entries(COLLECTIONS)) {
   if (MODEL_CATEGORY_POLICIES[category] === 'teaching-diagram') continue;
   for (const [item, figure] of Object.entries(collection.items)) {
     const model = LICENSED_FIGURES[figure];
-    if (!model) continue;
-    const asset = model.url.replace(/^\/models\//, '');
-    if (!active.has(asset)) active.set(asset, []);
-    active.get(asset).push({ category, item, figure });
+    const supplement = LICENSED_FIGURE_SUPPLEMENTS[figure];
+    for (const url of [model?.url, supplement?.url].filter(Boolean)) {
+      const asset = url.replace(/^\/models\//, '');
+      if (!active.has(asset)) active.set(asset, []);
+      active.get(asset).push({ category, item, figure });
+    }
   }
 }
 

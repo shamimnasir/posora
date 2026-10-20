@@ -41,6 +41,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 1, expected: ['jackfruit_risd_scan_01/jackfruit-pod.glb'], shot: 'life-jackfruit-pod.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 7, expected: ['nypa_fruit_01/nypa-fruit-cluster.glb'], shot: 'life-golpata-fruit-cluster.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 8, expected: ['bamboo_botany_01/bamboo.glb'], shot: 'life-bamboo.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 9, expected: ['rice_oryza_sativa_01/oryza-sativa.glb'], shot: 'life-paddy-rice.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 11, expected: ['water_lily_nymphaea_01/water-lily.glb'], shot: 'life-shapla-water-lily.png' },
@@ -303,6 +304,20 @@ try {
       }, null, { timeout: 10000 });
       const credit = await page.locator('#model-credit-banyan').innerText();
       check(credit.includes('Jimmy Gunawan') && credit.includes('CC BY 4.0') && credit.includes('পুরো গাছ নয়') && credit.includes('নির্দিষ্ট বাংলাদেশি গাছ'), `${test.world}: banyan creator/license/model-scope/geographic limitation credit is incomplete`);
+    }
+    if (test.expected.some((asset) => asset.startsWith('nypa_fruit_01/'))) {
+      const credit = page.locator('#model-credit-nypa-fruit');
+      await page.waitForFunction(() => document.querySelector('#model-credit-nypa-fruit') instanceof HTMLElement && !document.querySelector('#model-credit-nypa-fruit').hidden, null, { timeout: 10000 });
+      check((await credit.innerText()).includes('zefruitlivingbeingidk') && (await credit.innerText()).includes('CC BY 4.0') && (await credit.innerText()).includes('পুরো গাছ নয়'), 'Golpata: source, license, or fruit-cluster scope disclosure is incomplete');
+      await page.locator('#ctl-x').evaluate((element) => {
+        if (element instanceof HTMLInputElement) { element.value = '55'; element.dispatchEvent(new Event('input', { bubbles: true })); }
+      });
+      await page.waitForFunction(() => {
+        const note = document.querySelector('#explode-note');
+        const copy = document.querySelector('#explode-note-copy')?.textContent ?? '';
+        const fact = document.querySelector('#explode-note-fun')?.textContent ?? '';
+        return note instanceof HTMLElement && !note.hidden && copy.includes('পাম-জাতীয়') && fact.length > 15;
+      }, null, { timeout: 10000 });
     }
     if (test.expected.some((asset) => asset.startsWith('asian_elephant_01/'))) {
       await page.waitForFunction(() => {

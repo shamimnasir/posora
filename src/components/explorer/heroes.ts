@@ -14,7 +14,7 @@ import {
 import { FIGURES, arc, arcPerRow } from './figures';
 import { dressScene, castShadows, stylise } from './render';
 import { loadLicensedModel } from './model-loader';
-import { LICENSED_FIGURES } from './licensed-figures';
+import { LICENSED_FIGURES, LICENSED_FIGURE_SUPPLEMENTS } from './licensed-figures';
 import { buildFoodTabletop } from './food-tabletop';
 import { visibleBounds } from './cinematic-camera';
 import { iconFont, withIconFont } from '../../lib/icon-font';
@@ -542,7 +542,7 @@ const SCENES: Record<string, Builder> = {
    * makes them take a turn in front, one at a time, so a child can look at
    * any one of them close up without dragging.
    */
-  collection({ root, figures }) {
+  collection({ root, figures, onAssetLoaded }) {
     const anchors: Record<string, Object3D> = {};
     const made: { g: Group; home: Vector3; row: number }[] = [];
     let firstDone = false;
@@ -586,6 +586,18 @@ const SCENES: Record<string, Builder> = {
             materials.forEach((material) => material.dispose());
           });
         });
+      }
+      const supplement = LICENSED_FIGURE_SUPPLEMENTS[spec.figure];
+      if (supplement) {
+        const specimen = new Group();
+        specimen.position.set(...supplement.position);
+        g.add(specimen);
+        void loadLicensedModel(supplement.url, specimen, {
+          height: supplement.height,
+          fitAxis: supplement.fitAxis,
+          centerOnFloor: true,
+          accept: () => root.parent !== null,
+        }).then((model) => { if (model) onAssetLoaded(); });
       }
       const home = arc(figures.length, i, narrow);
       g.position.copy(home);

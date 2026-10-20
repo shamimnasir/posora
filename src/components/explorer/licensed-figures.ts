@@ -128,3 +128,11 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // not presented as a Bangladesh species or as a stand-in for coral.
   octopusSpecimen: { url: '/models/octopus_scan_01/octopus.glb', height: 1.22, fitAxis: 'longest' },
 };
+
+/** Scoped real-model additions that supplement, rather than replace, a teaching figure. */
+export const LICENSED_FIGURE_SUPPLEMENTS: Record<string, { url: string; height: number; position: [number, number, number]; fitAxis?: 'x' | 'y' | 'z' | 'longest' }> = {
+  // Golpata is a sprawling palm with an underground stem; the free source is
+  // only its fruiting head, so keep the whole-plant teaching figure and attach
+  // the model as a clearly disclosed fruit-cluster specimen.
+  golpata: { url: '/models/nypa_fruit_01/nypa-fruit-cluster.glb', height: 0.62, position: [0, 0.67, 0.12], fitAxis: 'longest' },
+};
