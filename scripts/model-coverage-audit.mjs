@@ -17,22 +17,29 @@ if (unknownCategories.length) {
 const exactBacklog = [];
 let total = 0;
 let licensed = 0;
+let exact = 0;
+let analogies = 0;
+const visualAnalogyOnly = new Set(['datePalmAnalogy']);
 for (const [category, collection] of Object.entries(COLLECTIONS)) {
   const policy = policies[category];
   const rows = Object.entries(collection.items);
   total += rows.length;
   const concrete = rows.filter(([, figure]) => LICENSED_FIGURES[figure]);
+  const exactConcrete = concrete.filter(([, figure]) => !visualAnalogyOnly.has(figure));
+  const visualAnalog = concrete.filter(([, figure]) => visualAnalogyOnly.has(figure));
   licensed += concrete.length;
+  exact += exactConcrete.length;
+  analogies += visualAnalog.length;
   if (policy === 'exact-object') {
     exactBacklog.push(...rows
-      .filter(([, figure]) => !LICENSED_FIGURES[figure])
-      .map(([item, figure]) => ({ category, item, figure })));
+      .filter(([, figure]) => !LICENSED_FIGURES[figure] || visualAnalogyOnly.has(figure))
+      .map(([item, figure]) => ({ category, item, figure, analogy: visualAnalogyOnly.has(figure) })));
   }
   console.log(`${policy.padEnd(16)} ${String(concrete.length).padStart(2)}/${String(rows.length).padEnd(2)} ${category}`);
 }
 
-console.log(`\nLicensed exact-object/example mappings: ${licensed}/${total}`);
-console.log(`Concrete exact-object backlog: ${exactBacklog.length}`);
-for (const row of exactBacklog) console.log(`- ${row.category} / ${row.item} (procedural: ${row.figure})`);
+console.log(`\nLicensed model mappings: ${licensed}/${total} (${exact} exact, ${analogies} disclosed visual analogy)`);
+console.log(`Exact-object backlog: ${exactBacklog.length}`);
+for (const row of exactBacklog) console.log(`- ${row.category} / ${row.item} (${row.analogy ? 'visual analogy only: ' : 'procedural: '}${row.figure})`);
 
 if (process.env.MODEL_COVERAGE_STRICT === '1' && exactBacklog.length) process.exitCode = 1;

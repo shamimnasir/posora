@@ -41,7 +41,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 7, expected: ['mint_leaves_01/mint-leaves.glb'], shot: 'life-mint-leaves.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
-  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 3, expected: ['palmyra_tree_01/palmyra.glb'], shot: 'life-palmyra-tree.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 3, expected: ['date_palm_analogy_01/date-palm.glb'], shot: 'life-tal-date-palm-analogy.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 1, expected: ['jackfruit_risd_scan_01/jackfruit-pod.glb'], shot: 'life-jackfruit-pod.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 4, expected: ['bombax_ceiba_scan_01/bombax-ceiba.glb'], shot: 'life-shimul-bombax-ceiba.png' },
@@ -788,13 +788,13 @@ try {
         check(playing, `${viewport.name}: bamboo's authored animation is not playing (or reduced-motion was incorrectly detected)`);
       }
     }
-    if (test.expected.some((asset) => asset.startsWith('palmyra_tree_01/'))) {
+    if (test.expected.some((asset) => asset.startsWith('date_palm_analogy_01/'))) {
       await page.waitForFunction(() => {
-        const note = document.querySelector('#model-credit-palmyra');
+        const note = document.querySelector('#model-credit-date-palm');
         return note instanceof HTMLElement && !note.hidden;
       }, null, { timeout: 10000 });
-      const credit = await page.locator('#model-credit-palmyra').innerText();
-      check(credit.includes('MidNoon') && credit.includes('CC BY 4.0') && credit.includes('ভিয়েতনাম'), `${viewport.name}: Palmyra source, license, or Vietnam specimen disclosure is missing`);
+      const credit = await page.locator('#model-credit-date-palm').innerText();
+      check(credit.includes('Innerscene') && credit.includes('CC0') && credit.includes('তাল নয়') && credit.includes('পাখার মতো'), `${viewport.name}: date-palm source, license, or species-comparison disclosure is missing`);
       await page.locator('#ctl-x').evaluate((element) => {
         if (element instanceof HTMLInputElement) {
           element.value = '55';
@@ -810,7 +810,7 @@ try {
       }, null, { timeout: 10000 });
       if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') {
         await page.waitForTimeout(1000);
-        await page.screenshot({ path: path.join(evidenceDir, `${viewport.name}-life-palmyra-tree-closeup.png`), fullPage: false });
+        await page.screenshot({ path: path.join(evidenceDir, `${viewport.name}-life-tal-date-palm-analogy-closeup.png`), fullPage: false });
       }
       await page.locator('#ctl-x').evaluate((element) => {
         if (element instanceof HTMLInputElement) {
