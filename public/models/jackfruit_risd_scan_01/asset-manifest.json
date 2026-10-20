@@ -1,0 +1,36 @@
+{
+  "name": "Jackfruit Pod",
+  "scientificFamily": "Moraceae",
+  "source": "https://sketchfab.com/3d-models/jackfruit-pod-35bc5ca4e80c42cea328b9a3f0fd725f",
+  "creator": "RISD Nature Lab",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Jackfruit Pod by RISD Nature Lab, licensed under CC BY 4.0.",
+  "usage": "One scanned fruit specimen in Language → শব্দভাণ্ডার → ফল. It is a jackfruit pod, not the tree or a representative of all varieties.",
+  "downloadedDate": "2026-10-20",
+  "original": {
+    "file": "jackfruit_pod.glb",
+    "bytes": 31344616,
+    "sha256": "262e132cc5794a9745c33b3632c611f2e80f3b10ab89c0b5b34447777703f52e",
+    "trianglesApprox": 1000000,
+    "texture": "1024x1024 PNG"
+  },
+  "web": {
+    "file": "jackfruit-pod.glb",
+    "bytes": 4445984,
+    "sha256": "d44cf74189fd56ce92ade163b83ee84cb966c0e45336e1a307b3489a69f1a75b",
+    "trianglesApprox": 199982,
+    "texture": "1024x1024 WebP"
+  },
+  "modifications": [
+    "Welded duplicate vertices.",
+    "Simplified with glTF Transform 4.5.1 to a target vertex ratio of 0.2 and error threshold 0.003.",
+    "Kept texture dimensions at 1024px and encoded as WebP quality 85.",
+    "Quantized vertex attributes using standard KHR_mesh_quantization."
+  ],
+  "limitations": [
+    "The Sketchfab source reports that the 1M-triangle original is too heavy to render on some devices; the web derivative was optimized for runtime use.",
+    "A scanned fruit specimen is not a growing jackfruit tree and does not represent all jackfruit varieties.",
+    "Static scan with no authored animation."
+  ]
+}

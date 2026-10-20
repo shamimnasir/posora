@@ -19,9 +19,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   amphibianSpecimen: { url: '/models/realistic_axolotl_01/axolotl.glb', height: 1.25, fitAxis: 'longest', rotationY: Math.PI / 2 },
   // Shown as a concrete fruit example for the generic vitamin-rich fruit tile.
   greenFruit: { url: '/models/avocado/avocado.glb', height: 1.05 },
-  // AI-generated Pixabay jackfruit illustration; it is a fruit vocabulary
-  // example only, not a botanical scan or a representation of all fruit.
-  jackfruitIllustration: { url: '/models/jackfruit_pixabay_01/jackfruit.glb', height: 0.72, fitAxis: 'longest' },
+  // RISD Nature Lab museum scan of one jackfruit pod. It is a fruit specimen,
+  // not a growing tree or a claim that every jackfruit has the same shape.
+  jackfruitScan: { url: '/models/jackfruit_risd_scan_01/jackfruit-pod.glb', height: 0.88, fitAxis: 'longest' },
   // Exact CC0 specimens used in the Food and Life collections and fruit wheel.
   bananaFruit: { url: '/models/bananas/bananas.glb', height: 1.05 },
   lycheeFruit: { url: '/models/food_lychee_01/food_lychee_01.glb', height: 0.95 },

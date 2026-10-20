@@ -188,7 +188,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'language:শব্দভাণ্ডার': {
     fallback: 'bubble',
     items: {
-      'ছবি ও শব্দ': 'bubble', 'রং': 'swatches', 'ফল': 'jackfruitIllustration',
+      'ছবি ও শব্দ': 'bubble', 'রং': 'swatches', 'ফল': 'jackfruitScan',
       'সবজি': 'polySweetPotato', 'প্রাণী': 'tiger', 'পরিবার': 'family',
       'শরীরের অংশ': 'palmHand', 'পোশাক': 'shirt', 'যানবাহন': 'bus',
       'বিপরীত শব্দ': 'opposites', 'সমার্থক শব্দ': 'bubble', 'ধ্বনি-শব্দ': 'bubble',
