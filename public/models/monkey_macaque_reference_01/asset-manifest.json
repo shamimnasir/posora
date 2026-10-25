@@ -1,0 +1,12 @@
+{
+  "name": "Japanese macaque — macaque body-form comparison",
+  "subject": "Macaca fuscata, used for a broad macaque-form comparison in the Bangladesh monkey lesson",
+  "creator": "seirogan",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/japanese-monkey-6805de96391f4ad7b1933c041d756d27",
+  "localMainFile": "japanese-macaque.glb",
+  "format": "glTF 2.0 GLB, web-optimized derivative",
+  "files": [{ "path": "japanese-macaque.glb", "bytes": 4962148, "sha256": "09e47d4b50373005a365e0a1452ed0549f9ee8e82d405b6194b27c5d5f451412" }],
+  "limitations": ["Japanese macaque, not a verified Bangladeshi species.", "The Bengali item uses a broad common name; this is a visibly disclosed macaque-body comparison."]
+}

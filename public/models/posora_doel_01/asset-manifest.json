@@ -1,0 +1,24 @@
+{
+  "name": "Doel / Oriental magpie-robin",
+  "subject": "Copsychus saularis morphology teaching illustration",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using diagnostic animal morphology; not a scan or marketplace model.",
+  "localMainFile": "oriental-magpie-robin.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "oriental-magpie-robin.glb",
+      "bytes": 213744,
+      "sha256": "34ddde581d75aea6188e3c5e2e94d1bf8d23d2ab4eebbb69eba0f9ed28eebe25"
+    }
+  ],
+  "educationalRole": "Exact named-item or visibly disclosed type illustration for Life → doel.",
+  "limitations": [
+    "Original morphology-focused PBR illustration, not photogrammetry, taxidermy or a verified individual specimen.",
+    "Individuals vary by sex, age, season, habitat and health.",
+    "Use the lesson references for facts; do not infer real size from this model."
+  ]
+}

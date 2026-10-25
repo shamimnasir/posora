@@ -1,0 +1,24 @@
+{
+  "name": "Leopard cat",
+  "subject": "Prionailurus bengalensis morphology teaching illustration",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using diagnostic animal morphology; not a scan or marketplace model.",
+  "localMainFile": "leopard-cat.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "leopard-cat.glb",
+      "bytes": 337532,
+      "sha256": "0d029c7a2706dc2b727d081cdf3f6d755b444ea21fdd55a64b5e574efaae0c96"
+    }
+  ],
+  "educationalRole": "Exact named-item or visibly disclosed type illustration for Life → leopardCat.",
+  "limitations": [
+    "Original morphology-focused PBR illustration, not photogrammetry, taxidermy or a verified individual specimen.",
+    "Individuals vary by sex, age, season, habitat and health.",
+    "Use the lesson references for facts; do not infer real size from this model."
+  ]
+}

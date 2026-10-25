@@ -1,0 +1,24 @@
+{
+  "name": "Rice and dal serving",
+  "subject": "A representative serving of steamed rice and yellow lentil dal",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "rice-and-dal.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "rice-and-dal.glb",
+      "bytes": 196252,
+      "sha256": "cd426dca3b4592724359fbd04f168e6651f1f935c0d70a80f685cd0f5086f3a7"
+    }
+  ],
+  "educationalRole": "Dish-specific illustrative model for Food → বাংলার খাবার → riceDal.",
+  "limitations": [
+    "Original PBR illustration, not photogrammetry and not a standard recipe.",
+    "Ingredients, shape, garnish, portion and serving style vary by family, region and occasion.",
+    "The model shows one representative serving and must not be read as the only authentic form."
+  ]
+}

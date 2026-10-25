@@ -1,0 +1,24 @@
+{
+  "name": "Green cardamom plant",
+  "subject": "Elettaria cardamomum leafy clump and basal fruit teaching illustration",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using species morphology references; not a scan or marketplace model.",
+  "localMainFile": "cardamom-plant.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "cardamom-plant.glb",
+      "bytes": 283692,
+      "sha256": "5974239e5f6d75d8b147360b372b59da1a7b22e753a0b754a3d629224df4ffee"
+    }
+  ],
+  "educationalRole": "Exact named-item teaching illustration for Life → cardamomPlant.",
+  "limitations": [
+    "Original field-guide style PBR illustration, not photogrammetry or a herbarium specimen.",
+    "Individuals vary by age, season, habitat, health and cultivar.",
+    "Use the visible lesson copy and source references for facts; do not infer scale from this model."
+  ]
+}

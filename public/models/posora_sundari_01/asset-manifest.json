@@ -1,0 +1,24 @@
+{
+  "name": "Sundari mangrove",
+  "subject": "Heritiera fomes teaching illustration with plank buttresses",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using species morphology references; not a scan or marketplace model.",
+  "localMainFile": "sundari-mangrove.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "sundari-mangrove.glb",
+      "bytes": 221800,
+      "sha256": "6b17b2fa66f2271dc890e9fdb517987b29d924ff87bd4b820ec60f80940db2a4"
+    }
+  ],
+  "educationalRole": "Exact named-item teaching illustration for Life → sundari.",
+  "limitations": [
+    "Original field-guide style PBR illustration, not photogrammetry or a herbarium specimen.",
+    "Individuals vary by age, season, habitat, health and cultivar.",
+    "Use the visible lesson copy and source references for facts; do not infer scale from this model."
+  ]
+}

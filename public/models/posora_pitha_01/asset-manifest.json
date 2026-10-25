@@ -1,0 +1,24 @@
+{
+  "name": "Pitha assortment",
+  "subject": "Illustrative bhapa, patisapta and ring-shaped pitha examples",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "pitha-assortment.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "pitha-assortment.glb",
+      "bytes": 145984,
+      "sha256": "a4a27c1a4f4df600285b68f9f4e6212c31861ef46fcd37bf40955326724bef7f"
+    }
+  ],
+  "educationalRole": "Dish-specific illustrative model for Food → বাংলার খাবার → pitha.",
+  "limitations": [
+    "Original PBR illustration, not photogrammetry and not a standard recipe.",
+    "Ingredients, shape, garnish, portion and serving style vary by family, region and occasion.",
+    "The model shows one representative serving and must not be read as the only authentic form."
+  ]
+}

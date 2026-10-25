@@ -1,0 +1,24 @@
+{
+  "name": "Kadam tree",
+  "subject": "Neolamarckia cadamba teaching illustration with ball flowers",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using species morphology references; not a scan or marketplace model.",
+  "localMainFile": "kadam-tree.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "kadam-tree.glb",
+      "bytes": 540412,
+      "sha256": "f9c567fc50d3b32cb77af916560ae365eb6908ed545526b8020f9cf3d6e6dcad"
+    }
+  ],
+  "educationalRole": "Exact named-item teaching illustration for Life → kodom.",
+  "limitations": [
+    "Original field-guide style PBR illustration, not photogrammetry or a herbarium specimen.",
+    "Individuals vary by age, season, habitat, health and cultivar.",
+    "Use the visible lesson copy and source references for facts; do not infer scale from this model."
+  ]
+}

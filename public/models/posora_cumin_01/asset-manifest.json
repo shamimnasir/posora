@@ -1,0 +1,24 @@
+{
+  "name": "Cumin seeds",
+  "subject": "Cuminum cyminum dried fruits",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "cumin-seeds.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "cumin-seeds.glb",
+      "bytes": 67564,
+      "sha256": "2d5ce46fb44f166f34c86d8ce59ea45e75bd79b6fea3f584fb02cfdc40e143a3"
+    }
+  ],
+  "educationalRole": "Exact dried-spice teaching specimen for Food → মশলার জগৎ → cumin.",
+  "limitations": [
+    "Original PBR teaching model, not photogrammetry and not a specimen scan.",
+    "Natural products vary in size, color, curvature, age, processing and cultivar.",
+    "The bowl is a display vessel and is not part of the spice."
+  ]
+}

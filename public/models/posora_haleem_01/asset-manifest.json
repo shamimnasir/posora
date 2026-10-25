@@ -1,0 +1,24 @@
+{
+  "name": "Haleem serving",
+  "subject": "Thick slow-cooked haleem with onion, chilli and herb garnish",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "haleem.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "haleem.glb",
+      "bytes": 123816,
+      "sha256": "3ff18404b6c5f2b672321e8c4ffe9f463e1959dcabbabddb7df664554e9710a5"
+    }
+  ],
+  "educationalRole": "Dish-specific illustrative model for Food → বাংলার খাবার → haleem.",
+  "limitations": [
+    "Original PBR illustration, not photogrammetry and not a standard recipe.",
+    "Ingredients, shape, garnish, portion and serving style vary by family, region and occasion.",
+    "The model shows one representative serving and must not be read as the only authentic form."
+  ]
+}

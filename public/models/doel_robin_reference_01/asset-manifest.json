@@ -1,0 +1,12 @@
+{
+  "name": "European robin — Doel songbird comparison",
+  "subject": "European robin anatomy, shown only as a small-songbird comparison for Copsychus saularis",
+  "creator": "SDPM Esare",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/high-per-realistic-europen-robin-49bf02ce59e04bfa858b56502b8a05a1",
+  "localMainFile": "european-robin.glb",
+  "format": "glTF 2.0 GLB, web-optimized derivative",
+  "files": [{ "path": "european-robin.glb", "bytes": 380028, "sha256": "513b4155f234b372ba649bde4f978cd12fe023149f14fc0aec27647eba988c38" }],
+  "limitations": ["Not Doel / Oriental magpie-robin.", "European-robin plumage must not be used as evidence for Doel coloration."]
+}

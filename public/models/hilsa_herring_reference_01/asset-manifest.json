@@ -1,0 +1,12 @@
+{
+  "name": "Pacific herring — Hilsa morphology comparison",
+  "subject": "Clupea pallasii, shown only as a close clupeid comparison for Tenualosa ilisha",
+  "creator": "ffish.asia / floraZia.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "https://sketchfab.com/3d-models/cc0-pacific-herring-clupea-pallasii-e36819a39e5841f5971a01e1af6bf399",
+  "localMainFile": "pacific-herring.glb",
+  "format": "glTF 2.0 GLB, web-optimized derivative",
+  "files": [{ "path": "pacific-herring.glb", "bytes": 2231352, "sha256": "90a9a753fefad6080fd196d74a8744ba07413f954572e1d80800f0793900f90a" }],
+  "limitations": ["Not Hilsa and not an exact Tenualosa ilisha specimen.", "Use only as a visibly disclosed clupeid body-form comparison."]
+}

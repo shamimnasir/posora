@@ -1,5 +1,5 @@
 /** Exact-object licensed models. The key is a figure identity, never a vague category. */
-export const LICENSED_FIGURES: Record<string, { url: string; height: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; focusY?: number; rotationX?: number; rotationY?: number; rotationZ?: number; colorBoost?: number; leafShadows?: boolean; playAnimations?: boolean; animationClip?: string }> = {
+export const LICENSED_FIGURES: Record<string, { url: string; height: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; focusY?: number; rotationX?: number; rotationY?: number; rotationZ?: number; colorBoost?: number; colorTint?: string; leafShadows?: boolean; playAnimations?: boolean; animationClip?: string }> = {
   bulb: { url: '/models/lightbulb_led/lightbulb_led_1k.gltf', height: 1.45 },
   // The Food pilot's CC0 Barramundi is also a faithful model for generic fish
   // examples. Species-specific figures such as ইলিশ remain distinct.
@@ -88,9 +88,17 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   waterLilySpecimen: { url: '/models/water_lily_nymphaea_01/water-lily.glb', height: 1.15, fitAxis: 'longest', focusY: 0.12 },
   // Exact mango-tree specimen; CC BY 4.0 credit is recorded with the asset.
   mango: { url: '/models/mango_tree_01/mango_tree.glb', height: 1.3, colorBoost: 1.22, leafShadows: false },
-  // Sketchfab model titled "Palmyra", credited under CC BY 4.0. The page
-  // credits the model source and avoids describing it as a Bangladesh field scan.
-  palmyraPalm: { url: '/models/palmyra_palm_01/palmyra-palm.glb', height: 1.5, fitAxis: 'longest', leafShadows: false },
+  // A CC0 date-palm comparison only. Its feather-shaped fronds are visibly
+  // different from Tal's fan-shaped leaves; never present it as a Tal specimen.
+  datePalmAnalogy: { url: '/models/date_palm_analogy_01/date-palm.glb', height: 1.5, fitAxis: 'longest', leafShadows: false },
+  talPalm: { url: '/models/posora_tal_palm_01/tal-palmyra-palm.glb', height: 1.5, fitAxis: 'y', leafShadows: false },
+  sundari: { url: '/models/posora_sundari_01/sundari-mangrove.glb', height: 1.62, fitAxis: 'y', leafShadows: false },
+  golpata: { url: '/models/posora_golpata_01/golpata-nypa-palm.glb', height: 1.38, fitAxis: 'longest', leafShadows: false },
+  jute: { url: '/models/posora_jute_01/jute-stand.glb', height: 1.48, fitAxis: 'y', leafShadows: false },
+  kodom: { url: '/models/posora_kadam_01/kadam-tree.glb', height: 1.56, fitAxis: 'y', leafShadows: false },
+  hijol: { url: '/models/posora_hijal_01/hijal-tree.glb', height: 1.54, fitAxis: 'y', leafShadows: false },
+  cardamom: { url: '/models/posora_cardamom_plant_01/cardamom-plant.glb', height: 1.52, fitAxis: 'y', leafShadows: false },
+  thanakuni: { url: '/models/posora_thanakuni_01/thanakuni-creeper.glb', height: 1.28, fitAxis: 'longest', leafShadows: false },
   // CC BY 4.0 bowl of green cardamom pods; source marks this model as AI-generated.
   // It illustrates the spice product only, never a cardamom plant or harvest scan.
   cardamomBowl: { url: '/models/cardamom_bowl_01/cardamom-bowl.glb', height: 0.82, fitAxis: 'longest' },
@@ -102,6 +110,18 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // as a tiger, so the visible credit explicitly avoids claiming a verified
   // Bengal subspecies.
   runningTiger: { url: '/models/running_tiger_01/running-tiger.glb', height: 1.7, fitAxis: 'longest', playAnimations: true },
+  // No exact, high-detail, permissively licensed public models were found for
+  // these five named Bangladesh animals. Use visibly disclosed close-form
+  // comparisons instead of the earlier sphere/cylinder teaching figures.
+  // None of these records may be described as a scan of the lesson species.
+  hilsa: { url: '/models/hilsa_herring_reference_01/pacific-herring.glb', height: 1.2, fitAxis: 'longest' },
+  // The rig's skinned vertices extend well beyond its static bounding box;
+  // a conservative fitted height keeps the complete head, tail and feet in
+  // the inspection frame instead of magnifying the torso past the viewport.
+  doel: { url: '/models/doel_robin_reference_01/european-robin.glb', height: 0.82, fitAxis: 'y' },
+  leopardCat: { url: '/models/leopard_cat_bengal_reference_01/bengal-cat.glb', height: 1.5, fitAxis: 'y' },
+  monkey: { url: '/models/monkey_macaque_reference_01/japanese-macaque.glb', height: 1.85, fitAxis: 'y', colorTint: '#c49372', colorBoost: 1.08 },
+  vulture: { url: '/models/vulture_gyps_reference_01/griffon-vulture.glb', height: 1.75, fitAxis: 'y' },
   // CC0 bamboo canes with named cane/leaf materials and an authored sway clip.
   bamboo: { url: '/models/bamboo_botany_01/bamboo.glb', height: 1.35, playAnimations: true },
   // Exact Oryza sativa specimen for paddy plants; it must not stand in for
@@ -113,6 +133,25 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // remains legible in the multi-item Life canvas without changing the source.
   cinnamonStickScan: { url: '/models/cinnamon_stick_scan_01/cinnamon-stick.glb', height: 1.2, fitAxis: 'longest', colorBoost: 1.45 },
   redChilliScan: { url: '/models/red_chilli_scan_01/red-chilli.glb', height: 0.84, fitAxis: 'longest' },
+  // Posora-original CC0 PBR teaching specimens. These represent the dried
+  // culinary products named by the Food lesson, not living plants or scans.
+  cumin: { url: '/models/posora_cumin_01/cumin-seeds.glb', height: 0.86, fitAxis: 'longest' },
+  coriander: { url: '/models/posora_coriander_01/coriander-seeds.glb', height: 0.86, fitAxis: 'longest' },
+  bayLeaf: { url: '/models/posora_bay_leaf_01/bay-leaves.glb', height: 0.95, fitAxis: 'longest' },
+  mustard: { url: '/models/posora_mustard_01/mustard-seeds.glb', height: 0.86, fitAxis: 'longest' },
+  fenugreek: { url: '/models/posora_fenugreek_01/fenugreek-seeds.glb', height: 0.86, fitAxis: 'longest' },
+  garamMasala: { url: '/models/posora_garam_masala_01/garam-masala.glb', height: 0.96, fitAxis: 'longest' },
+  // Posora-original CC0 Bengali-dish illustrations. Each is deliberately
+  // scoped to one representative serving; recipes and presentation vary.
+  riceDal: { url: '/models/posora_rice_dal_01/rice-and-dal.glb', height: 0.96, fitAxis: 'longest' },
+  bhorta: { url: '/models/posora_bhorta_01/bhorta-assortment.glb', height: 0.94, fitAxis: 'longest' },
+  khichuri: { url: '/models/posora_khichuri_01/vegetable-khichuri.glb', height: 0.93, fitAxis: 'longest' },
+  pitha: { url: '/models/posora_pitha_01/pitha-assortment.glb', height: 0.96, fitAxis: 'longest' },
+  payesh: { url: '/models/posora_payesh_01/rice-payesh.glb', height: 0.93, fitAxis: 'longest' },
+  sweet: { url: '/models/posora_sweets_01/bangla-sweets.glb', height: 0.96, fitAxis: 'longest' },
+  haleem: { url: '/models/posora_haleem_01/haleem.glb', height: 0.93, fitAxis: 'longest' },
+  dateBowl: { url: '/models/posora_iftar_01/iftar-assortment.glb', height: 0.98, fitAxis: 'longest' },
+  panta: { url: '/models/posora_panta_01/panta-rice.glb', height: 0.93, fitAxis: 'longest' },
   whiteThroatedKingfisherScan: { url: '/models/white_throated_kingfisher_01/white-throated-kingfisher.glb', height: 1.05, fitAxis: 'longest', rotationY: Math.PI / 2 },
   // Saltwater crocodile listed as native to India’s east coast/Southeast Asia;
   // the lesson identifies it as the Sundarbans example, not a local specimen scan.
@@ -146,4 +185,8 @@ export const LICENSED_FIGURE_SUPPLEMENTS: Record<string, { url: string; height: 
   // only its fruiting head, so keep the whole-plant teaching figure and attach
   // the model as a clearly disclosed fruit-cluster specimen.
   golpata: { url: '/models/nypa_fruit_01/nypa-fruit-cluster.glb', height: 0.62, position: [0, 0.67, 0.12], fitAxis: 'longest' },
+  // Life's Elachi entry teaches the plant, while the free licensed model is
+  // specifically a bowl of dried fruits/seeds. Keep the plant diagram and show
+  // the real spice product separately rather than mislabel the bowl as a plant.
+  cardamom: { url: '/models/cardamom_bowl_01/cardamom-bowl.glb', height: 0.78, position: [0.78, 0.08, 0.18], fitAxis: 'longest' },
 };

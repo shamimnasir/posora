@@ -1,0 +1,24 @@
+{
+  "name": "Coriander seeds",
+  "subject": "Coriandrum sativum dried fruits",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "coriander-seeds.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "coriander-seeds.glb",
+      "bytes": 68980,
+      "sha256": "f66838d85a390a21a486ff67ec5451ce2822384ad695c478c46d7ac9cdbee105"
+    }
+  ],
+  "educationalRole": "Exact dried-spice teaching specimen for Food → মশলার জগৎ → coriander.",
+  "limitations": [
+    "Original PBR teaching model, not photogrammetry and not a specimen scan.",
+    "Natural products vary in size, color, curvature, age, processing and cultivar.",
+    "The bowl is a display vessel and is not part of the spice."
+  ]
+}

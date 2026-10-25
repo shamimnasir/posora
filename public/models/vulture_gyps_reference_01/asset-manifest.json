@@ -1,0 +1,12 @@
+{
+  "name": "Griffon vulture — White-rumped vulture comparison",
+  "subject": "Gyps fulvus, used only as a same-genus body-form comparison for Gyps bengalensis",
+  "creator": "CeDRI",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/griffon-vulture-gyps-fulvus-2af94d00d668444b82ef2289c9d45dc6",
+  "localMainFile": "griffon-vulture.glb",
+  "format": "glTF 2.0 GLB, web-optimized derivative",
+  "files": [{ "path": "griffon-vulture.glb", "bytes": 122996, "sha256": "694eb6baa492100e2fd0e0ebee537b8e5e97731c827eb70c80fee76082abe8e2" }],
+  "limitations": ["Griffon vulture, not White-rumped vulture.", "Same genus but a different species; plumage, range and conservation details come from the cited lesson content."]
+}

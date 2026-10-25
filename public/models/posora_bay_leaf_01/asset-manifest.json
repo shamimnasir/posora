@@ -1,0 +1,24 @@
+{
+  "name": "Dried bay leaves",
+  "subject": "Cinnamomum tamala leaf teaching model",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "bay-leaves.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "bay-leaves.glb",
+      "bytes": 146264,
+      "sha256": "e1f170df925be0fe5ded057958acb62509c9944f8fe6b46c05b16037281bb1d5"
+    }
+  ],
+  "educationalRole": "Exact dried-spice teaching specimen for Food → মশলার জগৎ → bayLeaf.",
+  "limitations": [
+    "Original PBR teaching model, not photogrammetry and not a specimen scan.",
+    "Natural products vary in size, color, curvature, age, processing and cultivar.",
+    "The bowl is a display vessel and is not part of the spice."
+  ]
+}

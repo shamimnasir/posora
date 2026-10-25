@@ -227,6 +227,7 @@ export function mountShelf(host: HTMLElement, onPick?: (i: number) => void): She
             rotationX: licensed.rotationX,
             rotationZ: licensed.rotationZ,
             colorBoost: licensed.colorBoost,
+            colorTint: licensed.colorTint,
             leafShadows: licensed.leafShadows,
             playAnimations: licensed.playAnimations,
             animationClip: licensed.animationClip,

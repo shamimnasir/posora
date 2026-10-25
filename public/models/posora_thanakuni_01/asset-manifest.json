@@ -1,0 +1,24 @@
+{
+  "name": "Thankuni creeper",
+  "subject": "Centella asiatica teaching illustration with creeping stolons and kidney-shaped leaves",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using species morphology references; not a scan or marketplace model.",
+  "localMainFile": "thanakuni-creeper.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "thanakuni-creeper.glb",
+      "bytes": 231388,
+      "sha256": "afe7b738cffc1e1179688b0809d7336702f0487eadbffb4377507f9af0d9dc04"
+    }
+  ],
+  "educationalRole": "Exact named-item teaching illustration for Life → thanakuni.",
+  "limitations": [
+    "Original field-guide style PBR illustration, not photogrammetry or a herbarium specimen.",
+    "Individuals vary by age, season, habitat, health and cultivar.",
+    "Use the visible lesson copy and source references for facts; do not infer scale from this model."
+  ]
+}

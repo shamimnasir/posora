@@ -1,0 +1,24 @@
+{
+  "name": "Iftar assortment",
+  "subject": "Dates and chickpea salad illustrating a varied iftar, not a fixed menu",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "iftar-assortment.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "iftar-assortment.glb",
+      "bytes": 452808,
+      "sha256": "3b61477ed75354e7503a0289f66120f10c68779350a63d73d16dc0bc66221fbf"
+    }
+  ],
+  "educationalRole": "Dish-specific illustrative model for Food → বাংলার খাবার → dateBowl.",
+  "limitations": [
+    "Original PBR illustration, not photogrammetry and not a standard recipe.",
+    "Ingredients, shape, garnish, portion and serving style vary by family, region and occasion.",
+    "The model shows one representative serving and must not be read as the only authentic form."
+  ]
+}

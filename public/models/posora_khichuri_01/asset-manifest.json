@@ -1,0 +1,24 @@
+{
+  "name": "Vegetable khichuri",
+  "subject": "Rice-and-lentil khichuri with visible vegetable garnish",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "vegetable-khichuri.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "vegetable-khichuri.glb",
+      "bytes": 216540,
+      "sha256": "6eddea8a33f460a4eea98eedcc9cf4f39434bb38476dd0835864eca82dc960f4"
+    }
+  ],
+  "educationalRole": "Dish-specific illustrative model for Food → বাংলার খাবার → khichuri.",
+  "limitations": [
+    "Original PBR illustration, not photogrammetry and not a standard recipe.",
+    "Ingredients, shape, garnish, portion and serving style vary by family, region and occasion.",
+    "The model shows one representative serving and must not be read as the only authentic form."
+  ]
+}

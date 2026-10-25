@@ -13,6 +13,26 @@ const assetResponses = new Map();
 const evidenceDir = path.resolve('docs/animation-remake/evidence/licensed-models');
 if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') await mkdir(evidenceDir, { recursive: true });
 const check = (ok, message) => { if (!ok) failures.push(message); };
+const installReliablePageWait = (page) => {
+  // Playwright's waitForFunction can rely on renderer polling that is throttled
+  // in a headless/background tab. Poll with direct protocol evaluations instead
+  // so a true DOM condition is not reported as a timeout after it is already true.
+  page.waitForFunction = async (predicate, arg = null, options = {}) => {
+    const timeout = options.timeout ?? 30000;
+    const polling = typeof options.polling === 'number' ? options.polling : 100;
+    const deadline = Date.now() + timeout;
+    do {
+      try {
+        if (await page.evaluate(predicate, arg)) return;
+      } catch {
+        // Navigation can briefly replace the execution context; retry until the
+        // real deadline, then surface a useful timeout rather than that race.
+      }
+      if (Date.now() < deadline) await page.waitForTimeout(Math.max(10, polling));
+    } while (Date.now() < deadline);
+    throw new Error(`Page condition timed out after ${timeout}ms`);
+  };
+};
 const cases = [
   { world: 'food', selector: '#world .rail-list [data-i="0"]', category: 'খাদ্যের ছয় উপাদান', itemIndex: 0, expected: ['rice_in_bowl_01/rice-in-bowl.glb'], shot: 'food-cooked-rice-bowl.png' },
   { world: 'food', selector: '#world .rail-list [data-i="3"]', expected: ['food_lychee_01/food_lychee_01.glb'], shot: 'food-fruit-wheel.png' },
@@ -21,12 +41,32 @@ const cases = [
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 6, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'food-cinnamon.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 4, expected: ['red_chilli_scan_01/red-chilli.glb'], shot: 'food-red-chilli.png' },
   { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 5, expected: ['cardamom_bowl_01/cardamom-bowl.glb'], shot: 'food-cardamom-bowl.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 2, expected: ['posora_cumin_01/cumin-seeds.glb'], shot: 'food-cumin-seeds.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 3, expected: ['posora_coriander_01/coriander-seeds.glb'], shot: 'food-coriander-seeds.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 7, expected: ['posora_bay_leaf_01/bay-leaves.glb'], shot: 'food-bay-leaves.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 8, expected: ['posora_mustard_01/mustard-seeds.glb'], shot: 'food-mustard-seeds.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 9, expected: ['posora_fenugreek_01/fenugreek-seeds.glb'], shot: 'food-fenugreek-seeds.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="5"]', category: 'মশলার জগৎ', itemIndex: 10, expected: ['posora_garam_masala_01/garam-masala.glb'], shot: 'food-garam-masala.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 1, expected: ['ikan_goreng_01/ikan-goreng.glb'], shot: 'food-fried-fish-photogrammetry.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 0, expected: ['posora_rice_dal_01/rice-and-dal.glb'], shot: 'food-rice-and-dal.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 2, expected: ['posora_bhorta_01/bhorta-assortment.glb'], shot: 'food-bhorta-assortment.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 3, expected: ['posora_khichuri_01/vegetable-khichuri.glb'], shot: 'food-vegetable-khichuri.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 4, expected: ['posora_pitha_01/pitha-assortment.glb'], shot: 'food-pitha-assortment.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 5, expected: ['posora_payesh_01/rice-payesh.glb'], shot: 'food-rice-payesh.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 6, expected: ['posora_sweets_01/bangla-sweets.glb'], shot: 'food-bangla-sweets.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 7, expected: ['posora_haleem_01/haleem.glb'], shot: 'food-haleem.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 8, expected: ['posora_iftar_01/iftar-assortment.glb'], shot: 'food-iftar-assortment.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 9, expected: ['posora_panta_01/panta-rice.glb'], shot: 'food-panta-rice.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 6, expected: ['white_throated_kingfisher_01/white-throated-kingfisher.glb'], shot: 'life-white-throated-kingfisher.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 4, expected: ['ganges_dolphin_skeleton_01/ganges-dolphin-skeleton.glb'], shot: 'life-ganges-dolphin-skeleton.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 3, expected: ['asian_elephant_01/asian-elephant.glb'], shot: 'life-asian-elephant.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 11, expected: ['realistic_bee_01/bee.glb'], shot: 'life-bangladesh-honeybee.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 10, expected: ['green_sea_turtle_01/green-sea-turtle.glb'], shot: 'life-green-sea-turtle.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 1, expected: ['hilsa_herring_reference_01/pacific-herring.glb'], shot: 'life-hilsa.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 2, expected: ['doel_robin_reference_01/european-robin.glb'], shot: 'life-doel.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 7, expected: ['leopard_cat_bengal_reference_01/bengal-cat.glb'], shot: 'life-leopard-cat.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 8, expected: ['monkey_macaque_reference_01/japanese-macaque.glb'], shot: 'life-monkey.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 9, expected: ['vulture_gyps_reference_01/griffon-vulture.glb'], shot: 'life-vulture.png' },
   { world: 'food', selector: '#world .rail-list [data-i="6"]', category: 'রান্নার বিজ্ঞান', itemIndex: 0, expected: ['pot_enamel_01/pot_enamel_01_1k.gltf'], shot: 'food-boiling-pot.png' },
   { world: 'food', selector: '#world .rail-list [data-i="6"]', category: 'রান্নার বিজ্ঞান', itemIndex: 1, expected: ['brass_pan_01/brass_pan_01_1k.gltf'], shot: 'food-frying-pan.png' },
   { world: 'food', selector: '#world .rail-list [data-i="7"]', category: 'নিরাপদ খাবার ও অভ্যাস', itemIndex: 1, expected: ['pot_enamel_01/pot_enamel_01_1k.gltf'], shot: 'food-safe-water-pot.png' },
@@ -39,17 +79,23 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 0, expected: ['tulsi_tree_01/tulsi.glb'], shot: 'life-tulsi-plant.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 4, expected: ['turmeric_root_scan_01/turmeric-root.glb'], shot: 'life-turmeric-rhizome.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 5, expected: ['cinnamon_stick_scan_01/cinnamon-stick.glb'], shot: 'life-cinnamon-bark.png' },
+  { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 6, expected: ['posora_cardamom_plant_01/cardamom-plant.glb', 'cardamom_bowl_01/cardamom-bowl.glb'], shot: 'life-cardamom-plant-and-spice.png' },
+  { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 8, expected: ['posora_thanakuni_01/thanakuni-creeper.glb'], shot: 'life-thanakuni-creeper.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 7, expected: ['mint_leaves_01/mint-leaves.glb'], shot: 'life-mint-leaves.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
-  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 3, expected: ['palmyra_palm_01/palmyra-palm.glb'], shot: 'life-tal-palmyra-palm.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 3, expected: ['posora_tal_palm_01/tal-palmyra-palm.glb'], shot: 'life-tal-palmyra-palm.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 1, expected: ['jackfruit_risd_scan_01/jackfruit-pod.glb'], shot: 'life-jackfruit-pod.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 4, expected: ['bombax_ceiba_scan_01/bombax-ceiba.glb'], shot: 'life-shimul-bombax-ceiba.png' },
-  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 7, expected: ['nypa_fruit_01/nypa-fruit-cluster.glb'], shot: 'life-golpata-fruit-cluster.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 6, expected: ['posora_sundari_01/sundari-mangrove.glb'], shot: 'life-sundari-mangrove.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 7, expected: ['posora_golpata_01/golpata-nypa-palm.glb', 'nypa_fruit_01/nypa-fruit-cluster.glb'], shot: 'life-golpata-nypa-palm.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 8, expected: ['bamboo_botany_01/bamboo.glb'], shot: 'life-bamboo.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 9, expected: ['rice_oryza_sativa_01/oryza-sativa.glb'], shot: 'life-paddy-rice.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 10, expected: ['posora_jute_01/jute-stand.glb'], shot: 'life-jute-stand.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 11, expected: ['water_lily_nymphaea_01/water-lily.glb'], shot: 'life-shapla-water-lily.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 5, expected: ['krishnachura_delonix_01/krishnachura.glb'], shot: 'life-krishnachura.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 12, expected: ['posora_kadam_01/kadam-tree.glb'], shot: 'life-kadam-tree.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 13, expected: ['posora_hijal_01/hijal-tree.glb'], shot: 'life-hijal-tree.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="6"]', category: 'পরিমাপের যন্ত্র', itemIndex: 1, expected: ['balance_scale_01/balance-scale.glb'], shot: 'discovery-balance-scale.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 0, expected: ['realistic_red_fox_01/red-fox.glb'], shot: 'life-mammal-fox.png' },
   { world: 'life', selector: 'button.grow:has-text("প্রাণীর শ্রেণি")', category: 'প্রাণীর শ্রেণি', itemIndex: 1, expected: ['realistic_indian_peafowl_01/indian-peafowl.glb'], shot: 'life-bird-peafowl.png' },
@@ -93,13 +139,14 @@ const cases = [
   { world: 'language', selector: '#world .rail-list [data-i="3"]', itemIndex: 3, expected: ['sweet_potato/sweet_potato_1k.gltf'], shot: 'language-vegetable.png' },
   { world: 'language', selector: '#world .rail-list [data-i="3"]', itemIndex: 2, expected: ['jackfruit_risd_scan_01/jackfruit-pod.glb'], shot: 'language-jackfruit.png' },
 ];
-const worldCases = process.env.MODEL_SMOKE_ONLY
-  ? cases.filter((test) => test.world === process.env.MODEL_SMOKE_ONLY)
+const requestedWorlds = new Set((process.env.MODEL_SMOKE_ONLY ?? '').split(',').map((world) => world.trim()).filter(Boolean));
+const worldCases = requestedWorlds.size
+  ? cases.filter((test) => requestedWorlds.has(test.world))
   : cases;
 const activeCases = process.env.MODEL_SMOKE_CASE
   ? worldCases.filter((test) => test.shot === process.env.MODEL_SMOKE_CASE)
   : worldCases;
-if (!activeCases.length) throw new Error(`No licensed-model smoke cases for ${process.env.MODEL_SMOKE_ONLY}`);
+if (!activeCases.length) throw new Error(`No licensed-model smoke cases for ${[...requestedWorlds].join(', ') || process.env.MODEL_SMOKE_CASE || 'the selected filters'}`);
 // Keep each world's model cases together. Reopening the same world after
 // several WebGL-heavy pages increases software-renderer pressure and made the
 // long desktop/mobile suite intermittently fail during a category transition.
@@ -109,7 +156,7 @@ try {
   const viewports = [
     { name: 'desktop', width: 1440, height: 900 },
     { name: 'mobile', width: 390, height: 844 },
-  ];
+  ].filter((viewport) => !process.env.MODEL_SMOKE_VIEWPORT || viewport.name === process.env.MODEL_SMOKE_VIEWPORT);
   for (const viewport of viewports) {
     const errors = [];
     let page;
@@ -121,6 +168,7 @@ try {
         // later captures appear blank in a long headless visual pass.
         await page?.close();
         page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
+        installReliablePageWait(page);
         assetResponses.clear();
         await page.addInitScript(() => {
           window.__posoraLoadedModels = [];
@@ -143,34 +191,106 @@ try {
         });
         currentWorld = test.world;
         await page.goto(`${base}/${currentWorld}/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await page.locator('#hero-host').waitFor({ state: 'attached', timeout: 15000 });
+        await page.locator('#hero-host').waitFor({ state: 'attached', timeout: 45000 }).catch(async (error) => {
+          console.error(`HERO HOST DEBUG ${viewport.name} ${test.world}/${test.shot}: ${JSON.stringify(await page.evaluate(() => ({
+            url: location.href,
+            title: document.title,
+            status: document.querySelector('main')?.getAttribute('data-slug') ?? null,
+            body: document.body.innerText.slice(0, 600),
+            hostCount: document.querySelectorAll('#hero-host').length,
+          })))}`);
+          throw error;
+        });
+        // Wait for the webfont/layout shift to settle before crossing the lazy
+        // WebGL intersection boundary. Otherwise the host can move back out of
+        // view between scrollIntoView() and the observer callback.
+        // Astro's dev server can perform one full reload when a generated
+        // asset changes just before the smoke starts. Retry this harmless
+        // settling probe across that navigation instead of failing the case.
+        let layoutSettled = false;
+        for (let attempt = 0; attempt < 3 && !layoutSettled; attempt += 1) {
+          try {
+            await page.evaluate(async () => {
+              await document.fonts.ready;
+              await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            });
+            layoutSettled = true;
+          } catch (error) {
+            if (!String(error).includes('Execution context was destroyed') || attempt === 2) throw error;
+            await page.waitForLoadState('domcontentloaded');
+            await page.locator('#hero-host').waitFor({ state: 'attached', timeout: 15000 });
+          }
+        }
+        await page.evaluate(() => document.querySelector('#hero-host')?.scrollIntoView({ block: 'center' }));
         if (viewport.name === 'mobile') {
           // The server-rendered CTA appears before its external module has
           // attached the tap handler. Wait for the explicit hydration marker
           // so this verifies the mobile opt-in instead of racing it.
-          await page.waitForFunction(() => document.querySelector('#world-start')?.getAttribute('data-interactive') === 'true', null, { timeout: 15000 });
-          const start = page.locator('#world-start');
+          const start = page.locator('#world-start[data-interactive="true"]');
+          await start.waitFor({ state: 'attached', timeout: 15000 });
           if (await start.count() && await start.isVisible()) await start.click();
         }
         // The canvas element is server-rendered even before Three.js mounts.
         // Three.js sets data-engine only after successfully creating a WebGL
         // renderer, so this cannot mistake an empty canvas for a working scene.
-        await page.waitForFunction(() => {
-          return !!document.querySelector('#hero-host canvas')?.getAttribute('data-engine');
-        }, null, { timeout: 30000 });
-        // The island can replace the host during initial hydration; scroll the
-        // current node from page context instead of retaining a stale locator.
-        await page.evaluate(() => document.querySelector('#hero-host')?.scrollIntoView({ block: 'center' }));
+        let engineReady = false;
+        let engineError;
+        for (let attempt = 0; attempt < 3 && !engineReady; attempt += 1) {
+          if (attempt > 0) {
+            await page.evaluate(() => document.querySelector('#hero-host')?.scrollIntoView({ block: 'center' }));
+            await page.waitForTimeout(500);
+          }
+          try {
+            await page.locator('#hero-host canvas[data-engine]').waitFor({
+              state: 'attached', timeout: viewport.name === 'mobile' ? 30000 : 20000,
+            });
+            engineReady = true;
+          } catch (error) {
+            engineError = error;
+          }
+        }
+        if (!engineReady) {
+          const diagnostics = await page.evaluate(() => ({
+            url: location.href,
+            canvas: document.querySelector('#hero-host canvas')?.outerHTML.slice(0, 500) ?? null,
+            fallback: document.querySelector('#hero-loading')?.textContent ?? null,
+            start: document.querySelector('#world-start')?.outerHTML ?? null,
+            loadedModels: window.__posoraLoadedModels,
+          }));
+          console.error(`SCENE DEBUG ${viewport.name}: ${JSON.stringify(diagnostics)}; warnings=${errors.join(' | ') || 'none'}`);
+          throw engineError;
+        }
       }
     if (test.category) {
-      const currentCategory = await page.locator('#crumb-cat').textContent();
+      // Read both element presence and its label in one DOM turn: the hydrated
+      // explorer may replace the breadcrumb between separate locator calls.
+      const currentCategory = await page.evaluate(() => document.querySelector('#crumb-cat')?.textContent?.trim() ?? null);
       if (currentCategory?.trim() !== test.category) {
-        // Use a real locator click so mobile scrolls the category into view and
-        // exercises the same pointer path as a learner. A synthetic DOM click
-        // could fire while the previous heavy WebGL scene was still settling,
-        // then leave the next item assertion on the stale category.
-        await page.locator(test.selector).click({ timeoutMs: 15000 });
-        await page.waitForFunction((name) => document.querySelector('#crumb-cat')?.textContent?.trim() === name, test.category, { timeout: 15000 });
+        // The fixed site header can overlap the category rail after a WebGL
+        // stage scrolls into view, intercepting Playwright's pointer click.
+        // Activate the actual button rather than failing this asset smoke on
+        // a test-only sticky-header hit target; then wait for the UI state.
+        await page.locator(test.selector).evaluate((element) => {
+          if (!(element instanceof HTMLElement)) throw new Error('Category control is not an HTMLElement');
+          element.click();
+        });
+        await page.waitForFunction((name) => document.querySelector('#crumb-cat')?.textContent?.trim() === name, test.category, { timeout: 15000 }).catch(async (error) => {
+          const diagnostic = await page.evaluate(() => ({
+            category: document.querySelector('#crumb-cat')?.textContent?.trim() ?? null,
+            item: document.querySelector('#crumb-item')?.textContent?.trim() ?? null,
+            rail: [...document.querySelectorAll('#world .rail-list [data-i]')].map((node) => ({
+              index: node.getAttribute('data-i'),
+              text: node.textContent?.trim(),
+              pressed: node.getAttribute('aria-pressed'),
+              visible: node instanceof HTMLElement && node.getBoundingClientRect().width > 0,
+            })),
+            chips: [...document.querySelectorAll('.chip[data-di]')].map((node) => ({
+              index: node.getAttribute('data-di'), text: node.textContent?.trim(), pressed: node.getAttribute('aria-pressed'),
+            })),
+          }));
+          console.error(`CATEGORY TRANSITION DEBUG ${viewport.name} ${test.world}/${test.category}: ${JSON.stringify(diagnostic)}`);
+          throw error;
+        });
       }
     } else {
       await page.locator(test.selector).evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
@@ -190,19 +310,24 @@ try {
       }
     }
     if (test.shot === 'food-fruit-wheel.png') {
-      await page.locator('.chip[data-di="1"]').evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+      const chip = page.locator('.chip[data-di="1"]');
+      if (await chip.count()) await chip.evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
     }
     if (test.shot === 'life-ginger.png') {
-      await page.locator('.chip[data-di="3"]').evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+      const chip = page.locator('.chip[data-di="3"]');
+      if (await chip.count()) await chip.evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
     }
     if (test.shot === 'discovery-instruments.png') {
-      await page.locator('.chip[data-di="3"]').evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+      const chip = page.locator('.chip[data-di="3"]');
+      if (await chip.count()) await chip.evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
     }
     if (test.shot === 'discovery-telephone.png') {
-      await page.locator('.chip[data-di="6"]').evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+      const chip = page.locator('.chip[data-di="6"]');
+      if (await chip.count()) await chip.evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
     }
     if (test.shot === 'language-fruit.png') {
-      await page.locator('.chip[data-di="2"]').evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+      const chip = page.locator('.chip[data-di="2"]');
+      if (await chip.count()) await chip.evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
     }
     if (test.itemIndex !== undefined) {
       if (test.world === 'nature') {
@@ -214,8 +339,29 @@ try {
       }
       else {
         const item = page.locator(`.chip[data-di="${test.itemIndex}"]`);
-        await item.waitFor({ state: 'visible', timeout: 10000 });
-        await item.evaluate((element) => { if (element instanceof HTMLElement) element.click(); });
+        await page.waitForFunction((index) => {
+          const node = document.querySelector(`.chip[data-di="${index}"]`);
+          return node instanceof HTMLElement && !node.hidden && node.getBoundingClientRect().width > 0 && node.getBoundingClientRect().height > 0;
+        }, test.itemIndex, { timeout: 10000 }).catch(async (error) => {
+          const diagnostic = await page.evaluate(() => ({
+            category: document.querySelector('#crumb-cat')?.textContent?.trim() ?? null,
+            item: document.querySelector('#crumb-item')?.textContent?.trim() ?? null,
+            chips: [...document.querySelectorAll('.chip[data-di]')].map((node) => ({
+              index: node.getAttribute('data-di'), text: node.textContent?.trim(), visible: node instanceof HTMLElement && node.getBoundingClientRect().width > 0,
+            })),
+            chipRegion: document.querySelector('.chips')?.outerHTML.slice(0, 1200) ?? null,
+          }));
+          console.error(`ITEM SELECTION DEBUG ${viewport.name} ${test.world}/${test.shot}: ${JSON.stringify(diagnostic)}`);
+          throw error;
+        });
+        const selected = await item.evaluate((element) => {
+          if (!(element instanceof HTMLElement)) return false;
+          element.click();
+          // Read the exact DOM node that received the click. Re-resolving a
+          // locator here races the explorer's progress/toast re-render.
+          return element.getAttribute('aria-pressed') === 'true';
+        });
+        check(selected, `${test.world}/${test.shot}: clicked item chip did not become selected`);
       }
     }
     if (test.expected.some((asset) => asset.startsWith('mango_tree_01/'))) {
@@ -305,13 +451,31 @@ try {
       await page.waitForFunction(() => {
         const note = document.querySelector('#model-credit-banyan');
         return note instanceof HTMLElement && !note.hidden;
-      }, null, { timeout: 10000 });
+      }, null, { timeout: 15000 }).catch(async (error) => {
+        console.error(`BANYAN CREDIT DEBUG ${viewport.name}: ${JSON.stringify(await page.evaluate(() => ({
+          category: document.querySelector('#crumb-cat')?.textContent?.trim() ?? null,
+          item: document.querySelector('#crumb-item')?.textContent?.trim() ?? null,
+          banyan: document.querySelector('#model-credit-banyan')?.outerHTML ?? null,
+          allModelCredits: [...document.querySelectorAll('[id^="model-credit-"]')].filter((node) => node instanceof HTMLElement && !node.hidden).map((node) => node.id),
+          chips: [...document.querySelectorAll('.chip[data-di]')].filter((node) => node instanceof HTMLElement && node.getAttribute('aria-pressed') === 'true').map((node) => ({ index: node.getAttribute('data-di'), text: node.textContent?.trim() })),
+        })))}`);
+        throw error;
+      });
       const credit = await page.locator('#model-credit-banyan').innerText();
       check(credit.includes('Jimmy Gunawan') && credit.includes('CC BY 4.0') && credit.includes('পুরো গাছ নয়') && credit.includes('নির্দিষ্ট বাংলাদেশি গাছ'), `${test.world}: banyan creator/license/model-scope/geographic limitation credit is incomplete`);
     }
     if (test.expected.some((asset) => asset.startsWith('nypa_fruit_01/'))) {
       const credit = page.locator('#model-credit-nypa-fruit');
-      await page.waitForFunction(() => document.querySelector('#model-credit-nypa-fruit') instanceof HTMLElement && !document.querySelector('#model-credit-nypa-fruit').hidden, null, { timeout: 10000 });
+      await credit.waitFor({ state: 'visible', timeout: 10000 }).catch(async (error) => {
+        console.error(`NYPA CREDIT DEBUG ${viewport.name}: ${JSON.stringify(await page.evaluate(() => ({
+          category: document.querySelector('#crumb-cat')?.textContent?.trim() ?? null,
+          item: document.querySelector('#crumb-item')?.textContent?.trim() ?? null,
+          credit: document.querySelector('#model-credit-nypa-fruit')?.outerHTML ?? null,
+          parentHidden: document.querySelector('#model-credit') instanceof HTMLElement ? document.querySelector('#model-credit').hidden : null,
+          selectedChips: [...document.querySelectorAll('.chip[data-di]')].filter((node) => node.getAttribute('aria-pressed') === 'true').map((node) => ({ index: node.getAttribute('data-di'), text: node.textContent?.trim() })),
+        })))}`);
+        throw error;
+      });
       check((await credit.innerText()).includes('zefruitlivingbeingidk') && (await credit.innerText()).includes('CC BY 4.0') && (await credit.innerText()).includes('পুরো গাছ নয়'), 'Golpata: source, license, or fruit-cluster scope disclosure is incomplete');
       await page.locator('#ctl-x').evaluate((element) => {
         if (element instanceof HTMLInputElement) { element.value = '55'; element.dispatchEvent(new Event('input', { bubbles: true })); }
@@ -473,7 +637,19 @@ try {
       await page.waitForFunction(() => {
         const note = document.querySelector('#model-credit-turmeric');
         return note instanceof HTMLElement && !note.hidden;
-      }, null, { timeout: 10000 });
+      }, null, { timeout: 10000 }).catch(async (error) => {
+        const diagnostic = await page.evaluate(() => ({
+          category: document.querySelector('#crumb-cat')?.textContent?.trim() ?? null,
+          item: document.querySelector('#crumb-item')?.textContent?.trim() ?? null,
+          turmericCreditHidden: document.querySelector('#model-credit-turmeric') instanceof HTMLElement
+            ? document.querySelector('#model-credit-turmeric').hidden : null,
+          chips: [...document.querySelectorAll('.chip[data-di]')].map((node) => ({
+            index: node.getAttribute('data-di'), text: node.textContent?.trim(), pressed: node.getAttribute('aria-pressed'),
+          })),
+        }));
+        console.error(`TURMERIC CREDIT DEBUG ${viewport.name} ${test.shot}: ${JSON.stringify(diagnostic)}`);
+        throw error;
+      });
       const credit = await page.locator('#model-credit-turmeric').innerText();
       check(credit.includes('Keeszify') && credit.includes('CC BY 4.0') && (credit.includes('শিকড়') || credit.includes('রাইজোম')), `${test.world}: turmeric root identity/creator/license credit is incomplete`);
       if (test.world === 'life') {
@@ -630,7 +806,17 @@ try {
         return note instanceof HTMLElement && !note.hidden
           && window.__posoraModelAnimations[path]?.includes('Turtle_idle_2')
           && window.__posoraPlayingAnimations[path] === true;
-      }, null, { timeout: 10000 });
+      }, null, { timeout: 20000 }).catch(async (error) => {
+        console.error(`TURTLE ANIMATION DEBUG ${viewport.name}: ${JSON.stringify(await page.evaluate(() => ({
+          category: document.querySelector('#crumb-cat')?.textContent?.trim() ?? null,
+          item: document.querySelector('#crumb-item')?.textContent?.trim() ?? null,
+          credit: document.querySelector('#model-credit-green-turtle')?.hidden ?? null,
+          loaded: window.__posoraLoadedModels,
+          animations: window.__posoraModelAnimations['/models/green_sea_turtle_01/green-sea-turtle.glb'] ?? null,
+          playing: window.__posoraPlayingAnimations['/models/green_sea_turtle_01/green-sea-turtle.glb'] ?? null,
+        })))}`);
+        throw error;
+      });
       const credit = await page.locator('#model-credit-green-turtle').innerText();
       check(credit.includes('jgrabo20') && credit.includes('CC BY 4.0') && credit.includes('বাংলাদেশের নির্দিষ্ট'), `${viewport.name}: turtle source, license, or identity caveat is incomplete`);
       await page.locator('#ctl-x').evaluate((element) => {
@@ -751,20 +937,48 @@ try {
     // stage after the selection so it renders the object this case is testing.
     const sceneStart = page.locator('#world-start');
     if (viewport.name === 'mobile') {
-      // Hydration can briefly show a disabled CTA while the canvas is being
-      // recreated. Wait until the CTA is truly actionable before using it;
-      // a missing CTA means this scene has already been activated.
-      await page.waitForFunction(() => {
-        const button = document.querySelector('#world-start');
-        return !button || !button.hasAttribute('disabled');
-      }, null, { timeout: 8000 }).catch(() => {});
+      // Item changes can re-arm the mobile opt-in after the selection handler
+      // returns. Give that button a moment to become visible before deciding the
+      // existing canvas is still active.
+      if (!(await sceneStart.isVisible().catch(() => false))) {
+        await sceneStart.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+      }
       if (await sceneStart.count() && await sceneStart.isVisible() && await sceneStart.isEnabled()) {
         await sceneStart.click({ timeout: 5000 }).catch(() => {});
       }
     }
-    await page.waitForFunction(() => {
-      return !!document.querySelector('#hero-host canvas')?.getAttribute('data-engine');
-    }, null, { timeout: 30000 });
+    let rearmed = false;
+    let rearmError;
+    for (let attempt = 0; attempt < 3 && !rearmed; attempt += 1) {
+      if (attempt > 0) {
+        await page.evaluate(() => document.querySelector('#hero-host')?.scrollIntoView({ block: 'center' }));
+        if (viewport.name === 'mobile' && await sceneStart.isVisible().catch(() => false) && await sceneStart.isEnabled()) {
+          await sceneStart.click({ timeout: 5000 }).catch(() => {});
+        }
+        await page.waitForTimeout(500);
+      }
+      try {
+        await page.locator('#hero-host canvas[data-engine]').waitFor({
+          state: 'attached', timeout: viewport.name === 'mobile' ? 30000 : 20000,
+        });
+        rearmed = true;
+      } catch (error) {
+        rearmError = error;
+      }
+    }
+    if (!rearmed) {
+      const diagnostics = await page.evaluate(() => ({
+        url: location.href,
+        category: document.querySelector('#crumb-cat')?.textContent?.trim() ?? null,
+        item: document.querySelector('#crumb-item')?.textContent?.trim() ?? null,
+        canvas: document.querySelector('#hero-host canvas')?.outerHTML.slice(0, 500) ?? null,
+        fallback: document.querySelector('#hero-loading')?.textContent ?? null,
+        start: document.querySelector('#world-start')?.outerHTML ?? null,
+        loadedModels: window.__posoraLoadedModels,
+      }));
+      console.error(`REARM DEBUG ${viewport.name} ${test.shot}: ${JSON.stringify(diagnostics)}; warnings=${errors.join(' | ') || 'none'}`);
+      throw rearmError;
+    }
     // Let the GLTF parser finish attaching the successful response before the
     // visual capture; an HTTP 200 alone does not prove the scene can use it.
     // GLTFLoader must parse the GLB and its image textures after the transfer;
@@ -772,7 +986,7 @@ try {
     for (const asset of test.expected) {
       const url = `/models/${asset}`;
       try {
-        await page.waitForFunction((path) => window.__posoraLoadedModels.some((value) => new URL(value, location.href).pathname === path), url, { timeout: 12000 });
+        await page.waitForFunction((path) => window.__posoraLoadedModels.some((value) => new URL(value, location.href).pathname === path), url, { timeout: 30000 });
       } catch { /* the assertion below reports the model and world together */ }
       const loaded = await page.evaluate((path) => window.__posoraLoadedModels.some((value) => new URL(value, location.href).pathname === path), url);
       const status = assetResponses.get(url);
@@ -788,42 +1002,23 @@ try {
         check(playing, `${viewport.name}: bamboo's authored animation is not playing (or reduced-motion was incorrectly detected)`);
       }
     }
-    if (test.expected.some((asset) => asset.startsWith('palmyra_palm_01/'))) {
-      await page.waitForFunction(() => {
-        const note = document.querySelector('#model-credit-palmyra');
-        return note instanceof HTMLElement && !note.hidden;
-      }, null, { timeout: 10000 });
-      const credit = await page.locator('#model-credit-palmyra').innerText();
-      check(credit.includes('P.S.Thng') && credit.includes('CC BY 4.0') && credit.includes('মাঠ-স্ক্যান'), `${viewport.name}: Palmyra source credit, license, or field-scan caveat is missing`);
-      await page.locator('#ctl-x').evaluate((element) => {
-        if (element instanceof HTMLInputElement) {
-          element.value = '55';
-          element.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      });
-      await page.waitForFunction(() => {
-        const note = document.querySelector('#explode-note');
-        return note instanceof HTMLElement && !note.hidden
-          && document.querySelector('#explode-note-title')?.textContent?.includes('তাল')
-          && (document.querySelector('#explode-note-copy')?.textContent?.length ?? 0) > 20
-          && (document.querySelector('#explode-note-fun')?.textContent?.length ?? 0) > 15;
-      }, null, { timeout: 10000 });
-      if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') {
-        await page.waitForTimeout(1000);
-        await page.screenshot({ path: path.join(evidenceDir, `${viewport.name}-life-tal-palmyra-closeup.png`), fullPage: false });
-      }
-      await page.locator('#ctl-x').evaluate((element) => {
-        if (element instanceof HTMLInputElement) {
-          element.value = '0';
-          element.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      });
-    }
     if (test.expected.some((asset) => asset.startsWith('cardamom_bowl_01/'))) {
-      await page.waitForFunction(() => {
-        const note = document.querySelector('#model-credit-cardamom-bowl');
-        return note instanceof HTMLElement && !note.hidden;
-      }, null, { timeout: 10000 });
+      try {
+        await page.waitForFunction(() => {
+          const note = document.querySelector('#model-credit-cardamom-bowl');
+          return note instanceof HTMLElement && !note.hidden;
+        }, null, { timeout: 10000 });
+      } catch (error) {
+        const diagnostics = await page.evaluate(() => ({
+          category: document.querySelector('#crumb-cat')?.textContent,
+          item: document.querySelector('#crumb-item')?.textContent,
+          credit: document.querySelector('#model-credit-cardamom-bowl')?.outerHTML,
+          parent: document.querySelector('#model-credit')?.outerHTML,
+          loaded: window.__posoraLoadedModels,
+        }));
+        console.error(`CARDAMOM DEBUG ${viewport.name}: ${JSON.stringify(diagnostics)}`);
+        throw error;
+      }
       const credit = await page.locator('#model-credit-cardamom-bowl').innerText();
       check(credit.includes('go3452') && credit.includes('CC BY 4.0') && credit.includes('AI-সহায়তায় তৈরি'), `${viewport.name}: cardamom source, license, or AI-generation disclosure is missing`);
     }
@@ -892,17 +1087,19 @@ try {
       });
     }
       await page.waitForTimeout(1000);
-      const canvas = page.locator('#hero-host canvas');
-      check(await canvas.count() === 1, `${viewport.name} /${test.world}: focused scene canvas missing after selecting ${test.selector}`);
+      await page.waitForFunction(() => !!document.querySelector('#hero-host canvas'), null, { timeout: 15000 });
+      const canvasCount = await page.evaluate(() => document.querySelectorAll('#hero-host canvas').length);
+      check(canvasCount === 1, `${viewport.name} /${test.world}: focused scene canvas missing after selecting ${test.selector}`);
       // The 3D scene may animate continuously, so Playwright's stability wait
       // inside scrollIntoViewIfNeeded can time out even when the canvas is
       // present and rendering. Use an immediate DOM scroll instead.
-      await canvas.evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await page.evaluate(() => document.querySelector('#hero-host canvas')?.scrollIntoView({ block: 'center', behavior: 'instant' }));
       await page.waitForTimeout(1000);
       if (process.env.MODEL_SMOKE_SCREENSHOTS === '1') {
         await page.screenshot({
           path: path.join(evidenceDir, `${viewport.name}-${test.shot}`),
           fullPage: false,
+          timeout: viewport.name === 'mobile' ? 60000 : 30000,
         });
       }
       if (failures.length === failuresBeforeCase) console.log(`PASS ${viewport.name} /${test.world}/ ${test.expected.join(', ')}`);

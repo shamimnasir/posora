@@ -1,0 +1,24 @@
+{
+  "name": "Bangla sweet assortment",
+  "subject": "Illustrative chhana-based round and shaped sweets",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "bangla-sweets.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "bangla-sweets.glb",
+      "bytes": 115500,
+      "sha256": "9f2a6def8fc1820ef0db0d70334947bda8d98c41f8037cd1863ea8d4fdc0748d"
+    }
+  ],
+  "educationalRole": "Dish-specific illustrative model for Food → বাংলার খাবার → sweet.",
+  "limitations": [
+    "Original PBR illustration, not photogrammetry and not a standard recipe.",
+    "Ingredients, shape, garnish, portion and serving style vary by family, region and occasion.",
+    "The model shows one representative serving and must not be read as the only authentic form."
+  ]
+}

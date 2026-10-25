@@ -1,0 +1,12 @@
+{
+  "name": "Domestic Bengal cat — Leopard cat comparison",
+  "subject": "Domestic Bengal cat, shown only as a spotted-felid comparison for Prionailurus bengalensis",
+  "creator": "ItsKrish7",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "source": "https://sketchfab.com/3d-models/bengal-cat-6d82596b5db94f7b9093814a4a88caa9",
+  "localMainFile": "bengal-cat.glb",
+  "format": "glTF 2.0 GLB, web-optimized derivative",
+  "files": [{ "path": "bengal-cat.glb", "bytes": 975372, "sha256": "a4e64d8fa7f90602479b66031e56e93f806359815a46456607abb48461d12102" }],
+  "limitations": ["Domestic Bengal cat, not the wild Leopard cat.", "Use only as a visibly disclosed felid-body and spotted-coat comparison."]
+}

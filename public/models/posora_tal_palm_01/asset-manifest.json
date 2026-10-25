@@ -1,0 +1,24 @@
+{
+  "name": "Tal / Palmyra palm",
+  "subject": "Borassus flabellifer teaching illustration",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using species morphology references; not a scan or marketplace model.",
+  "localMainFile": "tal-palmyra-palm.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "tal-palmyra-palm.glb",
+      "bytes": 573024,
+      "sha256": "ca6b2863c48451341269192d5eb6c94ed069c1c51bec68b94ebc6b561e732a71"
+    }
+  ],
+  "educationalRole": "Exact named-item teaching illustration for Life → talPalm.",
+  "limitations": [
+    "Original field-guide style PBR illustration, not photogrammetry or a herbarium specimen.",
+    "Individuals vary by age, season, habitat, health and cultivar.",
+    "Use the visible lesson copy and source references for facts; do not infer scale from this model."
+  ]
+}

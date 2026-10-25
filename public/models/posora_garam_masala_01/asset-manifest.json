@@ -1,0 +1,24 @@
+{
+  "name": "Whole garam masala mixture",
+  "subject": "Cinnamon, cardamom, clove, pepper and star-anise teaching set",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "garam-masala.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "garam-masala.glb",
+      "bytes": 386904,
+      "sha256": "34a1c8876d4d9c781a59fe6cbb7946748b08e755f51cc87de4417fc74cb3c9ff"
+    }
+  ],
+  "educationalRole": "Exact dried-spice teaching specimen for Food → মশলার জগৎ → garamMasala.",
+  "limitations": [
+    "Original PBR teaching model, not photogrammetry and not a specimen scan.",
+    "Natural products vary in size, color, curvature, age, processing and cultivar.",
+    "The bowl is a display vessel and is not part of the spice."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Bangladesh macaque-type monkey",
+  "subject": "A broad macaque-form teaching illustration; not a verified individual species",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using diagnostic animal morphology; not a scan or marketplace model.",
+  "localMainFile": "macaque-type-monkey.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "macaque-type-monkey.glb",
+      "bytes": 221448,
+      "sha256": "73cc191f766802d12d0e3d20e3d90a06ea2f34175ea9b65bc0f561b6323d63f3"
+    }
+  ],
+  "educationalRole": "Exact named-item or visibly disclosed type illustration for Life → monkey.",
+  "limitations": [
+    "Original morphology-focused PBR illustration, not photogrammetry, taxidermy or a verified individual specimen.",
+    "Individuals vary by sex, age, season, habitat and health.",
+    "The Bengali lesson uses a broad common name; this model shows macaque-type anatomy and does not claim one verified species."
+  ]
+}

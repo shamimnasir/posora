@@ -13,7 +13,7 @@ loader.setMeshoptDecoder(MeshoptDecoder);
 export function loadLicensedModel(
   url: string,
   parent: Object3D,
-  options: { height?: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; position?: Vector3; rotationX?: number; rotationY?: number; rotationZ?: number; colorBoost?: number; leafShadows?: boolean; centerOnFloor?: boolean; playAnimations?: boolean; animationClip?: string; accept?: () => boolean } = {},
+  options: { height?: number; fitAxis?: 'x' | 'y' | 'z' | 'longest'; position?: Vector3; rotationX?: number; rotationY?: number; rotationZ?: number; colorBoost?: number; colorTint?: string; leafShadows?: boolean; centerOnFloor?: boolean; playAnimations?: boolean; animationClip?: string; accept?: () => boolean } = {},
 ): Promise<Group | null> {
   return new Promise((resolve) => {
     loader.load(url, (gltf) => {
@@ -41,6 +41,7 @@ export function loadLicensedModel(
         model.position.z -= (fitted.min.z + fitted.max.z) / 2;
       }
       const colorBoost = options.colorBoost ?? 1;
+      const colorTint = options.colorTint ? new Color(options.colorTint) : null;
       model.traverse((node) => {
         const mesh = node as Mesh;
         if (mesh.isMesh) {
@@ -50,11 +51,13 @@ export function loadLicensedModel(
           const leafMesh = options.leafShadows === false && /leaf|leaves|foliage/i.test(mesh.name);
           mesh.castShadow = !leafMesh;
           mesh.receiveShadow = !leafMesh;
-          if (colorBoost !== 1) {
+          if (colorBoost !== 1 || colorTint) {
             const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
             materials.forEach((material) => {
               const color = (material as Material & { color?: Color }).color;
-              if (color?.isColor) color.multiplyScalar(colorBoost);
+              if (!color?.isColor) return;
+              if (colorTint) color.multiply(colorTint);
+              if (colorBoost !== 1) color.multiplyScalar(colorBoost);
             });
           }
         }

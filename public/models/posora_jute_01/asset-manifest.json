@@ -1,0 +1,24 @@
+{
+  "name": "Jute stand",
+  "subject": "Corchorus crop teaching illustration",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using species morphology references; not a scan or marketplace model.",
+  "localMainFile": "jute-stand.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "jute-stand.glb",
+      "bytes": 215228,
+      "sha256": "59b69251be0590236466866eb01eb71a20fd0412ed19651e1871fa9c18d35263"
+    }
+  ],
+  "educationalRole": "Exact named-item teaching illustration for Life → jute.",
+  "limitations": [
+    "Original field-guide style PBR illustration, not photogrammetry or a herbarium specimen.",
+    "Individuals vary by age, season, habitat, health and cultivar.",
+    "Use the visible lesson copy and source references for facts; do not infer scale from this model."
+  ]
+}

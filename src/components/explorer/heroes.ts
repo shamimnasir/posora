@@ -569,6 +569,7 @@ const SCENES: Record<string, Builder> = {
           rotationX: licensed.rotationX,
           rotationZ: licensed.rotationZ,
           colorBoost: licensed.colorBoost,
+          colorTint: licensed.colorTint,
           leafShadows: licensed.leafShadows,
           playAnimations: licensed.playAnimations,
           animationClip: licensed.animationClip,
@@ -646,7 +647,7 @@ const SCENES: Record<string, Builder> = {
       // away for a selected object on a portrait screen. Let the focus move
       // decisively into the subject; the reveal/explode path adds its own
       // pull-back so detached parts still get room when opened.
-      focusZoomFactor: 0.58,
+      focusZoomFactor: narrow ? 0.58 : 0.52,
       // The pocket the camera must hold. Narrower on a phone, where the frame
       // is taller than it is wide and insisting on a laptop's width would push
       // the camera back until the subject was a thumbnail again.
@@ -662,6 +663,12 @@ const SCENES: Record<string, Builder> = {
         // Snap on the first frame, ease after: same reason as the badges.
         m.g.userData.k = settled ? (m.g.userData.k ?? 0) + (want - (m.g.userData.k ?? 0)) * 0.1 : want;
         const k = m.g.userData.k as number;
+        // Once an item has been chosen, the canvas becomes its inspection
+        // table. Keeping eleven unrelated specimens visible behind it made
+        // exact models look like tiny props and defeated the close-up. Allow
+        // the previous subject to ease out briefly, then remove it entirely
+        // from the draw list (and from hit-testing) until selected again.
+        m.g.visible = on;
         /**
          * The chosen one gets a clear stage, not an elbow in the ribs.
          *
@@ -678,12 +685,12 @@ const SCENES: Record<string, Builder> = {
         m.g.position.set(
           m.home.x * out * (1 - k * 0.9),
           m.home.y + k * 0.05,
-          m.home.z - (1 - k) * 0.55 + k * (1.4 + m.row * 1.95),
+          m.home.z - (1 - k) * 0.55 + k * (1.75 + m.row * 0.18),
         );
         // The chosen one turns slowly so its whole silhouette is read; the
         // others breathe rather than spin, which would make the grove jitter.
         m.g.rotation.y = on ? t * 0.45 : Math.sin(t * 0.35 + i * 1.7) * 0.12;
-        m.g.scale.setScalar(back * (0.92 + k * (0.5 + m.row * 0.26)));
+        m.g.scale.setScalar(back * (0.9 + k * (narrow ? 0.62 : 0.55)));
       });
     } };
   },
@@ -2235,6 +2242,10 @@ export function mountHero(
            * of every one of them is a tap or a slider nudge away, and the
            * reading panel beside the stage has it in full.
            */
+          if (sceneType === 'collection') {
+            b.sp.visible = on;
+            b.label.visible = on;
+          }
           const target = (on ? (sceneType === 'collection' ? 0.48 : 1) : pinScale * 0.72) * sprK() * beckonAt(i, t);
           b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
           (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.42;

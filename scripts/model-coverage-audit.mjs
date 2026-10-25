@@ -19,7 +19,11 @@ let total = 0;
 let licensed = 0;
 let exact = 0;
 let analogies = 0;
-const visualAnalogyOnly = new Set();
+const visualAnalogyOnly = new Set([
+  // High-detail, visibly disclosed comparisons. They replace crude geometry,
+  // but do not close the exact-species sourcing backlog.
+  'hilsa', 'doel', 'leopardCat', 'monkey', 'vulture',
+]);
 for (const [category, collection] of Object.entries(COLLECTIONS)) {
   const policy = policies[category];
   const rows = Object.entries(collection.items);

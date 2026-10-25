@@ -1,0 +1,24 @@
+{
+  "name": "Rice payesh",
+  "subject": "Thickened milk-and-rice payesh with raisin and nut garnish",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.",
+  "localMainFile": "rice-payesh.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "rice-payesh.glb",
+      "bytes": 168760,
+      "sha256": "9e8f0122e587e7f1365e14c248c5a311e6ea6ac15f8bda6ced682b50d50a9438"
+    }
+  ],
+  "educationalRole": "Dish-specific illustrative model for Food → বাংলার খাবার → payesh.",
+  "limitations": [
+    "Original PBR illustration, not photogrammetry and not a standard recipe.",
+    "Ingredients, shape, garnish, portion and serving style vary by family, region and occasion.",
+    "The model shows one representative serving and must not be read as the only authentic form."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Hijal tree",
+  "subject": "Barringtonia acutangula teaching illustration with pendent flowers",
+  "creator": "Posora.com",
+  "license": "CC0 1.0 Universal",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "Original deterministic Three.js geometry authored for Posora using species morphology references; not a scan or marketplace model.",
+  "localMainFile": "hijal-tree.glb",
+  "format": "glTF 2.0 GLB",
+  "createdDate": "2026-10-21",
+  "files": [
+    {
+      "path": "hijal-tree.glb",
+      "bytes": 398192,
+      "sha256": "ffb5eaf0b9f058f119e48d8e224c9d8c5f4390123c8ec44b2a73f17939d6dc98"
+    }
+  ],
+  "educationalRole": "Exact named-item teaching illustration for Life → hijol.",
+  "limitations": [
+    "Original field-guide style PBR illustration, not photogrammetry or a herbarium specimen.",
+    "Individuals vary by age, season, habitat, health and cultivar.",
+    "Use the visible lesson copy and source references for facts; do not infer scale from this model."
+  ]
+}
