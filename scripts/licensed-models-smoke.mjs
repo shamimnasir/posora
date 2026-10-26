@@ -991,8 +991,13 @@ try {
       const loaded = await page.evaluate((path) => window.__posoraLoadedModels.some((value) => new URL(value, location.href).pathname === path), url);
       const status = assetResponses.get(url);
       if (!loaded) {
-        const selection = await page.locator('#crumb-cat, #crumb-item').allTextContents();
-        console.error(`MODEL DEBUG ${viewport.name} ${selection.join(' / ')}: ${url} HTTP=${status ?? 'not observed'}; warnings=${errors.join(' | ') || 'none'}`);
+        const diagnostics = await page.evaluate(() => ({
+          selection: [...document.querySelectorAll('#crumb-cat, #crumb-item')].map((node) => node.textContent?.trim()),
+          loadedModels: window.__posoraLoadedModels,
+          loadingText: document.querySelector('#hero-loading')?.textContent?.trim() ?? null,
+          selectedChip: document.querySelector('.chip[aria-pressed="true"]')?.textContent?.trim() ?? null,
+        }));
+        console.error(`MODEL DEBUG ${viewport.name} ${diagnostics.selection.join(' / ')}: ${url} HTTP=${status ?? 'not observed'}; loaded=${JSON.stringify(diagnostics.loadedModels)}; selected=${diagnostics.selectedChip}; loading=${diagnostics.loadingText}; warnings=${errors.join(' | ') || 'none'}`);
       }
       check(loaded && (status === undefined || status === 200), `${test.world}: ${asset} was not successfully parsed and attached to its scene`);
       if (asset === 'bamboo_botany_01/bamboo.glb') {
