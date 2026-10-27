@@ -10,7 +10,6 @@
  * Astro always inlines and the CSP would silently block).
  */
 ---
-<script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-H4ESLZMRCW"></script>
 <script>
   /**
    * `arguments`, not a rest array. This is the whole bug.
@@ -47,4 +46,24 @@
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
   });
+
+  // Analytics is useful after a page becomes usable, never before. Loading
+  // Google's ~165KB runtime during the critical rendering path cost about
+  // 70KB of unused JavaScript in Lighthouse and competed with the Bengali
+  // font on slow phones. Queue commands immediately, fetch gtag after load,
+  // and retain every page view without delaying first paint.
+  const loadAnalytics = () => {
+    if (document.querySelector('script[data-posora-analytics]')) return;
+    const script = document.createElement('script');
+    script.async = true;
+    script.dataset.posoraAnalytics = 'true';
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-H4ESLZMRCW';
+    document.head.append(script);
+  };
+  const scheduleAnalytics = () => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(loadAnalytics, { timeout: 2500 });
+    else globalThis.setTimeout(loadAnalytics, 1200);
+  };
+  if (document.readyState === 'complete') scheduleAnalytics();
+  else window.addEventListener('load', scheduleAnalytics, { once: true });
 </script>

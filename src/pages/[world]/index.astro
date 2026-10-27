@@ -362,6 +362,16 @@ const schema = [
             <span id="model-credit-octopus" hidden>অক্টোপাসের ৩ডি মডেল: <a href="https://sketchfab.com/3d-models/octopus-d08195133942442dae870ede04e3d7f1" target="_blank" rel="noopener noreferrer">rayleighsyafiq-এর “Octopus”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি অমেরুদণ্ডী প্রাণীর একটি উদাহরণ, বাংলাদেশের নির্দিষ্ট প্রজাতি নয় · তথ্য: <a href="https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives" target="_blank" rel="noopener noreferrer">Smithsonian Ocean</a></span>
             <span id="model-credit-green-turtle" hidden>সবুজ সামুদ্রিক কাছিম (*Chelonia mydas*)-এর ৩ডি নমুনা: <a href="https://sketchfab.com/3d-models/green-sea-turtle-d3dc6a6a4ff74465a59105fd7c66b32b" target="_blank" rel="noopener noreferrer">jgrabo20-এর “Green Sea Turtle”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি বাংলাদেশের নির্দিষ্ট কোনো কাছিমের স্ক্যান নয় · তথ্য: <a href="https://sufal.bforest.gov.bd/redlist/wp-content/uploads/2023/03/Volume-4-Reptiles-and-Amphibians-Full-Book.pdf" target="_blank" rel="noopener noreferrer">বাংলাদেশের সরীসৃপ লাল তালিকা (২০১৪ মূল্যায়ন)</a> ও <a href="https://www.fisheries.noaa.gov/species/green-turtle" target="_blank" rel="noopener noreferrer">NOAA Fisheries</a></span>
           </p>
+          <figure class="species-reference" id="species-reference" hidden>
+            <img id="species-reference-image" width="480" height="320" loading="lazy" decoding="async" alt="" />
+            <figcaption>
+              <span class="species-reference-kicker">ঠিক প্রজাতি চিনে নাও</span>
+              <strong id="species-reference-title"></strong>
+              <em id="species-reference-science"></em>
+              <p id="species-reference-copy"></p>
+              <small id="species-reference-credit"></small>
+            </figcaption>
+          </figure>
           {w.slug === 'food' && <p class="food-detail-note" id="food-detail-note" hidden><span id="food-detail-copy"></span><button type="button" id="food-detail-return" hidden>পুরো টেবিলে ফেরো</button></p>}
           {/* The model used to come apart in silence everywhere except the Food
               pilot.  This is deliberately next to the canvas (not buried in
@@ -874,6 +884,16 @@ const schema = [
   .lesson-cue { position: relative; z-index: 1; display: flex; align-items: baseline; gap: 0.65rem; margin: 0.65rem 0 0; padding: 0.25rem 0.15rem; max-width: 72ch; color: var(--ink-2); font-size: 13px; line-height: 1.45; }
   .lesson-cue b { flex: none; color: #ffd76a; }
   .model-note { position: relative; max-width: 68ch; margin: 0.55rem 0.9rem 0; padding: 0.25rem 0.6rem; border-radius: 8px; background: color-mix(in oklab, var(--panel) 76%, transparent); color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .species-reference { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(130px, 210px) 1fr; gap: 0.9rem; max-width: 68ch; margin: 0.65rem 0.9rem 0; padding: 0.65rem; border: 1px solid color-mix(in oklab, var(--w) 45%, var(--line)); border-radius: 16px; background: color-mix(in oklab, var(--panel) 90%, var(--w)); box-shadow: 0 12px 26px color-mix(in oklab, #061022 18%, transparent); color: var(--ink-2); }
+  .species-reference[hidden] { display: none; }
+  .species-reference img { width: 100%; height: 100%; min-height: 128px; max-height: 170px; border-radius: 11px; object-fit: cover; background: var(--panel-2); }
+  .species-reference figcaption { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; }
+  .species-reference-kicker { margin-bottom: 0.2rem; color: var(--w); font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+  .species-reference strong { color: var(--ink); font-size: clamp(17px, 1.8vw, 22px); }
+  .species-reference em { color: var(--muted); font-family: Georgia, serif; font-size: 13px; }
+  .species-reference p { margin: 0.42rem 0; font-size: 13px; line-height: 1.55; }
+  .species-reference small { color: var(--muted); font-size: 10.5px; line-height: 1.45; }
+  .species-reference a { color: var(--w); }
   .food-detail-note { max-width: 68ch; margin: 0.35rem 0.9rem 0; padding: 0.65rem 0.8rem; border-left: 3px solid #5fc4b4; border-radius: 0 10px 10px 0; background: color-mix(in oklab, #5fc4b4 10%, var(--panel)); color: var(--ink-2); font-size: 13px; line-height: 1.6; }
   .food-detail-note[hidden] { display: none; }
   .food-detail-note button { display: inline-flex; margin: 0.45rem 0 0; padding: 0.35rem 0.75rem; border: 1px solid color-mix(in oklab,#5fc4b4 55%,var(--line)); border-radius: 999px; background: var(--panel); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
@@ -902,6 +922,9 @@ const schema = [
   @keyframes hb { 0%, 100% { transform: scale(0.9); opacity: 0.18; } 50% { transform: scale(1.06); opacity: 0.4; } }
   @media (prefers-reduced-motion: reduce) { .loading span { animation: none; } }
   @media (max-width: 700px) {
+    .species-reference { grid-template-columns: 112px 1fr; gap: 0.65rem; max-width: calc(100% - 24px); margin-inline: 12px; }
+    .species-reference img { min-height: 118px; }
+    .species-reference p { font-size: 12px; }
     #world .world-start:not([hidden]) { position:absolute; z-index:3; inset:50% auto auto 50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.4rem; min-width:190px; padding:1rem 1.3rem; border:1px solid rgba(255,255,255,.65); border-radius:22px; color:#17233c; background:linear-gradient(145deg,color-mix(in oklab,var(--w) 18%,white),white); box-shadow:0 12px 36px rgba(0,0,0,.32),inset 0 1px 0 #fff; cursor:pointer; }
     #world .host:has(.world-start:not([hidden])) .loading { display:none; }
     #world .world-start span { font-size:2.1rem; color:var(--w); }
@@ -1426,6 +1449,45 @@ const schema = [
   explodeNoteReturn?.addEventListener('click', () => { ctlX.value = '0'; ctlX.dispatchEvent(new Event('input', { bubbles: true })); });
   const foodEnergyPanel = root.querySelector<HTMLElement>('#food-energy');
   const modelCredit = root.querySelector<HTMLElement>('#model-credit');
+  const speciesReference = root.querySelector<HTMLElement>('#species-reference');
+  const speciesReferenceImage = root.querySelector<HTMLImageElement>('#species-reference-image');
+  const speciesReferenceTitle = root.querySelector<HTMLElement>('#species-reference-title');
+  const speciesReferenceScience = root.querySelector<HTMLElement>('#species-reference-science');
+  const speciesReferenceCopy = root.querySelector<HTMLElement>('#species-reference-copy');
+  const speciesReferenceCredit = root.querySelector<HTMLElement>('#species-reference-credit');
+  type SpeciesReference = { image: string; title: string; science: string; copy: string; alt: string; credit: string };
+  const speciesReferences: Record<string, SpeciesReference> = {
+    'ইলিশ': {
+      image: '/images/species-reference/hilsa-chandpur.jpg', title: 'ইলিশ', science: 'Tenualosa ilisha',
+      alt: 'চাঁদপুরের বাজারে আসল ইলিশ মাছ',
+      copy: 'ছবিতে আসল ইলিশের রুপালি, পাশ থেকে চাপা দেহ দেখো। ৩ডি দৃশ্যের Pacific herring একই পরিবারের তুলনা - ইলিশ নয়।',
+      credit: '<a href="https://commons.wikimedia.org/wiki/File:Tenualosa_ilisha_(Hilsa_fish)_at_Chandpur_Fish_Market_(1).jpg" target="_blank" rel="noopener noreferrer">ছবি: Nahid Sultan</a> · CC BY-SA 4.0',
+    },
+    'দোয়েল': {
+      image: '/images/species-reference/doel-oriental-magpie-robin.jpg', title: 'দোয়েল', science: 'Copsychus saularis',
+      alt: 'আসল দোয়েল বা Oriental magpie-robin',
+      copy: 'আসল দোয়েলের কালো-সাদা পালক, সাদা ডানার দাগ ও লম্বা লেজ দেখো। ৩ডি robin-টি শুধু ছোট গায়ক-পাখির দেহরূপের তুলনা।',
+      credit: '<a href="https://commons.wikimedia.org/wiki/File:Oriental_Magpie_Robin.jpg" target="_blank" rel="noopener noreferrer">ছবি: Challiyil Eswaramangalath Vipin</a> · CC BY-SA 3.0',
+    },
+    'চিতা বিড়াল': {
+      image: '/images/species-reference/leopard-cat-sundarban.jpg', title: 'চিতা বিড়াল', science: 'Prionailurus bengalensis',
+      alt: 'সুন্দরবনের বন্য চিতা বিড়াল',
+      copy: 'ছবিটি সুন্দরবনের বন্য চিতা বিড়াল। মাথার ডোরা ও ছোট গাঢ় দাগ দেখো; ৩ডি domestic Bengal cat বন্য প্রজাতিটি নয়।',
+      credit: '<a href="https://commons.wikimedia.org/wiki/File:Leopard_Cat_in_Sundarban.jpg" target="_blank" rel="noopener noreferrer">ছবি: Soumyajit Nandy</a> · CC BY-SA 4.0',
+    },
+    'বানর': {
+      image: '/images/species-reference/rhesus-macaque.jpg', title: 'রেসাস বানর', science: 'Macaca mulatta',
+      alt: 'পুরুষ রেসাস বানর',
+      copy: '“বানর” অনেক প্রজাতির সাধারণ নাম। ছবিতে রেসাস বানর; ৩ডি Japanese macaque একই গণের হলেও আলাদা প্রজাতি।',
+      credit: '<a href="https://commons.wikimedia.org/wiki/File:Rhesus_macaque_(Macaca_mulatta_mulatta),_male,_Gokarna.jpg" target="_blank" rel="noopener noreferrer">ছবি: Charles J. Sharp</a> · CC BY-SA 4.0',
+    },
+    'শকুন': {
+      image: '/images/species-reference/white-rumped-vulture-bangladesh.jpg', title: 'সাদা-পিঠ শকুন', science: 'Gyps bengalensis',
+      alt: 'বাংলাদেশের সাদা-পিঠ শকুন',
+      copy: 'বাংলাদেশে তোলা সাদা-পিঠ শকুনের ছবি। পিঠের সাদা অংশ দেখো; ৩ডি Griffon vulture একই Gyps গণের হলেও আলাদা প্রজাতি।',
+      credit: '<a href="https://commons.wikimedia.org/wiki/File:White-rumped_vulture_Sunderbans_Bangladesh.jpg" target="_blank" rel="noopener noreferrer">ছবি: Mahmudul Bari</a> · CC BY-SA 4.0',
+    },
+  };
   const syncModelCredit = () => {
     const category = cats[curCat]?.n;
     const item = cats[curCat]?.items[curItem];
@@ -1480,6 +1542,18 @@ const schema = [
       visible ||= !!key;
     }
     if (modelCredit) modelCredit.hidden = !visible;
+    const reference = slug === 'life' && category === 'বাংলাদেশের প্রাণী' ? speciesReferences[item] : undefined;
+    if (speciesReference) speciesReference.hidden = !reference;
+    if (reference && speciesReferenceImage && speciesReferenceTitle && speciesReferenceScience && speciesReferenceCopy && speciesReferenceCredit) {
+      // Set the source only when the child selects one of these animals. This
+      // keeps five reference photographs out of the world's initial payload.
+      if (speciesReferenceImage.getAttribute('src') !== reference.image) speciesReferenceImage.src = reference.image;
+      speciesReferenceImage.alt = reference.alt;
+      speciesReferenceTitle.textContent = reference.title;
+      speciesReferenceScience.textContent = reference.science;
+      speciesReferenceCopy.textContent = reference.copy;
+      speciesReferenceCredit.innerHTML = reference.credit;
+    }
   };
   syncModelCredit();
   const syncFoodEnergyPanel = () => {

@@ -29,10 +29,11 @@
   --r: 22px;
   --r-sm: 13px;
   --wrap: 1280px;
-  /* Noto Emoji is first but claims only the emoji codepoints, by the
-     unicode-range in emoji-font.css. Every picture on the site is drawn
-     by one designer rather than by whichever phone is holding it. */
-  --font-body: "Noto Emoji", "Noto Sans Bengali", system-ui, sans-serif;
+  /* Keep the 200KB monochrome emoji subset out of the first-paint font chain.
+     Three.js asks for it explicitly when it builds a canvas label; ordinary
+     page emoji use the device font and Bengali copy only downloads the much
+     smaller text face. */
+  --font-body: "Noto Sans Bengali", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   /* Headings are the same family as body text, set heavier. Declaring it a
      second time in astro.config only ever duplicated the @font-face blocks. */

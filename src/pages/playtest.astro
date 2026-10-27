@@ -1,0 +1,96 @@
+---
+import Base from '../layouts/Base.astro';
+
+const title = 'বাস্তব শিশু-অভিভাবক পরীক্ষা';
+const description = 'পসরার থ্রিডি শেখার অভিজ্ঞতা বাস্তব শিশুর সঙ্গে পরীক্ষা করার সংক্ষিপ্ত, গোপনীয়তা-সচেতন নির্দেশিকা।';
+---
+<Base {title} {description} noindex>
+  <section class="playtest wrap">
+    <header>
+      <p class="eyebrow">অভিভাবক ও শিক্ষকের জন্য</p>
+      <h1>১৫ মিনিটে পসরা পরীক্ষা করুন</h1>
+      <p class="lede">শিশুকে উত্তর বলে দেবেন না। কোথায় থামে, কোথায় হাসে, কী নিজে আবিষ্কার করে শুধু তা লক্ষ্য করুন। নাম, ছবি, স্কুল বা অন্য কোনো ব্যক্তিগত তথ্য লিখবেন না।</p>
+    </header>
+
+    <ol class="tasks">
+      <li><b>নিজে ভুবন বেছে নাও</b><span>শিশু কোন ভুবন নেয় এবং কেন নেয় তা জিজ্ঞেস করুন।</span></li>
+      <li><b>একটি বস্তু খুঁজে খোলো</b><span>ঘোরানো, কাছে নেওয়া ও খুলে দেখার নিয়ন্ত্রণ নিজে খুঁজে পায় কি না দেখুন।</span></li>
+      <li><b>তিনটি তথ্য বলো</b><span>মডেল ও তথ্যকার্ড দেখে নিজের ভাষায় কী মনে রাখতে পারে শুনুন।</span></li>
+      <li><b>একটি মিশন শেষ করো</b><span>নির্দেশনা কোথায় অস্পষ্ট বা বেশি কঠিন লাগে তা লিখুন।</span></li>
+      <li><b>বন্ধুকে কী দেখাবে?</b><span>সবচেয়ে আনন্দের মুহূর্তটি শিশুকে বেছে নিতে দিন।</span></li>
+    </ol>
+
+    <form id="playtest-form">
+      <fieldset>
+        <legend>পরীক্ষার নোট</legend>
+        <label>বয়সের পরিসর
+          <select name="age"><option>৫-৬</option><option>৭-৮</option><option>৯-১০</option><option>১১-১২</option><option>১৩+</option></select>
+        </label>
+        <label>ডিভাইস
+          <select name="device"><option>ফোন</option><option>ট্যাবলেট</option><option>ল্যাপটপ/ডেস্কটপ</option></select>
+        </label>
+        <label>কাজ শেষ করতে সময় <input name="minutes" inputmode="numeric" placeholder="যেমন: ১২ মিনিট" /></label>
+        <label>কোথায় সাহায্য চেয়েছে? <textarea name="stuck" rows="3"></textarea></label>
+        <label>সবচেয়ে পছন্দের মুহূর্ত <textarea name="wow" rows="3"></textarea></label>
+        <label>কোন তথ্য নিজের ভাষায় বলেছে? <textarea name="learned" rows="3"></textarea></label>
+        <label>একটি পরিবর্তন করলে কী করবেন? <textarea name="change" rows="3"></textarea></label>
+      </fieldset>
+      <div class="actions">
+        <button type="button" class="primary" id="copy-note">নোট কপি করুন</button>
+        <button type="button" id="print-note">প্রিন্ট করুন</button>
+        <output id="status" aria-live="polite"></output>
+      </div>
+    </form>
+
+    <aside>
+      <h2>সফলতার সহজ মানদণ্ড</h2>
+      <ul>
+        <li>৩০ সেকেন্ডের মধ্যে প্রথম বস্তু খুলতে পারে</li>
+        <li>বড়দের সাহায্য ছাড়া ঘোরানো ও কাছে নেওয়া বোঝে</li>
+        <li>শেষে অন্তত দুটি সঠিক তথ্য নিজের ভাষায় বলে</li>
+        <li>আবার খেলতে বা অন্য ভুবন দেখতে চায়</li>
+      </ul>
+    </aside>
+  </section>
+</Base>
+
+<style>
+  .playtest { max-width: 900px; padding-block: clamp(2rem,6vw,5rem); }
+  header { display:grid; gap:.7rem; margin-bottom:1.5rem; }
+  h1 { font-size:clamp(2rem,7vw,4rem); }
+  .lede { color:var(--ink-2); max-width:68ch; }
+  .tasks { display:grid; gap:.75rem; padding:0; list-style:none; counter-reset:task; }
+  .tasks li { counter-increment:task; display:grid; grid-template-columns:2.5rem 1fr; gap:.1rem .8rem; padding:1rem; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--panel); }
+  .tasks li::before { content:counter(task, bengali); grid-row:1/3; display:grid; place-items:center; width:2.4rem; height:2.4rem; border-radius:50%; background:var(--brand); color:var(--on-brand); font-weight:800; }
+  .tasks span { color:var(--muted); }
+  form, aside { margin-top:1.5rem; padding:clamp(1rem,4vw,1.6rem); border:1px solid var(--line); border-radius:var(--r); background:var(--panel); }
+  fieldset { border:0; padding:0; display:grid; gap:1rem; grid-template-columns:1fr 1fr; }
+  legend { font-size:1.35rem; font-weight:800; margin-bottom:1rem; }
+  label { display:grid; gap:.35rem; font-weight:700; }
+  label:has(textarea) { grid-column:1/-1; }
+  input, select, textarea { width:100%; padding:.7rem .8rem; border:1px solid var(--line); border-radius:10px; background:var(--sunk); color:var(--ink); font:inherit; }
+  .actions { display:flex; align-items:center; flex-wrap:wrap; gap:.7rem; margin-top:1rem; }
+  .actions button { padding:.7rem 1rem; border:1px solid var(--line); border-radius:999px; font-weight:800; }
+  .actions .primary { background:var(--brand); color:var(--on-brand); border-color:transparent; }
+  #status { color:var(--ok); }
+  aside h2 { margin-bottom:.6rem; }
+  aside ul { margin:0; padding-inline-start:1.2rem; }
+  @media(max-width:620px){ fieldset{grid-template-columns:1fr} label:has(textarea){grid-column:auto} }
+  @media print { header .eyebrow, .actions, body > header, body > footer { display:none!important; } .playtest{padding:0}.tasks li,form,aside{break-inside:avoid;background:#fff;color:#111} }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#playtest-form');
+  const status = document.querySelector<HTMLOutputElement>('#status');
+  const note = () => {
+    if (!form) return '';
+    const data = new FormData(form);
+    const labels: Record<string,string> = { age:'বয়স', device:'ডিভাইস', minutes:'সময়', stuck:'সাহায্য লেগেছে', wow:'পছন্দের মুহূর্ত', learned:'যা শিখেছে', change:'পরিবর্তন' };
+    return ['পসরা প্লে-টেস্ট', ...[...data.entries()].map(([key,value]) => `${labels[key] ?? key}: ${String(value).trim() || 'লেখা হয়নি'}`)].join('\n');
+  };
+  document.querySelector('#copy-note')?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(note());
+    if (status) status.value = 'কপি হয়েছে';
+  });
+  document.querySelector('#print-note')?.addEventListener('click', () => window.print());
+</script>
