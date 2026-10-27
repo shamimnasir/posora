@@ -107,6 +107,14 @@ type SceneObj = {
   /** A specimen can swap from an intact render to its labeled teaching pieces. */
   setExplode?: (amount: number) => void;
   focusZoomFactor?: number;
+  /**
+   * World-space size of the selected item, measured about its turntable axis.
+   * When present the close-up is fitted to the object itself instead of one
+   * zoom factor shared by a 0.4 m spice bowl and a 1.9 m elephant.
+   */
+  focusExtent?: (index: number) => { halfHeight: number; radius: number; node: Object3D } | null;
+  /** The item a single-subject scene is showing while nothing is focused. */
+  restIndex?: () => number;
   detailZoomFactor?: number;
   /** Preserve a scene's authored elevation while the camera dollies into detail. */
   preserveFocusAngle?: boolean;
@@ -544,8 +552,50 @@ const SCENES: Record<string, Builder> = {
    */
   collection({ root, figures, onAssetLoaded }) {
     const anchors: Record<string, Object3D> = {};
-    const made: { g: Group; home: Vector3; row: number }[] = [];
-    let firstDone = false;
+    const made: { g: Group; home: Vector3; row: number; focus: Object3D; extent: { halfHeight: number; radius: number } | null }[] = [];
+    let firstDone = false, lastPick = 0;
+    /**
+     * Measure an item in its own unscaled frame, about the axis it turns on.
+     * The radius is the swept circle rather than the box, so a turning crown
+     * or a long crocodile never grows out of the close-up mid-rotation. The
+     * focus marker moves to the visual middle: a tree and a flat plate do not
+     * share one "waist height".
+     */
+    const measure = (entry: (typeof made)[number]) => {
+      const { g } = entry;
+      g.updateMatrixWorld(true);
+      const toLocal = new Matrix4().copy(g.matrixWorld).invert();
+      const box = new Box3(), part = new Box3();
+      let radius = 0;
+      g.traverse((node) => {
+        const mesh = node as Mesh;
+        if (!mesh.isMesh || node === entry.focus) return;
+        // Skinned and instanced meshes carry their own posed bounds; the raw
+        // geometry box of a rigged animal is its bind pose in source units.
+        const own = mesh as Mesh & { boundingBox?: Box3 | null; computeBoundingBox?: () => void };
+        if (own.boundingBox !== undefined) {
+          if (own.boundingBox === null) own.computeBoundingBox?.();
+          if (!own.boundingBox) return;
+          part.copy(own.boundingBox);
+        } else {
+          if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+          part.copy(mesh.geometry.boundingBox!);
+        }
+        const toItem = new Matrix4().multiplyMatrices(toLocal, mesh.matrixWorld);
+        part.applyMatrix4(toItem);
+        box.union(part);
+        // Box corners overstate a round crown by up to 40%, so sample the
+        // vertices themselves where the geometry is static.
+        const positions = mesh.geometry.attributes.position;
+        if (own.boundingBox === undefined && positions) {
+          const step = Math.max(1, Math.floor(positions.count / 20000)), v = new Vector3();
+          for (let k = 0; k < positions.count; k += step) { v.fromBufferAttribute(positions, k).applyMatrix4(toItem); radius = Math.max(radius, Math.hypot(v.x, v.z)); }
+        } else for (const x of [part.min.x, part.max.x]) for (const z of [part.min.z, part.max.z]) radius = Math.max(radius, Math.hypot(x, z));
+      });
+      if (box.isEmpty()) return;
+      entry.extent = { halfHeight: (box.max.y - box.min.y) / 2, radius };
+      if (!entry.focus.userData.authoredFocus) entry.focus.position.y = (box.min.y + box.max.y) / 2;
+    };
     // the figures stand around eye level rather than at the bottom of the stage
     root.position.y = 0.55;
     const narrow = matchMedia('(max-width: 640px)').matches;
@@ -579,6 +629,8 @@ const SCENES: Record<string, Builder> = {
           if (!model) return;
           // The simple shape exists only while the exact-object model loads.
           fallback.removeFromParent();
+          const entry = made.find((m) => m.g === g);
+          if (entry) measure(entry);
           fallback.traverse((node) => {
             const mesh = node as Mesh;
             if (!mesh.isMesh) return;
@@ -598,18 +650,28 @@ const SCENES: Record<string, Builder> = {
           fitAxis: supplement.fitAxis,
           centerOnFloor: true,
           accept: () => root.parent !== null,
-        }).then((model) => { if (model) onAssetLoaded(); });
+        }).then((model) => {
+          if (!model) return;
+          const entry = made.find((m) => m.g === g);
+          if (entry) measure(entry);
+          onAssetLoaded();
+        });
       }
       const home = arc(figures.length, i, narrow);
       g.position.copy(home);
       root.add(g);
-      made.push({ g, home: home.clone(), row: Math.floor(i / perRow) });
       // Focus at the object's visual center, not a standard waist-height point.
       // The ruler is deliberately laid flat, so a 0.55m pin framed empty sky
       // while the ruler itself was cropped against the floor on phones.
+      // `focusY` is the authored value until the loaded model is measured.
       const focusY = licensed?.focusY ?? (licensed?.fitAxis === 'longest' ? 0.14 : 0.55);
       const m = new Object3D(); m.position.set(0, focusY, 0); g.add(m);
       anchors[spec.label] = m;
+      const entry = { g, home: home.clone(), row: Math.floor(i / perRow), focus: m, extent: null };
+      made.push(entry);
+      // An authored focus point is a deliberate composition; keep it.
+      if (!licensed) measure(entry);
+      else if (licensed.focusY !== undefined) entry.focus.userData.authoredFocus = true;
     }
     // No ground of its own any more: the shared one in render.ts catches the
     // key light's shadow, and two grounds at slightly different heights was
@@ -652,10 +714,20 @@ const SCENES: Record<string, Builder> = {
       // is taller than it is wide and insisting on a laptop's width would push
       // the camera back until the subject was a thumbnail again.
       fit: { x: narrow ? 1.05 : 1.5, z: 1.15 },
+      focusExtent: (index) => {
+        const entry = made[index];
+        if (!entry?.extent) return null;
+        const s = entry.g.getWorldScale(new Vector3()).y;
+        return { halfHeight: entry.extent.halfHeight * s, radius: entry.extent.radius * s, node: entry.focus };
+      },
+      // Only the picked item is drawn, so even "at rest" the stage holds one
+      // subject and the camera should frame it rather than the whole grove.
+      restIndex: () => lastPick,
       aim: { y: 0.34, z: 0.3, eye: 0.74, dolly: 0.74 }, update(t, _dt, p) {
       const n = made.length;
       if (!n) return;
       const pick = Math.min(n - 1, Math.round(p * (n - 1)));
+      lastPick = pick;
       const settled = firstDone; firstDone = true;
       made.forEach((m, i) => {
         const on = i === pick;
@@ -1779,10 +1851,15 @@ export function mountHero(
   let onAssetLoaded = () => {};
   let focusNode: Object3D | null = null, focusZoom = 0;
   const focusPos = new Vector3(), detailPos = new Vector3();
+  let fitLift = 0;
+  let restFocus: Object3D | null = null;
   const aimCamera = () => {
     camera.position.y = eyeY;
-    if (focusNode && focusZoom > 0.01) {
-      focusNode.getWorldPosition(focusPos);
+    const focused = !!focusNode && focusZoom > 0.01;
+    const node = focused ? focusNode : restFocus;
+    const weight = focused ? focusZoom : 1;
+    if (node) {
+      node.getWorldPosition(focusPos);
       if (cur?.setReveal && active >= 0 && detailZoom > 0) {
         const detailNode = cur.detailFocusTargets?.[active] ?? cur.detailTargets?.[active];
         if (detailNode) { detailNode.getWorldPosition(detailPos); focusPos.lerp(detailPos, detailZoom); }
@@ -1796,7 +1873,8 @@ export function mountHero(
       // Shift the camera over the selected lesson object instead of merely
       // swivelling toward it; otherwise a close-up pushes objects near the
       // edge of the tableau out of frame.
-      camera.position.x = focusPos.x * focusZoom;
+      camera.position.x = focusPos.x * weight;
+      if (fitLift > 0) camera.position.y = MathUtils.lerp(camera.position.y, Math.max(camera.position.y, focusPos.y + (camera.position.z - focusPos.z) * fitLift), weight);
       camera.lookAt(focusPos.x, focusPos.y, focusPos.z);
     } else { camera.position.x = 0; camera.lookAt(0, aimY, aimZ); }
   };
@@ -2223,13 +2301,29 @@ export function mountHero(
           b.sp.position.copy(wp); b.sp.position.y += pinScale * 0.33 + Math.sin(t * 1.7 + i) * 0.065;
           // A collection's object is the picture. Keep its selected marker
           // beside the object so the badge cannot cover the actual geometry.
+          // A close-up of a small subject brings the camera near the badge too;
+          // shrink it with distance so it keeps roughly one on-screen size.
+          const near = sceneType === 'collection' && on && cur?.focusExtent ? MathUtils.clamp((camera.position.z - wp.z) / 4.2, 0.4, 1) : 1;
           if (sceneType === 'collection' && on) {
             // Thin or flat objects (rulers, leaves, paper) disappear under a
             // centered badge even when the camera is correctly focused. Move
             // the callout farther to the side and slightly up so the real
             // silhouette stays unobstructed on portrait canvases too.
-            b.sp.position.x += 1.18 * sprK();
-            b.sp.position.y += 0.28 * sprK();
+            // A fitted close-up leaves less room at the side on a phone, so
+            // never push the callout past what is visible at the subject.
+            let offset = 1.18 * sprK(), lift = 0;
+            const ext = cur?.focusExtent?.(i);
+            if (ext) {
+              const visibleHalf = (camera.position.z - wp.z) * Math.tan(MathUtils.degToRad(camera.fov) / 2) * camera.aspect;
+              // the name tag is ~1.85 units wide at sprK 1; keep all of it inside
+              const room = visibleHalf - 1.05 * sprK() * near;
+              offset = Math.min(offset, Math.max(0.15, room));
+              // No room beside the subject (a phone): put the tag above it
+              // rather than over the plate or bowl it is naming.
+              if (room < ext.radius) lift = ext.halfHeight + 0.55 * near;
+            }
+            b.sp.position.x += offset;
+            b.sp.position.y += 0.28 * sprK() * near + lift;
           }
           /**
            * One label at a time.
@@ -2246,10 +2340,10 @@ export function mountHero(
             b.sp.visible = on;
             b.label.visible = on;
           }
-          const target = (on ? (sceneType === 'collection' ? 0.48 : 1) : pinScale * 0.72) * sprK() * beckonAt(i, t);
+          const target = (on ? (sceneType === 'collection' ? 0.48 : 1) : pinScale * 0.72) * sprK() * beckonAt(i, t) * near;
           b.sp.scale.setScalar(b.sp.scale.x + (target - b.sp.scale.x) * 0.14);
           (b.sp.material as SpriteMaterial).opacity = on || active < 0 ? 1 : 0.42;
-          b.label.position.copy(b.sp.position); b.label.position.y -= 0.42 * sprK() + 0.3;
+          b.label.position.copy(b.sp.position); b.label.position.y -= (0.42 * sprK() + 0.3) * near;
           // Set, not eased. An eased opacity here depends on the frame loop
           // having run enough times, and this loop idles when the turntable is
           // paused and is throttled outright when the tab is in the background:
@@ -2258,7 +2352,7 @@ export function mountHero(
           // is written as one.
           b.label.visible = on;
           (b.label.material as SpriteMaterial).opacity = 1;
-          b.label.scale.set((sceneType === 'collection' ? 1.85 : 2.6) * sprK(), 0.52 * sprK(), 1);
+          b.label.scale.set((sceneType === 'collection' ? 1.85 : 2.6) * sprK() * near, 0.52 * sprK() * near, 1);
           return;
         }
         const a = b.a0 + orbit.rotation.y; const depth = Math.sin(a);           // +1 = nearest the camera
@@ -2290,7 +2384,35 @@ export function mountHero(
     focusZoom += ((active >= 0 ? 1 : 0) - focusZoom) * 0.1;
     // Pull back progressively as the staged reveal opens; the deepest state
     // must keep every detached piece inside the canvas on narrow screens.
-    camera.position.z = Math.max(1.75, camZBase * (1 - focusZoom * (cur?.focusZoomFactor ?? 0.36) - detailZoom * (cur?.detailZoomFactor ?? 0.13)) + explodeNow * spread * 2.4);
+    let camZ = Math.max(1.75, camZBase * (1 - focusZoom * (cur?.focusZoomFactor ?? 0.36) - detailZoom * (cur?.detailZoomFactor ?? 0.13)));
+    const restIndex = active < 0 ? cur?.restIndex?.() ?? -1 : -1;
+    const extent = active >= 0 && focusNode ? cur?.focusExtent?.(active) : restIndex >= 0 ? cur?.focusExtent?.(restIndex) ?? null : null;
+    restFocus = active < 0 && extent ? extent.node : null;
+    const fitWeight = active >= 0 ? focusZoom : 1;
+    // A plate, a bowl or a creeping herb seen at eye level is a rim and
+    // nothing else. The flatter the subject, the more the camera looks down
+    // on it, up to a three-quarter view; upright trees and animals keep 0.
+    const flatness = extent ? 1 - Math.min(1, extent.halfHeight / Math.max(0.01, extent.radius)) : 0;
+    // Only short subjects get looked down on: a broad krishnachura crown is
+    // wide but still a tree, while a plate or a creeping herb is genuinely low.
+    const lowness = extent ? MathUtils.clamp((1.2 - extent.halfHeight * 2) / 0.5, 0, 1) : 0;
+    fitLift = Math.tan(MathUtils.degToRad(34) * MathUtils.clamp((flatness - 0.5) / 0.22, 0, 1) * lowness);
+    if (extent) {
+      // Fit the subject: the tighter of its height against the vertical field
+      // and its swept radius against the horizontal one, leaving a margin for
+      // the name badge. Distance is measured to the subject's turning axis and
+      // its near side is kept clear of the lens.
+      const halfV = Math.tan(MathUtils.degToRad(camera.fov) / 2), halfH = halfV * camera.aspect;
+      const fill = w < 600 ? 0.8 : 0.74;
+      (active >= 0 ? focusNode! : extent.node).getWorldPosition(focusPos);
+      // Looking down shortens the depth needed for the same viewing distance.
+      const fitZ = focusPos.z + (extent.radius * 0.6 + Math.max(extent.halfHeight / halfV, extent.radius / halfH) / fill) / Math.sqrt(1 + fitLift * fitLift);
+      // A measurement can only refine the authored framing: it may come in to
+      // where the subject fills the frame, never wander far beyond it.
+      const fitted = MathUtils.clamp(fitZ, focusPos.z + extent.radius + 0.35, Math.max(camZ * 1.8, focusPos.z + extent.radius + 0.35));
+      camZ = MathUtils.lerp(camZ, fitted * (1 - detailZoom * (cur?.detailZoomFactor ?? 0.13)), fitWeight);
+    }
+    camera.position.z = camZ + explodeNow * spread * 2.4;
     aimCamera();
     renderer.render(scene, camera);
     onFrame?.({ yawDeg: yawDeg(), auto });

@@ -1,8 +1,5 @@
-# Dried bay leaves
+# Tejpata (Indian bay leaf)
 
-- Subject: Cinnamomum tamala leaf teaching model
-- Local file: `bay-leaves.glb`
-- Creator: Posora.com
-- License: CC0 1.0 Universal
-- Generation source: [generate-original-spice-models.mjs](../../../scripts/generate-original-spice-models.mjs)
-- Hashes and limitations: [asset-manifest.json](asset-manifest.json)
+*Cinnamomum tamala* — dried elliptic leaves with three main veins running from the base.
+
+See `asset-manifest.json` and `SOURCE-LICENSE.md`. Shown on https://posora.com/food/ with an exact reference photograph.

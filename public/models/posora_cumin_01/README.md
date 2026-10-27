@@ -1,8 +1,5 @@
 # Cumin seeds
 
-- Subject: Cuminum cyminum dried fruits
-- Local file: `cumin-seeds.glb`
-- Creator: Posora.com
-- License: CC0 1.0 Universal
-- Generation source: [generate-original-spice-models.mjs](../../../scripts/generate-original-spice-models.mjs)
-- Hashes and limitations: [asset-manifest.json](asset-manifest.json)
+*Cuminum cyminum* — slender, slightly curved dried fruits with fine longitudinal ridges.
+
+See `asset-manifest.json` and `SOURCE-LICENSE.md`. Shown on https://posora.com/food/ with an exact reference photograph.

@@ -23,7 +23,8 @@ export const MODEL_CATEGORY_POLICIES: Record<string, 'exact-object' | 'mixed-exa
   'discovery:বিজ্ঞানের পদ্ধতি': 'teaching-diagram',
   'discovery:বাঙালি বিজ্ঞানী': 'teaching-diagram',
   'discovery:ঘরে বসে পরীক্ষা': 'teaching-diagram',
-  'discovery:পৃথিবী ও ভূতত্ত্ব': 'teaching-diagram',
+  // Earth processes stay diagrams; rocks, fossils and dinosaurs are specimens.
+  'discovery:পৃথিবী ও ভূতত্ত্ব': 'mixed-example',
   'nature:বাস্তুতন্ত্র': 'teaching-diagram',
   'nature:বাংলাদেশের প্রকৃতি': 'teaching-diagram',
   'language:শব্দভাণ্ডার': 'mixed-example',

@@ -1,8 +1,5 @@
 # Mustard seeds
 
-- Subject: Brassica/Sinapis seed teaching model
-- Local file: `mustard-seeds.glb`
-- Creator: Posora.com
-- License: CC0 1.0 Universal
-- Generation source: [generate-original-spice-models.mjs](../../../scripts/generate-original-spice-models.mjs)
-- Hashes and limitations: [asset-manifest.json](asset-manifest.json)
+*Brassica species* — tiny round reddish-brown seeds with a few yellow ones.
+
+See `asset-manifest.json` and `SOURCE-LICENSE.md`. Shown on https://posora.com/food/ with an exact reference photograph.

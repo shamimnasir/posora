@@ -1,6 +1,6 @@
 # Exact-species replacement registry
 
-Last reviewed: 2026-10-26
+Last reviewed: 2026-10-28
 
 This registry prevents a visually attractive comparison model from silently becoming a false species claim. Posora may temporarily use a comparison only when the interface says plainly that it is not the target species and shows an exact-species reference photograph beside it.
 
@@ -15,6 +15,23 @@ This registry prevents a visually attractive comparison model from silently beco
 | সাদা-পিঠ শকুন (*Gyps bengalensis*) | Griffon vulture (*Gyps fulvus*), CC BY 4.0 | Bangladesh photo on Wikimedia Commons, CC BY-SA 4.0 | No downloadable permissively licensed exact exterior model found |
 
 Searches covered scientific names and common names on Sketchfab, Wikimedia Commons, Smithsonian/Open Access discovery pages and general web search. A paid Hilsa model was excluded because the project currently permits free sources only.
+
+## Posora-authored teaching illustrations (2026-10-28 queue)
+
+These 23 items are drawn by Posora's own generators (`scripts/generate-original-*.mjs`, generation 2) and are classified `teaching-diagram` in `src/data/model-quality.ts`. Each shows an exact Wikimedia Commons photograph beside the model (`src/data/reference-photos.ts`, evidence in `evidence/reference-photo-licenses.json`). Replace a row only through the acceptance gate below.
+
+| Learning object | Search result (Sketchfab downloadable API, Wikimedia Commons, Smithsonian Open Access) |
+| --- | --- |
+| তাল (*Borassus flabellifer*) | **Candidate:** Sketchfab “Palmyra” by MidNoon, CC BY 4.0, ~192k faces, described as a palm-sugar tree in An Giang, Viet Nam (Borassus). Download requires a signed-in Sketchfab account; not downloaded. |
+| ভাত ও ডাল | **Candidate:** Sketchfab “Dal bhat scans with iPhone12 Pro” by seirogan, CC BY 4.0, LiDAR scan of steamed rice and lentil dal (Nepal). Sign-in required; not downloaded. |
+| মিষ্টি | **Candidate:** Sketchfab “GULAB JAMUN” scans by seirogan, CC BY 4.0. Would replace only the কালোজাম/গোলাপজাম part; sign-in required. |
+| সুন্দরী, গোলপাতা (whole plant), পাট, কদম, হিজল, এলাচ গাছ, থানকুনি | No free downloadable exact model found. Generic “mangrove” models are *Rhizophora* or unidentified and were rejected. |
+| খিচুড়ি, ভর্তা, পিঠা, পায়েস, হালিম, ইফতার, পান্তা ভাত | No free exact model found; Sketchfab “Khichadi Express” (4k faces) was too crude to accept. |
+| জিরা, ধনে, তেজপাতা, সরিষা, মেথি, গরম মশলা | Only non-commercial (CC BY-NC-SA) coriander scans and an AI-generated fenugreek plant were found; all rejected. |
+
+## Mixed-lesson replacement backlog
+
+Reported (not failing) by `npm run audit:model-coverage`: চাকা, ছাপাখানা, বাষ্পীয় ইঞ্জিন and খনিজ still use stand-in figures. The 1903 Wright Flyer (উড়োজাহাজ), a *Triceratops horridus* skeleton (ডাইনোসর) and a *Poliella prima* trilobite (জীবাশ্ম) were replaced on 2026-10-28 with Smithsonian Open Access CC0 scans via `scripts/import-smithsonian-cc0-models.mjs`.
 
 ## Acceptance gate for a replacement
 

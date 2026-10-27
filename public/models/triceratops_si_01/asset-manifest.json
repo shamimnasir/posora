@@ -1,0 +1,35 @@
+{
+  "name": "Triceratops horridus Marsh, 1889",
+  "creator": "Smithsonian National Museum of Natural History, Department of Paleobiology",
+  "source": "http://n2t.net/ark:/65665/305d36697-5158-4947-8d0b-521db04bae9b",
+  "sourceFile": "https://3d-api.si.edu/content/document/3d_package:d8c623be-4ebc-11ea-b77f-2e728ce88125/resources/Triceratops-100k-2048_std_draco.glb",
+  "license": "CC0 1.0 Universal (Smithsonian Open Access)",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "termsUrl": "https://www.si.edu/termsofuse",
+  "attributionRequired": false,
+  "downloadedDate": "2026-10-28",
+  "qualityTier": "exact-licensed",
+  "sourceFiles": [
+    {
+      "path": "Triceratops-100k-2048_std_draco.glb",
+      "bytes": 3537340,
+      "sha256": "284ba4b9b52fe71e552afa9eeecd4bacc0299afb80800503bca76a64e4bebd2e"
+    }
+  ],
+  "files": [
+    {
+      "path": "triceratops-skeleton.glb",
+      "bytes": 1589456,
+      "sha256": "20019d1d34f44a311460e04b38838d187ae28dd7a45abea6b66f51990acaa7e8"
+    }
+  ],
+  "modifications": [
+    "Draco geometry decoded and re-encoded with EXT_meshopt_compression and KHR_mesh_quantization.",
+    "Textures resized to 1024 px and encoded as WebP."
+  ],
+  "educationalRole": "Discovery → পৃথিবী ও ভূতত্ত্ব → ডাইনোসর: a scanned Triceratops fossil skeleton.",
+  "limitations": [
+    "A fossil skeleton, not a reconstruction of the living animal's skin or colour.",
+    "Textures reduced to 1024 px WebP for web delivery; geometry unchanged."
+  ]
+}

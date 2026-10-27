@@ -23,7 +23,7 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // not a growing tree or a claim that every jackfruit has the same shape.
   // The source scan lies on its side; rotate the elongated fruit upright so
   // it reads like the tree-hanging jackfruit specimen rather than a slab.
-  jackfruitScan: { url: '/models/jackfruit_risd_scan_01/jackfruit-pod.glb', height: 0.88, fitAxis: 'longest', rotationZ: Math.PI / 2 },
+  jackfruitScan: { url: '/models/jackfruit_risd_scan_01/jackfruit-pod.glb', height: 0.88, fitAxis: 'longest', rotationY: Math.PI / 2, rotationZ: Math.PI / 2 },
   // 12-photo photogrammetry of a banyan tree by Jimmy Gunawan; no location or
   // scientific species is claimed because the source does not specify either.
   banyanTreeScan: { url: '/models/banyan_gunawan_01/banyan-tree.glb', height: 1.55, fitAxis: 'longest' },
@@ -63,7 +63,8 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   polyPottedPlant: { url: '/models/potted_plant_01/potted_plant_01_1k.gltf', height: 1.05 },
   polySchoolChair: { url: '/models/SchoolChair_01/SchoolChair_01_1k.gltf', height: 0.9 },
   polySchoolDesk: { url: '/models/SchoolDesk_01/SchoolDesk_01_1k.gltf', height: 0.8 },
-  polyNotebook: { url: '/models/binder_notebook/binder_notebook_1k.gltf', height: 0.42 },
+  // Lies flat: fit its length, not its thickness, or the binder balloons.
+  polyNotebook: { url: '/models/binder_notebook/binder_notebook_1k.gltf', height: 0.9, fitAxis: 'longest' },
   polyMeasuringTape: { url: '/models/measuring_tape_01/measuring_tape_01_1k.gltf', height: 0.38 },
   polyRuler: { url: '/models/ruler/ruler.glb', height: 1.25, fitAxis: 'longest' },
   polyMagnifier: { url: '/models/magnifying_glass_01/magnifying_glass_01_1k.gltf', height: 0.48 },
@@ -177,14 +178,20 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // CC BY 4.0 octopus specimen used as one example of an invertebrate; it is
   // not presented as a Bangladesh species or as a stand-in for coral.
   octopusSpecimen: { url: '/models/octopus_scan_01/octopus.glb', height: 1.22, fitAxis: 'longest' },
+  // Smithsonian Open Access CC0 scans. The aeroplane is the actual 1903
+  // Wright Flyer; the dinosaur is a fossil skeleton, not a living animal.
+  wrightFlyer1903: { url: '/models/wright_flyer_1903_si_01/wright-flyer-1903.glb', height: 1.7, fitAxis: 'longest' },
+  triceratopsSkeleton: { url: '/models/triceratops_si_01/triceratops-skeleton.glb', height: 1.8, fitAxis: 'longest', rotationY: Math.PI / 2, rotationZ: Math.PI / 2 },
+  trilobiteFossil: { url: '/models/trilobite_poliella_si_01/trilobite-poliella-prima.glb', height: 0.95, fitAxis: 'longest' },
 };
 
 /** Scoped real-model additions that supplement, rather than replace, a teaching figure. */
 export const LICENSED_FIGURE_SUPPLEMENTS: Record<string, { url: string; height: number; position: [number, number, number]; fitAxis?: 'x' | 'y' | 'z' | 'longest' }> = {
   // Golpata is a sprawling palm with an underground stem; the free source is
   // only its fruiting head, so keep the whole-plant teaching figure and attach
-  // the model as a clearly disclosed fruit-cluster specimen.
-  golpata: { url: '/models/nypa_fruit_01/nypa-fruit-cluster.glb', height: 0.62, position: [0, 0.67, 0.12], fitAxis: 'longest' },
+  // the model as a clearly disclosed fruit-cluster specimen. The head sits at
+  // mud level beside the fronds, which is where nipa fruit actually forms.
+  golpata: { url: '/models/nypa_fruit_01/nypa-fruit-cluster.glb', height: 0.4, position: [0.32, 0.02, 0.3], fitAxis: 'longest' },
   // Life's Elachi entry teaches the plant, while the free licensed model is
   // specifically a bowl of dried fruits/seeds. Keep the plant diagram and show
   // the real spice product separately rather than mislabel the bowl as a plant.

@@ -132,7 +132,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     items: {
       'চাকা': 'wheel', 'লিখন': 'polyNotebook', 'কাগজ': 'sheet', 'ছাপাখানা': 'book',
       'বাষ্পীয় ইঞ্জিন': 'gear', 'বিদ্যুৎ': 'bulb', 'টেলিফোন': 'telephone',
-      'উড়োজাহাজ': 'flyingBird', 'টিকা': 'flask', 'পেনিসিলিন': 'flask',
+      'উড়োজাহাজ': 'wrightFlyer1903', 'টিকা': 'flask', 'পেনিসিলিন': 'flask',
       'কম্পিউটার': 'polyLaptop', 'ইন্টারনেট': 'monitor',
     },
   },
@@ -228,7 +228,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   'discovery:পৃথিবী ও ভূতত্ত্ব': {
     fallback: 'rock',
     items: {
-      'শিলা': 'rock', 'খনিজ': 'mineral', 'জীবাশ্ম': 'fossil', 'ডাইনোসর': 'dino',
+      'শিলা': 'rock', 'খনিজ': 'mineral', 'জীবাশ্ম': 'trilobiteFossil', 'ডাইনোসর': 'triceratopsSkeleton',
       'বরফযুগ': 'iceberg', 'মাটির স্তর': 'strata', 'কয়লা ও তেল': 'coalOil',
       'মহাদেশের সরণ': 'continents',
     },

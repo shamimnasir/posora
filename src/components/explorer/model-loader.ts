@@ -22,6 +22,20 @@ export function loadLicensedModel(
       // Apply the presentation orientation before measuring. That way a
       // sideways museum scan is fitted and grounded in its final pose rather
       // than being centered correctly and then rotated through the floor.
+      // Some downloads ship a baked studio floor: a zero-thickness plane many
+      // times wider than the subject. Posora draws its own ground, and that
+      // plane would otherwise dominate the measured size and any top view.
+      model.updateMatrixWorld(true);
+      const meshBoxes: { mesh: Mesh; box: Box3 }[] = [];
+      model.traverse((node) => { if ((node as Mesh).isMesh) meshBoxes.push({ mesh: node as Mesh, box: new Box3().setFromObject(node) }); });
+      if (meshBoxes.length > 1) {
+        for (const { mesh, box } of meshBoxes) {
+          const size = box.getSize(new Vector3());
+          const others = meshBoxes.filter((entry) => entry.mesh !== mesh).reduce((acc, entry) => acc.union(entry.box), new Box3());
+          const rest = others.getSize(new Vector3());
+          if (size.y < 1e-4 * Math.max(size.x, size.z, 1e-6) && Math.max(size.x, size.z) > 3 * Math.max(rest.x, rest.z)) mesh.removeFromParent();
+        }
+      }
       if (options.rotationX) model.rotation.x = options.rotationX;
       if (options.rotationY) model.rotation.y = options.rotationY;
       if (options.rotationZ) model.rotation.z = options.rotationZ;

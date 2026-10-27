@@ -1,0 +1,35 @@
+{
+  "name": "1903 Wright Flyer",
+  "creator": "Smithsonian National Air and Space Museum",
+  "source": "http://n2t.net/ark:/65665/nv9aa91e7c2-85b2-4904-aff0-d990694b6f1d",
+  "sourceFile": "https://3d-api.si.edu/content/document/3d_package:d8c62e5e-4ebc-11ea-b77f-2e728ce88125/1903WrightFlyer-100k-2048_std_draco.glb",
+  "license": "CC0 1.0 Universal (Smithsonian Open Access)",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "termsUrl": "https://www.si.edu/termsofuse",
+  "attributionRequired": false,
+  "downloadedDate": "2026-10-28",
+  "qualityTier": "exact-licensed",
+  "sourceFiles": [
+    {
+      "path": "1903WrightFlyer-100k-2048_std_draco.glb",
+      "bytes": 630156,
+      "sha256": "eacaea3ffefa99951b637062043c4b62c7d9438ce5b77870e166e073b5607cfc"
+    }
+  ],
+  "files": [
+    {
+      "path": "wright-flyer-1903.glb",
+      "bytes": 905072,
+      "sha256": "4297ce9d0411e1b9d8d7c5718770290c2b0fa95ab78ac3409eb2c47126fb0588"
+    }
+  ],
+  "modifications": [
+    "Draco geometry decoded and re-encoded with EXT_meshopt_compression and KHR_mesh_quantization.",
+    "Textures resized to 1024 px and encoded as WebP."
+  ],
+  "educationalRole": "Discovery → আবিষ্কার ও আবিষ্কারক → উড়োজাহাজ: the actual first successful powered aeroplane (1903), digitised by the Smithsonian.",
+  "limitations": [
+    "A digitised museum object, not a modern passenger aircraft.",
+    "Textures reduced to 1024 px WebP for web delivery; geometry unchanged."
+  ]
+}

@@ -33,6 +33,20 @@ const installReliablePageWait = (page) => {
     throw new Error(`Page condition timed out after ${timeout}ms`);
   };
 };
+// A comparison model or a Posora-authored illustration must always arrive
+// with the exact photograph of the real thing and its licence beside it.
+const REFERENCE_IMAGES = {
+  'posora_tal_palm_01/': 'tal-palmyra-dhaka.jpg', 'posora_sundari_01/': 'sundari-heritiera-fomes.jpg', 'posora_golpata_01/': 'golpata-nipa-sundarbans.jpg',
+  'posora_jute_01/': 'jute-field-bangladesh.jpg', 'posora_kadam_01/': 'kadam-flower.jpg', 'posora_hijal_01/': 'hijal-flowers.jpg',
+  'posora_cardamom_plant_01/': 'cardamom-plant.jpg', 'posora_thanakuni_01/': 'thankuni-centella.jpg',
+  'posora_cumin_01/': 'cumin-seeds.jpg', 'posora_coriander_01/': 'coriander-seeds.jpg', 'posora_bay_leaf_01/': 'tejpata-dried.jpg',
+  'posora_mustard_01/': 'mustard-seeds.jpg', 'posora_fenugreek_01/': 'fenugreek-seeds.jpg', 'posora_garam_masala_01/': 'whole-garam-masala.jpg',
+  'posora_rice_dal_01/': 'rice-dal-meal.jpg', 'posora_bhorta_01/': 'tomato-bhorta.jpg', 'posora_khichuri_01/': 'vegetable-khichuri.jpg',
+  'posora_pitha_01/': 'bhapa-pitha.jpg', 'posora_payesh_01/': 'payesh.jpg', 'posora_sweets_01/': 'kalojam.jpg', 'posora_haleem_01/': 'haleem-bangladesh.jpg',
+  'posora_iftar_01/': 'iftar-plate-rajshahi.jpg', 'posora_panta_01/': 'panta-bhat.jpg',
+  'hilsa_herring_reference_01/': 'hilsa-chandpur.jpg', 'doel_robin_reference_01/': 'doel-oriental-magpie-robin.jpg', 'leopard_cat_bengal_reference_01/': 'leopard-cat-sundarban.jpg',
+  'monkey_macaque_reference_01/': 'rhesus-macaque.jpg', 'vulture_gyps_reference_01/': 'white-rumped-vulture-bangladesh.jpg',
+};
 const cases = [
   { world: 'food', selector: '#world .rail-list [data-i="0"]', category: 'খাদ্যের ছয় উপাদান', itemIndex: 0, expected: ['rice_in_bowl_01/rice-in-bowl.glb'], shot: 'food-cooked-rice-bowl.png' },
   { world: 'food', selector: '#world .rail-list [data-i="3"]', expected: ['food_lychee_01/food_lychee_01.glb'], shot: 'food-fruit-wheel.png' },
@@ -110,6 +124,9 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের প্রাণী")', category: 'বাংলাদেশের প্রাণী', itemIndex: 5, expected: ['saltwater_crocodile_01/saltwater-crocodile.glb'], shot: 'life-saltwater-crocodile.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="2"]', expected: ['rock_07/rock_07.glb'], shot: 'discovery-rock.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', expected: ['korean_public_payphone_01/korean_public_payphone_01.glb'], shot: 'discovery-telephone.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="3"]', category: 'আবিষ্কার ও আবিষ্কারক', itemIndex: 7, expected: ['wright_flyer_1903_si_01/wright-flyer-1903.glb'], shot: 'discovery-wright-flyer-1903.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="2"]', category: 'পৃথিবী ও ভূতত্ত্ব', itemIndex: 2, expected: ['trilobite_poliella_si_01/trilobite-poliella-prima.glb'], shot: 'discovery-trilobite-fossil.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="2"]', category: 'পৃথিবী ও ভূতত্ত্ব', itemIndex: 3, expected: ['triceratops_si_01/triceratops-skeleton.glb'], shot: 'discovery-triceratops-skeleton.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', itemIndex: 1, expected: ['binder_notebook/binder_notebook_1k.gltf'], shot: 'discovery-notebook.png' },
   // The scientific-method chapter is a dedicated interactive chemistry
   // workspace. These stages select content in that scene; they are not a
@@ -1091,6 +1108,24 @@ try {
         }
       });
     }
+      const referencePrefix = Object.keys(REFERENCE_IMAGES).find((prefix) => test.expected.some((asset) => asset.startsWith(prefix)));
+      if (referencePrefix) {
+        const image = REFERENCE_IMAGES[referencePrefix];
+        try {
+          await page.waitForFunction((name) => {
+            const card = document.querySelector('#species-reference');
+            const img = document.querySelector('#species-reference-image');
+            return card instanceof HTMLElement && !card.hidden && img instanceof HTMLImageElement
+              && img.getAttribute('src')?.endsWith(`/${name}`) && img.complete && img.naturalWidth > 0;
+          }, image, { timeout: 15000 });
+          const credit = await page.locator('#species-reference-credit').innerText();
+          const links = await page.locator('#species-reference-credit a').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
+          check(/ছবি: \S/.test(credit) && /(CC|Public domain)/.test(credit) && links.length === 2 && links.every((href) => href.startsWith('https://')),
+            `${viewport.name}: ${test.shot} reference photograph credit, licence or links are incomplete (${credit})`);
+        } catch {
+          check(false, `${viewport.name}: ${test.shot} did not show its exact reference photograph ${image}`);
+        }
+      }
       await page.waitForTimeout(1000);
       await page.waitForFunction(() => !!document.querySelector('#hero-host canvas'), null, { timeout: 15000 });
       const canvasCount = await page.evaluate(() => document.querySelectorAll('#hero-host canvas').length);

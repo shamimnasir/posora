@@ -26,4 +26,8 @@ These diagrams must disclose that scale or distance is not proportional where re
 - load a large 3D runtime on initial mobile paint merely to decorate the page; or
 - count a visual as covered when clicking it produces no explanation.
 
+## Quality tiers (enforced)
+
+`src/data/model-quality.ts` classifies every licensed or authored figure as `exact-licensed`, `accurate-authored`, `disclosed-comparison`, `teaching-diagram` or `replacement-required`, and gives every procedurally drawn item in a mixed lesson an explicit reason. `npm run audit:model-coverage` fails when an exact-object lesson uses a `replacement-required` figure, is drawn procedurally, or shows a comparison/teaching illustration without an exact reference photograph on disk. A model that merely loads is not counted as satisfactory.
+
 The automated model-coverage audit is the inventory. The exact-species registry is the replacement queue. Together they make every item either a verified physical model, a clearly disclosed example/comparison, or an intentional teaching diagram.

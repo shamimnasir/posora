@@ -1,0 +1,35 @@
+{
+  "name": "Poliella prima (Walcott), USNM PAL 116112",
+  "creator": "Smithsonian National Museum of Natural History, Department of Paleobiology",
+  "source": "http://n2t.net/ark:/65665/3b8ac40e8-2b17-4817-8488-f10907ed93c4",
+  "sourceFile": "https://3d-api.si.edu/content/document/3d_package:fcec58e8-ac1f-425d-9d83-8b16ca72b60c/nmnh-116112_w9k-100k-2048_std_draco.glb",
+  "license": "CC0 1.0 Universal (Smithsonian Open Access)",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "termsUrl": "https://www.si.edu/termsofuse",
+  "attributionRequired": false,
+  "downloadedDate": "2026-10-28",
+  "qualityTier": "exact-licensed",
+  "sourceFiles": [
+    {
+      "path": "nmnh-116112_w9k-100k-2048_std_draco.glb",
+      "bytes": 1320272,
+      "sha256": "3c19233cc8a1f7273eab361b27e18d44ebd92360f3dd035cb35332437213297e"
+    }
+  ],
+  "files": [
+    {
+      "path": "trilobite-poliella-prima.glb",
+      "bytes": 1032680,
+      "sha256": "d1ef2978c50990b912e87a1acef995a966150795494aa3c3dffa0f0598129915"
+    }
+  ],
+  "modifications": [
+    "Draco geometry decoded and re-encoded with EXT_meshopt_compression and KHR_mesh_quantization.",
+    "Textures resized to 1024 px and encoded as WebP."
+  ],
+  "educationalRole": "Discovery → পৃথিবী ও ভূতত্ত্ব → জীবাশ্ম: a scanned Cambrian trilobite fossil specimen.",
+  "limitations": [
+    "One trilobite fossil specimen in rock; fossils take many other forms.",
+    "Textures reduced to 1024 px WebP for web delivery; geometry unchanged."
+  ]
+}

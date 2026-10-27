@@ -26,6 +26,7 @@ import MissionPanel from '../../components/explorer/MissionPanel.astro';
 import NatureCinema from '../../components/explorer/NatureCinema.astro';
 import RelatedReading from '../../components/RelatedReading.astro';
 import { natureChapters } from '../../data/nature-cinema';
+import { referencePhotosFor } from '../../data/reference-photos';
 
 export const prerender = false;
 
@@ -82,6 +83,7 @@ const payload = w.cats.map((c, i) => {
     hero: w.slug === 'nature' ? { type: 'nature-cinema', hue: w.hue, v: String(i), p: i === 1 ? 0.04 : 0.4 } : heroFor(w.slug, w.hue, i, c.n),
     lab: c.lab, labAnchors: c.labAnchors, detail, chars: charsOf(detail),
     emoji: c.items.map((it) => emojiFor(w.slug, it)), mission: catMission[i] ?? null,
+    references: referencePhotosFor(w.slug, c.n),
   };
 });
 
@@ -341,9 +343,9 @@ const schema = [
             <span id="model-credit-fried-fish" hidden>ভাজা মাছের সাধারণ ফটোগ্রামেট্রি ৩ডি স্ক্যান: <a href="https://sketchfab.com/3d-models/ikan-goreng-833b9c3ec4284047ac0b4b5cc35e9928" target="_blank" rel="noopener noreferrer">wox080xow-এর “Ikan Goreng”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি বাংলাদেশের নির্দিষ্ট মাছের জাত বা রেসিপির নমুনা নয়</span>
             <span id="model-credit-ganges-dolphin-skeleton" hidden>গঙ্গা নদীর শুশুকের কঙ্কাল-স্ক্যান, নমুনা C 272: <a href="https://commons.wikimedia.org/wiki/File:Platanista_gangetica_3d_scan_Natural_History_Museum_University_of_Pisa_C_272.stl" target="_blank" rel="noopener noreferrer">Patrizia17 ও পিসা বিশ্ববিদ্যালয়ের প্রাকৃতিক ইতিহাস জাদুঘরের স্ক্যান</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> · ওয়েবের জন্য STL থেকে GLB-তে রূপান্তর ও জ্যামিতি সরল করা হয়েছে · এটি কঙ্কাল, জীবন্ত শুশুক নয়</span>
             <span id="model-credit-chilli" hidden>লাল মরিচের ৩ডি স্ক্যান: <a href="https://sketchfab.com/3d-models/red-chilli-3d-scan-agisoftnaturechallenge-92b1bb0824ab4a238c5ec899729067b8" target="_blank" rel="noopener noreferrer">Muhammad Azim-এর “Red Chilli &#8212; 3d Scan”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি একটি মরিচের ফল, মরিচগাছ নয়</span>
-            <span id="model-credit-posora-spice" hidden>শুকনো মসলার ৩ডি শিক্ষামডেল: Posora.com-এর নিজস্ব জ্যামিতি · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি বাস্তব নমুনার স্ক্যান নয়; আকার, রং, জাত ও প্রক্রিয়াজাতকরণে প্রাকৃতিক পার্থক্য হয়</span>
-            <span id="model-credit-posora-bangla-food" hidden>বাংলার খাবারের ৩ডি শিক্ষামডেল: Posora.com-এর নিজস্ব জ্যামিতি · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি একটি প্রতিনিধিত্বমূলক পরিবেশন, বাস্তব খাবারের স্ক্যান বা একমাত্র প্রামাণ্য রেসিপি নয়; উপকরণ, আকৃতি ও পরিবেশন পরিবার ও অঞ্চলভেদে বদলায়</span>
-            <span id="model-credit-posora-botany" hidden>বাংলাদেশের গাছের ৩ডি শিক্ষামডেল: Posora.com-এর নিজস্ব, উদ্ভিদ-পরিচয়ভিত্তিক জ্যামিতি · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি বাস্তব গাছ বা হার্বেরিয়াম নমুনার স্ক্যান নয়; বয়স, ঋতু, বাসস্থান ও জাতভেদে গাছের রূপ বদলায়</span>
+            <span id="model-credit-posora-spice" hidden>গোটা মশলার ৩ডি শিক্ষামডেল: Posora.com-এর নিজস্ব জ্যামিতি · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি বাস্তব নমুনার স্ক্যান নয়; দানার আকার বোঝার সুবিধায় বড় করে দেখানো, রং ও জাতভেদে পার্থক্য হয় · আসল মশলার ছবি নিচে</span>
+            <span id="model-credit-posora-bangla-food" hidden>বাংলার খাবারের ৩ডি শিক্ষামডেল: Posora.com-এর নিজস্ব জ্যামিতি · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি একটি প্রতিনিধিত্বমূলক পরিবেশন, বাস্তব খাবারের স্ক্যান বা একমাত্র প্রামাণ্য রেসিপি নয়; উপকরণ, আকৃতি ও পরিবেশন পরিবার ও অঞ্চলভেদে বদলায় · আসল খাবারের ছবি নিচে</span>
+            <span id="model-credit-posora-botany" hidden>বাংলাদেশের গাছের ৩ডি শিক্ষামডেল: Posora.com-এর নিজস্ব, উদ্ভিদ-পরিচয়ভিত্তিক জ্যামিতি · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি বাস্তব গাছ বা হার্বেরিয়াম নমুনার স্ক্যান নয়; পাতা, ফুল ও ফল চেনার সুবিধায় বড় করে দেখানো, আর বয়স, ঋতু ও বাসস্থানভেদে গাছের রূপ বদলায় · আসল গাছের ছবি নিচে</span>
             <span id="model-credit-hilsa-comparison" hidden>ইলিশের কাছের দেহরূপ তুলনা: <a href="https://sketchfab.com/3d-models/cc0-pacific-herring-clupea-pallasii-e36819a39e5841f5971a01e1af6bf399" target="_blank" rel="noopener noreferrer">ffish.asia / floraZia.com-এর Pacific herring</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি ইলিশ নয়; শুধু একই Clupeidae পরিবারের মাছের উচ্চ-বিস্তারিত দেহরূপ তুলনা</span>
             <span id="model-credit-doel-comparison" hidden>দোয়েলের ছোট গায়ক-পাখির দেহরূপ তুলনা: <a href="https://sketchfab.com/3d-models/high-per-realistic-europen-robin-49bf02ce59e04bfa858b56502b8a05a1" target="_blank" rel="noopener noreferrer">SDPM Esare-এর European robin</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি দোয়েল নয়; পালকের রং ও প্রজাতি শনাক্ত করতে পাঠের তথ্য দেখো</span>
             <span id="model-credit-leopard-cat-comparison" hidden>চিতা বিড়ালের দেহ ও দাগ তুলনা: <a href="https://sketchfab.com/3d-models/bengal-cat-6d82596b5db94f7b9093814a4a88caa9" target="_blank" rel="noopener noreferrer">ItsKrish7-এর domestic Bengal cat</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি বন্য চিতা বিড়াল নয়; শুধু কাছাকাছি ফেলিড দেহরূপ ও দাগের তুলনা</span>
@@ -360,12 +362,15 @@ const schema = [
             <span id="model-credit-peafowl" hidden>ভারতীয় ময়ূরের ৩ডি নমুনা · <a href="https://1designtool.com/3d/models/indian-peacock" target="_blank" rel="noopener noreferrer">মডেল ও লাইসেন্স</a> · পেখমের তথ্য: <a href="https://animals.sandiegozoo.org/animals/peafowl" target="_blank" rel="noopener noreferrer">San Diego Zoo</a> · এটি বাংলাদেশের পাখির তালিকার অংশ নয়</span>
             <span id="model-credit-axolotl" hidden>অ্যাক্সোলটলের ৩ডি নমুনা · <a href="https://1designtool.com/3d/models/axolotl" target="_blank" rel="noopener noreferrer">মডেল ও লাইসেন্স</a> · ফুলকার তথ্য: <a href="https://animals.sandiegozoo.org/animals/axolotl" target="_blank" rel="noopener noreferrer">San Diego Zoo</a> · এটি বাংলাদেশের প্রাণী নয়</span>
             <span id="model-credit-octopus" hidden>অক্টোপাসের ৩ডি মডেল: <a href="https://sketchfab.com/3d-models/octopus-d08195133942442dae870ede04e3d7f1" target="_blank" rel="noopener noreferrer">rayleighsyafiq-এর “Octopus”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি অমেরুদণ্ডী প্রাণীর একটি উদাহরণ, বাংলাদেশের নির্দিষ্ট প্রজাতি নয় · তথ্য: <a href="https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives" target="_blank" rel="noopener noreferrer">Smithsonian Ocean</a></span>
+            <span id="model-credit-wright-flyer" hidden>উড়োজাহাজের ৩ডি মডেল: স্মিথসোনিয়ান ন্যাশনাল এয়ার অ্যান্ড স্পেস মিউজিয়ামে রাখা আসল <a href="http://n2t.net/ark:/65665/nv9aa91e7c2-85b2-4904-aff0-d990694b6f1d" target="_blank" rel="noopener noreferrer">১৯০৩ রাইট ফ্লায়ার</a>-এর ডিজিটাল মডেল · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি প্রথম সফল ইঞ্জিনচালিত উড়োজাহাজ, আজকের যাত্রীবাহী বিমান নয়</span>
+            <span id="model-credit-triceratops" hidden>ডাইনোসরের ৩ডি স্ক্যান: স্মিথসোনিয়ান প্রাকৃতিক ইতিহাস জাদুঘরের <a href="http://n2t.net/ark:/65665/305d36697-5158-4947-8d0b-521db04bae9b" target="_blank" rel="noopener noreferrer">ট্রাইসেরাটপস (<em>Triceratops horridus</em>)</a> কঙ্কাল · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · এটি জীবাশ্ম হাড়ের কঙ্কাল; জীবিত প্রাণীর চামড়া বা রং নয়</span>
+            <span id="model-credit-trilobite" hidden>জীবাশ্মের ৩ডি স্ক্যান: স্মিথসোনিয়ানের <a href="http://n2t.net/ark:/65665/3b8ac40e8-2b17-4817-8488-f10907ed93c4" target="_blank" rel="noopener noreferrer">ট্রাইলোবাইট (<em>Poliella prima</em>), নমুনা USNM PAL 116112</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> · ক্যামব্রিয়ান যুগের সামুদ্রিক প্রাণীর জীবাশ্ম; জীবাশ্ম আরও নানা রকম হয়</span>
             <span id="model-credit-green-turtle" hidden>সবুজ সামুদ্রিক কাছিম (*Chelonia mydas*)-এর ৩ডি নমুনা: <a href="https://sketchfab.com/3d-models/green-sea-turtle-d3dc6a6a4ff74465a59105fd7c66b32b" target="_blank" rel="noopener noreferrer">jgrabo20-এর “Green Sea Turtle”</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> · এটি বাংলাদেশের নির্দিষ্ট কোনো কাছিমের স্ক্যান নয় · তথ্য: <a href="https://sufal.bforest.gov.bd/redlist/wp-content/uploads/2023/03/Volume-4-Reptiles-and-Amphibians-Full-Book.pdf" target="_blank" rel="noopener noreferrer">বাংলাদেশের সরীসৃপ লাল তালিকা (২০১৪ মূল্যায়ন)</a> ও <a href="https://www.fisheries.noaa.gov/species/green-turtle" target="_blank" rel="noopener noreferrer">NOAA Fisheries</a></span>
           </p>
           <figure class="species-reference" id="species-reference" hidden>
             <img id="species-reference-image" width="480" height="320" loading="lazy" decoding="async" alt="" />
             <figcaption>
-              <span class="species-reference-kicker">ঠিক প্রজাতি চিনে নাও</span>
+              <span class="species-reference-kicker" id="species-reference-kicker">ঠিক প্রজাতি চিনে নাও</span>
               <strong id="species-reference-title"></strong>
               <em id="species-reference-science"></em>
               <p id="species-reference-copy"></p>
@@ -1316,6 +1321,7 @@ const schema = [
   import { syncWorld, pushSeen } from '../../lib/sync';
   import type { HeroHandle, HeroSpec } from '../../components/explorer/heroes';
   import type { ItemDetail } from '../../data/explorer-types';
+  import type { ReferencePhoto } from '../../data/reference-photos';
 
   type Cat = {
     n: string; items: string[]; play: string; hero: HeroSpec;
@@ -1323,6 +1329,8 @@ const schema = [
     emoji: (string | undefined)[];
     /** Index into this world's missions, when one was built for this category. */
     mission: number | null;
+    /** Exact photographs for items whose 3D figure is a comparison or an illustration. */
+    references: Record<string, ReferencePhoto> | null;
   };
 
   const root = document.getElementById('world')!;
@@ -1455,39 +1463,8 @@ const schema = [
   const speciesReferenceScience = root.querySelector<HTMLElement>('#species-reference-science');
   const speciesReferenceCopy = root.querySelector<HTMLElement>('#species-reference-copy');
   const speciesReferenceCredit = root.querySelector<HTMLElement>('#species-reference-credit');
-  type SpeciesReference = { image: string; title: string; science: string; copy: string; alt: string; credit: string };
-  const speciesReferences: Record<string, SpeciesReference> = {
-    'ইলিশ': {
-      image: '/images/species-reference/hilsa-chandpur.jpg', title: 'ইলিশ', science: 'Tenualosa ilisha',
-      alt: 'চাঁদপুরের বাজারে আসল ইলিশ মাছ',
-      copy: 'ছবিতে আসল ইলিশের রুপালি, পাশ থেকে চাপা দেহ দেখো। ৩ডি দৃশ্যের Pacific herring একই পরিবারের তুলনা - ইলিশ নয়।',
-      credit: '<a href="https://commons.wikimedia.org/wiki/File:Tenualosa_ilisha_(Hilsa_fish)_at_Chandpur_Fish_Market_(1).jpg" target="_blank" rel="noopener noreferrer">ছবি: Nahid Sultan</a> · CC BY-SA 4.0',
-    },
-    'দোয়েল': {
-      image: '/images/species-reference/doel-oriental-magpie-robin.jpg', title: 'দোয়েল', science: 'Copsychus saularis',
-      alt: 'আসল দোয়েল বা Oriental magpie-robin',
-      copy: 'আসল দোয়েলের কালো-সাদা পালক, সাদা ডানার দাগ ও লম্বা লেজ দেখো। ৩ডি robin-টি শুধু ছোট গায়ক-পাখির দেহরূপের তুলনা।',
-      credit: '<a href="https://commons.wikimedia.org/wiki/File:Oriental_Magpie_Robin.jpg" target="_blank" rel="noopener noreferrer">ছবি: Challiyil Eswaramangalath Vipin</a> · CC BY-SA 3.0',
-    },
-    'চিতা বিড়াল': {
-      image: '/images/species-reference/leopard-cat-sundarban.jpg', title: 'চিতা বিড়াল', science: 'Prionailurus bengalensis',
-      alt: 'সুন্দরবনের বন্য চিতা বিড়াল',
-      copy: 'ছবিটি সুন্দরবনের বন্য চিতা বিড়াল। মাথার ডোরা ও ছোট গাঢ় দাগ দেখো; ৩ডি domestic Bengal cat বন্য প্রজাতিটি নয়।',
-      credit: '<a href="https://commons.wikimedia.org/wiki/File:Leopard_Cat_in_Sundarban.jpg" target="_blank" rel="noopener noreferrer">ছবি: Soumyajit Nandy</a> · CC BY-SA 4.0',
-    },
-    'বানর': {
-      image: '/images/species-reference/rhesus-macaque.jpg', title: 'রেসাস বানর', science: 'Macaca mulatta',
-      alt: 'পুরুষ রেসাস বানর',
-      copy: '“বানর” অনেক প্রজাতির সাধারণ নাম। ছবিতে রেসাস বানর; ৩ডি Japanese macaque একই গণের হলেও আলাদা প্রজাতি।',
-      credit: '<a href="https://commons.wikimedia.org/wiki/File:Rhesus_macaque_(Macaca_mulatta_mulatta),_male,_Gokarna.jpg" target="_blank" rel="noopener noreferrer">ছবি: Charles J. Sharp</a> · CC BY-SA 4.0',
-    },
-    'শকুন': {
-      image: '/images/species-reference/white-rumped-vulture-bangladesh.jpg', title: 'সাদা-পিঠ শকুন', science: 'Gyps bengalensis',
-      alt: 'বাংলাদেশের সাদা-পিঠ শকুন',
-      copy: 'বাংলাদেশে তোলা সাদা-পিঠ শকুনের ছবি। পিঠের সাদা অংশ দেখো; ৩ডি Griffon vulture একই Gyps গণের হলেও আলাদা প্রজাতি।',
-      credit: '<a href="https://commons.wikimedia.org/wiki/File:White-rumped_vulture_Sunderbans_Bangladesh.jpg" target="_blank" rel="noopener noreferrer">ছবি: Mahmudul Bari</a> · CC BY-SA 4.0',
-    },
-  };
+  const speciesReferenceKicker = root.querySelector<HTMLElement>('#species-reference-kicker');
+  const linkTo = (href: string, text: string) => { const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = text; return a; };
   const syncModelCredit = () => {
     const category = cats[curCat]?.n;
     const item = cats[curCat]?.items[curItem];
@@ -1533,6 +1510,9 @@ const schema = [
       'model-credit-peafowl': slug === 'life' && category === 'প্রাণীর শ্রেণি' && ['পাখি', 'উষ্ণ রক্ত'].includes(item) ? 'peafowl' : null,
       'model-credit-axolotl': slug === 'life' && category === 'প্রাণীর শ্রেণি' && item === 'উভচর' ? 'axolotl' : null,
       'model-credit-octopus': slug === 'life' && category === 'প্রাণীর শ্রেণি' && item === 'অমেরুদণ্ডী' ? 'octopus' : null,
+      'model-credit-wright-flyer': slug === 'discovery' && category === 'আবিষ্কার ও আবিষ্কারক' && item === 'উড়োজাহাজ' ? 'wright-flyer' : null,
+      'model-credit-triceratops': slug === 'discovery' && category === 'পৃথিবী ও ভূতত্ত্ব' && item === 'ডাইনোসর' ? 'triceratops' : null,
+      'model-credit-trilobite': slug === 'discovery' && category === 'পৃথিবী ও ভূতত্ত্ব' && item === 'জীবাশ্ম' ? 'trilobite' : null,
       'model-credit-green-turtle': slug === 'life' && category === 'বাংলাদেশের প্রাণী' && item === 'কচ্ছপ' ? 'green-turtle' : null,
     };
     let visible = false;
@@ -1542,17 +1522,20 @@ const schema = [
       visible ||= !!key;
     }
     if (modelCredit) modelCredit.hidden = !visible;
-    const reference = slug === 'life' && category === 'বাংলাদেশের প্রাণী' ? speciesReferences[item] : undefined;
+    // Any figure that is a comparison or a Posora illustration carries an
+    // exact photograph of the real thing (src/data/reference-photos.ts).
+    const reference = item ? cats[curCat]?.references?.[item] : undefined;
     if (speciesReference) speciesReference.hidden = !reference;
     if (reference && speciesReferenceImage && speciesReferenceTitle && speciesReferenceScience && speciesReferenceCopy && speciesReferenceCredit) {
-      // Set the source only when the child selects one of these animals. This
-      // keeps five reference photographs out of the world's initial payload.
+      // Set the source only when the child selects that item, so reference
+      // photographs never join the world's initial payload.
       if (speciesReferenceImage.getAttribute('src') !== reference.image) speciesReferenceImage.src = reference.image;
       speciesReferenceImage.alt = reference.alt;
+      if (speciesReferenceKicker) speciesReferenceKicker.textContent = reference.kicker;
       speciesReferenceTitle.textContent = reference.title;
       speciesReferenceScience.textContent = reference.science;
       speciesReferenceCopy.textContent = reference.copy;
-      speciesReferenceCredit.innerHTML = reference.credit;
+      speciesReferenceCredit.replaceChildren(linkTo(reference.page, `ছবি: ${reference.author}`), ' · ', linkTo(reference.licenseUrl, reference.license));
     }
   };
   syncModelCredit();

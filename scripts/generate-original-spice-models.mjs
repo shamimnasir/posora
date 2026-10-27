@@ -1,313 +1,169 @@
-import { createHash } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import {
-  BufferGeometry,
-  CapsuleGeometry,
-  Color,
-  CylinderGeometry,
-  DodecahedronGeometry,
-  DoubleSide,
-  Float32BufferAttribute,
-  Group,
-  IcosahedronGeometry,
-  LatheGeometry,
-  Mesh,
-  MeshPhysicalMaterial,
-  SphereGeometry,
-  Vector2,
-} from 'three';
-import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { BufferGeometry, CylinderGeometry, Float32BufferAttribute, IcosahedronGeometry, LatheGeometry, SphereGeometry, Vector2, Vector3 } from 'three';
+import { Batch, blade, col, compose, displace, fbm, material, mix, noise3, seeded, taperedTube, writeAsset } from './lib/procedural-kit.mjs';
 
-// Posora-original, deterministic PBR teaching specimens. These are not scans:
-// they model the visible morphology of the named dried spices and are released
-// as CC0 so the site never depends on a paid/login-gated asset.
-const OUTPUT = path.resolve('public/models');
-const CHECKED = '2026-10-21';
+/**
+ * Posora-original whole-spice teaching models, generation 2 (CC0).
+ *
+ * The lesson asks a child to tell spices apart in the kitchen, so each seed
+ * or leaf carries the cue a cook uses: cumin is slender, ridged and slightly
+ * curved; coriander is a round, ribbed fruit that splits in two; tejpata
+ * (Cinnamomum tamala) has three veins running from its base, unlike European
+ * bay; mustard is tiny and round; fenugreek is small, angular and grooved;
+ * Bengali gorom moshla is cinnamon, green cardamom and cloves.
+ *
+ * Seeds are enlarged relative to the bowl so their shape can be seen.
+ */
+const CREATED = '2026-10-28';
+const v3 = (x, y, z) => new Vector3(x, y, z);
 
-class NodeFileReader {
-  result = null;
-  onloadend = null;
-  onerror = null;
-  async readAsArrayBuffer(blob) {
-    try { this.result = await blob.arrayBuffer(); this.onloadend?.({ target: this }); }
-    catch (error) { this.onerror?.(error); }
-  }
-  async readAsDataURL(blob) {
-    try {
-      const bytes = Buffer.from(await blob.arrayBuffer());
-      this.result = `data:${blob.type || 'application/octet-stream'};base64,${bytes.toString('base64')}`;
-      this.onloadend?.({ target: this });
-    } catch (error) { this.onerror?.(error); }
-  }
+function smallBowl(batch, { radius = 0.62, height = 0.3, kind = 'steel' } = {}) {
+  const profile = [[0, 0], [radius * 0.45, 0], [radius * 0.5, 0.03], [radius * 0.85, height * 0.45], [radius, height], [radius * 0.98, height * 1.03], [radius * 0.92, height * 0.95], [radius * 0.78, height * 0.45], [radius * 0.42, height * 0.12], [0, height * 0.1]];
+  const tones = kind === 'clay' ? ['#8a4a2c', '#a8623a'] : ['#8f9599', '#cdd1d2'];
+  batch.add(kind, new LatheGeometry(profile.map(([x, y]) => new Vector2(x, y)), 64), null, (p) => mix(col(tones[0]), col(tones[1]), p.y / height));
 }
-globalThis.FileReader ??= NodeFileReader;
-
-const material = (name, color, roughness = 0.78, metalness = 0) => {
-  const value = new MeshPhysicalMaterial({
-    name,
-    color: new Color(color),
-    roughness,
-    metalness,
-    clearcoat: 0.08,
-    clearcoatRoughness: 0.72,
-  });
-  value.side = DoubleSide;
-  return value;
-};
-
-const ceramic = material('glazed earthenware', '#38545a', 0.34);
-const ceramicInside = material('unglazed inner bowl', '#b9a68b', 0.72);
-const cuminMat = material('cumin seed', '#8a6336', 0.86);
-const cuminRidgeMat = material('cumin seed ridge', '#5b3e22', 0.9);
-const corianderMat = material('coriander seed', '#b79a5d', 0.88);
-const corianderDark = material('coriander groove', '#77613d', 0.9);
-const mustardMat = material('brown mustard seed', '#5b371d', 0.72);
-const mustardGold = material('yellow mustard seed', '#ba8f35', 0.76);
-const fenugreekMat = material('fenugreek seed', '#b98d3f', 0.86);
-const fenugreekCut = material('fenugreek crease', '#775223', 0.92);
-const bayLeafMat = material('dried bay leaf', '#6f7134', 0.91);
-const bayLeafEdge = material('bay leaf vein', '#a5a65c', 0.86);
-const cinnamonMat = material('cinnamon bark', '#8a4528', 0.92);
-const cloveMat = material('clove', '#4b2d21', 0.84);
-const cardamomMat = material('green cardamom pod', '#788147', 0.9);
-const pepperMat = material('black peppercorn', '#25211d', 0.68);
-const starAniseMat = material('star anise', '#6e3422', 0.9);
-
-function seeded(seed) {
-  let state = seed >>> 0;
-  return (min = 0, max = 1) => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return min + (state / 0x100000000) * (max - min);
-  };
-}
-
-function bowl() {
-  const group = new Group(); group.name = 'ceramic-bowl';
-  const profile = [
-    new Vector2(0.0, 0.02), new Vector2(0.57, 0.02), new Vector2(0.62, 0.09),
-    new Vector2(0.72, 0.28), new Vector2(0.79, 0.48), new Vector2(0.82, 0.58),
-  ];
-  const shell = new Mesh(new LatheGeometry(profile, 64), ceramic); shell.name = 'outer-bowl'; group.add(shell);
-  const inside = new Mesh(new CylinderGeometry(0.75, 0.61, 0.055, 64), ceramicInside);
-  inside.name = 'inner-bowl'; inside.position.y = 0.53; group.add(inside);
-  const rim = new Mesh(new CylinderGeometry(0.86, 0.8, 0.07, 64, 1, true), ceramic);
-  rim.name = 'bowl-rim'; rim.position.y = 0.59; group.add(rim);
-  return group;
-}
-
-function ridgedSeedGeometry(length = 0.24, width = 0.065, ridges = 7, bend = 0.025) {
-  const radial = 12, along = 9;
-  const positions = [], normals = [], indices = [];
-  for (let zIndex = 0; zIndex <= along; zIndex += 1) {
-    const u = zIndex / along;
-    const z = (u - 0.5) * length;
-    const taper = Math.pow(Math.sin(Math.PI * u), 0.55);
-    const centreX = Math.sin((u - 0.5) * Math.PI) * bend;
-    for (let a = 0; a < radial; a += 1) {
-      const theta = a / radial * Math.PI * 2;
-      const ridge = 1 + 0.14 * Math.cos(theta * ridges);
-      const rx = width * taper * ridge;
-      positions.push(centreX + Math.cos(theta) * rx, Math.sin(theta) * rx * 0.72, z);
-      normals.push(Math.cos(theta), Math.sin(theta), 0.12 * Math.cos(Math.PI * u));
-    }
-  }
-  for (let z = 0; z < along; z += 1) for (let a = 0; a < radial; a += 1) {
-    const next = (a + 1) % radial, i = z * radial + a, j = z * radial + next;
-    indices.push(i, i + radial, j, j, i + radial, j + radial);
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3));
-  geometry.setIndex(indices); geometry.computeVertexNormals();
-  geometry.name = `ridged-seed-${ridges}`;
-  return geometry;
-}
-
-function groovedSphereGeometry(radius = 0.075, grooves = 10) {
-  const horizontal = 18, vertical = 12, positions = [], normals = [], indices = [];
-  for (let y = 0; y <= vertical; y += 1) {
-    const v = y / vertical, phi = v * Math.PI;
-    for (let x = 0; x <= horizontal; x += 1) {
-      const u = x / horizontal, theta = u * Math.PI * 2;
-      const rib = 1 + 0.075 * Math.cos(theta * grooves) * Math.sin(phi);
-      const r = radius * rib;
-      const nx = Math.sin(phi) * Math.cos(theta), ny = Math.cos(phi), nz = Math.sin(phi) * Math.sin(theta);
-      positions.push(nx * r, ny * r * 0.94, nz * r); normals.push(nx, ny, nz);
-    }
-  }
-  for (let y = 0; y < vertical; y += 1) for (let x = 0; x < horizontal; x += 1) {
-    const i = y * (horizontal + 1) + x, j = i + horizontal + 1;
-    indices.push(i, j, i + 1, i + 1, j, j + 1);
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3));
-  geometry.setIndex(indices); geometry.computeVertexNormals(); geometry.name = 'grooved-coriander-seed';
-  return geometry;
-}
-
-function scatter(group, geometry, materials, count, seed, options = {}) {
-  const random = seeded(seed);
-  const radius = options.radius ?? 0.6;
+/** A heap of items piled into the bowl: denser and higher at the centre. */
+function heap(batch, key, make, { count, radius, base, peak, random, paint, sizeJitter = 0.18 }) {
   for (let i = 0; i < count; i += 1) {
-    const mesh = new Mesh(geometry, materials[i % materials.length]);
-    const angle = random(0, Math.PI * 2), r = radius * Math.sqrt(random(0.02, 1));
-    mesh.position.set(Math.cos(angle) * r, 0.61 + random(0.02, options.height ?? 0.2) * (1 - r / radius), Math.sin(angle) * r);
-    mesh.rotation.set(random(-0.7, 0.7), random(0, Math.PI * 2), random(-0.7, 0.7));
-    const scale = random(options.scaleMin ?? 0.82, options.scaleMax ?? 1.18); mesh.scale.setScalar(scale);
-    mesh.name = `${options.name ?? 'seed'}-${String(i + 1).padStart(2, '0')}`;
-    group.add(mesh);
+    const a = random(0, Math.PI * 2), r = radius * Math.sqrt(random()), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    const t = r / radius, y = base + peak * Math.pow(Math.max(0, 1 - t * t), 0.8) * random(0.55, 1);
+    const s = 1 + random(-sizeJitter, sizeJitter);
+    const g = make(i), m = compose([x, y, z], [random(-1.2, 1.2), random(0, Math.PI * 2), random(-1.2, 1.2)], s);
+    // a seed that already carries its own shading keeps it
+    if (paint) batch.add(key, g, m, (p) => paint(p, i)); else batch.addColored(key, g, m);
   }
 }
+const ridges = (p, n, axisLen) => Math.abs(Math.sin(Math.atan2(p.y, p.x) * n)) + Math.abs(p.z / axisLen) * 0.4;
 
-function leafGeometry(length = 0.82, width = 0.2) {
-  const segments = 14, positions = [], normals = [], indices = [];
-  for (let i = 0; i <= segments; i += 1) {
-    const u = i / segments, z = (u - 0.5) * length;
-    const w = Math.sin(Math.PI * u) * width * (0.86 + 0.14 * Math.sin(Math.PI * u));
-    const curl = Math.sin((u - 0.5) * Math.PI) * 0.055;
-    positions.push(-w, curl, z, 0, curl + 0.028, z, w, curl, z);
-    normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
+/* ---------- জিরা: Cuminum cyminum ---------- */
+function cumin() {
+  const random = seeded(0xc0412), batch = new Batch();
+  smallBowl(batch);
+  // a slender, slightly curved fruit with fine longitudinal ridges and a
+  // tiny stalk at one end
+  const seed = () => {
+    const len = 0.075, bend = random(0.004, 0.01);
+    const { geometry } = taperedTube([v3(0, 0, -len / 2), v3(bend, 0, 0), v3(0, 0, len / 2)], (u) => 0.012 * Math.pow(Math.sin(Math.PI * Math.min(1, 0.04 + u * 0.94)), 0.7) + 0.0015, { tubular: 8, radial: 8, paint: (u, a) => mix(col('#6e5a3e'), col('#b49b72'), Math.pow(Math.abs(Math.sin(a * Math.PI * 4.5)), 4) * 0.8 + (u < 0.08 ? 0.3 : 0)) });
+    return geometry;
+  };
+  heap(batch, 'seeds', seed, { count: 480, radius: 0.44, base: 0.15, peak: 0.13, random, paint: null, sizeJitter: 0.15 });
+  return finishTinted(batch, 'cumin-seeds');
+}
+function finishTinted(batch, name) {
+  return batch.build(name, {
+    steel: material('stainless steel bowl', { roughness: 0.22, clearcoat: 0.4 }),
+    clay: material('terracotta bowl', { roughness: 0.9 }),
+    seeds: material('dried seed', { roughness: 0.75, clearcoat: 0.05 }),
+    leaves: material('dried leaf', { roughness: 0.8, side: 2 }),
+    pods: material('green cardamom pod', { roughness: 0.6, clearcoat: 0.1 }),
+    bark: material('cinnamon bark quill', { roughness: 0.85, side: 2 }),
+    cloves: material('dried clove', { roughness: 0.7 }),
+  });
+}
+
+/* ---------- ধনে: Coriandrum sativum ---------- */
+function coriander() {
+  const random = seeded(0xc0412b), batch = new Batch();
+  smallBowl(batch);
+  // a near-spherical ribbed fruit, straw-tan, with a small point on top;
+  // some have split into their two hemispherical halves
+  const whole = () => displace(new SphereGeometry(0.024, 12, 9), 0.0, 1);
+  const half = () => new SphereGeometry(0.024, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+  heap(batch, 'seeds', (i) => (i % 9 === 0 ? half() : whole()), { count: 360, radius: 0.44, base: 0.15, peak: 0.13, random, paint: (p) => mix(col('#a8875a'), col('#d8bf8a'), Math.pow(Math.abs(Math.sin(Math.atan2(p.x, p.z) * 5)), 3) * 0.8 + noise3(p.x * 300, p.y * 300, p.z * 300) * 0.1) });
+  return finishTinted(batch, 'coriander-seeds');
+}
+
+/* ---------- তেজপাতা: Cinnamomum tamala ---------- */
+function bayLeaves() {
+  const random = seeded(0xba72), batch = new Batch();
+  // Tejpata's three main veins run from the base to the tip, which is the
+  // field difference from Laurus nobilis (one midrib with side veins).
+  const veinPaint = (base, vein) => (p) => {
+    const u = Math.min(1, Math.max(0, p.z)); const w = 0.21 * Math.sin(Math.PI * Math.pow(u, 0.9)) + 1e-3;
+    const s = p.x / w, line = (c) => Math.exp(-Math.pow((s - c) / 0.1, 2));
+    return mix(base, vein, Math.min(1, line(0) + line(-0.55) * 0.8 + line(0.55) * 0.8));
+  };
+  const leaf = blade({ length: 1, halfWidth: (u) => 0.21 * Math.sin(Math.PI * Math.pow(u, 0.9)), segments: 14, across: 10, fold: 0.04, arch: 0.08, twist: 0.1, upper: col('#7a7d3e'), lower: col('#8c8a52') });
+  for (let i = 0; i < 7; i += 1) {
+    const g = leaf.upper.clone(); const c = g.attributes.color, p = new Vector3();
+    const base = mix(col('#55622a'), col('#7a5e30'), random(0, 0.6)), vein = col('#b3a873');
+    const paint = veinPaint(base, vein);
+    for (let k = 0; k < c.count; k += 1) { p.fromBufferAttribute(g.attributes.position, k); const q = paint(p); c.setXYZ(k, q.r, q.g, q.b); }
+    const a = (i / 7) * Math.PI * 2 + random(-0.3, 0.3);
+    batch.addColored('leaves', g, compose([Math.cos(a) * 0.12, 0.02 + i * 0.012, Math.sin(a) * 0.12], [random(-0.15, 0.15), -a + Math.PI / 2, random(-0.1, 0.1)], 0.75));
   }
-  for (let i = 0; i < segments; i += 1) {
-    const row = i * 3, next = row + 3;
-    indices.push(row, next, row + 1, row + 1, next, next + 1, row + 1, next + 1, row + 2, row + 2, next + 1, next + 2);
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3));
-  geometry.setIndex(indices); geometry.computeVertexNormals(); geometry.name = 'curved-bay-leaf';
-  return geometry;
+  return finishTinted(batch, 'bay-leaves');
 }
 
-function baseSpecimen(name) {
-  const root = new Group(); root.name = name;
-  root.add(bowl());
-  const contents = new Group(); contents.name = `${name}-contents`; root.add(contents);
-  return { root, contents };
+/* ---------- সরিষা: Brassica (mustard) ---------- */
+function mustard() {
+  const random = seeded(0x3a57), batch = new Batch();
+  smallBowl(batch);
+  heap(batch, 'seeds', () => new SphereGeometry(0.014, 6, 4), { count: 1100, radius: 0.44, base: 0.15, peak: 0.13, random, paint: (p, i) => (i % 11 === 0 ? col('#b8862e') : mix(col('#3a1c14'), col('#6a3420'), noise3(p.x * 400 + i, p.y * 400, p.z * 400) * 0.5 + 0.5)), sizeJitter: 0.2 });
+  return finishTinted(batch, 'mustard-seeds');
 }
 
-function cuminModel() {
-  const { root, contents } = baseSpecimen('cumin-seeds');
-  scatter(contents, ridgedSeedGeometry(), [cuminMat, cuminRidgeMat], 84, 0xc001, { radius: 0.65, height: 0.28, name: 'cumin-seed' });
-  return root;
+/* ---------- মেথি: Trigonella foenum-graecum ---------- */
+function fenugreek() {
+  const random = seeded(0xfe9e), batch = new Batch();
+  smallBowl(batch);
+  // small, hard, angular seeds, golden-brown, with a diagonal groove
+  const seed = () => displace(new SphereGeometry(0.02, 7, 5), 0.002, 120).scale(1.5, 0.75, 1);
+  heap(batch, 'seeds', seed, { count: 520, radius: 0.44, base: 0.15, peak: 0.13, random, paint: (p) => mix(col('#c18a3a'), col('#7a5224'), Math.exp(-Math.pow((p.x - p.z * 0.8) / 0.004, 2)) * 0.9 + noise3(p.x * 200, p.y * 200, p.z * 200) * 0.15) });
+  return finishTinted(batch, 'fenugreek-seeds');
 }
 
-function corianderModel() {
-  const { root, contents } = baseSpecimen('coriander-seeds');
-  scatter(contents, groovedSphereGeometry(), [corianderMat, corianderDark], 72, 0xc022, { radius: 0.65, height: 0.3, name: 'coriander-seed' });
-  return root;
-}
-
-function mustardModel() {
-  const { root, contents } = baseSpecimen('mustard-seeds');
-  scatter(contents, new IcosahedronGeometry(0.046, 2), [mustardMat, mustardGold], 150, 0x5eed, { radius: 0.67, height: 0.26, scaleMin: 0.72, scaleMax: 1.16, name: 'mustard-seed' });
-  return root;
-}
-
-function fenugreekModel() {
-  const { root, contents } = baseSpecimen('fenugreek-seeds');
-  const geometry = new DodecahedronGeometry(0.074, 1); geometry.scale(1.16, 0.72, 0.88); geometry.name = 'angular-fenugreek-seed';
-  scatter(contents, geometry, [fenugreekMat, fenugreekCut], 88, 0xfe90, { radius: 0.65, height: 0.28, scaleMin: 0.75, scaleMax: 1.12, name: 'fenugreek-seed' });
-  return root;
-}
-
-function bayLeafModel() {
-  const { root, contents } = baseSpecimen('bay-leaves');
-  const leaf = leafGeometry();
-  const random = seeded(0xba71);
-  for (let i = 0; i < 18; i += 1) {
-    const holder = new Group(); holder.name = `bay-leaf-${String(i + 1).padStart(2, '0')}`;
-    const mesh = new Mesh(leaf, bayLeafMat); holder.add(mesh);
-    const vein = new Mesh(new CapsuleGeometry(0.013, 0.67, 5, 8), bayLeafEdge);
-    vein.rotation.x = Math.PI / 2; vein.position.y = 0.035; holder.add(vein);
-    const angle = random(0, Math.PI * 2), radius = random(0.03, 0.48);
-    holder.position.set(Math.cos(angle) * radius, 0.64 + i * 0.018, Math.sin(angle) * radius);
-    holder.rotation.set(random(-0.2, 0.2), angle + random(-0.4, 0.4), random(-0.45, 0.45));
-    holder.scale.setScalar(random(0.78, 1.08)); contents.add(holder);
-  }
-  return root;
-}
-
-function garamMasalaModel() {
-  const { root, contents } = baseSpecimen('garam-masala-whole-spices');
-  const random = seeded(0x6a4a);
-  // Cinnamon quills.
-  for (let i = 0; i < 9; i += 1) {
-    const stick = new Mesh(new CylinderGeometry(0.035, 0.04, random(0.42, 0.68), 16, 1, true), cinnamonMat);
-    stick.name = `cinnamon-quill-${i + 1}`; stick.rotation.set(random(-0.35, 0.35), random(0, Math.PI), random(0.9, 1.45));
-    stick.position.set(random(-0.48, 0.48), 0.75 + random(0, 0.16), random(-0.42, 0.42)); contents.add(stick);
-  }
-  // Cardamom pods and peppercorns.
-  scatter(contents, ridgedSeedGeometry(0.2, 0.072, 9, 0.012), [cardamomMat], 28, 0xca2d, { radius: 0.58, height: 0.28, name: 'cardamom-pod' });
-  scatter(contents, new IcosahedronGeometry(0.044, 2), [pepperMat], 48, 0x9e99, { radius: 0.63, height: 0.3, name: 'peppercorn' });
-  // Cloves: distinct stalk and head groups.
-  for (let i = 0; i < 22; i += 1) {
-    const clove = new Group(); clove.name = `clove-${i + 1}`;
-    const stem = new Mesh(new CylinderGeometry(0.015, 0.028, 0.22, 10), cloveMat); clove.add(stem);
-    const head = new Mesh(new SphereGeometry(0.045, 12, 8), cloveMat); head.position.y = 0.125; head.scale.set(1, 0.7, 1); clove.add(head);
-    clove.position.set(random(-0.5, 0.5), 0.76 + random(0, 0.14), random(-0.45, 0.45));
-    clove.rotation.set(random(-1, 1), random(0, Math.PI * 2), random(-1, 1)); contents.add(clove);
-  }
-  // Two whole star-anise pods form unmistakable silhouettes.
-  for (let s = 0; s < 2; s += 1) {
-    const star = new Group(); star.name = `star-anise-${s + 1}`;
-    for (let i = 0; i < 8; i += 1) {
-      const arm = new Mesh(new CapsuleGeometry(0.035, 0.17, 4, 8), starAniseMat);
-      arm.rotation.z = Math.PI / 2; arm.rotation.y = i / 8 * Math.PI * 2; arm.position.set(Math.cos(i / 8 * Math.PI * 2) * 0.11, 0, Math.sin(i / 8 * Math.PI * 2) * 0.11); star.add(arm);
+/* ---------- গরম মশলা: Bengali whole gorom moshla ---------- */
+function garamMasala() {
+  const random = seeded(0x9a3a), batch = new Batch();
+  smallBowl(batch, { radius: 0.7, height: 0.22, kind: 'clay' });
+  // cinnamon (daruchini) quills: thin bark rolled into a scroll
+  for (let i = 0; i < 5; i += 1) {
+    const positions = [], colors = [], index = []; const len = random(0.42, 0.55), turns = 1.6, steps = 24, rings = 8;
+    for (let r = 0; r <= rings; r += 1) for (let s = 0; s <= steps; s += 1) {
+      const t = s / steps, ang = t * Math.PI * 2 * turns, rad = 0.028 + t * 0.018;
+      positions.push(Math.cos(ang) * rad, Math.sin(ang) * rad, (r / rings - 0.5) * len);
+      const c = mix(col('#7a3e1e'), col('#b0663a'), fbm(ang * 2, r * 0.8, i, 2) * 0.5 + 0.5 + (t > 0.9 ? 0.2 : 0)); colors.push(c.r, c.g, c.b);
     }
-    star.position.set(s ? 0.28 : -0.24, 0.98 + s * 0.04, s ? 0.12 : -0.08); star.rotation.x = Math.PI / 2; contents.add(star);
+    for (let r = 0; r < rings; r += 1) for (let s = 0; s < steps; s += 1) { const a = r * (steps + 1) + s, b = a + steps + 1; index.push(a, b, a + 1, a + 1, b, b + 1); }
+    const g = new BufferGeometry(); g.setAttribute('position', new Float32BufferAttribute(positions, 3)); g.setAttribute('color', new Float32BufferAttribute(colors, 3)); g.setIndex(index); g.computeVertexNormals();
+    const a = random(0, Math.PI * 2);
+    batch.addColored('bark', g, compose([Math.cos(a) * 0.2, 0.1 + i * 0.03, Math.sin(a) * 0.2], [0.1, a, random(-0.2, 0.2)]));
   }
-  return root;
+  // green cardamom (elach): three-sided, ribbed ovoid pods
+  for (let i = 0; i < 16; i += 1) {
+    const a = random(0, Math.PI * 2), r = random(0.05, 0.5);
+    batch.add('pods', displace(new SphereGeometry(0.045, 12, 8), 0.004, 60, i), compose([Math.cos(a) * r, 0.1 + random(0, 0.08), Math.sin(a) * r], [random(-1, 1), random(0, 6.3), random(-1, 1)], [0.7, 0.7, 1.35]), (p) => mix(col('#6f8a3a'), col('#a6b55e'), Math.pow(Math.abs(Math.sin(Math.atan2(p.x, p.y) * 1.5)), 2)));
+  }
+  // cloves (labongo): a tapering stalk with a round bud and four sepals
+  for (let i = 0; i < 18; i += 1) {
+    const a = random(0, Math.PI * 2), r = random(0.05, 0.5), pos = v3(Math.cos(a) * r, 0.11 + random(0, 0.07), Math.sin(a) * r);
+    const dir = v3(random(-1, 1), random(-0.3, 0.3), random(-1, 1)).normalize();
+    const tip = pos.clone().add(dir.clone().multiplyScalar(0.11));
+    batch.addColored('cloves', taperedTube([pos, pos.clone().lerp(tip, 0.5), tip], (u) => 0.008 + u * 0.006, { tubular: 4, radial: 6, paint: () => col('#4a2a1a') }).geometry, null);
+    batch.add('cloves', new SphereGeometry(0.016, 10, 8), compose([tip.x + dir.x * 0.014, tip.y + dir.y * 0.014, tip.z + dir.z * 0.014]), () => col('#6a3a22'));
+    for (let k = 0; k < 4; k += 1) batch.add('cloves', new CylinderGeometry(0.002, 0.006, 0.022, 4), compose([tip.x, tip.y, tip.z]), () => col('#3a2014'));
+  }
+  return finishTinted(batch, 'garam-masala');
 }
 
 const assets = [
-  { key: 'cumin', folder: 'posora_cumin_01', file: 'cumin-seeds.glb', title: 'Cumin seeds', scientific: 'Cuminum cyminum dried fruits', build: cuminModel },
-  { key: 'coriander', folder: 'posora_coriander_01', file: 'coriander-seeds.glb', title: 'Coriander seeds', scientific: 'Coriandrum sativum dried fruits', build: corianderModel },
-  { key: 'bayLeaf', folder: 'posora_bay_leaf_01', file: 'bay-leaves.glb', title: 'Dried bay leaves', scientific: 'Cinnamomum tamala leaf teaching model', build: bayLeafModel },
-  { key: 'mustard', folder: 'posora_mustard_01', file: 'mustard-seeds.glb', title: 'Mustard seeds', scientific: 'Brassica/Sinapis seed teaching model', build: mustardModel },
-  { key: 'fenugreek', folder: 'posora_fenugreek_01', file: 'fenugreek-seeds.glb', title: 'Fenugreek seeds', scientific: 'Trigonella foenum-graecum dried seeds', build: fenugreekModel },
-  { key: 'garamMasala', folder: 'posora_garam_masala_01', file: 'garam-masala.glb', title: 'Whole garam masala mixture', scientific: 'Cinnamon, cardamom, clove, pepper and star-anise teaching set', build: garamMasalaModel },
+  ['posora_cumin_01', 'cumin-seeds.glb', 'Cumin seeds', 'Cuminum cyminum', 'slender, slightly curved dried fruits with fine longitudinal ridges', cumin],
+  ['posora_coriander_01', 'coriander-seeds.glb', 'Coriander seeds', 'Coriandrum sativum', 'round, ribbed straw-tan fruits, some split into two halves', coriander],
+  ['posora_bay_leaf_01', 'bay-leaves.glb', 'Tejpata (Indian bay leaf)', 'Cinnamomum tamala', 'dried elliptic leaves with three main veins running from the base', bayLeaves],
+  ['posora_mustard_01', 'mustard-seeds.glb', 'Mustard seeds', 'Brassica species', 'tiny round reddish-brown seeds with a few yellow ones', mustard],
+  ['posora_fenugreek_01', 'fenugreek-seeds.glb', 'Fenugreek seeds', 'Trigonella foenum-graecum', 'small, hard, angular golden-brown seeds with a groove', fenugreek],
+  ['posora_garam_masala_01', 'garam-masala.glb', 'Whole gorom moshla', 'Cinnamon, green cardamom and clove', 'Bengali whole garam masala: cinnamon quills, green cardamom pods and cloves', garamMasala],
 ];
-
-function exportBinary(object) {
-  return new Promise((resolve, reject) => {
-    new GLTFExporter().parse(object, (result) => resolve(Buffer.from(result)), reject, {
-      binary: true,
-      onlyVisible: true,
-      trs: true,
-    });
+for (const [directory, filename, name, species, features, build] of assets) {
+  await writeAsset({
+    directory, filename, scene: build(),
+    manifest: {
+      name, species, subject: `${species}: ${features}`, creator: 'Posora.com', license: 'CC0 1.0 Universal', licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
+      source: 'Original deterministic Three.js geometry generated by scripts/generate-original-spice-models.mjs; not a scan.', createdDate: CREATED, qualityTier: 'teaching-diagram',
+      educationalRole: 'Whole-spice identification model for Food → মশলার জগৎ; shown beside an exact reference photograph.',
+      limitations: ['Original illustration, not a scan.', 'Seeds are enlarged relative to the bowl so their shape is visible; do not infer real size.', 'Colour and size vary with variety, origin, age and drying.'],
+    },
+    license: `# ${name}\n\n- Creator/source: Posora.com original asset\n- Generator: \`scripts/generate-original-spice-models.mjs\`\n- License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/\n- Created: ${CREATED}\n\nAn original teaching model of the whole spice, not a scan. Seeds are enlarged for visibility.\n`,
+    readme: `# ${name}\n\n*${species}* — ${features}.\n\nSee \`asset-manifest.json\` and \`SOURCE-LICENSE.md\`. Shown on https://posora.com/food/ with an exact reference photograph.\n`,
   });
-}
-
-for (const asset of assets) {
-  const directory = path.join(OUTPUT, asset.folder);
-  await mkdir(directory, { recursive: true });
-  const model = asset.build();
-  const bytes = await exportBinary(model);
-  const hash = createHash('sha256').update(bytes).digest('hex');
-  await writeFile(path.join(directory, asset.file), bytes);
-  const manifest = {
-    name: asset.title,
-    subject: asset.scientific,
-    creator: 'Posora.com',
-    license: 'CC0 1.0 Universal',
-    licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
-    source: 'Original deterministic Three.js geometry authored for Posora; not a scan or third-party marketplace model.',
-    localMainFile: asset.file,
-    format: 'glTF 2.0 GLB',
-    createdDate: CHECKED,
-    files: [{ path: asset.file, bytes: bytes.length, sha256: hash }],
-    educationalRole: `Exact dried-spice teaching specimen for Food → মশলার জগৎ → ${asset.key}.`,
-    limitations: [
-      'Original PBR teaching model, not photogrammetry and not a specimen scan.',
-      'Natural products vary in size, color, curvature, age, processing and cultivar.',
-      'The bowl is a display vessel and is not part of the spice.',
-    ],
-  };
-  await writeFile(path.join(directory, 'asset-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  await writeFile(path.join(directory, 'SOURCE-LICENSE.md'), `# Source and license evidence — ${asset.title}\n\n- Creator: Posora.com\n- Created: ${CHECKED}\n- License: [CC0 1.0 Universal](${manifest.licenseUrl})\n- Source: original geometry generated by \`scripts/generate-original-spice-models.mjs\`\n\nThis asset was authored specifically for Posora from deterministic mesh geometry and PBR materials. It contains no downloaded third-party mesh or texture. Posora releases the resulting GLB under CC0. It is a morphology-focused teaching model, not photogrammetry or a scientific specimen scan.\n`);
-  await writeFile(path.join(directory, 'README.md'), `# ${asset.title}\n\n- Subject: ${asset.scientific}\n- Local file: \`${asset.file}\`\n- Creator: Posora.com\n- License: CC0 1.0 Universal\n- Generation source: [generate-original-spice-models.mjs](../../../scripts/generate-original-spice-models.mjs)\n- Hashes and limitations: [asset-manifest.json](asset-manifest.json)\n`);
-  console.log(`${asset.folder}/${asset.file}: ${bytes.length} bytes · ${hash}`);
 }

@@ -1,8 +1,5 @@
 # Coriander seeds
 
-- Subject: Coriandrum sativum dried fruits
-- Local file: `coriander-seeds.glb`
-- Creator: Posora.com
-- License: CC0 1.0 Universal
-- Generation source: [generate-original-spice-models.mjs](../../../scripts/generate-original-spice-models.mjs)
-- Hashes and limitations: [asset-manifest.json](asset-manifest.json)
+*Coriandrum sativum* — round, ribbed straw-tan fruits, some split into two halves.
+
+See `asset-manifest.json` and `SOURCE-LICENSE.md`. Shown on https://posora.com/food/ with an exact reference photograph.
