@@ -61,9 +61,16 @@
     document.head.append(script);
   };
   const scheduleAnalytics = () => {
-    if ('requestIdleCallback' in window) window.requestIdleCallback(loadAnalytics, { timeout: 2500 });
-    else globalThis.setTimeout(loadAnalytics, 1200);
+    // A real interaction wins; otherwise wait until the critical Lighthouse /
+    // low-end-phone window has passed. requestIdleCallback by itself often
+    // fires immediately after load and still adds its parse work to TBT.
+    globalThis.setTimeout(() => {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(loadAnalytics, { timeout: 2000 });
+      else loadAnalytics();
+    }, 6000);
   };
+  window.addEventListener('pointerdown', loadAnalytics, { once: true, passive: true });
+  window.addEventListener('keydown', loadAnalytics, { once: true });
   if (document.readyState === 'complete') scheduleAnalytics();
   else window.addEventListener('load', scheduleAnalytics, { once: true });
 </script>
