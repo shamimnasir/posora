@@ -1,0 +1,39 @@
+---
+/**
+ * The shared frame for the privacy and terms pages: a readable column, a
+ * "last updated" line, and a short version for children above the full text.
+ * The body is slotted in by the page, so its styles are reached through
+ * :global() under `.legal` (see the scoped-CSS note in the project memory).
+ */
+interface Props {
+  eyebrow: string;
+  title: string;
+  updated: string;
+}
+const { eyebrow, title, updated } = Astro.props;
+---
+<article class="wrap legal">
+  <p class="eyebrow">{eyebrow}</p>
+  <h1>{title}</h1>
+  <p class="updated">সর্বশেষ হালনাগাদ: {updated}</p>
+  <slot />
+</article>
+
+<style>
+  .legal { max-width: 46rem; padding-block: clamp(2rem, 5vw, 4rem) 3rem; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; margin: 0.3rem 0 0.4rem; }
+  .updated { color: var(--muted); font-size: 14px; margin-bottom: 1.75rem; }
+  .legal :global(h2) { font-size: 1.3rem; font-weight: 800; margin: 2.2rem 0 0.6rem; }
+  .legal :global(p), .legal :global(li) { color: var(--ink-2); line-height: 1.8; }
+  .legal :global(p) { margin: 0 0 0.8rem; }
+  .legal :global(ul) { margin: 0 0 1rem; padding-left: 1.3rem; display: flex; flex-direction: column; gap: 0.35rem; }
+  .legal :global(a) { color: var(--brand-ink); text-decoration: underline; text-underline-offset: 3px; }
+  .legal :global(code) { font-size: 0.9em; background: var(--panel-2); padding: 0.05rem 0.35rem; border-radius: 6px; overflow-wrap: anywhere; }
+  .legal :global(.kids) { background: var(--brand-soft); border-radius: var(--r); padding: 1.1rem 1.3rem; margin-bottom: 1rem; }
+  .legal :global(.kids h2) { margin-top: 0; }
+  .legal :global(.kids p:last-child), .legal :global(.kids ul:last-child) { margin-bottom: 0; }
+  .legal :global(table) { width: 100%; border-collapse: collapse; margin: 0 0 1rem; font-size: 15px; }
+  .legal :global(th), .legal :global(td) { text-align: left; vertical-align: top; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--line-soft); color: var(--ink-2); }
+  .legal :global(th) { font-weight: 700; color: var(--ink); }
+  .legal :global(.scroll) { overflow-x: auto; }
+</style>

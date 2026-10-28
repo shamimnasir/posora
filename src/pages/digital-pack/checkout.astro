@@ -37,7 +37,7 @@ const ready = merchantReady && digitalPackReady();
           <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" tabindex="-1" autocomplete="off" /></div>
           <button class="btn btn-primary" type="submit">SSLCommerz-এ পেমেন্ট দাও →</button>
           <p class="msg" id="checkout-msg" role="status" aria-live="polite"></p>
-          <p class="fine">পেমেন্ট বাতিল করলে বা ব্যর্থ হলে কোনো access দেওয়া হবে না।</p>
+          <p class="fine">পেমেন্ট বাতিল করলে বা ব্যর্থ হলে কোনো access দেওয়া হবে না। অর্ডার দিলে <a href="/terms/">ব্যবহারের শর্ত</a> আর <a href="/privacy/">গোপনীয়তা নীতি</a> মেনে নিচ্ছেন।</p>
         </form>
       ) : !merchantReady ? (
         <section class="card setup">

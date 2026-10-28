@@ -30,6 +30,8 @@ export const GET: APIRoute = async ({ site }) => {
     { loc: '/schools/' },
     { loc: '/blog/' },
     { loc: '/contact/' },
+    { loc: '/privacy/' },
+    { loc: '/terms/' },
     // Public product landing page; checkout and confirmation are intentionally
     // excluded because they are transactional/noindex routes.
     { loc: '/digital-pack/' },
