@@ -42,6 +42,8 @@ export const LICENSED_FIGURE_QUALITY: Record<string, ModelQuality> = {
     'krishnachura', 'runningTiger', 'bamboo', 'paddyPlant', 'saltwaterCrocodileScan', 'asianElephant', 'analogStopwatch', 'barometer',
     'balanceScale', 'thermometer', 'beeSpecimen', 'greenSeaTurtle', 'octopusSpecimen',
   ]),
+  // Authored from the object's own construction or crystal geometry.
+  ...tier('accurate-authored', ['cartWheel', 'quartzCluster']),
   ...tier('disclosed-comparison', ['hilsa', 'doel', 'leopardCat', 'monkey', 'vulture', 'datePalmAnalogy']),
   // Posora-authored generation-2 illustrations (2026-10-28). No free exact
   // model was found for any of them; each is paired with an exact photograph.
@@ -73,10 +75,8 @@ export const PROCEDURAL_ITEM_DESIGNATIONS: Record<string, { quality: Extract<Mod
   'discovery:আবিষ্কার ও আবিষ্কারক/টিকা': { quality: 'teaching-diagram', reason: 'Vaccination is a medical idea; a vial symbolises it.' },
   'discovery:আবিষ্কার ও আবিষ্কারক/পেনিসিলিন': { quality: 'teaching-diagram', reason: 'A discovered substance; a lab vial symbolises it.' },
   'discovery:আবিষ্কার ও আবিষ্কারক/ইন্টারনেট': { quality: 'teaching-diagram', reason: 'A network, not an object.' },
-  'discovery:আবিষ্কার ও আবিষ্কারক/চাকা': { quality: 'replacement-required', reason: 'Physical invention; needs a free model of an early or cart wheel.' },
   'discovery:আবিষ্কার ও আবিষ্কারক/ছাপাখানা': { quality: 'replacement-required', reason: 'Shown as a book; needs a free model of a hand printing press.' },
   'discovery:আবিষ্কার ও আবিষ্কারক/বাষ্পীয় ইঞ্জিন': { quality: 'replacement-required', reason: 'Shown as a gear; needs a free model of a steam engine.' },
-  'discovery:পৃথিবী ও ভূতত্ত্ব/খনিজ': { quality: 'replacement-required', reason: 'Physical specimen; needs a free scan of a mineral crystal.' },
   'discovery:পৃথিবী ও ভূতত্ত্ব/বরফযুগ': { quality: 'teaching-diagram', reason: 'A geological period.' },
   'discovery:পৃথিবী ও ভূতত্ত্ব/মাটির স্তর': { quality: 'teaching-diagram', reason: 'A cross-section is clearer than any single specimen.' },
   'discovery:পৃথিবী ও ভূতত্ত্ব/কয়লা ও তেল': { quality: 'teaching-diagram', reason: 'Fossil-fuel formation is a process.' },

@@ -31,7 +31,7 @@ These 23 items are drawn by Posora's own generators (`scripts/generate-original-
 
 ## Mixed-lesson replacement backlog
 
-Reported (not failing) by `npm run audit:model-coverage`: চাকা, ছাপাখানা, বাষ্পীয় ইঞ্জিন and খনিজ still use stand-in figures. The 1903 Wright Flyer (উড়োজাহাজ), a *Triceratops horridus* skeleton (ডাইনোসর) and a *Poliella prima* trilobite (জীবাশ্ম) were replaced on 2026-10-28 with Smithsonian Open Access CC0 scans via `scripts/import-smithsonian-cc0-models.mjs`.
+Reported (not failing) by `npm run audit:model-coverage`: ছাপাখানা and বাষ্পীয় ইঞ্জিন still use stand-in figures (no free exact model found on Sketchfab, Poly Haven, Smithsonian 3D or Wikimedia Commons STL). চাকা (a bullock-cart wheel) and খনিজ (a quartz cluster) are now `accurate-authored` Posora models built from the object's construction and crystal geometry (`scripts/generate-original-wheel-mineral-models.mjs`). The 1903 Wright Flyer (উড়োজাহাজ), a *Triceratops horridus* skeleton (ডাইনোসর) and a *Poliella prima* trilobite (জীবাশ্ম) were replaced on 2026-10-28 with Smithsonian Open Access CC0 scans via `scripts/import-smithsonian-cc0-models.mjs`.
 
 ## Acceptance gate for a replacement
 

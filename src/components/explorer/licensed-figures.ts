@@ -182,6 +182,10 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // Wright Flyer; the dinosaur is a fossil skeleton, not a living animal.
   wrightFlyer1903: { url: '/models/wright_flyer_1903_si_01/wright-flyer-1903.glb', height: 1.7, fitAxis: 'longest' },
   triceratopsSkeleton: { url: '/models/triceratops_si_01/triceratops-skeleton.glb', height: 1.8, fitAxis: 'longest', rotationY: Math.PI / 2, rotationZ: Math.PI / 2 },
+  // Posora-authored CC0 models of objects defined by their construction:
+  // a bullock-cart wheel and a quartz cluster (six-sided prisms with tips).
+  cartWheel: { url: '/models/posora_bullock_cart_wheel_01/bullock-cart-wheel.glb', height: 1.25, fitAxis: 'longest' },
+  quartzCluster: { url: '/models/posora_quartz_cluster_01/quartz-cluster.glb', height: 1.0, fitAxis: 'longest' },
   trilobiteFossil: { url: '/models/trilobite_poliella_si_01/trilobite-poliella-prima.glb', height: 0.95, fitAxis: 'longest' },
 };
 

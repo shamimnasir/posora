@@ -6,10 +6,11 @@ The previous audit counted 98 "exact" mappings because every URL loaded. A visua
 
 | Tier | Count | Meaning |
 | --- | --- | --- |
-| exact-licensed | 78 | Scan or high-detail licensed model of the named object/species or its clearly named example |
+| exact-licensed | 78 |
+| accurate-authored | 2 | চাকা (bullock-cart wheel) and খনিজ (quartz cluster), built from their construction/crystal geometry | Scan or high-detail licensed model of the named object/species or its clearly named example |
 | disclosed-comparison | 5 | ইলিশ, দোয়েল, চিতা বিড়াল, বানর, শকুন — labelled comparisons with exact photographs |
 | teaching-diagram | 52 | 23 Posora-authored physical illustrations (each with an exact photograph) and 29 reasoned procedural designations in mixed lessons |
-| replacement-required | 4 | চাকা, ছাপাখানা, বাষ্পীয় ইঞ্জিন, খনিজ (mixed lesson; reported backlog) |
+| replacement-required | 2 | ছাপাখানা, বাষ্পীয় ইঞ্জিন (mixed lesson; reported backlog) |
 | procedural concept | 84 | Items in teaching-diagram lessons (processes, emotions, money, places) |
 
 ## What changed
