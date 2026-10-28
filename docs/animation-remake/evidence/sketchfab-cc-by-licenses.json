@@ -9,5 +9,28 @@
     "publishedAt": "2019-12-06T10:31:25.712372",
     "checked": "2026-10-28",
     "asset": "palmyra_fruit_01/palmyra-fruit.glb"
+  },
+  {
+    "uid": "46e246f191e44684b98a16f48201b301",
+    "name": "GULAB JAMUN",
+    "creator": "seirogan (@seirogan)",
+    "source": "https://sketchfab.com/3d-models/gulab-jamun-46e246f191e44684b98a16f48201b301",
+    "license": "CC Attribution",
+    "licenseSlug": "by",
+    "publishedAt": "2019-03-03T04:00:21.277399",
+    "checked": "2026-10-28",
+    "asset": "gulab_jamun_01/gulab-jamun.glb"
+  },
+  {
+    "uid": "a03baeed12ee4dc5a02b4fc02f4ee940",
+    "name": "Dal bhat scans with iPhone12 Pro",
+    "creator": "seirogan (@seirogan)",
+    "source": "https://sketchfab.com/3d-models/dal-bhat-scans-with-iphone12-pro-a03baeed12ee4dc5a02b4fc02f4ee940",
+    "license": "CC Attribution",
+    "licenseSlug": "by",
+    "publishedAt": "2021-05-15T15:15:48.064833",
+    "checked": "2026-10-28",
+    "asset": null,
+    "status": "held: Nepali thali, not imported into the site"
   }
 ]

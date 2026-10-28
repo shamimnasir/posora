@@ -28,7 +28,7 @@ const tier = (quality: ModelQuality, keys: string[]) => Object.fromEntries(keys.
 export const LICENSED_FIGURE_QUALITY: Record<string, ModelQuality> = {
   ...tier('exact-licensed', [
     // photogrammetry and museum scans
-    'gangesDolphinSkeleton', 'friedFishScan', 'jackfruitScan', 'banyanTreeScan', 'bombaxCeibaScan', 'mintLeavesSpecimen', 'tulsiSpecimen',
+    'gangesDolphinSkeleton', 'friedFishScan', 'gulabJamunScan', 'jackfruitScan', 'banyanTreeScan', 'bombaxCeibaScan', 'mintLeavesSpecimen', 'tulsiSpecimen',
     'rock', 'riceBowlScan', 'aloeVeraScan', 'turmericRootScan', 'cinnamonStickScan', 'redChilliScan', 'neem', 'whiteThroatedKingfisherScan',
     'wrightFlyer1903', 'triceratopsSkeleton', 'trilobiteFossil',
     // Poly Haven CC0 scanned or high-detail objects and produce

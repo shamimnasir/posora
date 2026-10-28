@@ -150,6 +150,9 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   pitha: { url: '/models/posora_pitha_01/pitha-assortment.glb', height: 0.96, fitAxis: 'longest' },
   payesh: { url: '/models/posora_payesh_01/rice-payesh.glb', height: 0.93, fitAxis: 'longest' },
   sweet: { url: '/models/posora_sweets_01/bangla-sweets.glb', height: 0.96, fitAxis: 'longest' },
+  // Sketchfab CC BY food by seirogan: textured গোলাপজাম in syrup, one real
+  // kind of মিষ্টি.
+  gulabJamunScan: { url: '/models/gulab_jamun_01/gulab-jamun.glb', height: 0.9, fitAxis: 'longest' },
   haleem: { url: '/models/posora_haleem_01/haleem.glb', height: 0.93, fitAxis: 'longest' },
   dateBowl: { url: '/models/posora_iftar_01/iftar-assortment.glb', height: 0.98, fitAxis: 'longest' },
   panta: { url: '/models/posora_panta_01/panta-rice.glb', height: 0.93, fitAxis: 'longest' },

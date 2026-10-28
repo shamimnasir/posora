@@ -42,7 +42,7 @@ const REFERENCE_IMAGES = {
   'posora_cumin_01/': 'cumin-seeds.jpg', 'posora_coriander_01/': 'coriander-seeds.jpg', 'posora_bay_leaf_01/': 'tejpata-dried.jpg',
   'posora_mustard_01/': 'mustard-seeds.jpg', 'posora_fenugreek_01/': 'fenugreek-seeds.jpg', 'posora_garam_masala_01/': 'whole-garam-masala.jpg',
   'posora_rice_dal_01/': 'rice-dal-meal.jpg', 'posora_bhorta_01/': 'tomato-bhorta.jpg', 'posora_khichuri_01/': 'vegetable-khichuri.jpg',
-  'posora_pitha_01/': 'bhapa-pitha.jpg', 'posora_payesh_01/': 'payesh.jpg', 'posora_sweets_01/': 'kalojam.jpg', 'posora_haleem_01/': 'haleem-bangladesh.jpg',
+  'posora_pitha_01/': 'bhapa-pitha.jpg', 'posora_payesh_01/': 'payesh.jpg', 'posora_sweets_01/': 'kalojam.jpg', 'gulab_jamun_01/': 'kalojam.jpg', 'posora_haleem_01/': 'haleem-bangladesh.jpg',
   'posora_iftar_01/': 'iftar-plate-rajshahi.jpg', 'posora_panta_01/': 'panta-bhat.jpg',
   'hilsa_herring_reference_01/': 'hilsa-chandpur.jpg', 'doel_robin_reference_01/': 'doel-oriental-magpie-robin.jpg', 'leopard_cat_bengal_reference_01/': 'leopard-cat-sundarban.jpg',
   'monkey_macaque_reference_01/': 'rhesus-macaque.jpg', 'vulture_gyps_reference_01/': 'white-rumped-vulture-bangladesh.jpg',
@@ -67,7 +67,7 @@ const cases = [
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 3, expected: ['posora_khichuri_01/vegetable-khichuri.glb'], shot: 'food-vegetable-khichuri.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 4, expected: ['posora_pitha_01/pitha-assortment.glb'], shot: 'food-pitha-assortment.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 5, expected: ['posora_payesh_01/rice-payesh.glb'], shot: 'food-rice-payesh.png' },
-  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 6, expected: ['posora_sweets_01/bangla-sweets.glb'], shot: 'food-bangla-sweets.png' },
+  { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 6, expected: ['gulab_jamun_01/gulab-jamun.glb'], shot: 'food-gulab-jamun.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 7, expected: ['posora_haleem_01/haleem.glb'], shot: 'food-haleem.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 8, expected: ['posora_iftar_01/iftar-assortment.glb'], shot: 'food-iftar-assortment.png' },
   { world: 'food', selector: '#world .rail-list [data-i="4"]', category: 'বাংলার খাবার', itemIndex: 9, expected: ['posora_panta_01/panta-rice.glb'], shot: 'food-panta-rice.png' },
@@ -482,6 +482,12 @@ try {
       });
       const credit = await page.locator('#model-credit-banyan').innerText();
       check(credit.includes('Jimmy Gunawan') && credit.includes('CC BY 4.0') && credit.includes('পুরো গাছ নয়') && credit.includes('নির্দিষ্ট বাংলাদেশি গাছ'), `${test.world}: banyan creator/license/model-scope/geographic limitation credit is incomplete`);
+    }
+    if (test.expected.some((asset) => asset.startsWith('gulab_jamun_01/'))) {
+      const credit = page.locator('#model-credit-gulab-jamun');
+      await credit.waitFor({ state: 'visible', timeout: 10000 });
+      const text = await credit.innerText();
+      check(text.includes('seirogan') && text.includes('CC BY 4.0') && text.includes('একটি ধরন'), 'Mishti: gulab jamun source, license, or one-kind scope disclosure is incomplete');
     }
     if (test.expected.some((asset) => asset.startsWith('palmyra_fruit_01/'))) {
       const credit = page.locator('#model-credit-palmyra-fruit');

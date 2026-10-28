@@ -1,0 +1,34 @@
+{
+  "name": "GULAB JAMUN",
+  "creator": "seirogan (@seirogan)",
+  "source": "https://sketchfab.com/3d-models/gulab-jamun-46e246f191e44684b98a16f48201b301",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "publishedDate": "2019-03-03",
+  "downloadedDate": "2026-10-28",
+  "qualityTier": "exact-licensed",
+  "sourceFiles": [
+    {
+      "path": "gulab_jamun.glb",
+      "bytes": 6000544,
+      "sha256": "4472606c9b72934908b048847faacbf36d9e5afb9355a9b6773da2df03e824c3",
+      "faceCount": 30368
+    }
+  ],
+  "files": [
+    {
+      "path": "gulab-jamun.glb",
+      "bytes": 736656,
+      "sha256": "c6a5c34ded1deabbf2b494faa6f58fc2c8b1399f4f6dcecdc1d6cfb91896251d"
+    }
+  ],
+  "modifications": [
+    "Re-encoded with EXT_meshopt_compression; textures resized to 1024 px WebP."
+  ],
+  "educationalRole": "Food → বাংলার খাবার → মিষ্টি: three textured গোলাপজাম (gulab jamun) in syrup in a glass bowl, one real kind of Bangladeshi মিষ্টি.",
+  "limitations": [
+    "One kind of মিষ্টি; রসগোল্লা, চমচম, সন্দেশ and others look different.",
+    "The glass bowl, syrup and spoon are modelled; textures reduced to 1024 px WebP."
+  ]
+}
