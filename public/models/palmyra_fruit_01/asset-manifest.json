@@ -1,0 +1,36 @@
+{
+  "name": "Palmyra",
+  "creator": "P.S.Thng (@MidNoon)",
+  "source": "https://sketchfab.com/3d-models/palmyra-675c51ed065348ac846fe52098868a0b",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "publishedDate": "2019-12-06",
+  "downloadedDate": "2026-10-28",
+  "qualityTier": "exact-licensed",
+  "sourceFiles": [
+    {
+      "path": "posora-palmyra.glb",
+      "bytes": 6984420,
+      "sha256": "0425f5bd57ed6f956304750fefaa409aa72d0e42f4d08ce5e4ba940a9638ddd1",
+      "faceCount": 192284
+    }
+  ],
+  "files": [
+    {
+      "path": "palmyra-fruit.glb",
+      "bytes": 918164,
+      "sha256": "efcfd92adc96dbf15211db56c4c5a9602a21034c6efc279d9924dff1bcdefce7"
+    }
+  ],
+  "modifications": [
+    "Removed meshes using material(s): Ground.",
+    "Re-encoded with EXT_meshopt_compression; textures resized to 1024 px WebP."
+  ],
+  "educationalRole": "Life → বাংলাদেশের গাছপালা → তাল: the fruit of Borassus flabellifer (one cut open to show the kernels), shown beside the whole-tree teaching figure.",
+  "limitations": [
+    "Fruits only, not the whole palm; the tree stays a Posora teaching figure.",
+    "A hand-modelled fruit, not a scan of a particular specimen.",
+    "Textures reduced to 1024 px WebP; the wooden display board was removed."
+  ]
+}

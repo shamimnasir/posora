@@ -97,7 +97,7 @@ const cases = [
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 8, expected: ['posora_thanakuni_01/thanakuni-creeper.glb'], shot: 'life-thanakuni-creeper.png' },
   { world: 'life', selector: 'button.grow:has-text("ঔষধি")', category: 'ঔষধি ও মশলা গাছ', itemIndex: 7, expected: ['mint_leaves_01/mint-leaves.glb'], shot: 'life-mint-leaves.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 0, expected: ['mango_tree_01/mango_tree.glb'], shot: 'life-mango-tree.png' },
-  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 3, expected: ['posora_tal_palm_01/tal-palmyra-palm.glb'], shot: 'life-tal-palmyra-palm.png' },
+  { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 3, expected: ['posora_tal_palm_01/tal-palmyra-palm.glb', 'palmyra_fruit_01/palmyra-fruit.glb'], shot: 'life-tal-palmyra-palm.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 1, expected: ['jackfruit_risd_scan_01/jackfruit-pod.glb'], shot: 'life-jackfruit-pod.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 2, expected: ['banyan_gunawan_01/banyan-tree.glb'], shot: 'life-banyan.png' },
   { world: 'life', selector: 'button.grow:has-text("বাংলাদেশের গাছপালা")', category: 'বাংলাদেশের গাছপালা', itemIndex: 4, expected: ['bombax_ceiba_scan_01/bombax-ceiba.glb'], shot: 'life-shimul-bombax-ceiba.png' },
@@ -482,6 +482,12 @@ try {
       });
       const credit = await page.locator('#model-credit-banyan').innerText();
       check(credit.includes('Jimmy Gunawan') && credit.includes('CC BY 4.0') && credit.includes('পুরো গাছ নয়') && credit.includes('নির্দিষ্ট বাংলাদেশি গাছ'), `${test.world}: banyan creator/license/model-scope/geographic limitation credit is incomplete`);
+    }
+    if (test.expected.some((asset) => asset.startsWith('palmyra_fruit_01/'))) {
+      const credit = page.locator('#model-credit-palmyra-fruit');
+      await credit.waitFor({ state: 'visible', timeout: 10000 });
+      const text = await credit.innerText();
+      check(text.includes('MidNoon') && text.includes('CC BY 4.0') && text.includes('পুরো গাছ নয়'), 'Tal: palmyra fruit source, license, or fruit-only scope disclosure is incomplete');
     }
     if (test.expected.some((asset) => asset.startsWith('nypa_fruit_01/'))) {
       const credit = page.locator('#model-credit-nypa-fruit');

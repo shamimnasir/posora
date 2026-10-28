@@ -22,7 +22,7 @@ These 23 items are drawn by Posora's own generators (`scripts/generate-original-
 
 | Learning object | Search result (Sketchfab downloadable API, Wikimedia Commons, Smithsonian Open Access) |
 | --- | --- |
-| তাল (*Borassus flabellifer*) | **Candidate:** Sketchfab “Palmyra” by MidNoon, CC BY 4.0, ~192k faces, described as a palm-sugar tree in An Giang, Viet Nam (Borassus). Download requires a signed-in Sketchfab account; not downloaded. |
+| তাল (*Borassus flabellifer*) | **Imported 2026-10-28 as a supplement:** Sketchfab “Palmyra” by P.S.Thng (@MidNoon), CC BY 4.0 (licence checked via the public API; evidence in `evidence/sketchfab-cc-by-licenses.json`). The source is the palmyra **fruit** (one cut open to show the kernels) on a wooden board, not the tree, so the board was removed and the fruit sits beside the whole-palm teaching figure (`public/models/palmyra_fruit_01/`). The tree itself remains a teaching diagram with a reference photo. |
 | ভাত ও ডাল | **Candidate:** Sketchfab “Dal bhat scans with iPhone12 Pro” by seirogan, CC BY 4.0, LiDAR scan of steamed rice and lentil dal (Nepal). Sign-in required; not downloaded. |
 | মিষ্টি | **Candidate:** Sketchfab “GULAB JAMUN” scans by seirogan, CC BY 4.0. Would replace only the কালোজাম/গোলাপজাম part; sign-in required. |
 | সুন্দরী, গোলপাতা (whole plant), পাট, কদম, হিজল, এলাচ গাছ, থানকুনি | No free downloadable exact model found. Generic “mangrove” models are *Rhizophora* or unidentified and were rejected. |

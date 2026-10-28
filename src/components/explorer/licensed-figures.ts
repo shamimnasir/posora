@@ -199,5 +199,9 @@ export const LICENSED_FIGURE_SUPPLEMENTS: Record<string, { url: string; height: 
   // Life's Elachi entry teaches the plant, while the free licensed model is
   // specifically a bowl of dried fruits/seeds. Keep the plant diagram and show
   // the real spice product separately rather than mislabel the bowl as a plant.
+  // Tal (Borassus flabellifer): the free source is the palmyra fruit, one cut
+  // open to show the jelly kernels (তালশাঁস), not the tree. It sits on the
+  // ground beside the whole-palm teaching figure, where fallen fruit lies.
+  talPalm: { url: '/models/palmyra_fruit_01/palmyra-fruit.glb', height: 0.5, position: [0.42, 0.02, 0.36], fitAxis: 'longest' },
   cardamom: { url: '/models/cardamom_bowl_01/cardamom-bowl.glb', height: 0.78, position: [0.78, 0.08, 0.18], fitAxis: 'longest' },
 };
