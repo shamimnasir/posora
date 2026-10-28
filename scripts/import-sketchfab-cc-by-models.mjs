@@ -35,7 +35,7 @@ const assets = [
   },
   {
     uid: 'a03baeed12ee4dc5a02b4fc02f4ee940', file: 'dal-bhat-scans-with-iphone12-pro.zip',
-    // Held back (2026-10-28): a Nepali thali would replace an accurate
+    // Held back (owner decision, 2026-10-28): a Nepali thali would replace an accurate
     // Bangladeshi rice-and-dal model with a comparison. SKETCHFAB_INCLUDE_HELD=1 imports it.
     held: true,
     directory: 'dal_bhat_nepal_scan_01', filename: 'dal-bhat-nepal-scan.glb', qualityTier: 'disclosed-comparison', dropMaterials: [],
