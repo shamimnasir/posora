@@ -16,14 +16,33 @@
  * The scarcity is a genuine cap the founder can honour, not a countdown.
  */
 import Base from '../layouts/Base.astro';
-import { totals } from '../data/worlds';
+import { totals, worlds } from '../data/worlds';
 import { bn, bnNum } from '../lib/bn';
 import { COVERAGE } from '../lib/coverage';
 import { sheets } from '../data/printables';
 import { bundle as digitalBundle } from '../data/digital-packs';
+import { catDetail, isReadable } from '../lib/explorers';
+import { buildWorksheet } from '../lib/worksheet';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
+
+// Worksheet counts are computed the same way /[world]/pack/ builds them, so
+// the offer cannot drift from what the pack actually prints.
+const ws = { worlds: 0, cats: 0, blanks: 0, matches: 0 };
+for (const w of worlds) {
+  if (w.open) continue;
+  let any = false;
+  w.cats.forEach((c, i) => {
+    if (!isReadable(w, i)) return;
+    const d = catDetail(w.slug, i);
+    if (!d) return;
+    const sheet = buildWorksheet(w.slug, i, c.items, d);
+    if (!sheet) return;
+    any = true; ws.cats++; ws.blanks += sheet.blanks.length; ws.matches += sheet.matchKey.length;
+  });
+  if (any) ws.worlds++;
+}
 
 const FOUNDING_SEATS = 100;
 const KIDS = 6;
@@ -56,12 +75,12 @@ const stack: { t: string; d: string; have: Have; annual?: boolean }[] = [
   { have: true,  t: `${bn(COVERAGE.readable)}টি বিষয়ের পুরো পাঠ, তিন গভীরতায়`, d: `${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব আর ${bn(COVERAGE.missions)}টি খেলার মিশন আছে। মহাকাশ, পদার্থ, রসায়ন, প্রাণিজগৎ, প্রকৃতি, খাদ্য, গণিত, টাকা, ভাষা, সামাজিক দক্ষতা, আবিষ্কার - একই লেখা ছোট, মাঝারি আর বড়, তাই পাঁচ বছরের আর তেরো বছরের সন্তান একই পাতায় বসতে পারে।` },
   { have: true,  t: `${bn(COVERAGE.cats)}টি বিভাগে জীবন্ত থ্রিডি মডেল`, d: 'ঢালু তল, দোলক, কেলাস, ঋতুচক্র, বর্ণমালা - টেনে ঘোরানো যায়, স্লাইডারে বদলায়। ভিডিও নয়, সত্যিকারের চালু মডেল।' },
   { have: true,  t: 'যেকোনো বিভাগ এক চাপে ছেপে নেওয়া', d: '“ছাপাও” চাপলেই পুরো বিভাগ কাগজে নেমে আসে - মডেল আর মেনু বাদ দিয়ে, আপনার বেছে নেওয়া গভীরতায়।' },
-  { have: true,  t: `${bn(sheets.length)}টি ছাপার শিট`, d: 'বর্ণমালার হাতের লেখা, যুক্তবর্ণ ভাঙা চার্ট, কার চিহ্ন, সংখ্যা ১-১০০, সৌরজগৎ তথ্যপত্র, টাকা চেনা।' },
+  { have: true,  t: `${bn(sheets.length)}টি ছাপার শিট`, d: 'বর্ণমালার হাতের লেখা, যুক্তবর্ণ ভাঙা চার্ট, কার চিহ্ন, সংখ্যা ০-১০০, সৌরজগৎ তথ্যপত্র, টাকা চেনা।' },
   { have: true,  t: `${bn(KIDS)} জন সন্তান পর্যন্ত, প্রত্যেকের নিজের প্রোফাইল`, d: 'নিজের নাম, নিজের বয়স, নিজের গভীরতা। ভাইবোন আর যে কাজিন ট্যাবটা ভাগ করে নেয় - সবার জায়গা হবে।' },
   { have: true,  t: 'যেকোনো ডিভাইসে অগ্রগতি', d: 'বাসার ফোন, স্কুলের ল্যাপটপ, দাদুর বাড়ির ট্যাব - একই সন্তানের হিসাব সব জায়গায় মিলে যায়। প্ল্যান ছাড়া হিসাবটা এক ব্রাউজারেই থাকে।' },
   { have: 'testing', t: 'প্রতি সপ্তাহে অভিভাবকের ইমেইল', d: 'কে কত দিন এসেছে, কী কী খুলেছে, কটা যাচাই দিয়েছে - আর রাতের খাবারে জিজ্ঞেস করার মতো কয়েকটা প্রশ্ন। যে সপ্তাহে কিছুই হয়নি, সে সপ্তাহে কোনো চিঠি যায় না।' },
   { have: true,  annual: true, t: 'যাচাই ও সার্টিফিকেট', d: 'প্রতি বিভাগের শেষে আটটি প্রশ্ন, পড়ার লেখা থেকেই বানানো, ফল সন্তানের নামে জমা থাকে। সব বিষয় দেখা আর সব যাচাই পাশ হলে ভুবনের সার্টিফিকেট, নাম-তারিখ সহ, ছাপার মতো।' },
-  { have: true,  annual: true, t: 'অনুশীলনী প্যাক', d: 'দশটি ভুবনের ৮১টি বিভাগের ছাপার অনুশীলনী - ৭২৪টি শূন্যস্থান আর ৬৩৮টি মিলানো, উত্তরপত্র আলাদা পাতায়। এক ভুবনের পুরোটা এক চাপে ছাপানো যায়, আগে সব প্রশ্ন তারপর সব উত্তর।' },
+  { have: true,  annual: true, t: 'অনুশীলনী প্যাক', d: `${bn(ws.worlds)}টি ভুবনের ${bn(ws.cats)}টি বিভাগের ছাপার অনুশীলনী - ${bn(ws.blanks)}টি শূন্যস্থান আর ${bn(ws.matches)}টি মিলানো, উত্তরপত্র আলাদা পাতায়। এক ভুবনের পুরোটা এক চাপে ছাপানো যায়, আগে সব প্রশ্ন তারপর সব উত্তর।` },
   { have: false, t: 'পর্দা ছাড়া কার্ড', d: 'প্রতি বিষয়ে একটা কাজ যা পর্দা ছাড়াই করা যায় - ছায়া মাপা, ডিম ভাসানো, গাছের বয়স গোনা।' },
   { have: false, t: 'অফলাইন প্যাক', d: 'ইন্টারনেট দুর্বল হলেও মডেলগুলো চলবে। গ্রামের স্কুল আর যাত্রাপথের জন্য।' },
   { have: false, t: 'দাদু-দিদার সঙ্গে', d: 'প্রতি বিষয়ে একটা প্রশ্ন, যেটা সন্তান বাংলায় দাদু-দিদাকে জিজ্ঞেস করবে। দেশের বাইরের পরিবারের জন্য এটাই আসল কারণ।' },
@@ -116,7 +135,7 @@ const schema = [
         <p><b>পরিষ্কার করে বলি:</b> এখনো কিছু বিক্রি হচ্ছে না, কারণ পেমেন্টের ব্যবস্থা
         বসানো হয়নি। প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিচ্ছি। নিচে নাম লেখালে
         <b>কার্ড লাগে না, এক পয়সাও কাটা যায় না।</b>
-        তালিকার {bn(haveCount)}টি জিনিস <em>আজই চালু</em>, বাকিগুলো <em>এখনো বানানো হয়নি</em> -
+        তালিকার {bn(haveCount)}টি জিনিস <em>আজই চালু</em>, বাকিগুলো হয় <em>পরীক্ষায় আছে</em>, নয়তো <em>এখনো বানানো হয়নি</em> -
         কোনটা কী, প্রতিটা লাইনের পাশে লেখা আছে।</p>
       </div>
 
@@ -204,7 +223,7 @@ const schema = [
           <span class="unit">দিনে ৳{bn(perDay(YEARLY_BDT))}, সন্তানপ্রতি মাসে প্রায় ৳{bn(Math.round(YEARLY_BDT / 12 / KIDS))}</span>
           <ul>
             <li>৳{bn(MONTHLY_BDT)} × ১২ = ৳{bnNum(MONTHLY_BDT * 12)}, বার্ষিকে ৳{bnNum(MONTHLY_BDT * 12 - YEARLY_BDT)} বেঁচে যায়</li>
-            <li>একজন গৃহশিক্ষকের এক দিনের বেতনেরও কম</li>
+            <li>একজন গৃহশিক্ষকের এক মাসের বেতনেরও কম</li>
             <li>অনলাইন কোচিংয়ের বছরে ২০-২৫ হাজারের তুলনায় বিশ ভাগের এক ভাগ</li>
           </ul>
         </div>

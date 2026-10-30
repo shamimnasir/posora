@@ -27,7 +27,7 @@ export const consonants: Letter[] = [
   { ch: 'চ', name: 'চ', roman: 'chô', word: 'চাঁদ', emoji: '🌙' },
   { ch: 'ছ', name: 'ছ', roman: 'chhô', word: 'ছাতা', emoji: '☂' },
   { ch: 'জ', name: 'বর্গীয় জ', roman: 'jô', word: 'জাহাজ', emoji: '🚢' },
-  { ch: 'ঝ', name: 'ঝ', roman: 'jhô', word: 'ঝর্ণা', emoji: '🏞' },
+  { ch: 'ঝ', name: 'ঝ', roman: 'jhô', word: 'ঝরনা', emoji: '🏞' },
   { ch: 'ঞ', name: 'ইঁঅ', roman: 'nyô', word: 'মিঞা', emoji: '👴', mid: true, note: 'শব্দের শুরুতে বসে না' },
   { ch: 'ট', name: 'ট', roman: 'ṭô', word: 'টমেটো', emoji: '🍅' },
   { ch: 'ঠ', name: 'ঠ', roman: 'ṭhô', word: 'ঠোঁট', emoji: '👄' },

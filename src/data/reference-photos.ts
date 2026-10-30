@@ -118,7 +118,7 @@ export const REFERENCE_PHOTOS: Record<string, Record<string, ReferencePhoto>> = 
       copy: 'দুধ জ্বাল দিয়ে চাল রান্না করা আসল পায়েস। ৩ডি মডেলে মাটির বাটিতে কিশমিশ, কাজু, তেজপাতা ও এলাচ।',
       author: 'Sm faysal', page: commons('Bengali home made Payesh.jpg'), license: 'CC BY-SA 4.0', licenseUrl: BY_SA_4 },
     'মিষ্টি': { image: '/images/reference-photos/kalojam.jpg', title: 'কালোজাম', science: 'বাংলাদেশের মিষ্টির দোকান', kicker: DISH, alt: 'দোকানে সাজানো কালোজাম মিষ্টি',
-      copy: 'বাংলাদেশের দোকানে আসল কালোজাম। ৩ডি মডেলে রসগোল্লা, কালোজাম, চমচম ও সন্দেশ, চেনা চার রকম মিষ্টি।',
+      copy: 'বাংলাদেশের দোকানে আসল কালোজাম। ৩ডি মডেলে কাচের বাটিতে রসে ডোবানো তিনটি গোলাপজাম, মিষ্টির একটি ধরন; রসগোল্লা, চমচম ও সন্দেশ দেখতে আলাদা।',
       author: 'Tanvir Rahman', page: commons('Kalojam - Bangladeshi Sweets from Banoful.jpg'), license: 'CC BY-SA 4.0', licenseUrl: BY_SA_4 },
     'হালিম': { image: '/images/reference-photos/haleem-bangladesh.jpg', title: 'হালিম', science: 'বাংলাদেশি শাহি হালিম', kicker: DISH, alt: 'লেবু ও বেরেস্তা দেওয়া হালিম',
       copy: 'আসল হালিম: গম, ডাল ও মাংস দিয়ে ঘন করে রান্না, ওপরে বেরেস্তা, আদা, কাঁচামরিচ, ধনেপাতা ও লেবু।',

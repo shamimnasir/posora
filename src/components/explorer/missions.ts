@@ -407,7 +407,7 @@ export function playMission(base: Mission, o: Opts): { close(): void } {
     const ok = el('button', 'mz-key mz-key-ok', 'ঠিক আছে ✔'); ok.type = 'button';
     ok.addEventListener('click', () => submit(ok));
     pad.append(del, ok);
-    const show = () => { if (over) return; counter.textContent = `${bn(ri + 1)} / ${bn(rounds.length)}`; q.textContent = rounds[ri]!.q; stepStart = performance.now(); };
+    const show = () => { if (over) return; counter.textContent = `${bn(ri + 1)} / ${bn(rounds.length)}`; q.textContent = rounds[ri]!.q; outU.textContent = rounds[ri]!.unit ?? unit; stepStart = performance.now(); };
     body.append(counter, q, out, pad);
     paint(); show();
   }

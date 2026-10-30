@@ -54,7 +54,7 @@ and carries no advertising.
 - ${c.tool} items are live interactive tools rather than reading.
 ${c.uncovered === 0
   ? '- Nothing on the plan is unwritten: every item has its text.\n'
-  : `- ${c.uncovered} items are listed in the plan but not yet written, and the site marks\n  them as such rather than showing an empty page.\n`}- ${missionCount} playable missions across the eleven worlds. Each is a small game
+  : `- ${c.uncovered} items are listed in the plan but not yet written, and the site marks\n  them as such rather than showing an empty page.\n`}- ${missionCount} playable missions across the ${worlds.length} worlds. Each is a small game
   with three lives, a timer bonus and a star score.
 - Every category also has a find-it game: the model names one of its own items
   and the child has to spot that item on the model.
@@ -147,8 +147,8 @@ top of the free material rather than fencing any of it off.
 - It does not create accounts for children. Accounts belong to an adult, and a
   child is only a nickname and a level inside one.
 - It makes no claim to cover a national curriculum.
-- It has no energy meter, no lives that run out, no gems, and no purchasable
-  streak protection. Progress is stored in the browser unless a family plan is
+- It has no energy meter, no lives that lock a child out (a mission run can end,
+  and it can be replayed at once), no gems, and no purchasable streak protection. Progress is stored in the browser unless a family plan is
   active, and the only leaderboard is between the children on one plan.
 
 ## Machine-readable

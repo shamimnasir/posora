@@ -17,7 +17,8 @@ export type PathStop = { name: string; emoji: string; fact: string; choices: str
 export type IdRound = { answer: string; art?: string; big?: string; shadow?: boolean; clue: string; options: string[]; fact: string };
 export type SortItem = { name: string; emoji: string; bucket: number; fact: string };
 export type ChoiceRound = { situation: string; emoji: string; options: { text: string; good: boolean; why: string }[] };
-export type CalcRound = { q: string; a: number; fact?: string };
+/** `unit` overrides the mission's unit for one round (a weight mission may ask one time question). */
+export type CalcRound = { q: string; a: number; fact?: string; unit?: string };
 /** `tags` are the requirements this item covers. An item with none is a trap, and `warn` says why. */
 export type BuildItem = { name: string; emoji: string; cost: number; tags: string[]; warn?: string };
 export type Mission =
