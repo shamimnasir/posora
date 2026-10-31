@@ -42,6 +42,13 @@
   ],
   // SITE_ORIGIN is what the weekly letter's links point at. The scheduled
   // handler has no request to read an origin from, so it has to be told.
-  "vars": { "CONTACT_TO": "support@posora.com", "CONTACT_FROM": "no-reply@posora.com", "SITE_ORIGIN": "https://posora.com" },
+  //
+  // Payments: DIGITAL_PACK_READY says the paid files are in the PACK_FILES
+  // bucket (upload with `npm run digital-packs:upload`). BKASH_MODE picks the
+  // production bKash API. Checkout still stays closed until the four bKash
+  // secrets exist:
+  //   npx wrangler secret put BKASH_USERNAME   (and BKASH_PASSWORD,
+  //   BKASH_APP_KEY, BKASH_APP_SECRET)
+  "vars": { "CONTACT_TO": "support@posora.com", "CONTACT_FROM": "no-reply@posora.com", "SITE_ORIGIN": "https://posora.com", "DIGITAL_PACK_READY": "true", "BKASH_MODE": "live" },
   "observability": { "enabled": true }
 }

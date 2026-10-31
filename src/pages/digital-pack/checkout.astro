@@ -1,57 +1,64 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { configured, digitalPackReady, DIGITAL_PACK_AMOUNT } from '../../lib/sslcommerz';
+import { digitalPackReady, usableGateways, liveGateways, DIGITAL_PACK_AMOUNT } from '../../lib/shop';
+import { library } from '../../lib/pack-files';
 import { bn } from '../../lib/bn';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'no-store');
-const merchantReady = configured();
-const ready = merchantReady && digitalPackReady();
+const rails = usableGateways();
+const filesReady = digitalPackReady();
+const ready = filesReady && rails.length > 0;
+// A rail in sandbox mode takes no real money; say so plainly on the page.
+const testMode = ready && liveGateways().length === 0;
+const lib = await library();
+const bkashError = Astro.url.searchParams.get('e') === 'bkash';
 ---
 
-<Base title="ডিজিটাল প্যাক চেকআউট" description="পসরা ডিজিটাল প্যাক বান্ডলের নিরাপদ চেকআউট পাতা।" noindex>
+<Base title="সব-ডাউনলোড বান্ডল চেকআউট" description="পসরা সব-ডাউনলোড বান্ডলের নিরাপদ চেকআউট: বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড।" noindex>
   <div class="wrap page">
-    <p class="crumbs"><a href="/digital-pack/">ডিজিটাল প্যাক</a> <span>/</span> চেকআউট</p>
+    <p class="crumbs"><a href="/digital-pack/">সব-ডাউনলোড বান্ডল</a> <span>/</span> চেকআউট</p>
     <div class="checkout-grid">
       <section class="card intro">
-        <p class="eyebrow">পসরা ডিজিটাল প্যাক</p>
+        <p class="eyebrow">পসরা সব-ডাউনলোড বান্ডল</p>
         <h1>চেকআউট</h1>
-        <p class="lede">১১টি ভুবনের ওয়ার্কশিট, কার্ড, গাইড আর উত্তরপত্র একসঙ্গে।</p>
-        <div class="order"><span>একবারের বান্ডল</span><b>৳{bn(DIGITAL_PACK_AMOUNT)}</b></div>
+        <p class="lede">১১টি ভুবনের ছাপার প্যাক, তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র, সনদ আর অভিভাবকের গাইড, সব এক ডাউনলোডে।</p>
+        <div class="order"><span>একবারের দাম, কোনো সাবস্ক্রিপশন নয়</span><b>৳{bn(DIGITAL_PACK_AMOUNT)}</b></div>
         <ul>
-          <li>কার্ডের তথ্য পসরায় জমা থাকে না</li>
-          <li>SSLCommerz-এর hosted checkout-এ পেমেন্ট হবে</li>
-          <li>পেমেন্ট যাচাই না হওয়া পর্যন্ত অর্ডার paid হবে না</li>
+          <li>পেমেন্টের সঙ্গে সঙ্গে এই পাতাতেই ডাউনলোড খুলবে, ফোনে বা কম্পিউটারে</li>
+          <li>{lib.totalPages ? `মোট ${bn(lib.totalPages)} পাতা, ` : ''}{bn(lib.files.length)}টি PDF, একটা ZIP-এও</li>
+          <li>ইমেইলেও ডাউনলোড লিংক যাবে; পরে অ্যাকাউন্ট থেকে আবার নামানো যাবে</li>
+          <li>বিকাশের পিন বা কার্ডের তথ্য পসরা কখনো দেখে না, জমাও রাখে না</li>
         </ul>
-        <a href="/digital-pack/">বান্ডলের সব প্যাক দেখো →</a>
+        <a href="/digital-pack/">বান্ডলে কী কী আছে দেখো →</a>
       </section>
 
       {ready ? (
         <form class="card form" id="checkout-form" novalidate>
+          {testMode && <p class="test">পরীক্ষামূলক মোড: এখন কোনো আসল টাকা কাটা হবে না।</p>}
+          {bkashError && <p class="msg">বিকাশ থেকে ফেরার সময় অর্ডারটি খুঁজে পাওয়া যায়নি। আবার চেষ্টা করুন।</p>}
           <h2>আপনার তথ্য</h2>
-          <p class="note">ডিজিটাল প্যাকের অর্ডার এবং access link এই ইমেইলের সঙ্গে যুক্ত হবে।</p>
+          <p class="note">ডাউনলোড লিংক আর রসিদ এই ইমেইলে যাবে, আর ফাইলগুলো এই ইমেইলের অ্যাকাউন্টে থাকবে।</p>
           <label>আপনার নাম <input name="name" required minlength="2" maxlength="100" autocomplete="name" /></label>
           <label>ইমেইল <input name="email" type="email" required maxlength="254" autocomplete="email" inputmode="email" /></label>
-          <label>মোবাইল নম্বর <input name="phone" required minlength="6" maxlength="24" autocomplete="tel" inputmode="tel" placeholder="০১৭..." /></label>
-          <label>ঠিকানা <input name="address" maxlength="120" autocomplete="street-address" placeholder="জেলা বা শহর" /></label>
+          <label>বিকাশ / মোবাইল নম্বর <input name="phone" required minlength="6" maxlength="24" autocomplete="tel" inputmode="tel" placeholder="01XXXXXXXXX" /></label>
           <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" tabindex="-1" autocomplete="off" /></div>
-          <button class="btn btn-primary" type="submit">SSLCommerz-এ পেমেন্ট দাও →</button>
+          {rails.includes('bkash') && (
+            <button class="btn btn-primary pay bkash" type="submit" data-rail="bkash">বিকাশে ৳{bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট দাও →</button>
+          )}
+          {rails.includes('sslcommerz') && (
+            <button class={`btn pay ${rails.includes('bkash') ? '' : 'btn-primary'}`} type="submit" data-rail="sslcommerz">{rails.includes('bkash') ? 'কার্ড, নগদ বা অন্য উপায়ে দাও' : `৳${bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট দাও →`}</button>
+          )}
           <p class="msg" id="checkout-msg" role="status" aria-live="polite"></p>
-          <p class="fine">পেমেন্ট বাতিল করলে বা ব্যর্থ হলে কোনো access দেওয়া হবে না। অর্ডার দিলে <a href="/terms/">ব্যবহারের শর্ত</a> আর <a href="/privacy/">গোপনীয়তা নীতি</a> মেনে নিচ্ছেন।</p>
+          {rails.includes('bkash') && <p class="fine">বোতাম চাপলে বিকাশের নিজের পাতা খুলবে। সেখানে বিকাশ নম্বর, ওটিপি আর পিন দিলেই পেমেন্ট হবে, তারপর আপনি এখানে ফিরে এসে ফাইল নামাবেন।</p>}
+          <p class="fine">পেমেন্ট বাতিল বা ব্যর্থ হলে কোনো টাকা নেওয়া হয় না। অর্ডার দিলে <a href="/terms/">ব্যবহারের শর্ত</a> আর <a href="/privacy/">গোপনীয়তা নীতি</a> মেনে নিচ্ছেন।</p>
         </form>
-      ) : !merchantReady ? (
-        <section class="card setup">
-          <p class="eyebrow">চেকআউট প্রস্তুত হচ্ছে</p>
-          <h2>SSLCommerz merchant keys এখনো বসানো হয়নি</h2>
-          <p>পেমেন্ট গেটওয়ে চালু হলেই এই পাতায় নিরাপদ hosted checkout খুলবে। এখন কোনো টাকা নেওয়া হচ্ছে না।</p>
-          <a class="btn btn-primary" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
-        </section>
       ) : (
         <section class="card setup">
           <p class="eyebrow">চেকআউট প্রস্তুত হচ্ছে</p>
-          <h2>ডিজিটাল ফাইল প্রকাশের কাজ চলছে</h2>
-          <p>পেমেন্ট নেওয়ার আগে প্রতিটি প্যাকের ডাউনলোড ফাইল প্রকাশ করা হবে। ফাইল প্রস্তুত হলে এই পাতায় নিরাপদ hosted checkout খুলবে।</p>
-          <a class="btn btn-primary" href="/family/#join">লঞ্চ তালিকায় নাম লেখাও →</a>
+          <h2>{rails.length === 0 ? 'পেমেন্ট এখনো চালু হয়নি' : 'ফাইল প্রকাশের কাজ চলছে'}</h2>
+          <p>{rails.length === 0 ? 'বিকাশ পেমেন্ট চালু হলেই এই পাতায় চেকআউট খুলবে। এখন কোনো টাকা নেওয়া হচ্ছে না।' : 'পেমেন্ট নেওয়ার আগে সব ফাইল প্রকাশ করা হবে। প্রস্তুত হলেই এই পাতায় চেকআউট খুলবে।'}</p>
+          <a class="btn btn-primary" href="/family/#join">খবর পেতে নাম লেখাও →</a>
         </section>
       )}
     </div>
@@ -61,21 +68,23 @@ const ready = merchantReady && digitalPackReady();
 {ready && <script>
   const form = document.getElementById('checkout-form') as HTMLFormElement;
   const msg = document.getElementById('checkout-msg')!;
-  const button = form.querySelector('button')!;
+  const buttons = [...form.querySelectorAll<HTMLButtonElement>('button.pay')];
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    msg.textContent = 'চেকআউট তৈরি হচ্ছে...';
-    button.disabled = true;
+    const rail = ((event as SubmitEvent).submitter as HTMLButtonElement | null)?.dataset.rail ?? buttons[0]?.dataset.rail ?? 'bkash';
+    if (!form.reportValidity()) return;
+    msg.textContent = rail === 'bkash' ? 'বিকাশের পাতা খুলছে...' : 'চেকআউট তৈরি হচ্ছে...';
+    buttons.forEach((b) => { b.disabled = true; });
     const body = Object.fromEntries(new FormData(form).entries());
     try {
-      const response = await fetch('/api/sslcommerz/checkout', {
+      const response = await fetch(`/api/${rail}/checkout`, {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
       });
       const data = await response.json() as { ok?: boolean; gatewayUrl?: string; error?: string };
       if (data.ok && data.gatewayUrl) { location.href = data.gatewayUrl; return; }
-      msg.textContent = data.error === 'invalid' ? 'নাম, ইমেইল আর মোবাইল নম্বর ঠিক করে দিন।' : 'চেকআউট এখন তৈরি করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।';
+      msg.textContent = data.error === 'invalid' ? 'নাম, ইমেইল আর মোবাইল নম্বর ঠিক করে দিন।' : 'পেমেন্ট এখন শুরু করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।';
     } catch { msg.textContent = 'যোগাযোগে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।'; }
-    button.disabled = false;
+    buttons.forEach((b) => { b.disabled = false; });
   });
 </script>}
 
@@ -101,6 +110,10 @@ const ready = merchantReady && digitalPackReady();
   button:disabled { opacity: .6; cursor: wait; }
   .setup { background: var(--brand-soft); }
   .setup p { margin: .5rem 0 1rem; }
+  .pay { width: 100%; justify-content: center; }
+  .bkash { background: #e2136e; border-color: #e2136e; color: #fff; }
+  .bkash:hover { background: #c40f5f; }
+  .test { margin: 0; padding: .55rem .8rem; border-radius: 10px; background: color-mix(in oklab, var(--sun) 25%, transparent); color: var(--ink); font-size: 13px; }
   .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
   @media (max-width: 720px) { .checkout-grid { grid-template-columns: 1fr; } }
 </style>

@@ -2,7 +2,8 @@
 import Base from '../../layouts/Base.astro';
 import { bundle, digitalPacks } from '../../data/digital-packs';
 import { bn } from '../../lib/bn';
-import { digitalPackOnSale } from '../../lib/sslcommerz';
+import { digitalPackOnSale } from '../../lib/shop';
+import { library } from '../../lib/pack-files';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
@@ -25,28 +26,29 @@ const schema = [
     })),
   },
 ];
-const activitiesPerPack = digitalPacks[0]?.activities.length ?? 0;
-const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
-const previewVersion = '20260919-varied';
+const previewVersion = '20261031-real';
+const workPages = digitalPacks.reduce((n, p) => n + p.workPages, 0);
 const checkoutLive = digitalPackOnSale();
+// Page and file counts come from the uploaded library, so they match the download.
+const lib = await library();
 ---
 
 <Base
-  title="৳২৪৯ ডিজিটাল প্যাক বান্ডল"
-  description="পসরার ১১টি বিষয়ভিত্তিক ডিজিটাল প্যাক: ৮৮টি ছাপার কাজ, ২২টি মিশন পাতা, ৩৩টি সহায়ক উপকরণ, সঙ্গে শুরু করার গাইড ও ৩০ দিনের পরিকল্পনা।"
+  title={`৳${bn(bundle.priceBdt)} সব-ডাউনলোড বান্ডল`}
+  description={`পসরার ১১টি ভুবনের ছাপার প্যাক${lib.totalPages ? `, মোট ${bn(lib.totalPages)} পাতা` : ''}: তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র, সনদ আর অভিভাবকের গাইড। বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড।`}
   schema={schema}
 >
   <div class="wrap page">
-    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> ডিজিটাল প্যাক</p>
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> সব-ডাউনলোড বান্ডল</p>
 
     <section class="hero">
       <div class="hero-copy">
         <p class="eyebrow">ডাউনলোড বান্ডল · পরিবার ও শিক্ষক</p>
         <h1>এক বান্ডলে <em>শেখার পুরো ঘর</em></h1>
         <p class="lede">
-          পসরার ১১টি বিষয়কে কাগজে নিয়ে আসুন। শুধু একই ছকের পাতা নয়, প্রতিটি প্যাকে আলাদা
-          মিশন, বাছাই ও মেলানো, মাপা, নকশা বা পরীক্ষা করার কাজ আছে। শিশুরা দেখে, অনুমান করে,
-          হাতে করে এবং নিজের ভাষায় ফল বলে।
+          পসরার ১১টি ভুবন এবার কাগজে। প্রতিটি পাতা সাইটের যাচাই করা পাঠ থেকে বানানো: কেটে রাখার
+          তথ্য-কার্ড, শূন্যস্থান আর মিলানোর অনুশীলনী, কুইজ, আর সবশেষে আলাদা উত্তরপত্র। একবার কিনে
+          ফোন বা কম্পিউটারে রেখে দিন, যতবার খুশি ছাপুন।
         </p>
         <div class="hero-actions">
           {checkoutLive
@@ -57,17 +59,17 @@ const checkoutLive = digitalPackOnSale();
         </div>
         <p class="fine">
           {checkoutLive
-            ? <>একবারের মূল্য <b>৳{bn(bundle.priceBdt)}</b>। পেমেন্ট যাচাই হলে সদস্য লাইব্রেরি থেকে আবার ডাউনলোড করা যাবে।</>
+            ? <>একবারের মূল্য <b>৳{bn(bundle.priceBdt)}</b>, বিকাশে। পেমেন্টের সঙ্গে সঙ্গে ডাউনলোড, পরে অ্যাকাউন্ট থেকে আবার।</>
             : <>প্রস্তাবিত এককালীন মূল্য <b>৳{bn(bundle.priceBdt)}</b>। ফাইল ও পেমেন্ট যাচাই শেষ না হওয়া পর্যন্ত এখনো অর্ডার নেওয়া হচ্ছে না।</>}
         </p>
       </div>
       <div class="price-card" aria-label="বান্ডলের সারাংশ">
         <span class="price-kicker">১১ ভুবন · ১ বান্ডল</span>
         <strong>৳{bn(bundle.priceBdt)}</strong>
-        <span>{checkoutLive ? 'পেমেন্টের পর সদস্য লাইব্রেরি থেকে আবার ডাউনলোড' : 'এখনো বিক্রি শুরু হয়নি · আগে নমুনা দেখে নিন'}</span>
-        <div class="stat-row"><b>{bn(bundle.activitySheets)}</b><span>টি কাজের পাতা</span></div>
-        <div class="stat-row"><b>{bn(bundle.packs)}</b><span>টি বিষয়ভিত্তিক প্যাক</span></div>
-        <div class="stat-row"><b>{bn(bundle.bonusSets)}</b><span>টি কার্ড, গাইড ও উত্তরপত্র</span></div>
+        <span>{checkoutLive ? 'বিকাশে পেমেন্ট · সঙ্গে সঙ্গে ডাউনলোড' : 'এখনো বিক্রি শুরু হয়নি · আগে নমুনা দেখে নিন'}</span>
+        {lib.totalPages && <div class="stat-row"><b>{bn(lib.totalPages)}</b><span>টি ছাপার পাতা</span></div>}
+        <div class="stat-row"><b>{bn(bundle.packs)}</b><span>টি ভুবনের প্যাক</span></div>
+        <div class="stat-row"><b>{bn(lib.files.length)}</b><span>টি PDF, একটা ZIP-এও</span></div>
       </div>
     </section>
 
@@ -75,7 +77,7 @@ const checkoutLive = digitalPackOnSale();
       <div><span aria-hidden="true">✦</span><b>প্রিন্ট-রেডি</b><small>A4 · রঙিন ও সাদা-কালো</small></div>
       <div><span aria-hidden="true">↺</span><b>স্ক্রিন থেকে দূরে</b><small>টেবিলে বসে, একসঙ্গে</small></div>
       <div><span aria-hidden="true">✓</span><b>উত্তরপত্রসহ</b><small>অভিভাবক ও শিক্ষক দুজনের জন্য</small></div>
-      <div><span aria-hidden="true">↻</span><b>আবার ডাউনলোড</b><small>পেমেন্ট যাচাইয়ের পর সদস্য লাইব্রেরি থেকে</small></div>
+      <div><span aria-hidden="true">↓</span><b>সঙ্গে সঙ্গে ডাউনলোড</b><small>ফোন বা কম্পিউটারে, পরে অ্যাকাউন্ট থেকে আবার</small></div>
     </section>
 
     <aside class="free-worlds-note">
@@ -92,55 +94,41 @@ const checkoutLive = digitalPackOnSale();
       </div>
       <div class="preview-tabs" role="tablist" aria-label="ডিজিটাল প্যাক preview">
         <button class="preview-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="preview-sheets" id="tab-sheets">কাজের পাতা</button>
-        <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-bonus" id="tab-bonus">বোনাস উপকরণ</button>
+        <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-bonus" id="tab-bonus">দোকান খেলা</button>
         <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-guide" id="tab-guide">অভিভাবকের গাইড</button>
       </div>
       <div class="preview-panel is-active" id="preview-sheets" role="tabpanel" aria-labelledby="tab-sheets">
-        <figure class="real-preview"><img src={`/digital-pack-preview/math-worksheet.png?v=${previewVersion}`} alt="গণিত খেলাঘর প্যাকের আসল কাজের পাতার নমুনা" loading="lazy" /><figcaption>আসল PDF-এর একটি কাজের পাতা · সম্পূর্ণ প্যাকের নমুনা</figcaption></figure>
-        <div class="preview-copy"><span class="preview-index">০১</span><h3>শিশু শুধু টিক দেবে না</h3><p>প্রতিটি কাজের পাতায় আঁকা বা লেখার জায়গা এবং “আমি কী দেখলাম?” বলে নিজের ভাবনা জানানোর অংশ আছে।</p><span class="preview-meta">A4 · রঙিন বা সাদা-কালোয় ছাপানো যায়</span></div>
+        <figure class="real-preview"><img src={`/digital-pack-preview/math-worksheet.png?v=${previewVersion}`} alt="গণিত প্যাকের শূন্যস্থান পূরণের আসল পাতা" loading="lazy" /><figcaption>আসল PDF-এর পাতা · গণিত প্যাক, পৃষ্ঠা ১৫</figcaption></figure>
+        <div class="preview-copy"><span class="preview-index">০১</span><h3>সাইটের পাঠ থেকেই প্রশ্ন</h3><p>প্রতিটি বিভাগের পাঠ পড়ার পর শব্দের ঝুড়ি থেকে শূন্যস্থান, তারপর মিলানো আর আট প্রশ্নের যাচাই। উত্তর প্যাকের শেষে, পৃষ্ঠা নম্বরসহ।</p><span class="preview-meta">A4 · সাদা পাতায় হালকা রং, কালি কম লাগে</span></div>
       </div>
       <div class="preview-panel" id="preview-bonus" role="tabpanel" aria-labelledby="tab-bonus" hidden>
-        <figure class="real-preview"><img src={`/digital-pack-preview/math-bonus.png?v=${previewVersion}`} alt="গণিত খেলাঘর প্যাকের বোনাস উপকরণের নমুনা" loading="lazy" /><figcaption>আসল বোনাস পাতার নমুনা · কাট-আউট, লক্ষ্য আর নিজের ভাবনার জায়গা</figcaption></figure>
-        <div class="preview-copy"><span class="preview-index">০২</span><h3>শেখার পরে ঘরে থাকে</h3><p>লক্ষ্য কার্ড, মিশন ব্যাজ, রুটিন বোর্ড, হিসাব রাখার পাতা এবং উত্তর মিলানোর পাতা। এগুলো শিশুকে আবার বসতে সাহায্য করে।</p><span class="preview-meta">কেটে নেওয়ার কার্ড · দেয়ালে লাগানোর চার্ট · পারিবারিক রুটিন</span></div>
+        <figure class="real-preview"><img src={`/digital-pack-preview/math-bonus.png?v=${previewVersion}`} alt="গণিত প্যাকের দোকান খেলার আসল পাতা" loading="lazy" /><figcaption>আসল PDF-এর পাতা · বাংলাদেশের নোট-কয়েন আর দোকানের হিসাব</figcaption></figure>
+        <div class="preview-copy"><span class="preview-index">০২</span><h3>হাতে-কলমে বিশেষ পাতা</h3><p>বাংলায় প্রতিটি বর্ণ, কার, ফলা আর ৩০টি যুক্তবর্ণ ট্রেসিং; গণিতে ০-১০০ সংখ্যার নাম, ঘড়ি পড়া আর দোকান খেলা; মহাকাশে গ্রহের আসল তথ্যের কার্ড।</p><span class="preview-meta">প্রতিটি ভুবনের সাইটের মিশনও কাগজে</span></div>
       </div>
       <div class="preview-panel" id="preview-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
-        <figure class="real-preview"><img src={`/digital-pack-preview/math-guide.png?v=${previewVersion}`} alt="গণিত খেলাঘর প্যাকের অভিভাবকের গাইডের নমুনা" loading="lazy" /><figcaption>আসল গাইড পাতার নমুনা · ঘরে ব্যবহারের ১৫ মিনিটের প্রশ্ন</figcaption></figure>
-        <div class="preview-copy"><span class="preview-index">০৩</span><h3>শুধু কাজের পাতা নয়</h3><p>প্রতিটি প্যাকে বয়সের পরিসর, ব্যবহার-পদ্ধতি, উত্তরপত্র এবং ঘরে কীভাবে কথাটি তুলবেন তার নির্দেশনা আছে।</p><span class="preview-meta">পরিবার · শিক্ষক · ছোট দল</span></div>
+        <figure class="real-preview"><img src={`/digital-pack-preview/math-guide.png?v=${previewVersion}`} alt="শুরু করার গাইডের আসল পাতা" loading="lazy" /><figcaption>আসল PDF-এর পাতা · অভিভাবকের শুরু করার গাইড</figcaption></figure>
+        <div class="preview-copy"><span class="preview-index">০৩</span><h3>বড়দের জন্যও গুছানো</h3><p>শুরু করার গাইড, ৩০ দিনের পরিকল্পনা আর তারকা-চার্ট, ১২টি সনদ আর দেয়ালে টাঙানোর চার্ট। কোন দিন কোন পাতা, পরিকল্পনাতেই লেখা।</p><span class="preview-meta">পরিবার · শিক্ষক · ছোট দল</span></div>
       </div>
       <div class="preview-all-head"><h3>১১টি প্যাকের আলাদা নমুনা</h3><span>কার্ড খুলে বড় করে দেখুন</span></div>
       <div class="preview-grid">
         {digitalPacks.map((p) => (
           <a class="pack-preview-card" href={`/digital-pack-preview/${p.slug}.png?v=${previewVersion}`} target="_blank" rel="noreferrer" style={`--pack:${p.color}`}>
             <img src={`/digital-pack-preview/${p.slug}.png?v=${previewVersion}`} alt={`${p.title} আসল কাজের পাতার নমুনা`} loading="lazy" />
-            <span class="pack-preview-info"><b>{p.title}</b><small>২টি মিশন পাতা · {p.activities.length}টি কাজের পাতা · {p.bonus.length}টি সহায়ক উপকরণ</small><em>বড় করে দেখুন ↗</em></span>
+            <span class="pack-preview-info"><b>{p.title}</b><small>{bn(p.pdfPages)} পাতা · তার {bn(p.workPages)}টিতে লেখার কাজ</small><em>বড় করে দেখুন ↗</em></span>
           </a>
         ))}
       </div>
     </section>
 
     <section class="sec pack-standard" id="every-pack">
-      <div class="sec-h"><p class="eyebrow">প্রতিটি প্যাকে যা থাকছে</p><h2>পাতা নয়, একটি ছোট শেখার অভিযান</h2><p>প্রতিটি বিষয়ের জন্য একই ছক চাপিয়ে দেওয়া হয়নি। মিশন পাতা দিয়ে শুরু, তারপর বিষয়মাফিক কাজ এবং অভিভাবক/শিক্ষকের সহায়ক উপকরণ।</p></div>
+      <div class="sec-h"><p class="eyebrow">প্রতিটি প্যাকে যা থাকছে</p><h2>পড়া, লেখা, যাচাই, তারপর উত্তর</h2><p>প্রতিটি পাতা পসরার যাচাই করা পাঠ থেকে বানানো। নতুন কোনো তথ্য বানিয়ে বসানো হয়নি, তাই সাইটে যা পড়ে, কাগজেও তাই পায়।</p></div>
       <div class="standard-grid">
-        <article><b>🗺️ মিশন শুরু ও মানচিত্র</b><p>প্রতি প্যাকে দুটি মিশন পাতা: গল্পের শুরু এবং চারটি ধাপে নিজের অগ্রগতি রাখার মানচিত্র।</p></article>
-        <article><b>🎚️ নিজের চ্যালেঞ্জ বেছে নাও</b><p>মিশন পাতায় সহজ, সাহসী ও বিশেষজ্ঞ, এই তিনটি স্তরের মধ্যে বেছে নেওয়ার সুযোগ আছে।</p></article>
-        <article><b>✂️ বিষয়ভিত্তিক কাজ</b><p>প্রতি প্যাকে {bn(activitiesPerPack)}টি কাজ: ট্রেসিং, সাজানো, মাপা, নকশা, সিদ্ধান্ত বা ছোট পরীক্ষা, বিষয় অনুযায়ী।</p></article>
-        <article><b>🧩 কাট-আউট ও সহায়ক উপকরণ</b><p>প্রতি প্যাকে {bn(bonusPerPack)}টি উপকরণ; যেমন কাট-আউট, চার্ট, কার্ড, রুটিন বা উত্তরপত্র।</p></article>
-        <article><b>↺ ইঙ্গিত দিয়ে আবার চেষ্টা</b><p>অভিভাবক/শিক্ষকের গাইডে আগে শিশুর ভাবনা শুনে, ছোট ইঙ্গিত দিয়ে আবার চেষ্টা করানোর পরামর্শ আছে।</p></article>
-        <article><b>📅 শুরু করার সহায়তা</b><p>বান্ডলে আলাদা “শুরু করার গাইড” এবং ৩০ দিনের ব্যবহার-পরিকল্পনাও আছে।</p></article>
-      </div>
-    </section>
-
-    <section class="sec research">
-      <div class="sec-h">
-        <p class="eyebrow">কেন এই জিনিসগুলো</p>
-        <h2>যে কাজগুলো মানুষ সত্যিই খুঁজে নেয়</h2>
-        <p>শুধু সুন্দর পাতা নয় - প্রতিটি প্যাক এমন কাজকে ছোট করেছে, যা বাড়ি বা ক্লাসে বারবার দরকার হয়।</p>
-      </div>
-      <div class="signal-grid">
-        <article><b>অক্ষর লিখতে শেখা</b><p>ট্রেসিং, কার, যুক্তবর্ণ, ডিকটেশন ও ছবি-শব্দ - শুরুর বাংলা শেখার সবচেয়ে ঘন চাহিদা।</p></article>
-        <article><b>গোনা ও হিসাব</b><p>সংখ্যা, যোগ-বিয়োগ, আকার, সময়, মাপ আর টাকা - একই পাতায় দেখা ও করার সুযোগ।</p></article>
-        <article><b>সোর্ট, লেবেল, উত্তর</b><p>বিজ্ঞান শেখায় বাছাই, অংশের নাম, জীবনচক্র, খাদ্যশৃঙ্খল এবং আলাদা উত্তরপত্র।</p></article>
-        <article><b>রুটিন ও অনুভূতি</b><p>ভিজ্যুয়াল রুটিন, প্রথমে-তারপর, অনুভূতি, বন্ধুত্ব ও শান্ত হওয়ার কার্ড - বাড়ির কাজ সহজ করে।</p></article>
+        <article><b>📖 পড়ো: কেটে রাখার কার্ড</b><p>প্রতিটি বিষয়ের নাম, মূল শব্দ, ছোট পাঠ আর একটা মজার তথ্য, কার্ডের মতো কেটে রাখা যায়।</p></article>
+        <article><b>✏️ অনুশীলনী</b><p>শব্দের ঝুড়ি থেকে শূন্যস্থান পূরণ, তারপর দাগ টেনে মিলাও। প্রতিটি বিভাগে একটা করে।</p></article>
+        <article><b>✅ আট প্রশ্নের যাচাই</b><p>চার বিকল্পের প্রশ্ন, নিচে নম্বর লেখার ঘর। সাইটের যাচাইয়ের মতোই।</p></article>
+        <article><b>🧩 কাগজের মিশন</b><p>সাইটের মিশনগুলো কাগজে: সাজাও, মেলাও, হিসাব করো, চিনে নাও, পথ খোঁজো।</p></article>
+        <article><b>🔑 শেষে পূর্ণ উত্তরপত্র</b><p>সব উত্তর প্যাকের শেষে, প্রতিটির পাশে কাজের পৃষ্ঠা নম্বর। পাতার উল্টো পিঠে উত্তর নেই।</p></article>
+        <article><b>📅 গাইড, পরিকল্পনা, সনদ</b><p>শুরু করার গাইড, ৩০ দিনের পরিকল্পনা, ১২টি সনদ আর দেয়ালের চার্ট বান্ডলে আলাদা।</p></article>
       </div>
     </section>
 
@@ -148,7 +136,7 @@ const checkoutLive = digitalPackOnSale();
       <div class="sec-h">
         <p class="eyebrow">ভেতরে যা পাবেন</p>
         <h2>১১টি প্যাক, ১১ রকমের “আজ কী করব?”</h2>
-        <p>প্রতিটি প্যাকে ২টি মিশন পাতা, {bn(activitiesPerPack)}টি আলাদা কাজের পাতা, {bn(bonusPerPack)}টি সহায়ক উপকরণ ও বয়সের পরিসর দেওয়া আছে। পুরো বান্ডলে আলাদা করে শুরু করার গাইড ও ৩০ দিনের পরিকল্পনা আছে।</p>
+        <p>১১টি প্যাকে মোট {bn(workPages)}টি লেখার পাতা, প্রতিটির শেষে উত্তরপত্র। পুরো বান্ডলে আলাদা করে শুরু করার গাইড, ৩০ দিনের পরিকল্পনা, সনদ আর দেয়ালের চার্ট আছে।</p>
       </div>
       <div class="pack-grid">
         {digitalPacks.map((p, i) => (
@@ -174,13 +162,13 @@ const checkoutLive = digitalPackOnSale();
         <h2>আলাদা আলাদা নয় - সব ১১টি একসঙ্গে</h2>
         <p>আজ বাংলা লিখবে, কাল গাছ দেখবে, পরশু দোকান খেলবে। শিশুর আগ্রহ বদলালেও প্যাক বদলাতে হবে না।</p>
       </div>
-      <div class="bundle-price"><span>{checkoutLive ? 'একবারের মূল্য' : 'প্রস্তাবিত এককালীন মূল্য'}</span><b>৳{bn(bundle.priceBdt)}</b><small>{checkoutLive ? 'পেমেন্ট যাচাইয়ের পর সদস্য লাইব্রেরি থেকে আবার ডাউনলোড' : 'বিক্রি শুরু হলে জানাব, নমুনা এখনই দেখুন'}</small>{checkoutLive ? <a class="btn btn-primary" href="/digital-pack/checkout/">নিরাপদ চেকআউট →</a> : <a class="btn btn-primary" href="/family/#join">বিক্রির খবর নিন →</a>}</div>
+      <div class="bundle-price"><span>{checkoutLive ? 'একবারের মূল্য' : 'প্রস্তাবিত এককালীন মূল্য'}</span><b>৳{bn(bundle.priceBdt)}</b><small>{checkoutLive ? 'বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড' : 'বিক্রি শুরু হলে জানাব, নমুনা এখনই দেখুন'}</small>{checkoutLive ? <a class="btn btn-primary" href="/digital-pack/checkout/">নিরাপদ চেকআউট →</a> : <a class="btn btn-primary" href="/family/#join">বিক্রির খবর নিন →</a>}</div>
     </section>
 
     <section class="sec honest">
       <h2>একটি জরুরি কথা</h2>
-      <p>ফ্রি শিটগুলো ফ্রিই থাকবে। এই আলাদা ডিজিটাল বান্ডলে আছে ১১টি বিষয়ভিত্তিক প্যাক, মোট {bn(bundle.activitySheets)}টি কাজ, {bn(bundle.packs * 2)}টি মিশন পাতা, {bn(bundle.bonusSets)}টি সহায়ক উপকরণ এবং শুরু করার গাইড ও ৩০ দিনের পরিকল্পনা। বর্তমানে বিক্রি শুরুর আগে পেমেন্ট ও ডাউনলোড ব্যবস্থা যাচাই চলছে।</p>
-      <p><b>এটি পসরা পরিবারের সদস্যপদ নয়।</b> এককালীন ডিজিটাল প্যাকের সঙ্গে পরিবারের অগ্রগতি-হিসাব বা সদস্যপদের অন্য সুবিধা যুক্ত নয়। সদস্যপদের বিষয়গুলো আলাদা করে <a href="/family/">এখানে দেখুন</a>।</p>
+      <p>ফ্রি শিট আর অনলাইন ভুবন ফ্রিই থাকবে। এই বান্ডলে আছে ১১টি ভুবনের ছাপার প্যাক{lib.totalPages ? `, মোট ${bn(lib.totalPages)} পাতা` : ''}, প্রতিটির শেষে উত্তরপত্র, সঙ্গে সনদ, শুরু করার গাইড ও ৩০ দিনের পরিকল্পনা। প্রতিটি তথ্য সাইটের যাচাই করা পাঠ থেকে নেওয়া।{checkoutLive ? '' : ' বিক্রি এখনো শুরু হয়নি।'}</p>
+      <p><b>এটি পসরা পরিবারের সদস্যপদ নয়।</b> একবার কিনলে ফাইলগুলো আপনার, কিন্তু সন্তানের প্রোফাইল বা অগ্রগতি-হিসাব এর সঙ্গে আসে না। উল্টোটা সত্যি: পরিবার প্ল্যানে এই পুরো বান্ডল অন্তর্ভুক্ত। সদস্যপদের বিষয়গুলো <a href="/family/">এখানে দেখুন</a>।</p>
       {checkoutLive ? <a href="/digital-pack/checkout/">নিরাপদ চেকআউটে যান →</a> : <a href="/family/#join">বিক্রির খবর পেতে নাম লেখাও →</a>}
     </section>
   </div>

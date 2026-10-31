@@ -12,7 +12,8 @@ import { db } from '../../lib/db';
 import { getWorlds } from '../../lib/content';
 import { bn } from '../../lib/bn';
 import { getMember, hasPlan, activeChild, progressSummary, bestQuizResults, familyWeek, MAX_CHILDREN, PLAN_DIGITAL_PACK } from '../../lib/members';
-import { digitalPackReady } from '../../lib/sslcommerz';
+import { digitalPackReady } from '../../lib/shop';
+import PackDownloads from '../../components/PackDownloads.astro';
 import { digitalPacks } from '../../data/digital-packs';
 import { readableCount, readableCats } from '../../lib/explorers';
 import { passMark } from '../../lib/quiz';
@@ -23,7 +24,9 @@ Astro.response.headers.set('cache-control', 'private, no-store');
 const ready = !!db();
 const member = ready ? await getMember(Astro) : null;
 const plan = hasPlan(member);
-const digitalPack = hasPlan(member, PLAN_DIGITAL_PACK);
+// The family plan includes every download, so its members see the library too.
+const boughtPack = hasPlan(member, PLAN_DIGITAL_PACK);
+const digitalPack = boughtPack || plan;
 const packReady = digitalPackReady();
 const child = activeChild(Astro, member);
 const welcome = Astro.url.searchParams.get('welcome') === '1';
@@ -155,16 +158,11 @@ if (member && plan && child) {
         {digitalPack && (
           <>
             <section class="card box pack-status">
-              <div class="sh"><h2>ডিজিটাল প্যাক বান্ডল</h2><span class="lbl ok-label">চালু</span></div>
+              <div class="sh"><h2>সব-ডাউনলোড বান্ডল</h2><span class="lbl ok-label">{boughtPack ? 'কেনা' : 'পরিবার প্ল্যানে'}</span></div>
               {packReady ? (
                 <>
-                  <p class="note">আপনার ৳২৪৯ বান্ডলের ফাইলগুলো এখান থেকে নামিয়ে নিন। লিংকটি শুধু আপনার অ্যাকাউন্টে কাজ করে।</p>
-                  <div class="pack-downloads">
-                    <a class="mini download all" href="/api/digital-pack/download/bundle">সব প্যাক একসঙ্গে (ZIP) <span aria-hidden="true">↓</span></a>
-                    <a class="mini download" href="/api/digital-pack/download/start-here">শুরু করার গাইড <span aria-hidden="true">↓</span></a>
-                    <a class="mini download" href="/api/digital-pack/download/30-day-plan">৩০ দিনের পরিকল্পনা <span aria-hidden="true">↓</span></a>
-                    {digitalPacks.map((p) => <a class="mini download" href={`/api/digital-pack/download/${p.slug}`}>{p.title} <span aria-hidden="true">↓</span></a>)}
-                  </div>
+                  <p class="note">ফাইলগুলো এখান থেকে যতবার দরকার নামান। লিংক শুধু আপনার অ্যাকাউন্টে কাজ করে।</p>
+                  <PackDownloads />
                 </>
               ) : <p class="note">আপনার access রাখা আছে। ফাইল লাইব্রেরি প্রকাশ হলেই এখান থেকে ডাউনলোড করতে পারবেন।</p>}
               <a class="btn" href="/digital-pack/">বান্ডলের সব জিনিস দেখো →</a>
@@ -336,9 +334,6 @@ if (member && plan && child) {
   .gate { background: color-mix(in oklab, var(--sun) 12%, var(--panel)); border-color: color-mix(in oklab, var(--sun) 40%, var(--line)); }
   .gate p { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
   .pack-status { background: color-mix(in oklab, var(--ok) 10%, var(--panel)); border-color: color-mix(in oklab, var(--ok) 38%, var(--line)); }
-  .pack-downloads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; margin: .8rem 0 1rem; }
-  .pack-downloads .download { display: flex; justify-content: space-between; align-items: center; text-decoration: none; min-height: 2.4rem; }
-  .pack-downloads .download span { color: var(--ok); font-size: 1.15rem; }
   .play-room { background: color-mix(in oklab, var(--brand) 5%, var(--panel)); }
   .play-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: .65rem; margin-top: .2rem; }
   .play-link { display: flex; min-width: 0; flex-direction: column; gap: .35rem; padding: .85rem; border: 1px solid color-mix(in oklab, var(--pack) 42%, var(--line)); border-top: 4px solid var(--pack); border-radius: 14px; background: var(--panel-2); transition: transform .15s ease, background .15s ease; }
@@ -370,7 +365,7 @@ if (member && plan && child) {
   .mini { font-size: 12px; font-weight: 600; padding: 0.3rem 0.65rem; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink-2); }
   .mini:hover { background: var(--panel-2); }
   .mini.danger:hover { color: var(--danger); border-color: color-mix(in oklab, var(--danger) 45%, var(--line)); }
-  @media (max-width: 560px) { .pack-downloads { grid-template-columns: 1fr; } }
+
   .kform { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.6rem; align-items: end; margin-top: 0.4rem; }
 
   /* the family week */

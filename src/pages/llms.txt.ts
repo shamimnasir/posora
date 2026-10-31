@@ -13,7 +13,7 @@
 import type { APIRoute } from 'astro';
 import { worlds } from '../data/worlds';
 import { bodies } from '../data/space';
-import { digitalPackOnSale } from '../lib/sslcommerz';
+import { digitalPackOnSale } from '../lib/shop';
 import { sheets } from '../data/printables';
 import { CLUSTERS, postsIn } from '../data/blog';
 import { COVERAGE } from '../lib/coverage';

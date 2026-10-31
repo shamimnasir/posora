@@ -12,6 +12,7 @@
     "audit": "node scripts/audit-content.mjs",
     "audit:seo": "node scripts/seo-audit.mjs",
     "digital-packs": "node --experimental-strip-types scripts/generate-digital-packs.mjs",
+    "digital-packs:upload": "node scripts/upload-digital-packs.mjs",
     "test:smoke": "node scripts/browser-smoke.mjs",
     "test:world-render": "node scripts/world-render-smoke.mjs",
     "test:licensed-models": "node scripts/licensed-models-smoke.mjs",

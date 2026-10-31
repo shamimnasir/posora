@@ -23,6 +23,15 @@ export type Env = {
   SSLCOMMERZ_STORE_PASSWORD?: string;
   /** `sandbox` until the merchant account is approved for production. */
   SSLCOMMERZ_MODE?: 'sandbox' | 'live';
+  /** bKash Tokenized Checkout credentials, also Worker secrets. */
+  BKASH_USERNAME?: string;
+  BKASH_PASSWORD?: string;
+  BKASH_APP_KEY?: string;
+  BKASH_APP_SECRET?: string;
+  /** `sandbox` until the merchant credentials are the production ones. */
+  BKASH_MODE?: 'sandbox' | 'live';
+  /** Test-only override of the bKash API base, for a local mock. */
+  BKASH_BASE_URL?: string;
   /** Set to "true" only after the paid pack's downloadable files are live. */
   DIGITAL_PACK_READY?: string;
 };

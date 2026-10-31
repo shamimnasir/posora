@@ -6,12 +6,13 @@
  * The callbacks and IPN both come through `settlePayment`, which validates the
  * transaction with SSLCommerz before anything is marked paid.
  */
-import { ensureMember, grantEntitlement, PLAN_DIGITAL_PACK } from './members';
 import { db, dbEnv, requireDb } from './db';
+import {
+  cleanBuyer, createOrder, digitalPackReady, fulfilOrder, markOrder, sslcommerzConfigured,
+  DIGITAL_PACK_AMOUNT, DIGITAL_PACK_CURRENCY, DIGITAL_PACK_SLUG,
+} from './shop';
 
-export const DIGITAL_PACK_SLUG = 'all-worlds-digital-pack';
-export const DIGITAL_PACK_AMOUNT = 249;
-export const DIGITAL_PACK_CURRENCY = 'BDT';
+export { digitalPackReady, digitalPackOnSale, DIGITAL_PACK_AMOUNT, DIGITAL_PACK_CURRENCY, DIGITAL_PACK_SLUG } from './shop';
 
 type Config = { storeId: string; storePassword: string; base: string };
 type GatewayResponse = { status?: string; failedreason?: string; GatewayPageURL?: string; sessionkey?: string };
@@ -30,16 +31,7 @@ const json = (v: string): Record<string, unknown> | null => {
   try { return JSON.parse(v) as Record<string, unknown>; } catch { return null; }
 };
 
-export const configured = (): boolean => {
-  const e = dbEnv();
-  return !!e.SSLCOMMERZ_STORE_ID && !!e.SSLCOMMERZ_STORE_PASSWORD;
-};
-
-/** A separate release switch prevents charging before the files exist. */
-export const digitalPackReady = (): boolean => dbEnv().DIGITAL_PACK_READY === 'true';
-export const checkoutReady = (): boolean => configured() && digitalPackReady();
-/** Real money changes hands only in live mode; public copy about selling follows this. */
-export const digitalPackOnSale = (): boolean => checkoutReady() && dbEnv().SSLCOMMERZ_MODE === 'live';
+export const configured = sslcommerzConfigured;
 
 function config(): Config | null {
   const e = dbEnv();
@@ -51,12 +43,6 @@ function config(): Config | null {
   };
 }
 
-export const newTranId = (): string => {
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
-  const suffix = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
-  return `POSORA${Date.now().toString(36).slice(-8)}${suffix}`.slice(0, 30);
-};
-
 export type CheckoutInput = { name: string; email: string; phone: string; address: string; origin: string };
 export type CheckoutResult =
   | { ok: true; tranId: string; gatewayUrl: string }
@@ -66,15 +52,11 @@ export async function initiateCheckout(input: CheckoutInput): Promise<CheckoutRe
   const cfg = config();
   const d = db();
   if (!cfg || !d || !digitalPackReady()) return { ok: false, error: 'unavailable' };
-  const name = text(input.name, 100), email = text(input.email, 254).toLowerCase();
-  const phone = text(input.phone, 24), address = text(input.address, 120);
-  if (name.length < 2 || !/^\S+@\S+\.\S{2,}$/.test(email) || phone.replace(/\D/g, '').length < 6) return { ok: false, error: 'invalid' };
-
-  const tranId = newTranId(), now = Date.now();
-  await d.prepare(
-    `INSERT INTO orders (id, tran_id, product_slug, amount_bdt, currency, customer_name, customer_email, customer_phone, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-  ).bind(crypto.randomUUID(), tranId, DIGITAL_PACK_SLUG, DIGITAL_PACK_AMOUNT, DIGITAL_PACK_CURRENCY, name, email, phone, now, now).run();
+  const buyer = cleanBuyer(input);
+  if (!buyer) return { ok: false, error: 'invalid' };
+  const { name, email, phone } = buyer;
+  const address = text(input.address, 120);
+  const { tranId } = await createOrder(buyer, 'sslcommerz');
 
   const form = new URLSearchParams({
     store_id: cfg.storeId,
@@ -138,15 +120,13 @@ async function validate(valId: string): Promise<ValidationResponse | null> {
 export type SettleResult = 'paid' | 'held' | 'failed' | 'ignored';
 
 /** Validate and settle a callback or IPN. Safe to call repeatedly. */
-export async function settlePayment(payload: Record<string, unknown>): Promise<SettleResult> {
+export async function settlePayment(payload: Record<string, unknown>, origin: string): Promise<SettleResult> {
   const d = db();
   if (!d || !configured()) return 'failed';
   const tranId = text(payload.tran_id, 40), valId = text(payload.val_id, 80);
   if (!tranId || !valId) return 'failed';
-  const order = await d.prepare('SELECT * FROM orders WHERE tran_id = ?').bind(tranId).first<{
-    tran_id: string; product_slug: string; member_id: string | null; amount_bdt: number; currency: string;
-    customer_name: string; customer_email: string; status: string;
-  }>();
+  const order = await d.prepare('SELECT tran_id, product_slug, amount_bdt, currency, status FROM orders WHERE tran_id = ?').bind(tranId)
+    .first<{ tran_id: string; product_slug: string; amount_bdt: number; currency: string; status: string }>();
   if (!order || order.product_slug !== DIGITAL_PACK_SLUG) return 'failed';
   if (order.status === 'paid' || order.status === 'held') return order.status;
 
@@ -159,36 +139,20 @@ export async function settlePayment(payload: Record<string, unknown>): Promise<S
     return 'failed';
   }
 
-  const risk = String(remote?.risk_level ?? payload.risk_level ?? '0') === '1';
-  const status = risk ? 'held' : 'paid';
-  // Risk-reviewed payments stay held until a manual review. For a normal
-  // payment, grant the entitlement before marking the order paid so a
-  // transient member/database error cannot create a paid-but-unentitled
-  // order. Both the grant and callback are idempotent, so retries are safe.
-  let memberId: string | null = null;
-  if (!risk) {
-    memberId = order.member_id ?? await ensureMember(order.customer_email, order.customer_name);
-    await grantEntitlement(memberId, PLAN_DIGITAL_PACK, null, `SSLCommerz ${tranId}`, 'sslcommerz');
+  // Risk-flagged payments stay held, with no entitlement, until a manual review.
+  if (String(remote?.risk_level ?? payload.risk_level ?? '0') === '1') {
+    await d.prepare("UPDATE orders SET status = 'held', validation_id = ?, bank_tran_id = ?, gateway_status = ?, updated_at = ? WHERE tran_id = ? AND status = 'pending'")
+      .bind(valId, text(remote?.bank_tran_id ?? payload.bank_tran_id, 80) || null, text(remote?.status, 40), Date.now(), tranId).run();
+    return 'held';
   }
-  await d.prepare(
-    `UPDATE orders SET status = ?, validation_id = ?, bank_tran_id = ?, gateway_status = ?, updated_at = ?, paid_at = ?
-     WHERE tran_id = ? AND status = 'pending'`,
-  ).bind(status, valId, text(remote?.bank_tran_id ?? payload.bank_tran_id, 80) || null, text(remote?.status, 40), Date.now(), risk ? null : Date.now(), tranId).run();
-  if (risk) return 'held';
-
-  await d.prepare('UPDATE orders SET member_id = ?, updated_at = ? WHERE tran_id = ?').bind(memberId, Date.now(), tranId).run();
+  await fulfilOrder(tranId, { bankTranId: text(remote?.bank_tran_id ?? payload.bank_tran_id, 80), validationId: valId, gatewayStatus: text(remote?.status, 40) }, origin);
   return 'paid';
 }
 
-export async function markCallback(tranId: string, status: 'failed' | 'cancelled'): Promise<void> {
-  const d = db();
-  if (!d || !tranId) return;
-  await d.prepare("UPDATE orders SET status = ?, gateway_status = ?, updated_at = ? WHERE tran_id = ? AND status = 'pending'")
-    .bind(status, status.toUpperCase(), Date.now(), tranId).run();
-}
+export const markCallback = (tranId: string, status: 'failed' | 'cancelled') => markOrder(tranId, status, status.toUpperCase());
 
 export const orderFor = async (tranId: string) => {
   if (!tranId) return null;
-  return requireDb().prepare('SELECT tran_id, status, customer_email, amount_bdt, currency FROM orders WHERE tran_id = ?').bind(tranId)
-    .first<{ tran_id: string; status: string; customer_email: string; amount_bdt: number; currency: string }>();
+  return requireDb().prepare('SELECT tran_id, status, customer_email, amount_bdt, currency, gateway FROM orders WHERE tran_id = ?').bind(tranId)
+    .first<{ tran_id: string; status: string; customer_email: string; amount_bdt: number; currency: string; gateway: string }>();
 };

@@ -3,10 +3,10 @@ import { settlePayment } from '../../../lib/sslcommerz';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, url }) => {
   let body: Record<string, unknown> = {};
   try { body = Object.fromEntries((await request.formData()).entries()); } catch { return new Response('bad request', { status: 400 }); }
-  const result = await settlePayment(body);
+  const result = await settlePayment(body, url.origin);
   // SSLCommerz only needs a reachable 2xx listener. Do not leak order details
   // into the response body; the merchant panel and order ledger are the source
   // of truth.

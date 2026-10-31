@@ -24,7 +24,7 @@ import { sheets } from '../data/printables';
 import { bundle as digitalBundle } from '../data/digital-packs';
 import { catDetail, isReadable } from '../lib/explorers';
 import { buildWorksheet } from '../lib/worksheet';
-import { digitalPackOnSale } from '../lib/sslcommerz';
+import { digitalPackOnSale, digitalPackReady, DIGITAL_PACK_AMOUNT } from '../lib/shop';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
@@ -83,6 +83,7 @@ const stack: { t: string; d: string; have: Have; annual?: boolean }[] = [
   { have: 'testing', t: 'প্রতি সপ্তাহে অভিভাবকের ইমেইল', d: 'কে কত দিন এসেছে, কী কী খুলেছে, কটা যাচাই দিয়েছে - আর রাতের খাবারে জিজ্ঞেস করার মতো কয়েকটা প্রশ্ন। যে সপ্তাহে কিছুই হয়নি, সে সপ্তাহে কোনো চিঠি যায় না।' },
   { have: true,  annual: true, t: 'যাচাই ও সার্টিফিকেট', d: 'প্রতি বিভাগের শেষে আটটি প্রশ্ন, পড়ার লেখা থেকেই বানানো, ফল সন্তানের নামে জমা থাকে। সব বিষয় দেখা আর সব যাচাই পাশ হলে ভুবনের সার্টিফিকেট, নাম-তারিখ সহ, ছাপার মতো।' },
   { have: true,  annual: true, t: 'অনুশীলনী প্যাক', d: `${bn(ws.worlds)}টি ভুবনের ${bn(ws.cats)}টি বিভাগের ছাপার অনুশীলনী - ${bn(ws.blanks)}টি শূন্যস্থান আর ${bn(ws.matches)}টি মিলানো, উত্তরপত্র আলাদা পাতায়। এক ভুবনের পুরোটা এক চাপে ছাপানো যায়, আগে সব প্রশ্ন তারপর সব উত্তর।` },
+  { have: digitalPackReady(), annual: true, t: 'সব-ডাউনলোড বান্ডল সঙ্গে', d: `আলাদা কিনলে যেটার দাম ৳${bn(DIGITAL_PACK_AMOUNT)}: ১১টি ভুবনের ছাপার প্যাক, তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র আর সনদ, PDF আর ZIP-এ, ফোন বা কম্পিউটারে নামিয়ে রাখার মতো।` },
   { have: false, t: 'পর্দা ছাড়া কার্ড', d: 'প্রতি বিষয়ে একটা কাজ যা পর্দা ছাড়াই করা যায় - ছায়া মাপা, ডিম ভাসানো, গাছের বয়স গোনা।' },
   { have: false, t: 'অফলাইন প্যাক', d: 'ইন্টারনেট দুর্বল হলেও মডেলগুলো চলবে। গ্রামের স্কুল আর যাত্রাপথের জন্য।' },
   { have: false, t: 'দাদু-দিদার সঙ্গে', d: 'প্রতি বিষয়ে একটা প্রশ্ন, যেটা সন্তান বাংলায় দাদু-দিদাকে জিজ্ঞেস করবে। দেশের বাইরের পরিবারের জন্য এটাই আসল কারণ।' },

@@ -1,0 +1,58 @@
+---
+/**
+ * The download list for the all-downloads bundle: one big ZIP button, then
+ * every file on its own, straight from the library manifest. `query` carries an
+ * order's download key on the confirmation page; the account page leaves it
+ * empty and the member's own entitlement opens the files.
+ */
+import { library, mb, BUNDLE_SLUG } from '../lib/pack-files';
+import { bn } from '../lib/bn';
+
+interface Props { query?: string }
+const { query = '' } = Astro.props;
+const lib = await library();
+const href = (slug: string) => `/api/digital-pack/download/${slug}${query}`;
+const groups = [
+  { kind: 'world', h: 'এগারোটি ভুবনের প্যাক' },
+  { kind: 'extra', h: 'বাড়তি ফাইল' },
+  { kind: 'guide', h: 'অভিভাবকের গাইড' },
+] as const;
+const meta = (pages?: number, bytes?: number) => [pages ? `${bn(pages)} পাতা` : '', bytes ? bn(mb(bytes)) : ''].filter(Boolean).join(' · ');
+---
+<div class="pd">
+  <a class="pd-all" href={href(BUNDLE_SLUG)} download>
+    <span class="pd-ico" aria-hidden="true">↓</span>
+    <span><b>সব ফাইল একসঙ্গে (ZIP)</b><small>{[lib.totalPages ? `মোট ${bn(lib.totalPages)} পাতা` : '', `${bn(lib.files.length)}টি PDF`, lib.bundleBytes ? bn(mb(lib.bundleBytes)) : ''].filter(Boolean).join(' · ')}</small></span>
+  </a>
+  <p class="pd-tip">ফোনে ZIP না খুললে নিচ থেকে একটা একটা PDF নামান। কম্পিউটারে ZIP-টাই সহজ।</p>
+  {groups.map((g) => {
+    const files = lib.files.filter((f) => f.kind === g.kind);
+    return files.length > 0 && (
+      <section>
+        <h3>{g.h}</h3>
+        <ul>
+          {files.map((f) => (
+            <li><a href={href(f.slug)} download><span>{f.title}</span><small>{meta(f.pages, f.bytes)}</small><i aria-hidden="true">↓</i></a></li>
+          ))}
+        </ul>
+      </section>
+    );
+  })}
+</div>
+
+<style>
+  .pd { display: flex; flex-direction: column; gap: .8rem; }
+  .pd-all { display: flex; align-items: center; gap: .9rem; padding: 1rem 1.1rem; border-radius: var(--r); background: var(--brand); color: var(--on-brand); text-decoration: none; }
+  .pd-all b { display: block; font-size: 1.1rem; }
+  .pd-all small { opacity: .85; font-size: 13px; }
+  .pd-ico { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgba(0,0,0,.12); font-size: 1.4rem; flex: none; }
+  .pd-tip { color: var(--muted); font-size: 13px; margin: 0; }
+  h3 { font-size: 15px; margin: .4rem 0 .4rem; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; }
+  li a { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: .6rem; padding: .6rem .8rem; border: 1px solid var(--line-soft); border-radius: 12px; text-decoration: none; color: var(--ink); background: var(--panel); min-height: 2.6rem; }
+  li a span { font-weight: 700; font-size: 14px; }
+  li a small { grid-column: 1; color: var(--muted); font-size: 12px; }
+  li a i { grid-row: 1 / span 2; grid-column: 2; align-self: center; color: var(--ok); font-style: normal; font-size: 1.15rem; }
+  li a:hover { border-color: var(--brand); }
+  @media (max-width: 560px) { ul { grid-template-columns: 1fr; } }
+</style>
