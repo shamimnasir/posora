@@ -7,11 +7,15 @@
  * is the one thing on this site that has to happen without anybody visiting.
  *
  * Everything the site serves still goes through the adapter's own `handle`,
- * untouched. If this file ever grows a second responsibility, it is in the
- * wrong place.
+ * untouched. The second scheduled job, settling stranded bKash payments, is
+ * one call into src/lib/bkash.ts.
  */
 import { handle } from '@astrojs/cloudflare/handler';
 import { runWeekly, type Mail } from './lib/weekly';
+import { reconcileBkash } from './lib/bkash';
+
+/** Must match the second entry of `triggers.crons` in wrangler.jsonc. */
+const RECONCILE_CRON = '*/5 * * * *';
 
 type Env = {
   EMAIL?: Mail;
@@ -33,12 +37,22 @@ export default {
    *
    * `waitUntil` keeps the worker alive for the sends. Nothing is awaited by the
    * platform otherwise, and a letter half sent is worse than one not sent.
+   *
+   * The every-five-minutes trigger settles bKash orders whose buyer paid but
+   * never made it back to the callback (see reconcileBkash).
    */
   async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    const origin = env.SITE_ORIGIN ?? 'https://posora.com';
+    if (event.cron === RECONCILE_CRON) {
+      ctx.waitUntil(reconcileBkash(origin)
+        .then((r) => { if (r.checked) console.log(`bKash reconcile: checked ${r.checked}, paid ${r.paid}, closed ${r.failed}`); })
+        .catch((err) => console.error('bKash reconcile failed', err)));
+      return;
+    }
     ctx.waitUntil((async () => {
       try {
         const r = await runWeekly({
-          origin: env.SITE_ORIGIN ?? 'https://posora.com',
+          origin,
           mail: env.EMAIL,
           from: env.CONTACT_FROM,
         });
@@ -49,6 +63,5 @@ export default {
         console.error('weekly letters failed', err);
       }
     })());
-    void event;
   },
 };

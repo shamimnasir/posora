@@ -111,6 +111,11 @@ export async function startBkash(input: BuyerInput, origin: string): Promise<Sta
   return { ok: true, tranId, url: r.bkashURL };
 }
 
+/** One log line per bKash answer: codes and states only, never credentials or tokens. */
+function logReply(step: string, tranId: string, r: BkashBody | null): void {
+  console.log(`bKash ${step} ${tranId}: ${r ? `code=${r.statusCode ?? '-'} state=${r.transactionStatus ?? '-'} msg=${String(r.statusMessage ?? r.errorMessage ?? '').slice(0, 80)}` : 'no response'}`);
+}
+
 /** True only for a completed payment that matches this order exactly. */
 function matches(r: BkashBody | null, tranId: string, paymentID: string): boolean {
   if (!r || r.transactionStatus !== 'Completed' || !r.trxID) return false;
@@ -127,6 +132,7 @@ function matches(r: BkashBody | null, tranId: string, paymentID: string): boolea
  * already-executed payment falls through to a status query.
  */
 export async function finishBkash(paymentID: string, status: string, origin: string): Promise<string> {
+  console.log(`bKash callback ${paymentID.slice(0, 40)} status=${status.slice(0, 20)}`);
   const fail = (tranId: string, s = 'failed') => confirmationUrl(origin, tranId, null, s);
   if (!/^[A-Za-z0-9]{6,80}$/.test(paymentID)) return new URL('/digital-pack/checkout/?e=bkash', origin).toString();
   const row = await requireDb().prepare("SELECT tran_id FROM orders WHERE gateway = 'bkash' AND gateway_ref = ?").bind(paymentID).first<{ tran_id: string }>();
@@ -145,10 +151,12 @@ export async function finishBkash(paymentID: string, status: string, origin: str
   if (!c || !t) return fail(order.tran_id, 'pending');
 
   let r = await post(`${c.base}/tokenized/checkout/execute`, authHeaders(c, t), { paymentID });
+  logReply('execute', order.tran_id, r);
   if (!matches(r, order.tran_id, paymentID)) {
     // Execute can time out after the money moved, or refuse because it already
     // ran. The status query is the source of truth in both cases.
     const q = await post(`${c.base}/tokenized/checkout/payment/status`, authHeaders(c, t), { paymentID });
+    logReply('status', order.tran_id, q);
     if (matches(q, order.tran_id, paymentID)) r = q;
     else {
       // Only a terminal answer from the status query fails the order; anything
@@ -164,4 +172,42 @@ export async function finishBkash(paymentID: string, status: string, origin: str
   }
   await fulfilOrder(order.tran_id, { bankTranId: r!.trxID, validationId: paymentID, gatewayStatus: 'Completed' }, origin);
   return confirmationUrl(origin, order.tran_id, order.download_key);
+}
+
+/**
+ * Ask bKash about orders still pending after their callback window, and settle
+ * them by bKash's own answer. This catches a buyer who paid and closed the tab
+ * before coming back, or a callback that timed out after the money moved.
+ * It never calls execute: an approved-but-unexecuted payment is voided by
+ * bKash, and only the buyer's return to the callback may execute it.
+ */
+export async function reconcileBkash(origin: string): Promise<{ checked: number; paid: number; failed: number }> {
+  const out = { checked: 0, paid: 0, failed: 0 };
+  const c = cfg();
+  if (!c) return out;
+  const now = Date.now();
+  const { results } = await requireDb().prepare(
+    `SELECT tran_id, gateway_ref, created_at FROM orders WHERE gateway = 'bkash' AND status = 'pending' AND gateway_ref IS NOT NULL
+       AND created_at < ? AND created_at > ? ORDER BY created_at LIMIT 25`,
+  ).bind(now - 3 * 60_000, now - 3 * 86_400_000).all<{ tran_id: string; gateway_ref: string; created_at: number }>();
+  if (!results.length) return out;
+  const t = await token(c);
+  if (!t) return out;
+  for (const o of results) {
+    out.checked++;
+    const q = await post(`${c.base}/tokenized/checkout/payment/status`, authHeaders(c, t), { paymentID: o.gateway_ref });
+    logReply('reconcile', o.tran_id, q);
+    if (matches(q, o.tran_id, o.gateway_ref)) {
+      await fulfilOrder(o.tran_id, { bankTranId: q!.trxID, validationId: o.gateway_ref, gatewayStatus: 'Completed (reconciled)' }, origin);
+      out.paid++;
+    } else if (q?.transactionStatus && !['Initiated', 'Pending Authorized', 'Completed'].includes(q.transactionStatus)) {
+      await markOrder(o.tran_id, 'failed', `reconcile ${q.transactionStatus}`);
+      out.failed++;
+    } else if (q?.transactionStatus === 'Initiated' && now - o.created_at > 86_400_000) {
+      // Never approved. bKash expires these; after a day, close the order too.
+      await markOrder(o.tran_id, 'cancelled', 'reconcile never approved');
+      out.failed++;
+    }
+  }
+  return out;
 }

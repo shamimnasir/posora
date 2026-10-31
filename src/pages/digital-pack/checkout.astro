@@ -44,10 +44,10 @@ const bkashError = Astro.url.searchParams.get('e') === 'bkash';
           <label>বিকাশ / মোবাইল নম্বর <input name="phone" required minlength="6" maxlength="24" autocomplete="tel" inputmode="tel" placeholder="01XXXXXXXXX" /></label>
           <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" tabindex="-1" autocomplete="off" /></div>
           {rails.includes('bkash') && (
-            <button class="btn btn-primary pay bkash" type="submit" data-rail="bkash">বিকাশে ৳{bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট দাও →</button>
+            <button class="btn btn-primary pay bkash" type="submit" data-rail="bkash">বিকাশে ৳{bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট করুন →</button>
           )}
           {rails.includes('sslcommerz') && (
-            <button class={`btn pay ${rails.includes('bkash') ? '' : 'btn-primary'}`} type="submit" data-rail="sslcommerz">{rails.includes('bkash') ? 'কার্ড, নগদ বা অন্য উপায়ে দাও' : `৳${bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট দাও →`}</button>
+            <button class={`btn pay ${rails.includes('bkash') ? '' : 'btn-primary'}`} type="submit" data-rail="sslcommerz">{rails.includes('bkash') ? 'কার্ড, নগদ বা অন্য উপায়ে পেমেন্ট করুন' : `৳${bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট করুন →`}</button>
           )}
           <p class="msg" id="checkout-msg" role="status" aria-live="polite"></p>
           {rails.includes('bkash') && <p class="fine">বোতাম চাপলে বিকাশের নিজের পাতা খুলবে। সেখানে বিকাশ নম্বর, ওটিপি আর পিন দিলেই পেমেন্ট হবে, তারপর আপনি এখানে ফিরে এসে ফাইল নামাবেন।</p>}
