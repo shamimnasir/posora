@@ -38,6 +38,8 @@ export const configured = (): boolean => {
 /** A separate release switch prevents charging before the files exist. */
 export const digitalPackReady = (): boolean => dbEnv().DIGITAL_PACK_READY === 'true';
 export const checkoutReady = (): boolean => configured() && digitalPackReady();
+/** Real money changes hands only in live mode; public copy about selling follows this. */
+export const digitalPackOnSale = (): boolean => checkoutReady() && dbEnv().SSLCOMMERZ_MODE === 'live';
 
 function config(): Config | null {
   const e = dbEnv();

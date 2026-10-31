@@ -5,9 +5,10 @@
  * This is the page that talks about money, so the honesty rules bind hardest
  * here. Three things are kept true on purpose:
  *
- *  1. Nothing can be bought. There is no payment rail and no account system, so
- *     the only action is joining the founding list, which is free and says so
- *     twice before the form.
+ *  1. The family plan cannot be bought. It has no payment rail, so the only
+ *     action is joining the founding list, which is free and says so twice
+ *     before the form. Once the digital pack goes on sale the copy says that
+ *     one thing is for sale, and nothing more.
  *  2. Every line in the stack is marked আছে or হবে. A reader can tell at a
  *     glance which half of the offer exists today.
  *  3. The comparison prices are real, published prices of real alternatives,
@@ -23,6 +24,7 @@ import { sheets } from '../data/printables';
 import { bundle as digitalBundle } from '../data/digital-packs';
 import { catDetail, isReadable } from '../lib/explorers';
 import { buildWorksheet } from '../lib/worksheet';
+import { digitalPackOnSale } from '../lib/sslcommerz';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
@@ -89,9 +91,10 @@ const stack: { t: string; d: string; have: Have; annual?: boolean }[] = [
 const haveCount = stack.filter((s) => s.have === true).length;
 const annualOnly = stack.filter((s) => s.annual);
 
+const onSale = digitalPackOnSale();
 const faqs = [
   { q: 'মাসিক না বার্ষিক, কোনটা নেব?', a: `যদি আগে দেখে নিতে চান, মাসিক নিন - এক মাস পরেই থামিয়ে দিতে পারবেন, কিছু জিজ্ঞেস করা হবে না। যদি জানেন সন্তান সারা বছর ব্যবহার করবে, বার্ষিকটাই সস্তা: ${bn(monthsFree)} মাসের টাকা বেঁচে যায়, আর ছাপার অনুশীলনী প্যাক আর সার্টিফিকেট বার্ষিকের সঙ্গেই আসে।` },
-  { q: 'এখন টাকা দিতে হবে?', a: 'না। পেমেন্ট গেটওয়ে এখনো বসানো হয়নি, তাই কেনার ব্যবস্থা নেই। অ্যাকাউন্ট আছে - ইমেইলের লিংকে ঢোকা যায় - আর প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিই। নিচের তালিকায় নাম লেখালে কার্ড লাগে না, টাকাও কাটা যায় না।' },
+  { q: 'এখন টাকা দিতে হবে?', a: (onSale ? 'না। পরিবার প্ল্যানের পেমেন্ট এখনো চালু হয়নি, তাই প্ল্যানটা কেনা যায় না (আলাদা ছাপার ডিজিটাল প্যাক অবশ্য কেনা যায়)। ' : 'না। পেমেন্ট গেটওয়ে এখনো বসানো হয়নি, তাই কেনার ব্যবস্থা নেই। ') + 'অ্যাকাউন্ট আছে - ইমেইলের লিংকে ঢোকা যায় - আর প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিই। নিচের তালিকায় নাম লেখালে কার্ড লাগে না, টাকাও কাটা যায় না।' },
   { q: 'তাহলে তালিকায় নাম লিখে লাভ কী?', a: 'দুটো। এক, প্রতিষ্ঠাতা দামটা আপনার জন্য আজীবন একই থাকবে। দুই, আমরা আগে আপনার কথা শুনে তারপর বানাবো - কোন জিনিসটা আগে দরকার, সেটা আপনিই বলবেন।' },
   { q: 'যেগুলো এখন ফ্রি, সেগুলো কি পরে টাকার পেছনে চলে যাবে?', a: `না, কখনো না। আজ যে ${bn(COVERAGE.total)}টি বিষয়, থ্রিডি মডেল আর ছাপার শিট ফ্রি, সেগুলো ফ্রিই থাকবে - ${bn(COVERAGE.readable)}টি বিষয়ের পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব আর ${bn(COVERAGE.missions)}টি মিশনসহ। পরিবার প্ল্যান বিক্রি করে সেগুলোর চারপাশের জিনিস - প্রোফাইল, রিপোর্ট, অনুশীলনী। পুরোনো জিনিসের চারপাশে বেড়া দেওয়া হবে না।` },
   { q: 'সন্তানের কোনো তথ্য নেবেন?', a: 'সন্তানের কোনো অ্যাকাউন্ট থাকবে না। অ্যাকাউন্ট থাকবে শুধু অভিভাবকের। সন্তানের জন্য যা লাগবে তা হলো আপনার দেওয়া একটা ডাকনাম আর একটা স্তর - নাম-ঠিকানা, ছবি, ইমেইল কিছুই নয়।' },
@@ -132,8 +135,9 @@ const schema = [
       </p>
 
       <div class="statusbox">
-        <p><b>পরিষ্কার করে বলি:</b> এখনো কিছু বিক্রি হচ্ছে না, কারণ পেমেন্টের ব্যবস্থা
-        বসানো হয়নি। প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিচ্ছি। নিচে নাম লেখালে
+        <p><b>পরিষ্কার করে বলি:</b> {onSale
+          ? <>পরিবার প্ল্যান এখনো বিক্রি হচ্ছে না, কারণ এর পেমেন্টের ব্যবস্থা বসানো হয়নি (আলাদা <a href="/digital-pack/">ছাপার ডিজিটাল প্যাক</a> কেনা যায়)।</>
+          : <>এখনো কিছু বিক্রি হচ্ছে না, কারণ পেমেন্টের ব্যবস্থা বসানো হয়নি।</>} প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিচ্ছি। নিচে নাম লেখালে
         <b>কার্ড লাগে না, এক পয়সাও কাটা যায় না।</b>
         তালিকার {bn(haveCount)}টি জিনিস <em>আজই চালু</em>, বাকিগুলো হয় <em>পরীক্ষায় আছে</em>, নয়তো <em>এখনো বানানো হয়নি</em> -
         কোনটা কী, প্রতিটা লাইনের পাশে লেখা আছে।</p>

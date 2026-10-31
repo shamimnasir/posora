@@ -2,8 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { bundle, digitalPacks } from '../../data/digital-packs';
 import { bn } from '../../lib/bn';
-import { configured, digitalPackReady } from '../../lib/sslcommerz';
-import { dbEnv } from '../../lib/db';
+import { digitalPackOnSale } from '../../lib/sslcommerz';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
@@ -29,7 +28,7 @@ const schema = [
 const activitiesPerPack = digitalPacks[0]?.activities.length ?? 0;
 const bonusPerPack = digitalPacks[0]?.bonus.length ?? 0;
 const previewVersion = '20260919-varied';
-const checkoutLive = configured() && digitalPackReady() && dbEnv().SSLCOMMERZ_MODE === 'live';
+const checkoutLive = digitalPackOnSale();
 ---
 
 <Base

@@ -6,6 +6,7 @@ import { getWorlds, getBody, computeTotals } from '../lib/content';
 import { isLoggedIn } from '../lib/auth';
 import { bn } from '../lib/bn';
 import { COVERAGE } from '../lib/coverage';
+import { digitalPackOnSale } from '../lib/sslcommerz';
 
 // Content now comes from D1 at request time, so this route can't be prerendered.
 export const prerender = false;
@@ -29,6 +30,7 @@ Astro.response.headers.set(
  * search result, or quoted by an assistant that never shows the page at all.
  * Counts come from COVERAGE, never typed by hand.
  */
+const onSale = digitalPackOnSale();
 const faqs = [
   {
     q: 'পসরা কী?',
@@ -40,7 +42,7 @@ const faqs = [
   },
   {
     q: 'টাকা লাগে?',
-    a: `না। ${bn(COVERAGE.readable)}টি বিষয়ের তিন গভীরতার পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব, ${bn(COVERAGE.missions)}টি মিশন, থ্রিডি মডেল আর ফ্রি ছাপার শিটগুলো সম্পূর্ণ ফ্রি, আর ফ্রিই থাকবে। পরিবার প্ল্যানে যোগ হবে অগ্রগতি সিঙ্ক, সাপ্তাহিক রিপোর্ট, পুরো ভুবনের অনুশীলনী প্যাক আর সার্টিফিকেট। এখন পেমেন্টের ব্যবস্থা নেই, তাই কিছু কেনারও উপায় নেই।`,
+    a: `না। ${bn(COVERAGE.readable)}টি বিষয়ের তিন গভীরতার পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব, ${bn(COVERAGE.missions)}টি মিশন, থ্রিডি মডেল আর ফ্রি ছাপার শিটগুলো সম্পূর্ণ ফ্রি, আর ফ্রিই থাকবে। পরিবার প্ল্যানে যোগ হবে অগ্রগতি সিঙ্ক, সাপ্তাহিক রিপোর্ট, পুরো ভুবনের অনুশীলনী প্যাক আর সার্টিফিকেট। ${onSale ? 'এখন কেনা যায় শুধু ছাপার ডিজিটাল প্যাক, একবারের দামে; পরিবার প্ল্যানের পেমেন্ট এখনো চালু হয়নি।' : 'এখন পেমেন্টের ব্যবস্থা নেই, তাই কিছু কেনারও উপায় নেই।'}`,
   },
   {
     q: 'বাচ্চার কোনো তথ্য লাগে?',
