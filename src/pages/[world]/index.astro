@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { getWorld, getWorlds, itemCount } from '../../lib/content';
 import { isLoggedIn } from '../../lib/auth';
-import { bn, pad2, bnOf } from '../../lib/bn';
+import { bn, pad2, bnOf, label } from '../../lib/bn';
 import { heroFor } from '../../data/heroes';
 import { mathExplorer } from '../../data/math-explorer';
 import { physicsExplorer } from '../../data/physics-explorer';
@@ -267,7 +267,7 @@ const schema = [
               <span class="sep sep-world" aria-hidden="true">›</span>
               <button type="button" class="crumb cur" id="crumb-cat">{first.n}</button>
               <span class="sep" id="crumb-sep2" aria-hidden="true">›</span>
-              <button type="button" class="crumb" id="crumb-item">{first.items[0]}</button>
+              <button type="button" class="crumb" id="crumb-item">{label(first.items[0]!)}</button>
             </nav>
             <div class="host" id="hero-host" role="group" aria-label="থ্রিডি মডেল - টেনে ঘোরাও">
               <canvas></canvas>
@@ -420,10 +420,10 @@ const schema = [
                 to do, and per item from the reading panel. */}
             <div class="chips" id="chips">
               {firstReadable
-                ? first.items.map((it, j) => <button type="button" class="chip" data-di={j} aria-pressed={j === 0 ? 'true' : 'false'}>{it}</button>)
+                ? first.items.map((it, j) => <button type="button" class="chip" data-di={j} aria-pressed={j === 0 ? 'true' : 'false'}>{label(it)}</button>)
                 : first.lab
-                  ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{it}</a>)
-                  : first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{it}</button>)}
+                  ? first.items.map((it, j) => <a class="chip chip-real" href={`${first.lab}#${first.labAnchors![j]}`}><span class="check" aria-hidden="true">✓</span>{label(it)}</a>)
+                  : first.items.map((it) => <button type="button" class="chip" data-key={`${w.slug}:${first.n}:${it}`} aria-pressed="false"><span class="star" aria-hidden="true">★</span>{label(it)}</button>)}
             </div>
             <p class="toast" id="star-toast" role="status" aria-live="polite"></p>
           </div>
@@ -544,7 +544,7 @@ const schema = [
               {LEVELS.map(([k, l, a]) => <button type="button" data-l={k} aria-pressed={k === 'l1' ? 'true' : 'false'}>{l} <small>{a}</small></button>)}
             </div>
           </div>
-          <h3 class="item-name" id="item-name">{first.items[0]}</h3>
+          <h3 class="item-name" id="item-name">{label(first.items[0]!)}</h3>
           {/* Shown only where a real Bangla voice exists; see src/lib/speak.ts
               for why an English voice reading Bangla is worse than silence. */}
           <button type="button" class="say" id="say" hidden>🔊 শুনে নাও</button>
@@ -658,7 +658,7 @@ const schema = [
             list is still whole and quotable with scripts off. */}
         <div class="ix-find">
           <label class="lbl" for="ix-q">খুঁজে নাও</label>
-          <input type="search" id="ix-q" placeholder={`${first.items[0]}, ${w.cats[1]?.items[0] ?? ''}…`} autocomplete="off" />
+          <input type="search" id="ix-q" placeholder={`${label(first.items[0]!)}, ${label(w.cats[1]?.items[0] ?? '')}…`} autocomplete="off" />
           <span class="lbl num" id="ix-count" role="status" aria-live="polite"></span>
         </div>
       </div>
@@ -683,7 +683,7 @@ const schema = [
                     {/* Name and tags wrap inside their own box, so the chevron
                         stays on the first line instead of being pushed onto a
                         second one by a long name. */}
-                    <span class="ix-t"><b>{it}</b>{chipsFor(c.detail![ii].chips, it, 2).map((ch) => <span class="pill">{ch}</span>)}</span>
+                    <span class="ix-t"><b>{label(it)}</b>{chipsFor(c.detail![ii].chips, it, 2).map((ch) => <span class="pill">{ch}</span>)}</span>
                   </summary>
                   <p>{c.detail![ii].l1}</p>
                   <p class="ix-fun"><span class="lbl">মজার তথ্য</span>{c.detail![ii].fun}</p>
@@ -694,9 +694,9 @@ const schema = [
               ))}
             </div>
           ) : c.lab ? (
-            <p class="index-note">এই বিভাগের প্রতিটি আইটেম আলাদা একটা চালু টুল: {c.items.join(', ')}। <a href={c.lab}>{c.n} টুলে যাও →</a></p>
+            <p class="index-note">এই বিভাগের প্রতিটি আইটেম আলাদা একটা চালু টুল: {c.items.map(label).join(', ')}। <a href={c.lab}>{c.n} টুলে যাও →</a></p>
           ) : (
-            <p class="index-note">এই বিভাগের লেখা এখনও তৈরি হয়নি। বিষয়গুলো হলো {c.items.join(', ')}।</p>
+            <p class="index-note">এই বিভাগের লেখা এখনও তৈরি হয়নি। বিষয়গুলো হলো {c.items.map(label).join(', ')}।</p>
           )}
           <RelatedReading world={w.slug} worldName={w.bn} category={c.n} items={c.items} compact />
         </div>
@@ -1318,7 +1318,7 @@ const schema = [
   import { goalParts, goalDone, goalMet } from '../../lib/daily';
   import { beginSession, noteItem, noteAct, goalJustMet, reachedMilestone } from '../../lib/session';
   import { makeSpeaker, type Speaker } from '../../lib/speak';
-  import { bn, pad2, bnAt } from '../../lib/bn';
+  import { bn, pad2, bnAt, label } from '../../lib/bn';
   import { chipsFor } from '../../lib/chips';
   import { track, trackItem, trackCategory, trackDepth, trackPlay } from '../../lib/track';
   import { setProgressScope } from '../../lib/progress';
@@ -1454,7 +1454,7 @@ const schema = [
     const show = slug !== 'food' && Number(ctlX.value) >= 30 && !!detail;
     if (explodeNote) explodeNote.hidden = !show;
     if (!show || !detail) return;
-    if (explodeNoteTitle) explodeNoteTitle.textContent = `${cats[curCat]!.items[curItem]}: কী দেখছ?`;
+    if (explodeNoteTitle) explodeNoteTitle.textContent = `${label(cats[curCat]!.items[curItem]!)}: কী দেখছ?`;
     if (explodeNoteCopy) explodeNoteCopy.textContent = detail.l1;
     if (explodeNoteFun) explodeNoteFun.textContent = detail.fun;
   };
@@ -1558,8 +1558,8 @@ const schema = [
     const d = Math.round(yawDeg); if (d === lastDeg) return;
     lastDeg = d; angleEl.textContent = `কোণ ${bn(d)}°`;
   };
-  const heroItems = (c: Cat) => c.items.map((label, j) => ({
-    label,
+  const heroItems = (c: Cat) => c.items.map((name, j) => ({
+    label: label(name),
     emoji: c.emoji[j],
     caption: c.detail?.[j]?.l1,
   }));
@@ -1909,7 +1909,7 @@ const schema = [
   function questShow() {
     const c = cats[curCat], j = questTarget();
     $('#q-emoji').textContent = c.emoji[j] ?? '';
-    $('#q-name').textContent = c.items[j]!;
+    $('#q-name').textContent = label(c.items[j]!);
     $('#q-count').textContent = `${bn(quest.i + 1)} / ${bn(c.items.length)}`;
     qHint.textContent = '';
     hero?.focus(-1);   // no badge stays lit from a hint on the last one
@@ -1952,8 +1952,8 @@ const schema = [
     quest.mistakes++; quest.wrongHere++;
     chime('no');
     qCard.classList.remove('shake'); void qCard.offsetWidth; qCard.classList.add('shake');
-    if (quest.wrongHere >= 2) { hero?.focus(target); qHint.textContent = `ইঙ্গিত: যেটা বড় হয়ে জ্বলছে, সেটাই ${c.items[target]}`; }
-    else qHint.textContent = `উঁহু, ওটা ${c.items[j]}। আবার খোঁজো - টেনে ঘোরাও, বা স্লাইডারে খুলে দেখো`;
+    if (quest.wrongHere >= 2) { hero?.focus(target); qHint.textContent = `ইঙ্গিত: যেটা বড় হয়ে জ্বলছে, সেটাই ${label(c.items[target]!)}`; }
+    else qHint.textContent = `উঁহু, ওটা ${label(c.items[j]!)}। আবার খোঁজো - টেনে ঘোরাও, বা স্লাইডারে খুলে দেখো`;
   }
   function questFinish() {
     const c = cats[curCat], ms = performance.now() - quest.t0, stars = starsFor(quest.mistakes);
@@ -2067,14 +2067,14 @@ const schema = [
     if (saying) { speaker?.stop(); setSay(false); }
     if (readable(c)) {
       const d = c.detail![curItem];
-      itemName.hidden = false; itemName.textContent = c.items[curItem]!;
+      itemName.hidden = false; itemName.textContent = label(c.items[curItem]!);
       itemChips.replaceChildren(...chipsFor(d.chips, c.items[curItem]!).map((t) => Object.assign(document.createElement('span'), { className: 'pill', textContent: t })));
       itemText.textContent = d[level];
       funWrap.hidden = false; itemFun.textContent = d.fun;
       // When the category also has a lab, the way in is per item: read about
       // the lever, then go and move one.
       labNote.hidden = !c.lab;
-      if (c.lab) labNote.innerHTML = `<a href="${c.lab}#${c.labAnchors?.[curItem] ?? ''}">"${c.items[curItem]}" নিজের হাতে নেড়ে দেখো →</a>`;
+      if (c.lab) labNote.innerHTML = `<a href="${c.lab}#${c.labAnchors?.[curItem] ?? ''}">"${label(c.items[curItem]!)}" নিজের হাতে নেড়ে দেখো →</a>`;
       sayBtn.hidden = !speaker;
       return;
     }
@@ -2110,7 +2110,7 @@ const schema = [
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'chip'; b.dataset.di = String(j);
         b.classList.toggle('done', seen.has(keyOf(curCat, j)));
-        b.append(it);
+        b.append(label(it));
         b.setAttribute('aria-pressed', String(j === curItem));
         return b;
       }));
@@ -2122,7 +2122,7 @@ const schema = [
         const a = document.createElement('a');
         a.className = 'chip chip-real'; a.href = `${c.lab}#${c.labAnchors![j]}`;
         a.innerHTML = '<span class="check" aria-hidden="true">✓</span>';
-        a.append(it);
+        a.append(label(it));
         return a;
       }));
       return;
@@ -2132,7 +2132,7 @@ const schema = [
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'chip'; b.dataset.key = `${slug}:${c.n}:${it}`;
       b.innerHTML = '<span class="star" aria-hidden="true">★</span>';
-      b.append(it);
+      b.append(label(it));
       b.setAttribute('aria-pressed', String(isStarred(b.dataset.key!)));
       return b;
     }));
@@ -2290,7 +2290,7 @@ const schema = [
     item.hidden = sep.hidden = !show;
     $('#crumb-cat').classList.toggle('cur', !show);
     item.classList.toggle('cur', show);
-    if (show) item.textContent = cats[curCat].items[curItem];
+    if (show) item.textContent = label(cats[curCat].items[curItem]!);
   }
   function selectItem(ii: number, mark = true) {
     const c = cats[curCat];
@@ -2466,7 +2466,7 @@ const schema = [
         const art = document.createElement('article');
         art.className = 'p-item';
         art.append(
-          el('h2', '', `${pad2(j + 1)}. ${c.items[j]}`),
+          el('h2', '', `${pad2(j + 1)}. ${label(c.items[j]!)}`),
           el('p', 'p-chips', d.chips.join(' · ')),
           el('p', 'p-text', d[level]),
           el('p', 'p-fun', `মজার তথ্য: ${d.fun}`),

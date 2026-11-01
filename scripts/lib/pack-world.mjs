@@ -5,7 +5,7 @@
  * then the world's missions on paper, and every answer collected at the end.
  * All content comes from the snapshot; this file only lays it out.
  */
-import { esc, bn, fromBn, OPT, shuffle, shuffleMoved, block, keep, group, cutFrame } from './pack-kit.mjs';
+import { esc, escName, bn, fromBn, OPT, shuffle, shuffleMoved, block, keep, group, cutFrame } from './pack-kit.mjs';
 
 const BLANK = '______';
 
@@ -26,7 +26,7 @@ export function traceGlyph(text, { w = 19, h = 19, size = 16, solid = false } = 
 /* ---------------- category pages ---------------- */
 function factCard(it) {
   const chips = (it.chips ?? []).filter((c) => c && c !== it.name).slice(0, 3);
-  return `<div class="blk card">${cutFrame}<span class="snip">✂</span><div class="nm">${esc(it.name)}</div>${chips.length ? `<div class="chips">${chips.map((c) => `<span class="pill">${esc(c)}</span>`).join('')}</div>` : ''}<p class="l1">${esc(it.l1)}</p>${it.fun ? `<p class="fun"><b>মজার তথ্য:</b> ${esc(it.fun)}</p>` : ''}</div>`;
+  return `<div class="blk card">${cutFrame}<span class="snip">✂</span><div class="nm">${escName(it.name)}</div>${chips.length ? `<div class="chips">${chips.map((c) => `<span class="pill">${esc(c)}</span>`).join('')}</div>` : ''}<p class="l1">${esc(it.l1)}</p>${it.fun ? `<p class="fun"><b>মজার তথ্য:</b> ${esc(it.fun)}</p>` : ''}</div>`;
 }
 
 function promptHtml(prompt) {
@@ -51,12 +51,12 @@ export function categorySections(world, cat, n, keys) {
       const p = promptHtml(b.prompt);
       return block(`<div class="bl"><span class="num">${bn(b.n)}.</span><div>${p.html}${p.inline ? '' : `<div class="ansline">কোনটির কথা? <i></i></div>`}</div></div>`);
     });
-    const rows = ws.matchLeft.map((l, i) => `<div class="mrow"><div class="l">${esc(l)}</div><div></div><div class="r">${esc(ws.matchRight[i])}</div></div>`).join('');
+    const rows = ws.matchLeft.map((l, i) => `<div class="mrow"><div class="l">${escName(l)}</div><div></div><div class="r">${escName(ws.matchRight[i])}</div></div>`).join('');
     sections.push({
       id: `ws-${cat.index}`, cont: `${cat.name} · অনুশীলনী`,
       parts: [
         secHead(`${label} · অনুশীলনী`, cat.name, '', nameBar()),
-        block(`<div class="bank"><p class="h3">শব্দের ঝুড়ি</p>${ws.bank.map((w) => `<span class="pill">${esc(w)}</span>`).join('')}</div>`),
+        block(`<div class="bank"><p class="h3">শব্দের ঝুড়ি</p>${ws.bank.map((w) => `<span class="pill">${escName(w)}</span>`).join('')}</div>`),
         subHead('ক. শূন্যস্থান পূরণ করো', 'প্রতিটি বাক্য পড়ো। ঝুড়ি থেকে ঠিক নামটা বেছে খালি দাগে লেখো। যে বাক্যে খালি দাগ নেই, তার নিচের দাগে লেখো বাক্যটা কোনটির কথা বলছে।'),
         group('blanks', blanks),
         block(`<p class="h2">খ. দাগ টেনে মেলাও</p><p class="inst">বাঁ দিকের প্রতিটি নামের সঙ্গে ডান দিকের ঠিক শব্দটা একটা দাগ টেনে জোড়ো।</p><div class="match">${rows}</div>`),
@@ -65,15 +65,15 @@ export function categorySections(world, cat, n, keys) {
     keys.push({
       title: `${label} · ${cat.name} · অনুশীলনী`, ref: `ws-${cat.index}`,
       rows: [
-        `<b>ক.</b> ${ws.blanks.map((b) => `${bn(b.n)}. ${esc(b.answer)}`).join(' · ')}`,
-        `<b>খ.</b> ${ws.matchKey.map((m) => `${esc(m.left)} → ${esc(m.right)}`).join(' · ')}`,
+        `<b>ক.</b> ${ws.blanks.map((b) => `${bn(b.n)}. ${escName(b.answer)}`).join(' · ')}`,
+        `<b>খ.</b> ${ws.matchKey.map((m) => `${escName(m.left)} → ${escName(m.right)}`).join(' · ')}`,
       ],
     });
   }
   if (cat.quiz?.length) {
     const qs = cat.quiz.map((q, i) => {
       const p = promptHtml(q.prompt);
-      return block(`<div class="q"><span class="num">${bn(i + 1)}.</span><div><div>${p.html}</div><div class="opts">${q.options.map((o, k) => `<span class="opt"><span class="o">${OPT[k]}</span>${esc(o)}</span>`).join('')}</div></div></div>`);
+      return block(`<div class="q"><span class="num">${bn(i + 1)}.</span><div><div>${p.html}</div><div class="opts">${q.options.map((o, k) => `<span class="opt"><span class="o">${OPT[k]}</span>${escName(o)}</span>`).join('')}</div></div></div>`);
     });
     sections.push({
       id: `qz-${cat.index}`, cont: `${cat.name} · যাচাই`,
@@ -85,7 +85,7 @@ export function categorySections(world, cat, n, keys) {
     });
     keys.push({
       title: `${label} · ${cat.name} · যাচাই`, ref: `qz-${cat.index}`,
-      rows: [cat.quiz.map((q, i) => `${bn(i + 1)}. <b>${OPT[q.answer]}</b> ${esc(q.options[q.answer])}`).join(' · ')],
+      rows: [cat.quiz.map((q, i) => `${bn(i + 1)}. <b>${OPT[q.answer]}</b> ${escName(q.options[q.answer])}`).join(' · ')],
     });
   }
   return sections;
@@ -109,7 +109,7 @@ function solveBuild(spec) {
   return best;
 }
 
-const optList = (opts) => `<div class="opts">${opts.map((o, k) => `<span class="opt"><span class="o">${OPT[k]}</span>${esc(o)}</span>`).join('')}</div>`;
+const optList = (opts) => `<div class="opts">${opts.map((o, k) => `<span class="opt"><span class="o">${OPT[k]}</span>${escName(o)}</span>`).join('')}</div>`;
 
 export function missionSections(world, keys) {
   const out = [];

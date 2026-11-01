@@ -19,6 +19,7 @@
     "audit:model-test-coverage": "node --experimental-strip-types scripts/model-test-coverage-audit.mjs",
     "audit:model-coverage": "node --experimental-strip-types scripts/model-coverage-audit.mjs",
     "audit:model-rights": "node scripts/audit-model-rights.mjs",
+    "audit:d1-drift": "node scripts/d1-content-drift.mjs",
     "assets:polyhaven": "node scripts/download-polyhaven-models.mjs",
     "assets:fauna": "node scripts/download-licensed-fauna.mjs",
     "assets:wildlife": "node scripts/download-licensed-wildlife.mjs",

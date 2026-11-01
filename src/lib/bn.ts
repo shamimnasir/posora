@@ -22,6 +22,16 @@ export const bnOf = (name: string): string => `${stem(name)}${VOWEL_END.test(nam
 /** Locative: পৃথিবী → পৃথিবীতে, বুধ → বুধে, প্রাণিজগৎ → প্রাণিজগতে. */
 export const bnAt = (name: string): string => `${stem(name)}${VOWEL_END.test(name) ? 'তে' : 'ে'}`;
 
+/**
+ * An item name for display. A vowel sign with no letter before it (the কার
+ * list "া ি ী ...", or ং ঃ ঁ after a space) has nothing to attach to and the
+ * shaper piles it onto the previous glyph. Show it on a dotted-circle carrier,
+ * the way Bangla primers print a bare কার. Display only: progress keys and
+ * lookups keep the stored name.
+ */
+export const label = (name: string): string =>
+  name.replace(/(^|[\s,(])([\u0981-\u0983\u09BE-\u09C4\u09C7\u09C8\u09CB\u09CC\u09D7])/gu, '$1\u25CC$2');
+
 /** Zero-padded two-digit Bangla ordinal, e.g. 3 → "০৩". */
 export const pad2 = (n: number): string => bn(String(n).padStart(2, '0'));
 /** Bangla thousands grouping: 384400 → "৩,৮৪,৪০০" (South Asian grouping). */

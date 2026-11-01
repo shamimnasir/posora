@@ -15,6 +15,14 @@ export const esc = (value) => String(value ?? '')
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 
+// An item name made of bare vowel signs (the কার list "া ি ী ...") gives each
+// sign nothing to attach to, and the shaper stacks them on one another. Print
+// each on a dotted-circle carrier, the way Bangla primers show a bare কার.
+// Only for item names: a chart that builds কা from ক and া must not get a
+// carrier between them.
+const BARE_SIGN = /(^|[\s,(])([ঁ-ঃা-ৄেৈোৌৗ])/gu;
+export const escName = (value) => esc(String(value ?? '').replace(BARE_SIGN, '$1◌$2'));
+
 const BN_DIGITS = '০১২৩৪৫৬৭৮৯';
 export const bn = (n) => String(n).replace(/\d/g, (d) => BN_DIGITS[Number(d)]);
 /** Bangla digits back to a JS number, for the figures stored as display text. */
