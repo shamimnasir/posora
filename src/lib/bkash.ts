@@ -107,13 +107,24 @@ export async function startBkash(input: BuyerInput, origin: string): Promise<Sta
     console.error('bKash create failed', r?.statusCode, r?.statusMessage ?? r?.errorMessage);
     return { ok: false, error: 'gateway-failed' };
   }
-  await requireDb().prepare('UPDATE orders SET gateway_ref = ?, updated_at = ? WHERE tran_id = ?').bind(String(r.paymentID).slice(0, 80), Date.now(), tranId).run();
+  await requireDb().prepare("UPDATE orders SET gateway_ref = ?, gateway_status = 'created', updated_at = ? WHERE tran_id = ?").bind(String(r.paymentID).slice(0, 80), Date.now(), tranId).run();
   return { ok: true, tranId, url: r.bkashURL };
 }
 
-/** One log line per bKash answer: codes and states only, never credentials or tokens. */
-function logReply(step: string, tranId: string, r: BkashBody | null): void {
+/**
+ * Note where a pending order got to in its gateway_status, so a stuck payment
+ * can be read from D1 without live logs. Never touches a settled order.
+ */
+async function note(tranId: string, step: string): Promise<void> {
+  await requireDb().prepare("UPDATE orders SET gateway_status = ?, updated_at = ? WHERE tran_id = ? AND status = 'pending'")
+    .bind(step.slice(0, 60), Date.now(), tranId).run().catch((err) => console.error('bKash note failed', err));
+}
+
+/** One log line per bKash answer, also noted on the order: codes and states only, never credentials or tokens. */
+async function logReply(step: string, tranId: string, r: BkashBody | null): Promise<void> {
+  const short = r ? `${r.statusCode ?? '-'} ${r.transactionStatus ?? '-'}` : 'no response';
   console.log(`bKash ${step} ${tranId}: ${r ? `code=${r.statusCode ?? '-'} state=${r.transactionStatus ?? '-'} msg=${String(r.statusMessage ?? r.errorMessage ?? '').slice(0, 80)}` : 'no response'}`);
+  await note(tranId, `${step} ${short}`);
 }
 
 /** True only for a completed payment that matches this order exactly. */
@@ -140,6 +151,7 @@ export async function finishBkash(paymentID: string, status: string, origin: str
   const order = await orderByTran(row.tran_id);
   if (!order) return fail(row.tran_id);
   if (order.status === 'paid') return confirmationUrl(origin, order.tran_id, order.download_key);
+  await note(order.tran_id, `callback ${status.slice(0, 20)}`);
 
   if (status === 'cancel' || status === 'failure') {
     await markOrder(order.tran_id, status === 'cancel' ? 'cancelled' : 'failed', `callback ${status}`);
@@ -151,12 +163,12 @@ export async function finishBkash(paymentID: string, status: string, origin: str
   if (!c || !t) return fail(order.tran_id, 'pending');
 
   let r = await post(`${c.base}/tokenized/checkout/execute`, authHeaders(c, t), { paymentID });
-  logReply('execute', order.tran_id, r);
+  await logReply('execute', order.tran_id, r);
   if (!matches(r, order.tran_id, paymentID)) {
     // Execute can time out after the money moved, or refuse because it already
     // ran. The status query is the source of truth in both cases.
     const q = await post(`${c.base}/tokenized/checkout/payment/status`, authHeaders(c, t), { paymentID });
-    logReply('status', order.tran_id, q);
+    await logReply('status', order.tran_id, q);
     if (matches(q, order.tran_id, paymentID)) r = q;
     else {
       // Only a terminal answer from the status query fails the order; anything
@@ -196,7 +208,7 @@ export async function reconcileBkash(origin: string): Promise<{ checked: number;
   for (const o of results) {
     out.checked++;
     const q = await post(`${c.base}/tokenized/checkout/payment/status`, authHeaders(c, t), { paymentID: o.gateway_ref });
-    logReply('reconcile', o.tran_id, q);
+    await logReply('reconcile', o.tran_id, q);
     if (matches(q, o.tran_id, o.gateway_ref)) {
       await fulfilOrder(o.tran_id, { bankTranId: q!.trxID, validationId: o.gateway_ref, gatewayStatus: 'Completed (reconciled)' }, origin);
       out.paid++;
