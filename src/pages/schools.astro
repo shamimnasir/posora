@@ -7,6 +7,10 @@
  * school can use today (all of it true and live right now), and what the pilot
  * would build (none of it built yet, and labelled as such). No price is quoted,
  * because no price has been set. Nothing on this page can be bought.
+ *
+ * Hidden on 2026-11-03 (owner decision: no school plan for now): unlinked from
+ * the menu, footer and other pages, dropped from the sitemap, and noindex. It
+ * still answers old links. To bring it back, revert those and remove noindex.
  */
 import Base from '../layouts/Base.astro';
 import { totals } from '../data/worlds';
@@ -39,6 +43,7 @@ const pilot = [
 ];
 ---
 <Base
+  noindex
   title="স্কুলের জন্য"
   description={`পসরা স্কুল পাইলট - ${bn(COVERAGE.worlds)}টি ভুবনের থ্রিডি মডেল ক্লাসে ব্যবহার করুন। শিক্ষার্থীর জন্য সবসময় ফ্রি। পাইলটে আগ্রহ জানান।`}
 >

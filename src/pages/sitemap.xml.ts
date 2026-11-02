@@ -27,7 +27,6 @@ export const GET: APIRoute = async ({ site }) => {
     { loc: '/collection/' },
     { loc: '/ladder/' },
     { loc: '/printables/' },
-    { loc: '/schools/' },
     { loc: '/blog/' },
     { loc: '/contact/' },
     { loc: '/privacy/' },
