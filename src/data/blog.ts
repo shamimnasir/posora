@@ -21,6 +21,7 @@ import social from './posts/social';
 import discovery from './posts/discovery';
 import searchQuestions from './posts/search-questions';
 import topicGapGuides from './posts/topic-gaps';
+import chapterGapGuides from './posts/chapter-gaps';
 import legacyFeaturedAnswers from './posts/legacy-featured-answers';
 import { EDITORIAL_SOURCES } from './posts/editorial-sources';
 
@@ -98,7 +99,7 @@ export const CLUSTERS: Cluster[] = [
 const articleDrafts: Post[] = [
   ...physics, ...nature, ...language, ...money,
   ...space, ...chemistry, ...life, ...food, ...math, ...social, ...discovery,
-  ...searchQuestions, ...topicGapGuides,
+  ...searchQuestions, ...topicGapGuides, ...chapterGapGuides,
 ];
 
 export const POSTS: Post[] = articleDrafts.map((post) => {
@@ -142,7 +143,26 @@ export const postImageAlt = (p: Post): string => p.generatedCover
  * article yet, return the world's pillar explicitly as a broad introduction
  * rather than pretending an unrelated article is an exact match.
  */
+/**
+ * Chapters whose right article is worded too differently for the scorer to
+ * find (the 2026-11-02 audit had these falling back to the pillar). Each slug
+ * was read and checked against the chapter's items.
+ */
+const CHAPTER_ARTICLES: Record<string, string[]> = {
+  'physics:বল ও গতি': ['newton-er-tin-sutro-sohoj-udaharone', 'maddhakorshon-ki-jinis-niche-pore-ken'],
+  'life:বাংলাদেশের গাছপালা': ['bangladesh-native-plants-guide'],
+  'food:রান্নার বিজ্ঞান': ['ranna-korle-khabarer-ki-bodle', 'khabar-songrokkhon-kibhabe-kaj-kore'],
+  'money:খরচ ও বাজেট': ['shishur-jonno-sohoj-budget-kibhabe', 'proyojon-ar-icchar-parthokko'],
+  'money:সঞ্চয় ও লক্ষ্য': ['taka-jomano-lokkho-thik-korbo-kibhabe', 'bank-e-joma-taka-kibhabe-thake'],
+  'money:টাকার নিরাপত্তা ও নীতি': ['money-safety-scam-guide'],
+  'social:আবেগ সামলানো': ['shishur-rag-samlano', 'rag-hole-shorir-mone-ki-hoy'],
+  'social:ভদ্রতা ও শিষ্টাচার': ['social-manners-responsibility-guide'],
+  'social:সমস্যা ও দ্বন্দ্ব': ['bondhur-sathe-jhogra-mitabo-kibhabe'],
+  'social:দায়িত্ব ও অভ্যাস': ['social-manners-responsibility-guide'],
+};
+
 export function relatedPostsForTopic(worldSlug: string, categoryName: string, items: string[], limit = 2) {
+  const curated = CHAPTER_ARTICLES[`${worldSlug}:${categoryName}`] ?? [];
   const topic = normalizeTopic(categoryName);
   const topicWords = meaningfulWords(topic);
   const ranked = POSTS
@@ -154,6 +174,7 @@ export function relatedPostsForTopic(worldSlug: string, categoryName: string, it
         ...post.sections.flatMap((section) => [section.h, ...section.p, ...(section.bullets ?? []), ...(section.steps ?? [])]),
       ].join(' '));
       let score = title.includes(topic) ? 18 : body.includes(topic) ? 5 : 0;
+      if (curated.includes(post.slug)) score += 20 - curated.indexOf(post.slug);
       for (const rawItem of items) {
         const item = normalizeTopic(rawItem);
         if (item.length < 3) continue;

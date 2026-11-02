@@ -94,7 +94,7 @@ for (const name of readdirSync(join(ROOT, 'src/data/posts'))) {
   if (!name.endsWith('.ts')) continue;
   const text = readFileSync(join(ROOT, 'src/data/posts', name), 'utf8');
   for (const match of text.matchAll(/slug:\s*'([^']+)'/g)) {
-    if (name === 'search-questions.ts' || name === 'topic-gaps.ts') {
+    if (name === 'search-questions.ts' || name === 'topic-gaps.ts' || name === 'chapter-gaps.ts') {
       // These content builders set generatedCover: true and the SVG route
       // creates a deterministic, title-specific image for every slug. They
       // intentionally have no duplicate raster JPEG under /images/blog/.
