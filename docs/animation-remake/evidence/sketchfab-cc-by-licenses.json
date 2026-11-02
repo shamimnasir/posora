@@ -32,5 +32,27 @@
     "checked": "2026-10-28",
     "asset": null,
     "status": "held: Nepali thali, not imported into the site"
+  },
+  {
+    "uid": "36e57c231b6546b7bdd19bf4dba8063d",
+    "name": "Model of the Watt Steam Engine with animation",
+    "creator": "Virtual Museums of Małopolska (@WirtualneMuzeaMalopolski)",
+    "source": "https://sketchfab.com/3d-models/model-of-the-watt-steam-engine-with-animation-36e57c231b6546b7bdd19bf4dba8063d",
+    "license": "CC Attribution",
+    "licenseSlug": "by",
+    "publishedAt": "2022-06-29T12:03:17.723944",
+    "checked": "2026-11-02",
+    "asset": "watt_steam_engine_model_01/watt-steam-engine.glb"
+  },
+  {
+    "uid": "e6f3474cecaa4c70a0e113301c362ebb",
+    "name": "Imprenta siglo xv",
+    "creator": "Daniel.Marquez2 (@Daniel.Marquez2)",
+    "source": "https://sketchfab.com/3d-models/imprenta-siglo-xv-e6f3474cecaa4c70a0e113301c362ebb",
+    "license": "CC Attribution",
+    "licenseSlug": "by",
+    "publishedAt": "2025-11-23T21:01:50.678638",
+    "checked": "2026-11-02",
+    "asset": "gutenberg_press_01/gutenberg-press.glb"
   }
 ]

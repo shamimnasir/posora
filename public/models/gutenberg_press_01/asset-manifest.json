@@ -1,0 +1,34 @@
+{
+  "name": "Imprenta siglo xv",
+  "creator": "Daniel.Marquez2 (@Daniel.Marquez2)",
+  "source": "https://sketchfab.com/3d-models/imprenta-siglo-xv-e6f3474cecaa4c70a0e113301c362ebb",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "publishedDate": "2025-11-23",
+  "downloadedDate": "2026-11-02",
+  "qualityTier": "exact-licensed",
+  "sourceFiles": [
+    {
+      "path": "imprenta_siglo_xv.glb",
+      "bytes": 2862484,
+      "sha256": "4559a24dc949bd5a0a0e1646202733d4c9913b575597dba7153d5ff3a801cf21",
+      "faceCount": 8848
+    }
+  ],
+  "files": [
+    {
+      "path": "gutenberg-press.glb",
+      "bytes": 274856,
+      "sha256": "d0a4fb89a0fdd1f5ca0bdb9d47b58edda92790a4881f8f297a2c9c7d7023bb68"
+    }
+  ],
+  "modifications": [
+    "Re-encoded with EXT_meshopt_compression; textures resized to 1024 px WebP."
+  ],
+  "educationalRole": "Discovery → আবিষ্কার ও আবিষ্কারক → ছাপাখানা: a low-poly reconstruction of a 15th-century Gutenberg-style wooden screw press, modelled from schematics of early Renaissance presses.",
+  "limitations": [
+    "A stylised reconstruction, not a scan of a surviving press; no original Gutenberg press survives.",
+    "Movable type and ink balls are not modelled."
+  ]
+}

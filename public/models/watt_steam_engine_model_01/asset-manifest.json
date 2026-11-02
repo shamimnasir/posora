@@ -1,0 +1,35 @@
+{
+  "name": "Model of the Watt Steam Engine with animation",
+  "creator": "Virtual Museums of Małopolska (@WirtualneMuzeaMalopolski)",
+  "source": "https://sketchfab.com/3d-models/model-of-the-watt-steam-engine-with-animation-36e57c231b6546b7bdd19bf4dba8063d",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionRequired": true,
+  "publishedDate": "2022-06-29",
+  "downloadedDate": "2026-11-02",
+  "qualityTier": "exact-licensed",
+  "sourceFiles": [
+    {
+      "path": "model_of_the_watt_steam_engine_with_animation.glb",
+      "bytes": 12271124,
+      "sha256": "98c52058699254c8071bd0dd8dee89822e1d905e8c2f16829de9564a810c59a1",
+      "faceCount": 124023
+    }
+  ],
+  "files": [
+    {
+      "path": "watt-steam-engine.glb",
+      "bytes": 1839484,
+      "sha256": "085c94d4bfb22145e93ba5135a5ee0616e704f4d9b72071de5ae3f7b5db8eb4e"
+    }
+  ],
+  "modifications": [
+    "Removed meshes using material(s): Material.001.",
+    "Re-encoded with EXT_meshopt_compression; textures resized to 1024 px WebP."
+  ],
+  "educationalRole": "Discovery → আবিষ্কার ও আবিষ্কারক → বাষ্পীয় ইঞ্জিন: a digitised c. 1835 Paris teaching model of a Watt beam engine (Eugène Bourdon, Muzea Małopolski), with its flywheel animation.",
+  "limitations": [
+    "A desk-sized demonstration model, not a full-size factory engine.",
+    "The museum display table was removed; textures reduced to 1024 px WebP."
+  ]
+}

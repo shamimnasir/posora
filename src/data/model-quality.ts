@@ -30,7 +30,7 @@ export const LICENSED_FIGURE_QUALITY: Record<string, ModelQuality> = {
     // photogrammetry and museum scans
     'gangesDolphinSkeleton', 'friedFishScan', 'gulabJamunScan', 'jackfruitScan', 'banyanTreeScan', 'bombaxCeibaScan', 'mintLeavesSpecimen', 'tulsiSpecimen',
     'rock', 'riceBowlScan', 'aloeVeraScan', 'turmericRootScan', 'cinnamonStickScan', 'redChilliScan', 'neem', 'whiteThroatedKingfisherScan',
-    'wrightFlyer1903', 'triceratopsSkeleton', 'trilobiteFossil',
+    'wrightFlyer1903', 'triceratopsSkeleton', 'trilobiteFossil', 'wattSteamEngine', 'gutenbergPress',
     // Poly Haven CC0 scanned or high-detail objects and produce
     'bulb', 'microscope', 'compass', 'clockFace', 'telephone', 'polyBinoculars', 'polyLaptop', 'polyCashRegister', 'polyGamepad', 'polyCalathea',
     'polySweetPotato', 'polyApple', 'polyKiwi', 'polyPomegranate', 'polyAsianPear', 'polyOnion', 'polyCroissant', 'polyAnthurium', 'polyFern',
@@ -75,8 +75,6 @@ export const PROCEDURAL_ITEM_DESIGNATIONS: Record<string, { quality: Extract<Mod
   'discovery:আবিষ্কার ও আবিষ্কারক/টিকা': { quality: 'teaching-diagram', reason: 'Vaccination is a medical idea; a vial symbolises it.' },
   'discovery:আবিষ্কার ও আবিষ্কারক/পেনিসিলিন': { quality: 'teaching-diagram', reason: 'A discovered substance; a lab vial symbolises it.' },
   'discovery:আবিষ্কার ও আবিষ্কারক/ইন্টারনেট': { quality: 'teaching-diagram', reason: 'A network, not an object.' },
-  'discovery:আবিষ্কার ও আবিষ্কারক/ছাপাখানা': { quality: 'replacement-required', reason: 'Shown as a book; needs a free model of a hand printing press.' },
-  'discovery:আবিষ্কার ও আবিষ্কারক/বাষ্পীয় ইঞ্জিন': { quality: 'replacement-required', reason: 'Shown as a gear; needs a free model of a steam engine.' },
   'discovery:পৃথিবী ও ভূতত্ত্ব/বরফযুগ': { quality: 'teaching-diagram', reason: 'A geological period.' },
   'discovery:পৃথিবী ও ভূতত্ত্ব/মাটির স্তর': { quality: 'teaching-diagram', reason: 'A cross-section is clearer than any single specimen.' },
   'discovery:পৃথিবী ও ভূতত্ত্ব/কয়লা ও তেল': { quality: 'teaching-diagram', reason: 'Fossil-fuel formation is a process.' },

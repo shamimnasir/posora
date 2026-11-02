@@ -184,6 +184,13 @@ export const LICENSED_FIGURES: Record<string, { url: string; height: number; fit
   // Smithsonian Open Access CC0 scans. The aeroplane is the actual 1903
   // Wright Flyer; the dinosaur is a fossil skeleton, not a living animal.
   wrightFlyer1903: { url: '/models/wright_flyer_1903_si_01/wright-flyer-1903.glb', height: 1.7, fitAxis: 'longest' },
+  // Sketchfab CC BY models of the two inventions. The engine is Muzea
+  // Małopolski's digitised c. 1835 Watt beam engine teaching model, moving
+  // as its maker meant it to; the press is a reconstruction, since no
+  // original Gutenberg press survives. Turned three-quarter so the bed and
+  // the frisket show beside the screw.
+  wattSteamEngine: { url: '/models/watt_steam_engine_model_01/watt-steam-engine.glb', height: 1.45, fitAxis: 'longest', playAnimations: true, animationClip: 'Animation' },
+  gutenbergPress: { url: '/models/gutenberg_press_01/gutenberg-press.glb', height: 1.35, fitAxis: 'longest', rotationY: -Math.PI / 4 },
   triceratopsSkeleton: { url: '/models/triceratops_si_01/triceratops-skeleton.glb', height: 1.8, fitAxis: 'longest', rotationY: Math.PI / 2, rotationZ: Math.PI / 2 },
   // Posora-authored CC0 models of objects defined by their construction:
   // a bullock-cart wheel and a quartz cluster (six-sided prisms with tips).

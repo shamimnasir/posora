@@ -130,8 +130,8 @@ export const COLLECTIONS: Record<string, Collection> = {
   'discovery:আবিষ্কার ও আবিষ্কারক': {
     fallback: 'gear',
     items: {
-      'চাকা': 'cartWheel', 'লিখন': 'polyNotebook', 'কাগজ': 'sheet', 'ছাপাখানা': 'book',
-      'বাষ্পীয় ইঞ্জিন': 'gear', 'বিদ্যুৎ': 'bulb', 'টেলিফোন': 'telephone',
+      'চাকা': 'cartWheel', 'লিখন': 'polyNotebook', 'কাগজ': 'sheet', 'ছাপাখানা': 'gutenbergPress',
+      'বাষ্পীয় ইঞ্জিন': 'wattSteamEngine', 'বিদ্যুৎ': 'bulb', 'টেলিফোন': 'telephone',
       'উড়োজাহাজ': 'wrightFlyer1903', 'টিকা': 'flask', 'পেনিসিলিন': 'flask',
       'কম্পিউটার': 'polyLaptop', 'ইন্টারনেট': 'monitor',
     },

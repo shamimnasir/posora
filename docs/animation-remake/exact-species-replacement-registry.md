@@ -31,7 +31,7 @@ These 23 items are drawn by Posora's own generators (`scripts/generate-original-
 
 ## Mixed-lesson replacement backlog
 
-Reported (not failing) by `npm run audit:model-coverage`: ছাপাখানা and বাষ্পীয় ইঞ্জিন still use stand-in figures (no free exact model found on Sketchfab, Poly Haven, Smithsonian 3D or Wikimedia Commons STL). চাকা (a bullock-cart wheel) and খনিজ (a quartz cluster) are now `accurate-authored` Posora models built from the object's construction and crystal geometry (`scripts/generate-original-wheel-mineral-models.mjs`). The 1903 Wright Flyer (উড়োজাহাজ), a *Triceratops horridus* skeleton (ডাইনোসর) and a *Poliella prima* trilobite (জীবাশ্ম) were replaced on 2026-10-28 with Smithsonian Open Access CC0 scans via `scripts/import-smithsonian-cc0-models.mjs`.
+ছাপাখানা and বাষ্পীয় ইঞ্জিন were replaced on 2026-11-02 with Sketchfab CC BY models via `scripts/import-sketchfab-cc-by-models.mjs`: Muzea Małopolski's digitised c. 1835 Watt beam engine teaching model (its display table removed, its flywheel animation kept) and Daniel.Marquez2's reconstruction of a 15th-century Gutenberg-style screw press. Licences are recorded in `evidence/sketchfab-cc-by-licenses.json`. চাকা (a bullock-cart wheel) and খনিজ (a quartz cluster) are now `accurate-authored` Posora models built from the object's construction and crystal geometry (`scripts/generate-original-wheel-mineral-models.mjs`). The 1903 Wright Flyer (উড়োজাহাজ), a *Triceratops horridus* skeleton (ডাইনোসর) and a *Poliella prima* trilobite (জীবাশ্ম) were replaced on 2026-10-28 with Smithsonian Open Access CC0 scans via `scripts/import-smithsonian-cc0-models.mjs`.
 
 ## Acceptance gate for a replacement
 

@@ -126,6 +126,8 @@ const cases = [
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', expected: ['korean_public_payphone_01/korean_public_payphone_01.glb'], shot: 'discovery-telephone.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', category: 'আবিষ্কার ও আবিষ্কারক', itemIndex: 7, expected: ['wright_flyer_1903_si_01/wright-flyer-1903.glb'], shot: 'discovery-wright-flyer-1903.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="3"]', category: 'আবিষ্কার ও আবিষ্কারক', itemIndex: 0, expected: ['posora_bullock_cart_wheel_01/bullock-cart-wheel.glb'], shot: 'discovery-cart-wheel.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="3"]', category: 'আবিষ্কার ও আবিষ্কারক', itemIndex: 3, expected: ['gutenberg_press_01/gutenberg-press.glb'], shot: 'discovery-gutenberg-press.png' },
+  { world: 'discovery', selector: '#world .rail-list [data-i="3"]', category: 'আবিষ্কার ও আবিষ্কারক', itemIndex: 4, expected: ['watt_steam_engine_model_01/watt-steam-engine.glb'], shot: 'discovery-watt-steam-engine.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="2"]', category: 'পৃথিবী ও ভূতত্ত্ব', itemIndex: 1, expected: ['posora_quartz_cluster_01/quartz-cluster.glb'], shot: 'discovery-quartz-cluster.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="2"]', category: 'পৃথিবী ও ভূতত্ত্ব', itemIndex: 2, expected: ['trilobite_poliella_si_01/trilobite-poliella-prima.glb'], shot: 'discovery-trilobite-fossil.png' },
   { world: 'discovery', selector: '#world .rail-list [data-i="2"]', category: 'পৃথিবী ও ভূতত্ত্ব', itemIndex: 3, expected: ['triceratops_si_01/triceratops-skeleton.glb'], shot: 'discovery-triceratops-skeleton.png' },
@@ -547,6 +549,21 @@ try {
         console.error(`ELEPHANT DETAIL DEBUG ${viewport.name}`, await page.locator('#crumb-cat,#crumb-item,#explode-note,#ctl-x').allTextContents(), await page.locator('#explode-note-title,#explode-note-copy,#explode-note-fun,#ctl-x').evaluateAll((nodes) => nodes.map((node) => ({ text: node.textContent, hidden: node instanceof HTMLElement ? node.hidden : undefined, value: node instanceof HTMLInputElement ? node.value : undefined }))));
         throw new Error(`${viewport.name}: elephant exploded view did not show its item-specific fact`);
       });
+    }
+    for (const [prefix, id, words] of [['watt_steam_engine_model_01/', 'steam-engine', ['Małopolska', 'CC BY 4.0']], ['gutenberg_press_01/', 'printing-press', ['Daniel.Marquez2', 'CC BY 4.0']]]) {
+      if (!test.expected.some((asset) => asset.startsWith(prefix))) continue;
+      await page.waitForFunction((selector) => {
+        const note = document.querySelector(selector);
+        return note instanceof HTMLElement && !note.hidden;
+      }, `#model-credit-${id}`, { timeout: 10000 });
+      const credit = await page.locator(`#model-credit-${id}`).innerText();
+      check(words.every((word) => credit.includes(word)), `${test.world}: ${id} credit is incomplete`);
+    }
+    if (test.expected.some((asset) => asset.startsWith('watt_steam_engine_model_01/'))) {
+      await page.waitForFunction(() => {
+        const url = '/models/watt_steam_engine_model_01/watt-steam-engine.glb';
+        return window.__posoraModelAnimations?.[url]?.includes('Animation') && window.__posoraPlayingAnimations?.[url] === true;
+      }, null, { timeout: 15000 });
     }
     if (test.expected.some((asset) => asset.startsWith('aloe_vera_scan_01/'))) {
       await page.waitForFunction(() => {
