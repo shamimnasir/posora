@@ -9,6 +9,7 @@
  */
 import type { Post } from '../blog-types';
 import { worlds } from '../worlds';
+import { SEARCH_UPGRADES } from './search-upgrades';
 
 type ArticleSeed = {
   cluster: string; slug: string; title: string; description: string;
@@ -142,11 +143,18 @@ function build(seed: ArticleSeed): Post {
     language:'bangla-bornomala-shekhano', social:'shishur-rag-samlano', discovery:'ghore-boshe-biggan-porikkha',
   };
   const lens = learningLenses[seed.cluster];
+  // A Search Console rewrite swaps the generic why/example sections for
+  // topic sections and keeps the hands-on mission and the world's lens.
+  const upgrade = SEARCH_UPGRADES[seed.slug];
   return {
-    slug: seed.slug, title: seed.title, description: seed.description,
-    cluster: seed.cluster, updated: '2026-10-04', generatedCover: true,
-    intro: [seed.intro], featuredAnswer: seed.answer,
-    sections: [
+    slug: seed.slug, title: upgrade?.title ?? seed.title, description: upgrade?.description ?? seed.description,
+    cluster: seed.cluster, updated: upgrade ? '2026-11-02' : '2026-10-04', generatedCover: true,
+    intro: upgrade ? [seed.intro, seed.why] : [seed.intro], featuredAnswer: upgrade?.answer ?? seed.answer,
+    sections: upgrade ? [
+      ...upgrade.sections,
+      { h: 'নিজে দেখে শেখার মিশন', p: [seed.example, seed.tryIt] },
+      { h: lens.h, p: [lens.p], bullets: lens.checklist },
+    ] : [
       { h: 'কেন বিষয়টি জানা দরকার', p: [seed.why] },
       { h: 'একটি উদাহরণ ভেঙে দেখি', p: [seed.example], steps: [
         `প্রথমে ${seed.faq} প্রশ্নটি নিজের ভাষায় বলো।`,
@@ -160,7 +168,7 @@ function build(seed: ArticleSeed): Post {
       ] },
       { h: lens.h, p: [lens.p], bullets: lens.checklist },
     ],
-    faq: [{ q: seed.faq, a: seed.faqAnswer }],
+    faq: [...(upgrade?.faq ?? []), { q: seed.faq, a: seed.faqAnswer }],
     refs: [
       { label: `${world.bn} ভুবন`, href: `/${world.slug}/`, note: 'এই বিষয়ের থ্রিডি দৃশ্য, সম্পর্কিত পাঠ ও হাতে-কলমে কাজ দেখো।' },
       { label: 'মূল পরিচিতি: এই ভুবনের বিষয়গুলো', href: `/blog/${pillarSlugs[seed.cluster]}/`, note: 'এই ভুবনের মূল ধারণা ও পটভূমি পড়ো।' },
