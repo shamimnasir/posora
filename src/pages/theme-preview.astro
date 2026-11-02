@@ -35,7 +35,7 @@ const selected = choices.find((choice) => choice.id === active) ?? choices[0];
     </div>
 
     <section class="live-preview" aria-label="থিমের বাস্তব নমুনা">
-      <nav class="sample-nav"><a href="/">পসরা</a><div><a href="/space/">মহাকাশ</a><a href="/nature/">প্রকৃতি</a><a href="/blog/">ব্লগ</a></div><a class="nav-cta" href="/digital-pack/">ডিজিটাল প্যাক</a></nav>
+      <nav class="sample-nav"><a href="/">পসরা</a><div><a href="/space/">মহাকাশ</a><a href="/nature/">প্রকৃতি</a><a href="/blog/">ব্লগ</a></div><a class="nav-cta" href="/digital-pack/">ডাউনলোড বান্ডল</a></nav>
       <div class="sample-hero">
         <div class="hero-copy"><span class="sample-kicker">আজকের ছোট অভিযান</span><h2>প্রশ্ন করো, খুঁজে দেখো, শিখে ফেলো</h2><p>বাংলায় ইন্টারঅ্যাকটিভ শেখা, হাতে-কলমে মিশন আর পরিবারের সঙ্গে করার মতো নতুন নতুন কাজ।</p><div class="hero-actions"><a class="sample-button" href={`/nature/?palette=${selected.id}`}>প্রকৃতির ভুবন ঘুরে দেখো <span>→</span></a><a class="text-link" href={`/digital-pack/?palette=${selected.id}`}>প্যাকের নমুনা দেখুন</a></div></div>
         <div class="hero-art" aria-hidden="true"><span class="sun-disc"></span><span class="hill hill-back"></span><span class="hill hill-front"></span><span class="flower flower-a">✿</span><span class="flower flower-b">✿</span><span class="art-caption">দেখো · ভাবো · বানাও</span></div>
@@ -51,7 +51,7 @@ const selected = choices.find((choice) => choice.id === active) ?? choices[0];
       </div>
     </section>
 
-    <footer class="theme-footer"><p>রঙ পছন্দ হয়েছে? বাস্তব পেজে একই থিম দেখে নিন:</p><div><a href={`/blog/panichokro-kake-bole/?palette=${selected.id}`}>একটি ব্লগ পোস্ট</a><a href={`/digital-pack/?palette=${selected.id}`}>ডিজিটাল প্যাক</a><a href={`/nature/?palette=${selected.id}`}>প্রকৃতি ভুবন</a></div><small>থিম তুলনা করতে লিংকটি শেয়ার করুন; পছন্দ না হওয়া পর্যন্ত ডিফল্ট থিমে কোনো পরিবর্তন হবে না।</small></footer>
+    <footer class="theme-footer"><p>রঙ পছন্দ হয়েছে? বাস্তব পেজে একই থিম দেখে নিন:</p><div><a href={`/blog/panichokro-kake-bole/?palette=${selected.id}`}>একটি ব্লগ পোস্ট</a><a href={`/digital-pack/?palette=${selected.id}`}>ডাউনলোড বান্ডল</a><a href={`/nature/?palette=${selected.id}`}>প্রকৃতি ভুবন</a></div><small>থিম তুলনা করতে লিংকটি শেয়ার করুন; পছন্দ না হওয়া পর্যন্ত ডিফল্ট থিমে কোনো পরিবর্তন হবে না।</small></footer>
   </section>
 </Base>
 

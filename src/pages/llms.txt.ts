@@ -133,7 +133,7 @@ ${bodies.map((b) => `- [${b.bn} (${b.en})](${origin}/space/${b.id}/)`).join('\n'
 
 - [পরিবার প্ল্যান](${origin}/family/): the planned family plan, what is built and what is not,
   and an honest note that the plan itself cannot be bought yet.${onSale ? `
-- [ডিজিটাল প্যাক](${origin}/digital-pack/): a one-time printable worksheet bundle, the only thing on sale.` : ''}
+- [ডাউনলোড বান্ডল](${origin}/digital-pack/): a one-time printable worksheet bundle, the only thing on sale.` : ''}
 - [স্কুলের জন্য](${origin}/schools/): what is ready for classroom use and what is still a pilot.
 - [যোগাযোগ](${origin}/contact/): support@posora.com, WhatsApp +880 1771-553141.
 

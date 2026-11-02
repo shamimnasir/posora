@@ -1,5 +1,5 @@
 /**
- * ছাপার প্যাক - the free printable sheets.
+ * ফ্রি ছাপার শিট - the free printable sheets.
  *
  * Every sheet is generated from data the site already renders (language.ts,
  * math.ts, space.ts), so nothing here is a separate copy that can go stale, and

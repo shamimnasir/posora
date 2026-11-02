@@ -277,7 +277,7 @@ export const digitalPacks: DigitalPack[] = [
 ];
 
 export const bundle = {
-  title: 'পসরা ১১-ভুবন ডিজিটাল প্যাক বান্ডল',
+  title: 'পসরা ১১-ভুবন ডাউনলোড বান্ডল',
   priceBdt: 249,
   packs: digitalPacks.length,
   /** Pages a child writes on, across all eleven packs. */

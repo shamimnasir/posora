@@ -13,7 +13,7 @@ const schema = [
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
-      { '@type': 'ListItem', position: 2, name: 'ডিজিটাল প্যাক', item: 'https://posora.com/digital-pack/' },
+      { '@type': 'ListItem', position: 2, name: 'ডাউনলোড বান্ডল', item: 'https://posora.com/digital-pack/' },
     ],
   },
   {
@@ -35,7 +35,7 @@ const lib = await library();
 
 <Base
   title={`৳${bn(bundle.priceBdt)} সব-ডাউনলোড বান্ডল`}
-  description={`পসরার ১১টি ভুবনের ছাপার প্যাক${lib.totalPages ? `, মোট ${bn(lib.totalPages)} পাতা` : ''}: তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র, সনদ আর অভিভাবকের গাইড। বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড।`}
+  description={`পসরার ১১টি ভুবনের অনুশীলনী প্যাক${lib.totalPages ? `, মোট ${bn(lib.totalPages)} পাতা` : ''}: তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র, সনদ আর অভিভাবকের গাইড। বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড।`}
   schema={schema}
 >
   <div class="wrap page">
@@ -92,7 +92,7 @@ const lib = await library();
         <h2>ভেতরের পাতার এক ঝলক</h2>
         <p>প্রতিটি কার্ডে সংশ্লিষ্ট প্যাকের নমুনা আছে। ট্রেসিং, সাজানো, মাপা, নকশা বা পরীক্ষার মতো কাজের ধরন আগে দেখে বেছে নিন।</p>
       </div>
-      <div class="preview-tabs" role="tablist" aria-label="ডিজিটাল প্যাক preview">
+      <div class="preview-tabs" role="tablist" aria-label="ডাউনলোড বান্ডলের নমুনা">
         <button class="preview-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="preview-sheets" id="tab-sheets">কাজের পাতা</button>
         <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-bonus" id="tab-bonus">দোকান খেলা</button>
         <button class="preview-tab" type="button" role="tab" aria-selected="false" aria-controls="preview-guide" id="tab-guide">অভিভাবকের গাইড</button>
@@ -167,7 +167,7 @@ const lib = await library();
 
     <section class="sec honest">
       <h2>একটি জরুরি কথা</h2>
-      <p>ফ্রি শিট আর অনলাইন ভুবন ফ্রিই থাকবে। এই বান্ডলে আছে ১১টি ভুবনের ছাপার প্যাক{lib.totalPages ? `, মোট ${bn(lib.totalPages)} পাতা` : ''}, প্রতিটির শেষে উত্তরপত্র, সঙ্গে সনদ, শুরু করার গাইড ও ৩০ দিনের পরিকল্পনা। প্রতিটি তথ্য সাইটের যাচাই করা পাঠ থেকে নেওয়া।{checkoutLive ? '' : ' বিক্রি এখনো শুরু হয়নি।'}</p>
+      <p>ফ্রি শিট আর অনলাইন ভুবন ফ্রিই থাকবে। এই বান্ডলে আছে ১১টি ভুবনের অনুশীলনী প্যাক{lib.totalPages ? `, মোট ${bn(lib.totalPages)} পাতা` : ''}, প্রতিটির শেষে উত্তরপত্র, সঙ্গে সনদ, শুরু করার গাইড ও ৩০ দিনের পরিকল্পনা। প্রতিটি তথ্য সাইটের যাচাই করা পাঠ থেকে নেওয়া।{checkoutLive ? '' : ' বিক্রি এখনো শুরু হয়নি।'}</p>
       <p><b>এটি পসরা পরিবারের সদস্যপদ নয়।</b> একবার কিনলে ফাইলগুলো আপনার, কিন্তু সন্তানের প্রোফাইল বা অগ্রগতি-হিসাব এর সঙ্গে আসে না। উল্টোটা সত্যি: পরিবার প্ল্যানে এই পুরো বান্ডল অন্তর্ভুক্ত। সদস্যপদের বিষয়গুলো <a href="/family/">এখানে দেখুন</a>।</p>
       {checkoutLive ? <a href="/digital-pack/checkout/">নিরাপদ চেকআউটে যান →</a> : <a href="/family/#join">বিক্রির খবর পেতে নাম লেখাও →</a>}
     </section>

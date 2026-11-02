@@ -40,7 +40,7 @@ const schema = [
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'পসরা', item: 'https://posora.com/' },
-      { '@type': 'ListItem', position: 2, name: 'ছাপার প্যাক', item: 'https://posora.com/printables/' },
+      { '@type': 'ListItem', position: 2, name: 'ফ্রি ছাপার শিট', item: 'https://posora.com/printables/' },
       { '@type': 'ListItem', position: 3, name: sheet.bn, item: sheetUrl },
     ],
   },
@@ -68,13 +68,13 @@ const skillLine: Record<typeof sheet.kind, string> = {
   money: 'দাম পড়ো · হিসাব করো',
 };
 ---
-<Base title={sheet.bn} description={`${sheet.tag} পসরার ফ্রি ছাপার প্যাক - ডাউনলোড বা প্রিন্ট করুন, কোনো অ্যাকাউন্ট লাগে না।`} schema={schema} crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }, { name: 'ছাপার প্যাক', url: 'https://posora.com/printables/' }]}>
+<Base title={sheet.bn} description={`${sheet.tag} পসরার ফ্রি ছাপার শিট - ডাউনলোড বা প্রিন্ট করুন, কোনো অ্যাকাউন্ট লাগে না।`} schema={schema} crumbs={[{ name: 'পসরা', url: 'https://posora.com/' }, { name: 'ফ্রি ছাপার শিট', url: 'https://posora.com/printables/' }]}>
   <div class="wrap page">
-    <p class="crumbs no-print"><a href="/">পসরা</a> <span>/</span> <a href="/printables/">ছাপার প্যাক</a> <span>/</span> {sheet.bn}</p>
+    <p class="crumbs no-print"><a href="/">পসরা</a> <span>/</span> <a href="/printables/">ফ্রি ছাপার শিট</a> <span>/</span> {sheet.bn}</p>
 
     <header class="head no-print">
       <div>
-        <p class="eyebrow">ছাপার প্যাক · ফ্রি</p>
+        <p class="eyebrow">ফ্রি ছাপার শিট</p>
         <h1>{sheet.emoji} {sheet.bn}</h1>
         <p class="lede">{sheet.tag}</p>
         <p class="meta">{sheet.who} · {sheet.pages}</p>
@@ -231,7 +231,7 @@ const skillLine: Record<typeof sheet.kind, string> = {
           </a>
         ))}
       </div>
-      <p class="back"><a href="/printables/">← সব ছাপার প্যাক</a> · <a href="/family/">পসরা পরিবার কী</a></p>
+      <p class="back"><a href="/printables/">← সব ফ্রি শিট</a> · <a href="/family/">পসরা পরিবার কী</a></p>
     </section>
   </div>
 </Base>
