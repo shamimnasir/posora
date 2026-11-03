@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.posora.app",
+      "sha256_cert_fingerprints": [
+        "4F:E5:BC:EB:F4:DD:6E:42:71:97:13:61:2E:0E:CD:9F:C5:5C:EC:8A:82:2B:99:6D:F4:23:BD:6F:0D:76:5A:AF"
+      ]
+    }
+  }
+]

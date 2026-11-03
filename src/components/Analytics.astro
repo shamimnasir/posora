@@ -53,6 +53,10 @@
   // font on slow phones. Queue commands immediately, fetch gtag after load,
   // and retain every page view without delaying first paint.
   const loadAnalytics = () => {
+    // The Android app is listed in Google Play's Families programme, which
+    // allows only SDKs certified for it; gtag.js is not one, so the app counts
+    // nothing. public/app-mode.js sets the class.
+    if (document.documentElement.classList.contains('in-app')) return;
     if (document.querySelector('script[data-posora-analytics]')) return;
     const script = document.createElement('script');
     script.async = true;

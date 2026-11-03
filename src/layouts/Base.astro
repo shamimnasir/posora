@@ -180,6 +180,8 @@ const graph = [
         page comes out of it. Built by scripts/make-font.py; the @font-face
         itself lives in src/styles/font.css, imported by global.css. */}
     <link rel="preload" href={FONT_URL} as="font" type="font/woff2" crossorigin />
+    {/* Marks the Android app (public/app-mode.js) before first paint. */}
+    <script is:inline src="/app-mode.js"></script>
     <Analytics />
   </head>
   <body data-palette={palette} style={hue ? `--w:${hue}` : undefined}>

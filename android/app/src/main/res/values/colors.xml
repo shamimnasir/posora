@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- theme_color in public/manifest.webmanifest -->
+    <color name="themeColor">#15544C</color>
+</resources>

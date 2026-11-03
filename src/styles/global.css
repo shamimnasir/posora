@@ -181,3 +181,8 @@ img, svg, canvas { display: block; max-width: 100%; }
 .sec-t { display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-start; }
 .sec-h h2 { font-size: clamp(1.6rem, 3.2vw, 2.2rem); }
 .sec-h p { color: var(--muted); max-width: 46ch; }
+
+/* Inside the Android app (public/app-mode.js) nothing may lead to a purchase:
+   Google Play allows digital goods to be sold only through its own billing. */
+html.in-app a[href^="/digital-pack"],
+html.in-app a[href^="/family"] { display: none !important; }

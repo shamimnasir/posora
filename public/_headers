@@ -22,3 +22,8 @@
 
 /manifest.webmanifest
   Cache-Control: public, max-age=86400
+
+# Digital Asset Links: lets the Android app (android/) open the site full screen
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
