@@ -95,7 +95,7 @@ export const LANGUAGE_CSS = String.raw`
 .tg.solid{color:#1d2433;font-weight:600;background:#fff}
 .lnote{font-size:10pt;color:#5b6475;margin:-.4mm 0 .6mm 46mm}
 .g.kars{display:flex;flex-direction:column}
-.krow{display:grid;grid-template-columns:30mm 40mm 34mm 1fr;align-items:center;gap:2mm;border-bottom:.8pt solid #e1e4ea;padding:1.2mm 0}
+.krow{display:grid;grid-template-columns:26mm 37mm 30mm 1fr;align-items:center;gap:2mm;border-bottom:.8pt solid #e1e4ea;padding:1.2mm 0}
 .kjoin b{font-size:15pt}
 .ktr{display:flex;gap:1.4mm;justify-content:flex-end}
 .g.conj{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}

@@ -200,7 +200,7 @@ const CSS = String.raw`
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#fff;color:#1d2433;font-family:PosoraBangla,PosoraEmoji,'Noto Sans Bengali',sans-serif;font-size:11.5pt;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #src{position:absolute;left:-9999px;top:0;width:180mm;visibility:hidden}
-.page{width:210mm;height:297mm;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:11mm 14mm 9mm;background:#fff;break-after:page;page-break-after:always}
+.page{width:210mm;height:297mm;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:14mm 17mm 12mm;background:#fff;break-after:page;page-break-after:always}
 .page:last-child{break-after:auto;page-break-after:auto}
 .run{display:flex;justify-content:space-between;align-items:center;font-size:9pt;color:#5b6475;border-bottom:1.2pt solid var(--c);padding-bottom:1.6mm;margin-bottom:4mm;min-height:6mm}
 .run b{color:var(--c)}

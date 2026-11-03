@@ -13,7 +13,8 @@ import { worlds } from '../../src/data/worlds';
 import { EXPLORERS, isReadable } from '../../src/lib/explorers';
 import { spaceExplorer, beltExtras } from '../../src/data/space-explorer';
 import { buildWorksheet } from '../../src/lib/worksheet';
-import { buildQuiz } from '../../src/lib/quiz';
+import { buildQuiz, blankOut } from '../../src/lib/quiz';
+import { rng, hash, shuffle } from '../../src/lib/rand';
 import { bodies } from '../../src/data/space';
 import { vowels, consonants, kars, folas, conjuncts } from '../../src/data/language';
 import { numberWords, denominations, shopItems } from '../../src/data/math';
@@ -21,9 +22,41 @@ import { MISSIONS } from '../../src/data/missions';
 import { digitalPacks, bundle } from '../../src/data/digital-packs';
 import { emojiFor } from '../../src/data/item-emoji';
 
+/**
+ * The paper যাচাই. The site's quiz asks about each item's short reading, which
+ * is exactly what the paper অনুশীলনী already blanks out, so on paper the child
+ * would answer the same ten sentences twice. This one asks about the card's
+ * মজার তথ্য instead (or, where a card has none, its longer reading): the same
+ * cards, different sentences, so it checks that the whole card was read.
+ * The item's name is blanked the same way; a fact that still names it, or
+ * names no one at all once blanked, is skipped rather than asked.
+ */
+function factQuiz(slug: string, cat: number, items: string[], detail: { l1: string; l2: string; fun: string }[]) {
+  if (items.length < 4) return [];
+  const r = rng(hash(`${slug}:${cat}:fq`));
+  const out: { prompt: string; options: string[]; answer: number }[] = [];
+  for (const i of shuffle(items.map((_, k) => k), r)) {
+    const d = detail[i]!;
+    const source = d.fun && d.fun !== d.l1 ? d.fun : d.l2;
+    if (!source) continue;
+    const prompt = blankOut(source, items[i]!);
+    const core = items[i]!.split(/\s+/).filter((w) => w.length >= 3);
+    if (core.some((w) => prompt.includes(w))) continue;
+    // A blank glued to letters (মেরুদণ্ডী blanked inside অমেরুদণ্ডী) reads as a typo.
+    if (/[\u0980-\u09FF]______|______[\u0995-\u09B9]/.test(prompt)) continue;
+    // A wrong option the fact itself mentions would be a trap, not a distractor.
+    const pool = items.map((_, j) => j).filter((j) => j !== i && !prompt.includes(items[j]!));
+    if (pool.length < 3) continue;
+    const others = shuffle(pool, rng(hash(`${slug}:${cat}:${i}:fq`))).slice(0, 3);
+    const opts = shuffle([i, ...others], rng(hash(`${slug}:${cat}:${i}:fqo`)));
+    out.push({ prompt, options: opts.map((j) => items[j]!), answer: opts.indexOf(i) });
+    if (out.length === 8) break;
+  }
+  return out;
+}
 function readableCats(slug: string) {
   const w = worlds.find((x) => x.slug === slug)!;
-  const out: { index: number; name: string; items: { name: string; emoji: string; chips: string[]; l1: string; fun: string }[]; worksheet: unknown; quiz: unknown }[] = [];
+  const out: { index: number; name: string; items: { name: string; emoji: string; chips: string[]; l1: string; fun: string }[]; worksheet: unknown; quiz: unknown; factQuiz: unknown }[] = [];
   w.cats.forEach((c, i) => {
     let detail = null as null | { chips: string[]; l1: string; l2: string; l3: string; fun: string }[];
     if (slug === 'space') {
@@ -39,6 +72,7 @@ function readableCats(slug: string) {
       items: c.items.map((name, k) => ({ name, emoji: emojiFor(slug, name) ?? '', chips: detail![k]!.chips, l1: detail![k]!.l1, fun: detail![k]!.fun })),
       worksheet: buildWorksheet(slug, i, c.items, detail),
       quiz: buildQuiz(slug, i, c.items, detail),
+      factQuiz: factQuiz(slug, i, c.items, detail),
     });
   });
   return out;

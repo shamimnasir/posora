@@ -29,6 +29,11 @@ function factCard(it) {
   return `<div class="blk card">${cutFrame}<span class="snip">✂</span><div class="nm">${it.emoji ? `<span class="em" aria-hidden="true">${esc(it.emoji)}</span>` : ''}${escName(it.name)}</div>${chips.length ? `<div class="chips">${chips.map((c) => `<span class="pill">${esc(c)}</span>`).join('')}</div>` : ''}<p class="l1">${esc(it.l1)}</p>${it.fun ? `<p class="fun"><b>মজার তথ্য:</b> ${esc(it.fun)}</p>` : ''}</div>`;
 }
 
+/** A blank card to finish the set: the child adds one thing this topic left out. */
+function ownCard() {
+  return `<div class="blk card own">${cutFrame}<span class="snip">✂</span><div class="nm"><span class="em" aria-hidden="true">✎</span>নিজের কার্ড</div><p class="small muted">এই বিভাগে আর কী থাকতে পারত? একটা নাম লেখো, ছবি আঁকো, আর এক লাইনে লেখো কেন।</p><div class="ownpic"></div><div class="ownl"><i></i><i></i></div></div>`;
+}
+
 function promptHtml(prompt) {
   const parts = String(prompt).split(BLANK);
   if (parts.length === 1) return { html: esc(prompt), inline: false };
@@ -42,7 +47,7 @@ export function categorySections(world, cat, n, keys) {
     id: `rd-${cat.index}`, cont: `${cat.name} · পড়ো`,
     parts: [
       secHead(`${label} · পড়ো`, cat.name, `${bn(cat.items.length)}টি কার্ড। জোরে পড়ো, তারপর দাগ ধরে কেটে নাও। কার্ড উল্টে রেখে একজন নাম বলবে, আরেকজন মনে করে বলবে কার্ডে কী লেখা ছিল।`),
-      group('cards', cat.items.map(factCard)),
+      group('cards', [...cat.items.map(factCard), ...(cat.items.length % 2 ? [ownCard()] : [])]),
     ],
   });
   const ws = cat.worksheet;
@@ -51,8 +56,7 @@ export function categorySections(world, cat, n, keys) {
       const p = promptHtml(b.prompt);
       return block(`<div class="bl"><span class="num">${bn(b.n)}.</span><div>${p.html}${p.inline ? '' : `<div class="ansline">কোনটির কথা? <i></i></div>`}</div></div>`);
     });
-    const pic = new Map(cat.items.map((it) => [it.name, it.emoji]));
-    const rows = ws.matchLeft.map((l, i) => `<div class="mrow"><div class="l">${pic.get(l) ? `<span class="em">${esc(pic.get(l))}</span> ` : ''}${escName(l)}</div><div></div><div class="r">${escName(ws.matchRight[i])}</div></div>`).join('');
+    const match = matchExercise(cat, ws);
     sections.push({
       id: `ws-${cat.index}`, cont: `${cat.name} · অনুশীলনী`,
       parts: [
@@ -60,64 +64,78 @@ export function categorySections(world, cat, n, keys) {
         block(`<div class="bank"><p class="h3">শব্দের ঝুড়ি</p>${ws.bank.map((w) => `<span class="pill">${escName(w)}</span>`).join('')}</div>`),
         subHead('ক. শূন্যস্থান পূরণ করো', 'প্রতিটি বাক্য পড়ো। ঝুড়ি থেকে ঠিক নামটা বেছে খালি দাগে লেখো। যে বাক্যে খালি দাগ নেই, তার নিচের দাগে লেখো বাক্যটা কোনটির কথা বলছে।'),
         group('blanks', blanks),
-        block(`<p class="h2">খ. দাগ টেনে মেলাও</p><p class="inst">বাঁ দিকের প্রতিটি নামের সঙ্গে ডান দিকের ঠিক শব্দটা একটা দাগ টেনে জোড়ো।</p><div class="match">${rows}</div>`),
+        ...(match ? match.parts : []),
       ],
     });
     keys.push({
       title: `${label} · ${cat.name} · অনুশীলনী`, ref: `ws-${cat.index}`,
       rows: [
         `<b>ক.</b> ${ws.blanks.map((b) => `${bn(b.n)}. ${escName(b.answer)}`).join(' · ')}`,
-        `<b>খ.</b> ${ws.matchKey.map((m) => `${escName(m.left)} → ${escName(m.right)}`).join(' · ')}`,
+        ...(match ? [`<b>খ.</b> ${match.key}`] : []),
       ],
     });
   }
-  if (cat.quiz?.length) {
-    const qs = cat.quiz.map((q, i) => {
+  // The paper quiz asks about the cards' মজার তথ্য, not the sentences the
+  // অনুশীলনী already blanked; the site's quiz is the fallback for a category
+  // whose facts all name their own item.
+  const quiz = cat.factQuiz?.length >= 4 ? cat.factQuiz : cat.quiz;
+  if (quiz?.length) {
+    const facts = quiz === cat.factQuiz;
+    const qs = quiz.map((q, i) => {
       const p = promptHtml(q.prompt);
       return block(`<div class="q"><span class="num">${bn(i + 1)}.</span><div><div>${p.html}</div><div class="opts">${q.options.map((o, k) => `<span class="opt"><span class="o">${OPT[k]}</span>${escName(o)}</span>`).join('')}</div></div></div>`);
     });
     sections.push({
-      id: `qz-${cat.index}`, cont: `${cat.name} · যাচাই`,
+      id: `qz-${cat.index}`, cont: `${cat.name} · যাচাই`, flow: !!ws,
       parts: [
-        secHead(`${label} · যাচাই`, cat.name, 'প্রতিটি বর্ণনা কোনটির, চারটি নামের মধ্য থেকে বেছে গোলটা ভরাট করো। আগে কার্ড না দেখে চেষ্টা করো।', nameBar()),
+        ...(ws ? [block('<div class="sep"></div>')] : []),
+        secHead(`${label} · যাচাই`, cat.name, facts
+          ? 'প্রতিটি মজার তথ্য কোন কার্ডের? চারটি নামের মধ্য থেকে বেছে গোলটা ভরাট করো। আগে কার্ড না দেখে চেষ্টা করো, তারপর কার্ড উল্টে মিলিয়ে নাও।'
+          : 'প্রতিটি বর্ণনা কোনটির, চারটি নামের মধ্য থেকে বেছে গোলটা ভরাট করো। আগে কার্ড না দেখে চেষ্টা করো।', ws ? '' : nameBar()),
         group('mcq', qs),
-        block(`<div class="score">পেলাম <i></i> / ${bn(cat.quiz.length)}</div>`),
+        block(`<div class="score">পেলাম <i></i> / ${bn(quiz.length)}</div>`),
+        block(`<div class="reflect"><p class="h3">আমার খাতা</p><div class="rl"><span>আজ নতুন শিখলাম</span><i></i></div><div class="rl"><span>সবচেয়ে মজার কার্ড</span><i></i></div><div class="rl"><span>আমার একটা প্রশ্ন, যার উত্তর খুঁজব</span><i></i></div><div class="rl stars"><span>কেমন লাগল? রং করো</span>${'<b>★</b>'.repeat(5)}</div></div>`),
       ],
     });
     keys.push({
       title: `${label} · ${cat.name} · যাচাই`, ref: `qz-${cat.index}`,
-      rows: [cat.quiz.map((q, i) => `${bn(i + 1)}. <b>${OPT[q.answer]}</b> ${escName(q.options[q.answer])}`).join(' · ')],
+      rows: [quiz.map((q, i) => `${bn(i + 1)}. <b>${OPT[q.answer]}</b> ${escName(q.options[q.answer])}`).join(' · ')],
     });
   }
-  const pm = pictureMatch(cat, label, keys);
-  if (pm) sections.push(pm);
   return sections;
 }
 
 /**
- * কার্ডের ছবি মনে আছে?: the category's pictures down the left, its names shuffled down
- * the right, a line to draw between them. Only items with a picture take
- * part, and a category with fewer than four is skipped rather than padded.
- * Framed as recall of the cards, not as guessing from the picture: for an
- * idea like a law of motion the picture is a reminder, not a definition.
- * It flows on after the যাচাই, which rarely fills its last page.
+ * খ. মেলাও on the worksheet. Where at least four cards carry a picture it is
+ * "কার্ডের ছবি মনে আছে?": pictures down the left, the names shuffled down
+ * the right. Framed as recall of the cards, not as guessing from a picture:
+ * for an idea like a law of motion the picture is a reminder, not a
+ * definition. Otherwise it is the keyword matching, minus any pair whose
+ * keyword repeats a word of the name ("নিউটনের প্রথম সূত্র" and "প্রথম
+ * সূত্র"), which would be a giveaway rather than an exercise.
  */
-function pictureMatch(cat, label, keys) {
+function matchExercise(cat, ws) {
   const pics = cat.items.filter((it) => it.emoji).slice(0, 8);
-  if (pics.length < 4) return null;
-  const names = shuffleMoved(pics.map((it) => it.name), `pm:${cat.name}`);
-  const rows = pics.map((it, i) => `<div class="pmrow"><span class="pmpic">${esc(it.emoji)}</span><span class="dot"></span><span></span><span class="dot"></span><span class="pmname">${escName(names[i])}</span></div>`).join('');
-  keys.push({
-    title: `${label} · ${cat.name} · কার্ডের ছবি`, ref: `pm-${cat.index}`,
-    rows: [pics.map((it) => `${esc(it.emoji)} → ${escName(it.name)}`).join(' · ')],
-  });
+  if (pics.length >= 4) {
+    const names = shuffleMoved(pics.map((it) => it.name), `pm:${cat.name}`);
+    const rows = pics.map((it, i) => `<div class="pmrow"><span class="pmpic">${esc(it.emoji)}</span><span class="dot"></span><span></span><span class="dot"></span><span class="pmname">${escName(names[i])}</span></div>`).join('');
+    return {
+      parts: [
+        keep(`<p class="h2">খ. কার্ডের ছবি মনে আছে?</p><p class="inst">পড়ো পাতার প্রতিটি কার্ডে একটা ছবি ছিল। কার্ড না দেখে বাঁয়ের ছবির বিন্দু থেকে ডানের ঠিক নামের বিন্দু পর্যন্ত দাগ টানো, তারপর কার্ড দেখে মিলিয়ে নাও। শেষে ছবিগুলোতে রং করো।</p>`),
+        block(`<div class="pm">${rows}</div>`),
+      ],
+      key: pics.map((it) => `${esc(it.emoji)} → ${escName(it.name)}`).join(' · '),
+    };
+  }
+  const words = (t) => String(t).split(/[\s,()-]+/).filter((w) => Array.from(w).length >= 3);
+  const shares = (a, b) => a.includes(b) || b.includes(a) || words(a).some((w) => b.includes(w)) || words(b).some((w) => a.includes(w));
+  const pairs = ws.matchKey.filter((m) => !shares(m.left, m.right));
+  if (pairs.length < 4) return null;
+  const right = shuffleMoved(pairs.map((m) => m.right), `mr:${cat.name}`);
+  const rows = pairs.map((m, i) => `<div class="mrow"><div class="l">${escName(m.left)}</div><div></div><div class="r">${escName(right[i])}</div></div>`).join('');
   return {
-    id: `pm-${cat.index}`, cont: `${cat.name} · কার্ডের ছবি`, flow: true,
-    parts: [
-      block('<div class="sep"></div>'),
-      keep(`<p class="h2">কার্ডের ছবি মনে আছে?</p><p class="inst">পড়ো পাতার প্রতিটি কার্ডে একটা ছবি ছিল। কার্ড না দেখে বাঁয়ের ছবির বিন্দু থেকে ডানের ঠিক নামের বিন্দু পর্যন্ত দাগ টানো, তারপর কার্ড দেখে মিলিয়ে নাও। শেষে ছবিগুলোতে রং করো।</p>`),
-      block(`<div class="pm">${rows}</div>`),
-    ],
+    parts: [block(`<p class="h2">খ. দাগ টেনে মেলাও</p><p class="inst">বাঁ দিকের প্রতিটি নামের সঙ্গে ডান দিকের ঠিক শব্দটা একটা দাগ টেনে জোড়ো।</p><div class="match">${rows}</div>`)],
+    key: pairs.map((m) => `${escName(m.left)} → ${escName(m.right)}`).join(' · '),
   };
 }
 
@@ -246,15 +264,15 @@ export function tocSection(rows) {
     parts: [
       secHead('এই প্যাকে যা আছে', 'সূচিপত্র', 'সংখ্যাগুলো পৃষ্ঠা নম্বর। পুরো প্যাক একসঙ্গে ছাপার দরকার নেই, আজ যে পাতাগুলো লাগবে শুধু সেগুলো ছাপুন।'),
       group('toc', rows.map(row), `<div class="trow th"><b></b><span>অংশ</span><span class="pg">পড়ো / শুরু</span><span class="pg">অনুশীলনী</span><span class="pg">যাচাই</span></div>`),
-      block(`<div class="legend"><p class="h3">প্রতিটি বিভাগে যা থাকে</p><p><b>পড়ো:</b> আসল তথ্যের কার্ড। পড়ো, কেটে নাও, খেলো।</p><p><b>অনুশীলনী:</b> শব্দের ঝুড়ি থেকে শূন্যস্থান পূরণ আর দাগ টেনে মেলানো।</p><p><b>যাচাই:</b> বহুনির্বাচনী প্রশ্ন। সব উত্তর প্যাকের শেষে উত্তরপত্রে, কাজের পাতার পেছনে নয়।</p><p><b>কার্ডের ছবি মনে আছে?</b> যাচাইয়ের পরে, কার্ডের ছবির সঙ্গে নাম দাগ টেনে মেলানো।</p><p><b>★ চিহ্নের পাতা</b> এই ভুবনের বিশেষ কাজ: ছবিতে নাম লেখা, রং করা, আঁকা আর মাপা। <b>ম</b> চিহ্নের পাতা কাগজে খেলার মিশন।</p></div>`),
+      block(`<div class="legend"><p class="h3">প্রতিটি বিভাগে যা থাকে</p><p><b>পড়ো:</b> আসল তথ্যের কার্ড। পড়ো, কেটে নাও, খেলো।</p><p><b>অনুশীলনী:</b> শব্দের ঝুড়ি থেকে শূন্যস্থান পূরণ, তারপর কার্ডের ছবির সঙ্গে নাম দাগ টেনে মেলানো।</p><p><b>যাচাই:</b> কার্ডের মজার তথ্যগুলো কোনটির, চারটি নাম থেকে বেছে নেওয়া। শেষে "আমার খাতা": কী শিখলাম, কী জানতে চাই। সব উত্তর প্যাকের শেষে উত্তরপত্রে, কাজের পাতার পেছনে নয়।</p><p><b>★ চিহ্নের পাতা</b> এই ভুবনের বিশেষ কাজ: ছবিতে নাম লেখা, রং করা, আঁকা আর মাপা। <b>ম</b> চিহ্নের পাতা কাগজে খেলার মিশন।</p></div>`),
     ],
   };
 }
 
 export const WORLD_CSS = String.raw`
-.cv{position:relative;height:100%;padding:16mm 16mm 9mm;display:flex;flex-direction:column;border:0}
-.cv::before{content:'';position:absolute;inset:7mm;border:1.6pt solid var(--c);border-radius:6mm;pointer-events:none}
-.cv-deco{position:absolute;right:7mm;top:7mm;width:95mm;height:95mm}
+.cv{position:relative;height:100%;padding:22mm 22mm 15mm;display:flex;flex-direction:column;border:0}
+.cv::before{content:'';position:absolute;inset:11mm;border:1.6pt solid var(--c);border-radius:6mm;pointer-events:none}
+.cv-deco{position:absolute;right:11mm;top:11mm;width:95mm;height:95mm}
 .cv-top{display:flex;justify-content:space-between;align-items:center;font-size:11pt;position:relative}
 .cv-brand{font-size:18pt;font-weight:800;color:var(--c)}
 .cv-site{color:#5b6475}
@@ -284,8 +302,15 @@ export const WORLD_CSS = String.raw`
 .card .nm .em{font-size:20pt;line-height:1;width:11mm;height:11mm;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:color-mix(in srgb,var(--c) 14%,#fff)}
 .mrow .em{font-size:13pt}
 .pm{display:flex;flex-direction:column;gap:1.6mm;padding:0 6mm}
-.pmrow{display:grid;grid-template-columns:14mm 3mm 1fr 3mm 56mm;align-items:center;gap:1.6mm;min-height:14mm}
-.pmpic{font-size:24pt;line-height:1;width:14mm;height:14mm;display:flex;align-items:center;justify-content:center;border:1pt solid #c9ced8;border-radius:2.4mm}
+.pmrow{display:grid;grid-template-columns:12mm 3mm 1fr 3mm 56mm;align-items:center;gap:1.6mm;min-height:12.5mm}
+.card.own .ownpic{border:1pt dashed #c9ced8;border-radius:2mm;min-height:24mm}
+.card.own .ownl{display:flex;flex-direction:column;gap:1mm}
+.card.own .ownl i{display:block;border-bottom:1pt solid #8a93a3;height:6.5mm}
+.reflect{border:1.2pt dashed color-mix(in srgb,var(--c) 60%,#fff);border-radius:3mm;padding:2.6mm 4mm;display:flex;flex-direction:column;gap:2mm}
+.rl{display:flex;gap:2mm;align-items:flex-end;font-size:11pt;color:#3a4356}
+.rl i{flex:1;border-bottom:1pt solid #4c5568;height:7mm}
+.rl.stars b{font-size:17pt;color:#fff;-webkit-text-stroke:.9pt #4c5568;line-height:1}
+.pmpic{font-size:21pt;line-height:1;width:12mm;height:12mm;display:flex;align-items:center;justify-content:center;border:1pt solid #c9ced8;border-radius:2.4mm}
 .pmrow .dot{width:2.6mm;height:2.6mm;border-radius:50%;background:#4c5568}
 .pmname{font-weight:700;border:1pt solid color-mix(in srgb,var(--c) 55%,#fff);border-radius:2mm;padding:1mm 2.6mm;min-width:22mm}
 .ord{display:flex;flex-wrap:wrap;gap:3mm 5mm;margin-top:1.6mm}

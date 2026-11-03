@@ -7,6 +7,8 @@ import { languageSections, mathSections, spaceSections, LANGUAGE_CSS, MATH_CSS, 
 import { visualSections, VISUAL_CSS } from './pack-visual.mjs';
 
 export function buildWorldDoc(pack, world, data) {
+  // The quiz the paper actually prints (see factQuiz in pack-data.ts).
+  const paperQuiz = (c) => (c.factQuiz?.length >= 4 ? c.factQuiz : c.quiz) ?? [];
   const keys = [];
   const special = [];
   const tocRows = [];
@@ -52,7 +54,7 @@ export function buildWorldDoc(pack, world, data) {
   const catSecs = [];
   world.readable.forEach((cat, i) => {
     catSecs.push(...categorySections(world, cat, i + 1, keys));
-    tocRows.push({ kind: 'cat', n: bn(i + 1), label: cat.name, index: cat.index, ws: !!cat.worksheet, qz: !!cat.quiz?.length });
+    tocRows.push({ kind: 'cat', n: bn(i + 1), label: cat.name, index: cat.index, ws: !!cat.worksheet, qz: !!paperQuiz(cat).length });
   });
   if (!previewSection) previewSection = world.readable[0] ? `ws-${world.readable[0].index}` : 'toc';
 
@@ -61,12 +63,12 @@ export function buildWorldDoc(pack, world, data) {
   tocRows.push({ kind: 'row', n: '✓', label: 'উত্তরপত্র (সব অনুশীলনী, যাচাই আর মিশনের উত্তর)', ref: 'key' });
 
   const cards = world.readable.reduce((n, c) => n + c.items.length, 0) + (world.slug === 'space' ? data.bodies.length + data.beltExtras.length : 0);
-  const questions = world.readable.reduce((n, c) => n + (c.quiz?.length ?? 0), 0);
-  const exercises = world.readable.reduce((n, c) => n + (c.worksheet ? c.worksheet.blanks.length + c.worksheet.matchKey.length : 0), 0);
+  const questions = world.readable.reduce((n, c) => n + paperQuiz(c).length, 0);
+  const exercises = world.readable.reduce((n, c) => n + (c.worksheet ? c.worksheet.blanks.length + Math.min(8, c.items.filter((it) => it.emoji).length >= 4 ? c.items.filter((it) => it.emoji).length : 0) : 0), 0);
   const stats = [
     [`${bn(world.readable.length)}টি`, 'বিভাগ'],
     [`${bn(cards)}টি`, 'তথ্য-কার্ড'],
-    [`${bn(exercises)}টি`, 'শূন্যস্থান ও মেলানো'],
+    [`${bn(exercises)}টি`, 'শূন্যস্থান ও ছবি মেলানো'],
     [`${bn(questions)}টি`, 'যাচাই প্রশ্ন'],
     [`${bn(missionSecs.length)}টি`, 'কাগজের মিশন'],
     world.slug === 'language' ? [`${bn(data.language.vowels.length + data.language.consonants.length)}টি`, 'বর্ণ ট্রেসিং']

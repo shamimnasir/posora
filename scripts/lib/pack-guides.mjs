@@ -13,6 +13,7 @@ const box = (title, body) => block(`<div class="gbox"><p class="h3">${esc(title)
 const steps = (items) => group('steps', items.map(([t, d], i) => block(`<div class="step"><span class="stepn">${bn(i + 1)}</span><div><p class="h3">${esc(t)}</p><p>${esc(d)}</p></div></div>`)));
 
 const GUIDE_CSS = String.raw`
+.g.weeks{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
 .gbox{border:1pt solid #d7dbe3;border-radius:3mm;padding:3.4mm 4.4mm;display:flex;flex-direction:column;gap:1.4mm}
 .gbox ul{margin:0;padding-left:5mm}
 .gbox li{margin:.6mm 0}
@@ -41,9 +42,9 @@ const GUIDE_CSS = String.raw`
 .lines{display:flex;flex-direction:column;gap:7mm;margin-top:3mm}
 .lines i{display:block;border-bottom:1pt solid #9aa3b3;height:1mm}
 /* certificates */
-.cert{position:relative;height:100%;padding:18mm 24mm 14mm;display:flex;flex-direction:column;align-items:center;text-align:center}
-.cert::before{content:'';position:absolute;inset:8mm;border:2.4pt solid var(--cc);border-radius:5mm}
-.cert::after{content:'';position:absolute;inset:11mm;border:.8pt solid var(--cc);border-radius:3.5mm;opacity:.6}
+.cert{position:relative;height:100%;padding:22mm 28mm 18mm;display:flex;flex-direction:column;align-items:center;text-align:center}
+.cert::before{content:'';position:absolute;inset:12mm;border:2.4pt solid var(--cc);border-radius:5mm}
+.cert::after{content:'';position:absolute;inset:15mm;border:.8pt solid var(--cc);border-radius:3.5mm;opacity:.6}
 .cert .brand{font-size:16pt;font-weight:800;color:var(--cc)}
 .cert .title{font-size:40pt;font-weight:800;margin-top:3mm;color:#141b2b;line-height:1.2}
 .cert .world{font-size:15pt;font-weight:700;color:var(--cc);margin-top:1mm}
@@ -220,7 +221,7 @@ export function buildPlan(data, packInfo) {
       id: 'notes', cont: 'আমি যা শিখলাম',
       parts: [
         secHead('প্রতি সপ্তাহের শেষে', 'আমি যা শিখলাম', 'সপ্তাহ শেষে তিনটি প্রশ্নের উত্তর লেখো বা আঁকো। ছোটরা বলবে, বড়রা লিখে দেবেন।'),
-        ...[1, 2, 3, 4].map((w) => block(`<div class="gbox"><p class="h3">সপ্তাহ ${bn(w)}</p><p>সবচেয়ে মজার তথ্য কোনটা ছিল?</p><div class="lines"><i></i></div><p>কোনটা কঠিন লেগেছিল, আর কীভাবে পারলে?</p><div class="lines"><i></i></div><p>পরের সপ্তাহে কোন ভুবনে যেতে চাও?</p><div class="lines"><i></i></div></div>`)),
+        group('weeks', [1, 2, 3, 4].map((w) => block(`<div class="gbox"><p class="h3">সপ্তাহ ${bn(w)}</p><p>সবচেয়ে মজার তথ্য কোনটা ছিল?</p><div class="lines"><i></i></div><p>কোনটা কঠিন লেগেছিল, আর কীভাবে পারলে?</p><div class="lines"><i></i></div><p>পরের সপ্তাহে কোন ভুবনে যেতে চাও?</p><div class="lines"><i></i></div></div>`))),
       ],
     },
   ];
