@@ -54,7 +54,7 @@ const text = value === null ? '' : JSON.stringify(value, null, 2);
     </div>
   </div>
 
-  <script is:inline type="application/json" id="dataset-key" set:html={JSON.stringify(key)} />
+  <script is:inline type="application/json" id="dataset-key" set:html={JSON.stringify(key).replace(/</g, '\\u003c')} />
 </Admin>
 
 <script>

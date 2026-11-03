@@ -134,8 +134,10 @@ export async function settlePayment(payload: Record<string, unknown>, origin: st
   const amount = Number(remote?.amount);
   const valid = remote?.status === 'VALID' || remote?.status === 'VALIDATED';
   if (!valid || remote?.tran_id !== tranId || remote?.currency !== order.currency || !Number.isFinite(amount) || Math.abs(amount - order.amount_bdt) > 0.001) {
-    await d.prepare("UPDATE orders SET status = 'failed', validation_id = ?, gateway_status = ?, updated_at = ? WHERE tran_id = ? AND status = 'pending'")
-      .bind(valId, text(remote?.status ?? payload.status, 40) || 'invalid', Date.now(), tranId).run();
+    // Anyone can post a tran_id with a made-up val_id to these public
+    // endpoints. Failing the order on that would let a stranger strand a real
+    // payment, so an unverifiable callback changes nothing; the gateway's own
+    // fail and cancel redirects still close the order.
     return 'failed';
   }
 

@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { addWaitlist } from '../../lib/members';
+import { addWaitlist, throttled } from '../../lib/members';
+import { sameOrigin, clientIp } from '../../lib/auth';
+import { db } from '../../lib/db';
 
 export const prerender = false;
 
@@ -12,8 +14,11 @@ type Env = {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const clip = (s: unknown, n: number) => String(s ?? '').trim().slice(0, n);
+/** One line: a name with a line break in it must not reach a mail header. */
+const line = (s: string) => s.replace(/[\r\n\u2028\u2029]+/g, ' ');
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, url }) => {
+  if (!sameOrigin(request, url)) return json({ ok: false, error: 'origin' }, 403);
   if (request.headers.get('content-type')?.includes('application/json') !== true) return json({ ok: false, error: 'bad-request' }, 415);
   let body: Record<string, unknown>;
   try { body = await request.json(); } catch { return json({ ok: false, error: 'bad-json' }, 400); }
@@ -21,8 +26,17 @@ export const POST: APIRoute = async ({ request }) => {
   // Honeypot: real users never fill this.
   if (clip(body.website, 10)) return json({ ok: true });
 
-  const name = clip(body.name, 80), contact = clip(body.contact, 120), message = clip(body.message, 2000);
+  const name = line(clip(body.name, 80)), contact = line(clip(body.contact, 120)), message = clip(body.message, 2000);
   if (name.length < 2 || contact.length < 5 || message.length < 5) return json({ ok: false, error: 'invalid' }, 422);
+
+  // Every message is an email to the support inbox and, for the waitlist
+  // forms, a database row, so one machine looping on this form could bury
+  // both. Wide enough for a family sharing a carrier-NAT address.
+  if (db()) {
+    try {
+      if (await throttled(`contact:${clientIp(request)}`, 10, 60 * 60_000)) return json({ ok: false, error: 'throttled' }, 429);
+    } catch (err) { console.error('contact throttle failed', err); }
+  }
 
   // Which form this came from, so school enquiries are not lost in the general
   // inbox. Anything unrecognised is treated as a normal message rather than

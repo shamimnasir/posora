@@ -21,6 +21,10 @@ import { bn } from './bn';
 import { hashPassword, verifyPassword } from './auth';
 
 export const MEMBER_COOKIE = 'posora_member';
+/** Ties a registration's password to the browser that chose it (see markVerified). */
+export const REG_COOKIE = 'posora_reg';
+export const regCookieOptions = (secure: boolean) =>
+  ({ httpOnly: true, secure, sameSite: 'strict', path: '/api/account', maxAge: 60 * 60 }) as const;
 export const CHILD_COOKIE = 'posora_child';
 const SESSION_DAYS = 30;
 const LINK_MINUTES = 20;
@@ -109,7 +113,7 @@ export const childCookieOptions = (secure: boolean) =>
  * the laptop would spend the allowance on nothing. That path uses the pair
  * below instead.
  */
-async function throttled(key: string, limit = LINK_LIMIT, windowMs = LINK_WINDOW_MS): Promise<boolean> {
+export async function throttled(key: string, limit = LINK_LIMIT, windowMs = LINK_WINDOW_MS): Promise<boolean> {
   const d = requireDb();
   const now = Date.now();
   const row = await d.prepare('SELECT count, until FROM member_throttle WHERE key = ?').bind(key).first<{ count: number; until: number }>();
@@ -151,7 +155,9 @@ export type LinkResult = 'sent' | 'throttled' | 'email-unavailable';
  * whether or not the address is known, so the form cannot be used to check
  * who is a member.
  */
-export async function requestMagicLink(rawEmail: string, origin: string, ip: string): Promise<LinkResult> {
+export async function requestMagicLink(
+  rawEmail: string, origin: string, ip: string, bind?: { pwHash: string; bindHash: string },
+): Promise<LinkResult> {
   const email = normalizeEmail(rawEmail);
   const d = requireDb();
   if (await throttled(`e:${await sha256Hex(email)}`) || await throttled(`ip:${ip}`)) return 'throttled';
@@ -162,8 +168,8 @@ export async function requestMagicLink(rawEmail: string, origin: string, ip: str
   const token = randomToken();
   const code = randomCode();
   const now = Date.now();
-  await d.prepare('INSERT INTO member_tokens (token_hash, email, created_at, expires_at, code_hash) VALUES (?, ?, ?, ?, ?)')
-    .bind(await sha256Hex(token), email, now, now + LINK_MINUTES * 60_000, await codeHash(code, email)).run();
+  await d.prepare('INSERT INTO member_tokens (token_hash, email, created_at, expires_at, code_hash, pw_hash, bind_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(await sha256Hex(token), email, now, now + LINK_MINUTES * 60_000, await codeHash(code, email), bind?.pwHash ?? null, bind?.bindHash ?? null).run();
 
   const link = `${origin}/account/verify?t=${token}`;
   /**
@@ -222,6 +228,27 @@ export async function peekMagicLink(token: string): Promise<LinkPeek> {
   return { ok: true, email: row.email };
 }
 
+/**
+ * Mark an address proved, and decide what happens to a password nobody has
+ * proved yet.
+ *
+ * An unverified row's password may have been set by anyone, because anyone can
+ * register any address. It survives only when the request being spent was made
+ * by registration AND is being spent from the browser that registered (the
+ * `posora_reg` cookie). Any other first proof of the address - the owner
+ * signing in by code, or clicking the link in an email they never asked for -
+ * clears it, so a stranger's password cannot ride along into the account.
+ */
+async function markVerified(
+  d: D1Database, email: string, tok: { pw_hash: string | null; bind_hash: string | null }, bindCookie: string | undefined,
+): Promise<void> {
+  const m = await d.prepare('SELECT email_verified FROM members WHERE email = ?').bind(email).first<{ email_verified: number }>();
+  if (!m || m.email_verified) return;
+  const keep = !!tok.pw_hash && !!tok.bind_hash && !!bindCookie && tok.bind_hash === (await sha256Hex(bindCookie));
+  await d.prepare('UPDATE members SET email_verified = 1, password_hash = ? WHERE email = ?')
+    .bind(keep ? tok.pw_hash : null, email).run();
+}
+
 /** Start the session for an address, creating the member on first sign-in. */
 async function startSession(email: string, ua: string | null): Promise<string> {
   const d = requireDb();
@@ -241,16 +268,18 @@ async function startSession(email: string, ua: string | null): Promise<string> {
 }
 
 /** Spend a link's token. Returns the raw session token, or null. */
-export async function consumeMagicLink(token: string, ua: string | null): Promise<string | null> {
+export async function consumeMagicLink(token: string, ua: string | null, bindCookie?: string): Promise<string | null> {
   if (!token || token.length < 20) return null;
   const d = requireDb();
   const hash = await sha256Hex(token);
-  const row = await d.prepare('SELECT email, expires_at, used_at FROM member_tokens WHERE token_hash = ?')
-    .bind(hash).first<{ email: string; expires_at: number; used_at: number | null }>();
+  const row = await d.prepare('SELECT email, expires_at, used_at, pw_hash, bind_hash FROM member_tokens WHERE token_hash = ?')
+    .bind(hash).first<{ email: string; expires_at: number; used_at: number | null; pw_hash: string | null; bind_hash: string | null }>();
   const now = Date.now();
   if (!row || row.used_at || row.expires_at < now) return null;
-  await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ?').bind(now, hash).run();
-  await d.prepare('UPDATE members SET email_verified = 1 WHERE email = ?').bind(row.email).run();
+  // Spent atomically: of two racing posts of the same link, only one signs in.
+  const spent = await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL').bind(now, hash).run();
+  if (Number(spent.meta.changes ?? 0) === 0) return null;
+  await markVerified(d, row.email, row, bindCookie);
   return startSession(row.email, ua);
 }
 
@@ -264,7 +293,7 @@ export type CodeResult =
  * twenty bits: after CODE_TRIES wrong guesses the whole request is dead and
  * the parent has to ask for a new one.
  */
-export async function consumeCode(rawEmail: string, rawCode: string, ua: string | null): Promise<CodeResult> {
+export async function consumeCode(rawEmail: string, rawCode: string, ua: string | null, bindCookie?: string): Promise<CodeResult> {
   const email = normalizeEmail(rawEmail);
   const code = rawCode.replace(/\D/g, '');
   if (!isEmail(email) || code.length !== 6) return { ok: false, error: 'bad' };
@@ -273,22 +302,28 @@ export async function consumeCode(rawEmail: string, rawCode: string, ua: string 
 
   // The newest live request for this address is the one being answered.
   const row = await d.prepare(
-    `SELECT token_hash, code_hash, expires_at, used_at, attempts FROM member_tokens
+    `SELECT token_hash, code_hash, expires_at, used_at, attempts, pw_hash, bind_hash FROM member_tokens
      WHERE email = ? AND code_hash IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
-  ).bind(email).first<{ token_hash: string; code_hash: string; expires_at: number; used_at: number | null; attempts: number }>();
+  ).bind(email).first<{ token_hash: string; code_hash: string; expires_at: number; used_at: number | null; attempts: number; pw_hash: string | null; bind_hash: string | null }>();
   if (!row || row.used_at || row.expires_at < now) return { ok: false, error: 'expired' };
-  if (row.attempts >= CODE_TRIES) return { ok: false, error: 'locked' };
+
+  // Claim a guess before checking it. Reading `attempts` and incrementing it
+  // afterwards let a burst of parallel requests all see the same count, so the
+  // five-guess cap was really "as many as you can send at once".
+  const claim = await d.prepare('UPDATE member_tokens SET attempts = attempts + 1 WHERE token_hash = ? AND attempts < ? AND used_at IS NULL')
+    .bind(row.token_hash, CODE_TRIES).run();
+  if (Number(claim.meta.changes ?? 0) === 0) return { ok: false, error: 'locked' };
 
   if (row.code_hash !== (await codeHash(code, email))) {
-    await d.prepare('UPDATE member_tokens SET attempts = attempts + 1 WHERE token_hash = ?').bind(row.token_hash).run();
     return { ok: false, error: row.attempts + 1 >= CODE_TRIES ? 'locked' : 'bad' };
   }
   // One request, one sign-in: spending the code also kills the link in the
   // same email, so a scanner cannot follow it afterwards either.
-  await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ?').bind(now, row.token_hash).run();
+  const spent = await d.prepare('UPDATE member_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL').bind(now, row.token_hash).run();
+  if (Number(spent.meta.changes ?? 0) === 0) return { ok: false, error: 'expired' };
   // entering the code is the proof that this address is theirs, which is what
   // a password account is waiting for before it will let anybody in
-  await d.prepare('UPDATE members SET email_verified = 1 WHERE email = ?').bind(email).run();
+  await markVerified(d, email, row, bindCookie);
   return { ok: true, session: await startSession(email, ua) };
 }
 
@@ -310,7 +345,7 @@ export async function consumeCode(rawEmail: string, rawCode: string, ua: string 
 export const MIN_PASSWORD = 10;
 
 export type RegisterResult =
-  | { ok: true; needsCode: true }
+  | { ok: true; needsCode: true; bind: string }
   | { ok: false; error: 'bad-email' | 'weak' | 'taken' | 'throttled' | 'email-unavailable' };
 
 /**
@@ -343,8 +378,11 @@ export async function registerWithPassword(
       .bind(newId(), email, name, now, hash).run();
   }
 
-  const sent = await requestMagicLink(email, origin, ip);
-  if (sent === 'sent') return { ok: true, needsCode: true };
+  // The code this sends keeps the password only if it is spent from this
+  // browser, which the route proves with the `bind` value as a cookie.
+  const bind = randomToken();
+  const sent = await requestMagicLink(email, origin, ip, { pwHash: hash, bindHash: await sha256Hex(bind) });
+  if (sent === 'sent') return { ok: true, needsCode: true, bind };
   return { ok: false, error: sent === 'throttled' ? 'throttled' : 'email-unavailable' };
 }
 

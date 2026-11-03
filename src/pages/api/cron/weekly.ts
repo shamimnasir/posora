@@ -8,6 +8,14 @@ export const prerender = false;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body, null, 2), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 
+/** Compare without stopping at the first wrong character, so timing says nothing. */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 type Env = {
   EMAIL?: Mail;
   CONTACT_FROM?: string;
@@ -37,7 +45,7 @@ export const POST: APIRoute = async (ctx) => {
   // it simply has no machine path in.
   const auth = request.headers.get('authorization') ?? '';
   const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  const bySecret = !!e.CRON_SECRET && bearer.length === e.CRON_SECRET.length && bearer === e.CRON_SECRET;
+  const bySecret = !!e.CRON_SECRET && safeEqual(bearer, e.CRON_SECRET);
   if (!bySecret && !(await isLoggedIn(ctx))) return json({ ok: false, error: 'auth' }, 401);
 
   const dry = url.searchParams.get('dry') === '1';

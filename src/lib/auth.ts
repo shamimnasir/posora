@@ -115,7 +115,10 @@ export async function isLoggedIn(ctx: APIContext): Promise<boolean> {
  */
 export function sameOrigin(request: Request, url: URL): boolean {
   const origin = request.headers.get('origin');
-  if (!origin) return true; // Non-browser client or a same-origin GET.
+  // No Origin: a non-browser client, or an old browser. A browser that says
+  // through Fetch Metadata that the request came from another site is refused
+  // even without one.
+  if (!origin) return !['cross-site', 'same-site'].includes(request.headers.get('sec-fetch-site') ?? '');
   try {
     return new URL(origin).host === url.host;
   } catch {

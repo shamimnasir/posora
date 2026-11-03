@@ -116,12 +116,14 @@ export async function fulfilOrder(tranId: string, proof: { bankTranId?: string |
   const order = await orderByTran(tranId);
   if (!order) throw new Error(`fulfilOrder: no order ${tranId}`);
   if (order.status === 'paid') return 'paid';
+  // A failed or cancelled mark can come from an unauthenticated callback; a
+  // payment the gateway itself has just confirmed overrides it.
   const memberId = order.member_id ?? await ensureMember(order.customer_email, order.customer_name);
   await grantEntitlement(memberId, PLAN_DIGITAL_PACK, null, `${order.gateway} ${tranId}`, order.gateway);
   const now = Date.now();
   const res = await d.prepare(
     `UPDATE orders SET status = 'paid', member_id = ?, bank_tran_id = COALESCE(?, bank_tran_id), validation_id = COALESCE(?, validation_id),
-       gateway_status = ?, updated_at = ?, paid_at = ? WHERE tran_id = ? AND status IN ('pending', 'held')`,
+       gateway_status = ?, updated_at = ?, paid_at = ? WHERE tran_id = ? AND status != 'paid'`,
   ).bind(memberId, text(proof.bankTranId, 80) || null, text(proof.validationId, 80) || null, text(proof.gatewayStatus, 40), now, now, tranId).run();
   // Only the request that actually flipped the order sends the receipt.
   if (Number(res.meta?.changes ?? 0) > 0) await sendReceipt({ ...order, paid_at: now, bank_tran_id: text(proof.bankTranId, 80) || order.bank_tran_id }, origin).catch((err) => console.error('receipt email failed', err));

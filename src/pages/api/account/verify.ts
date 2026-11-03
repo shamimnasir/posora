@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { sameOrigin } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { consumeMagicLink, MEMBER_COOKIE, cookieOptions } from '../../../lib/members';
+import { consumeMagicLink, MEMBER_COOKIE, REG_COOKIE, cookieOptions } from '../../../lib/members';
 
 export const prerender = false;
 
@@ -32,9 +32,10 @@ export const POST: APIRoute = async (ctx) => {
   } catch { return back('bad'); }
 
   try {
-    const session = await consumeMagicLink(token, request.headers.get('user-agent'));
+    const session = await consumeMagicLink(token, request.headers.get('user-agent'), cookies.get(REG_COOKIE)?.value);
     if (!session) return back('stale');
     cookies.set(MEMBER_COOKIE, session, cookieOptions(url.protocol === 'https:'));
+    cookies.delete(REG_COOKIE, { path: '/api/account' });
     return new Response(null, { status: 303, headers: { location: '/account/?welcome=1', 'cache-control': 'no-store' } });
   } catch (err) {
     console.error('verify failed', err);

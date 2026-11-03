@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { sameOrigin, clientIp } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { registerWithPassword } from '../../../lib/members';
+import { registerWithPassword, REG_COOKIE, regCookieOptions } from '../../../lib/members';
 
 export const prerender = false;
 
@@ -22,7 +22,7 @@ const json = (body: unknown, status = 200) =>
  * that nobody has proved looks exactly like a free one, and registering
  * against it simply sends that person an email they did not ask for once.
  */
-export const POST: APIRoute = async ({ request, url }) => {
+export const POST: APIRoute = async ({ request, url, cookies }) => {
   if (!sameOrigin(request, url)) return json({ ok: false, error: 'origin' }, 403);
   if (!db()) return json({ ok: false, error: 'unavailable' }, 503);
   if (request.headers.get('content-type')?.includes('application/json') !== true) return json({ ok: false, error: 'bad-request' }, 415);
@@ -39,6 +39,8 @@ export const POST: APIRoute = async ({ request, url }) => {
   try {
     const r = await registerWithPassword(email, password, name, url.origin, clientIp(request));
     if (!r.ok) return json({ ok: false, error: r.error }, r.error === 'throttled' ? 429 : 400);
+    // Only this browser can turn the emailed code into a password account.
+    cookies.set(REG_COOKIE, r.bind, regCookieOptions(url.protocol === 'https:'));
     return json({ ok: true, needsCode: true });
   } catch (err) {
     console.error('register failed', err);

@@ -154,7 +154,7 @@ const w = world ?? blank;
   </div>
 
   {/* Initial state for the client editor. Not executable: CSP-safe. */}
-  <script is:inline type="application/json" id="world-data" set:html={JSON.stringify({ world: w, creating })} />
+  <script is:inline type="application/json" id="world-data" set:html={JSON.stringify({ world: w, creating }).replace(/</g, '\\u003c')} />
 </Admin>
 
 <script>

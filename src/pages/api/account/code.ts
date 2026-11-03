@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { sameOrigin } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { consumeCode, MEMBER_COOKIE, cookieOptions } from '../../../lib/members';
+import { consumeCode, MEMBER_COOKIE, REG_COOKIE, cookieOptions } from '../../../lib/members';
 
 export const prerender = false;
 
@@ -43,9 +43,10 @@ export const POST: APIRoute = async ({ request, url, cookies }) => {
   const code = typeof body.code === 'string' ? body.code : '';
 
   try {
-    const r = await consumeCode(email, code, request.headers.get('user-agent'));
+    const r = await consumeCode(email, code, request.headers.get('user-agent'), cookies.get(REG_COOKIE)?.value);
     if (!r.ok) return json({ ok: false, error: r.error }, 401);
     cookies.set(MEMBER_COOKIE, r.session, cookieOptions(url.protocol === 'https:'));
+    cookies.delete(REG_COOKIE, { path: '/api/account' });
     return json({ ok: true });
   } catch (err) {
     console.error('code sign-in failed', err);

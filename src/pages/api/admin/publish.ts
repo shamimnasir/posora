@@ -24,5 +24,8 @@ export const POST: APIRoute = async (ctx) => {
     bustCache();
   }
 
-  return redirect(form.get('back')?.toString() || '/admin/worlds', 303);
+  // Only a path on this site: `//evil.example` or a full URL would turn the
+  // panel into an open redirect.
+  const back = form.get('back')?.toString() ?? '';
+  return redirect(/^\/(?![\/\\])/.test(back) ? back : '/admin/worlds', 303);
 };
