@@ -79,6 +79,17 @@ export const group = (cls, blocks, head = '') => ({ group: cls, head, blocks });
  */
 export const cutFrame = '<svg class="cut" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="10" ry="10" fill="none" stroke="#9aa3b3" stroke-width="1.2" stroke-dasharray="5 4"/></svg>';
 
+/**
+ * Pictures print in Noto Emoji, the monochrome font the site itself uses
+ * (scripts/make-emoji-font.py), not the system's colour emoji: the same
+ * drawing on every machine, vector instead of a bitmap per picture (colour
+ * bitmaps doubled a pack's size and made Chrome refuse to print the longest
+ * ones), and outlines a child can colour in. The generator downloads the
+ * full font into this path once; Chrome embeds only the glyphs used.
+ */
+export const EMOJI_FONT = 'private-downloads/.fonts/NotoEmoji.ttf';
+export const EMOJI_FONT_URL = 'https://raw.githubusercontent.com/google/fonts/main/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf';
+
 export function renderDoc(doc, root) {
   const fontUrl = `file://${path.join(root, 'public/fonts/noto-sans-bengali-400-800.95b2d88278.woff2')}`;
   const secs = doc.sections.map((s) => {
@@ -89,6 +100,7 @@ export function renderDoc(doc, root) {
   }).join('\n');
   return `<!doctype html><html lang="bn"><head><meta charset="utf-8"><title>${esc(doc.title)}</title>
 <style>@font-face{font-family:PosoraBangla;src:url('${fontUrl}') format('woff2');font-weight:400 800;font-display:block}
+@font-face{font-family:PosoraEmoji;src:url('file://${path.join(root, EMOJI_FONT)}') format('truetype');font-weight:300 700;font-display:block;unicode-range:U+2600-27BF,U+2B00-2BFF,U+1F000-1FAFF,U+FE0F,U+200D}
 ${CSS}
 :root{--c:${doc.color};}
 ${doc.landscape ? '@page{size:A4 landscape;margin:0}.page{width:297mm;height:210mm}' : ''}
@@ -186,7 +198,7 @@ window.__paginate = function () {
 const CSS = String.raw`
 @page{size:A4;margin:0}
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#fff;color:#1d2433;font-family:PosoraBangla,'Noto Sans Bengali',sans-serif;font-size:11.5pt;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#fff;color:#1d2433;font-family:PosoraBangla,PosoraEmoji,'Noto Sans Bengali',sans-serif;font-size:11.5pt;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #src{position:absolute;left:-9999px;top:0;width:180mm;visibility:hidden}
 .page{width:210mm;height:297mm;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:11mm 14mm 9mm;background:#fff;break-after:page;page-break-after:always}
 .page:last-child{break-after:auto;page-break-after:auto}

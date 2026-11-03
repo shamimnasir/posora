@@ -4,6 +4,7 @@
 import { bn } from './pack-kit.mjs';
 import { categorySections, missionSections, keySection, coverHtml, tocSection, WORLD_CSS } from './pack-world.mjs';
 import { languageSections, mathSections, spaceSections, LANGUAGE_CSS, MATH_CSS, SPACE_CSS } from './pack-special.mjs';
+import { visualSections, VISUAL_CSS } from './pack-visual.mjs';
 
 export function buildWorldDoc(pack, world, data) {
   const keys = [];
@@ -38,8 +39,15 @@ export function buildWorldDoc(pack, world, data) {
     sp('sp-order', 'দূরত্ব, ওজন আর চাঁদ: আসল সংখ্যা দিয়ে সাজাও');
     sp('sp-quiz', 'সৌরজগৎ যাচাই: সংখ্যা দেখে চিনে নাও');
     previewSection = 'sp-bodies';
+  } else {
+    const v = visualSections(world, keys);
+    if (v) {
+      css += VISUAL_CSS;
+      special.push(...v.sections);
+      v.toc.forEach(([id, label]) => sp(id, label));
+      previewSection = v.preview;
+    }
   }
-  if (world.slug === 'math') css += '';
 
   const catSecs = [];
   world.readable.forEach((cat, i) => {

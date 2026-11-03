@@ -21,7 +21,7 @@ import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { chromium } from 'playwright-core';
-import { renderDoc } from './lib/pack-kit.mjs';
+import { renderDoc, EMOJI_FONT, EMOJI_FONT_URL } from './lib/pack-kit.mjs';
 import { buildWorldDoc } from './lib/pack-docs.mjs';
 import { buildStartHere, buildPlan, buildCertificates, buildWallCharts } from './lib/pack-guides.mjs';
 
@@ -44,6 +44,13 @@ const { snapshot } = await import(pathToFileURL(entryOut).href);
 const data = snapshot();
 
 await fs.mkdir(htmlDir, { recursive: true });
+const emojiFont = path.join(root, EMOJI_FONT);
+if (!await fs.stat(emojiFont).catch(() => null)) {
+  const res = await fetch(EMOJI_FONT_URL);
+  if (!res.ok) throw new Error(`emoji font download failed: ${res.status}`);
+  await fs.mkdir(path.dirname(emojiFont), { recursive: true });
+  await fs.writeFile(emojiFont, Buffer.from(await res.arrayBuffer()));
+}
 await fs.mkdir(previewDir, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: true });
@@ -56,7 +63,7 @@ async function renderPdf(slug, doc) {
   await fs.writeFile(htmlPath, renderDoc(doc, root), 'utf8');
   const page = await ctx.newPage();
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: 'load' });
-  await page.evaluate(async () => { await document.fonts.load('16px PosoraBangla', 'অআক'); await document.fonts.ready; });
+  await page.evaluate(async () => { await document.fonts.load('16px PosoraBangla', 'অআক'); await document.fonts.load('16px PosoraEmoji', '🌱'); await document.fonts.ready; });
   const res = await page.evaluate(() => window.__paginate());
   if (res.errors.length) {
     console.error(`[${slug}] layout problems:\n  ${res.errors.join('\n  ')}`);
@@ -96,7 +103,7 @@ for (const pack of data.packs) {
   // Pages a child writes on: worksheets, quizzes, the world's special pages and the missions.
   const work = new Set();
   doc.sections.forEach((sec, i) => {
-    if (!/^(ws|qz|sp|ms)-/.test(sec.id)) return;
+    if (!/^(ws|qz|sp|ms|pm)-/.test(sec.id)) return;
     const a = r.toc[sec.id];
     const next = doc.sections.slice(i + 1).find((x) => r.toc[x.id]);
     const b = next ? (next.flow ? r.toc[next.id] : r.toc[next.id] - 1) : r.pages;

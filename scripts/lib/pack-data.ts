@@ -19,10 +19,11 @@ import { vowels, consonants, kars, folas, conjuncts } from '../../src/data/langu
 import { numberWords, denominations, shopItems } from '../../src/data/math';
 import { MISSIONS } from '../../src/data/missions';
 import { digitalPacks, bundle } from '../../src/data/digital-packs';
+import { emojiFor } from '../../src/data/item-emoji';
 
 function readableCats(slug: string) {
   const w = worlds.find((x) => x.slug === slug)!;
-  const out: { index: number; name: string; items: { name: string; chips: string[]; l1: string; fun: string }[]; worksheet: unknown; quiz: unknown }[] = [];
+  const out: { index: number; name: string; items: { name: string; emoji: string; chips: string[]; l1: string; fun: string }[]; worksheet: unknown; quiz: unknown }[] = [];
   w.cats.forEach((c, i) => {
     let detail = null as null | { chips: string[]; l1: string; l2: string; l3: string; fun: string }[];
     if (slug === 'space') {
@@ -35,7 +36,7 @@ function readableCats(slug: string) {
     out.push({
       index: i,
       name: c.n,
-      items: c.items.map((name, k) => ({ name, chips: detail![k]!.chips, l1: detail![k]!.l1, fun: detail![k]!.fun })),
+      items: c.items.map((name, k) => ({ name, emoji: emojiFor(slug, name) ?? '', chips: detail![k]!.chips, l1: detail![k]!.l1, fun: detail![k]!.fun })),
       worksheet: buildWorksheet(slug, i, c.items, detail),
       quiz: buildQuiz(slug, i, c.items, detail),
     });

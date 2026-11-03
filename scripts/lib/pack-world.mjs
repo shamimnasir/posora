@@ -26,7 +26,7 @@ export function traceGlyph(text, { w = 19, h = 19, size = 16, solid = false } = 
 /* ---------------- category pages ---------------- */
 function factCard(it) {
   const chips = (it.chips ?? []).filter((c) => c && c !== it.name).slice(0, 3);
-  return `<div class="blk card">${cutFrame}<span class="snip">✂</span><div class="nm">${escName(it.name)}</div>${chips.length ? `<div class="chips">${chips.map((c) => `<span class="pill">${esc(c)}</span>`).join('')}</div>` : ''}<p class="l1">${esc(it.l1)}</p>${it.fun ? `<p class="fun"><b>মজার তথ্য:</b> ${esc(it.fun)}</p>` : ''}</div>`;
+  return `<div class="blk card">${cutFrame}<span class="snip">✂</span><div class="nm">${it.emoji ? `<span class="em" aria-hidden="true">${esc(it.emoji)}</span>` : ''}${escName(it.name)}</div>${chips.length ? `<div class="chips">${chips.map((c) => `<span class="pill">${esc(c)}</span>`).join('')}</div>` : ''}<p class="l1">${esc(it.l1)}</p>${it.fun ? `<p class="fun"><b>মজার তথ্য:</b> ${esc(it.fun)}</p>` : ''}</div>`;
 }
 
 function promptHtml(prompt) {
@@ -51,7 +51,8 @@ export function categorySections(world, cat, n, keys) {
       const p = promptHtml(b.prompt);
       return block(`<div class="bl"><span class="num">${bn(b.n)}.</span><div>${p.html}${p.inline ? '' : `<div class="ansline">কোনটির কথা? <i></i></div>`}</div></div>`);
     });
-    const rows = ws.matchLeft.map((l, i) => `<div class="mrow"><div class="l">${escName(l)}</div><div></div><div class="r">${escName(ws.matchRight[i])}</div></div>`).join('');
+    const pic = new Map(cat.items.map((it) => [it.name, it.emoji]));
+    const rows = ws.matchLeft.map((l, i) => `<div class="mrow"><div class="l">${pic.get(l) ? `<span class="em">${esc(pic.get(l))}</span> ` : ''}${escName(l)}</div><div></div><div class="r">${escName(ws.matchRight[i])}</div></div>`).join('');
     sections.push({
       id: `ws-${cat.index}`, cont: `${cat.name} · অনুশীলনী`,
       parts: [
@@ -88,7 +89,36 @@ export function categorySections(world, cat, n, keys) {
       rows: [cat.quiz.map((q, i) => `${bn(i + 1)}. <b>${OPT[q.answer]}</b> ${escName(q.options[q.answer])}`).join(' · ')],
     });
   }
+  const pm = pictureMatch(cat, label, keys);
+  if (pm) sections.push(pm);
   return sections;
+}
+
+/**
+ * কার্ডের ছবি মনে আছে?: the category's pictures down the left, its names shuffled down
+ * the right, a line to draw between them. Only items with a picture take
+ * part, and a category with fewer than four is skipped rather than padded.
+ * Framed as recall of the cards, not as guessing from the picture: for an
+ * idea like a law of motion the picture is a reminder, not a definition.
+ * It flows on after the যাচাই, which rarely fills its last page.
+ */
+function pictureMatch(cat, label, keys) {
+  const pics = cat.items.filter((it) => it.emoji).slice(0, 8);
+  if (pics.length < 4) return null;
+  const names = shuffleMoved(pics.map((it) => it.name), `pm:${cat.name}`);
+  const rows = pics.map((it, i) => `<div class="pmrow"><span class="pmpic">${esc(it.emoji)}</span><span class="dot"></span><span></span><span class="dot"></span><span class="pmname">${escName(names[i])}</span></div>`).join('');
+  keys.push({
+    title: `${label} · ${cat.name} · কার্ডের ছবি`, ref: `pm-${cat.index}`,
+    rows: [pics.map((it) => `${esc(it.emoji)} → ${escName(it.name)}`).join(' · ')],
+  });
+  return {
+    id: `pm-${cat.index}`, cont: `${cat.name} · কার্ডের ছবি`, flow: true,
+    parts: [
+      block('<div class="sep"></div>'),
+      keep(`<p class="h2">কার্ডের ছবি মনে আছে?</p><p class="inst">পড়ো পাতার প্রতিটি কার্ডে একটা ছবি ছিল। কার্ড না দেখে বাঁয়ের ছবির বিন্দু থেকে ডানের ঠিক নামের বিন্দু পর্যন্ত দাগ টানো, তারপর কার্ড দেখে মিলিয়ে নাও। শেষে ছবিগুলোতে রং করো।</p>`),
+      block(`<div class="pm">${rows}</div>`),
+    ],
+  };
 }
 
 /* ---------------- missions on paper ---------------- */
@@ -216,7 +246,7 @@ export function tocSection(rows) {
     parts: [
       secHead('এই প্যাকে যা আছে', 'সূচিপত্র', 'সংখ্যাগুলো পৃষ্ঠা নম্বর। পুরো প্যাক একসঙ্গে ছাপার দরকার নেই, আজ যে পাতাগুলো লাগবে শুধু সেগুলো ছাপুন।'),
       group('toc', rows.map(row), `<div class="trow th"><b></b><span>অংশ</span><span class="pg">পড়ো / শুরু</span><span class="pg">অনুশীলনী</span><span class="pg">যাচাই</span></div>`),
-      block(`<div class="legend"><p class="h3">প্রতিটি বিভাগে তিন রকম পাতা</p><p><b>পড়ো:</b> আসল তথ্যের কার্ড। পড়ো, কেটে নাও, খেলো।</p><p><b>অনুশীলনী:</b> শব্দের ঝুড়ি থেকে শূন্যস্থান পূরণ আর দাগ টেনে মেলানো।</p><p><b>যাচাই:</b> বহুনির্বাচনী প্রশ্ন। সব উত্তর প্যাকের শেষে উত্তরপত্রে, কাজের পাতার পেছনে নয়।</p><p><b>★ চিহ্নের পাতা</b> এই ভুবনের বিশেষ কাজ, <b>ম</b> চিহ্নের পাতা কাগজে খেলার মিশন।</p></div>`),
+      block(`<div class="legend"><p class="h3">প্রতিটি বিভাগে যা থাকে</p><p><b>পড়ো:</b> আসল তথ্যের কার্ড। পড়ো, কেটে নাও, খেলো।</p><p><b>অনুশীলনী:</b> শব্দের ঝুড়ি থেকে শূন্যস্থান পূরণ আর দাগ টেনে মেলানো।</p><p><b>যাচাই:</b> বহুনির্বাচনী প্রশ্ন। সব উত্তর প্যাকের শেষে উত্তরপত্রে, কাজের পাতার পেছনে নয়।</p><p><b>কার্ডের ছবি মনে আছে?</b> যাচাইয়ের পরে, কার্ডের ছবির সঙ্গে নাম দাগ টেনে মেলানো।</p><p><b>★ চিহ্নের পাতা</b> এই ভুবনের বিশেষ কাজ: ছবিতে নাম লেখা, রং করা, আঁকা আর মাপা। <b>ম</b> চিহ্নের পাতা কাগজে খেলার মিশন।</p></div>`),
     ],
   };
 }
@@ -250,6 +280,14 @@ export const WORLD_CSS = String.raw`
 .trow.th{background:color-mix(in srgb,var(--c) 10%,#fff);font-weight:800;border-top:0;font-size:10.5pt}
 .legend{border:1pt solid #d7dbe3;border-radius:3mm;padding:3mm 4mm;display:flex;flex-direction:column;gap:1mm}
 .sep{border-top:1.2pt solid #e1e4ea;margin:1mm 0 2mm}
+.card .nm{display:flex;align-items:center;gap:2.4mm}
+.card .nm .em{font-size:20pt;line-height:1;width:11mm;height:11mm;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:color-mix(in srgb,var(--c) 14%,#fff)}
+.mrow .em{font-size:13pt}
+.pm{display:flex;flex-direction:column;gap:1.6mm;padding:0 6mm}
+.pmrow{display:grid;grid-template-columns:14mm 3mm 1fr 3mm 56mm;align-items:center;gap:1.6mm;min-height:14mm}
+.pmpic{font-size:24pt;line-height:1;width:14mm;height:14mm;display:flex;align-items:center;justify-content:center;border:1pt solid #c9ced8;border-radius:2.4mm}
+.pmrow .dot{width:2.6mm;height:2.6mm;border-radius:50%;background:#4c5568}
+.pmname{font-weight:700;border:1pt solid color-mix(in srgb,var(--c) 55%,#fff);border-radius:2mm;padding:1mm 2.6mm;min-width:22mm}
 .ord{display:flex;flex-wrap:wrap;gap:3mm 5mm;margin-top:1.6mm}
 .ordi{display:inline-flex;align-items:center;gap:2mm;border:1pt solid #c9ced8;border-radius:2mm;padding:1.4mm 3mm 1.4mm 1.4mm}
 .ordi .box{width:8mm;height:8mm}
