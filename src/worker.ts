@@ -24,8 +24,28 @@ type Env = {
   SITE_ORIGIN?: string;
 };
 
+/**
+ * One address per page. `www.posora.com` and `/blog` both served a full page,
+ * and `/blog` even declared itself canonical, so search engines saw duplicates
+ * of what the sitemap lists as `posora.com/blog/`. Only page reads redirect:
+ * /api and files keep their paths, and a form post must not lose its body.
+ */
+function canonicalRedirect(request: Request): Response | null {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null;
+  const url = new URL(request.url);
+  const isPage = !url.pathname.startsWith('/api/') && !url.pathname.split('/').pop()?.includes('.');
+  const needsHost = url.hostname === 'www.posora.com';
+  const needsSlash = isPage && !url.pathname.endsWith('/');
+  if (!needsHost && !needsSlash) return null;
+  if (needsHost) url.hostname = 'posora.com';
+  if (needsSlash) url.pathname += '/';
+  return new Response(null, { status: 301, headers: { location: url.href } });
+}
+
 export default {
-  fetch: handle,
+  fetch(request: Request, env: Parameters<typeof handle>[1], ctx: ExecutionContext) {
+    return canonicalRedirect(request) ?? handle(request, env, ctx);
+  },
 
   /**
    * Fired by the cron trigger in wrangler.jsonc.
