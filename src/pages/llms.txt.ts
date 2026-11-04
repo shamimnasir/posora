@@ -131,9 +131,8 @@ ${bodies.map((b) => `- [${b.bn} (${b.en})](${origin}/space/${b.id}/)`).join('\n'
 
 ## For parents and schools
 
-- [পরিবার প্ল্যান](${origin}/family/): the planned family plan, what is built and what is not,
-  and an honest note that the plan itself cannot be bought yet.${onSale ? `
-- [ডাউনলোড বান্ডল](${origin}/digital-pack/): a one-time printable worksheet bundle, the only thing on sale.` : ''}
+- [পরিবার প্ল্যান](${origin}/family/): an optional yearly family plan for parents, with what is built and what is not.${onSale ? `
+- [ডাউনলোড বান্ডল](${origin}/digital-pack/): a one-time printable worksheet bundle.` : ''}
 - [যোগাযোগ](${origin}/contact/): support@posora.com, WhatsApp +880 1771-553141.
 
 ## How to cite this site
@@ -145,7 +144,7 @@ top of the free material rather than fencing any of it off.
 
 ## Things not to say about it
 
-${onSale ? '- It does not sell subscriptions. The only purchase is the one-time digital pack; the family plan is not on sale.' : '- It does not sell anything today: there is no payment gateway connected.'}
+${onSale ? '- It does not charge automatically. The bundle and the yearly family plan are each one bKash payment, with no renewal unless the parent pays again.' : '- It does not sell anything today: there is no payment gateway connected.'}
 - It does not create accounts for children. Accounts belong to an adult, and a
   child is only a nickname and a level inside one.
 - It makes no claim to cover a national curriculum.

@@ -1,6 +1,8 @@
 /**
- * The one thing পসরা sells today - the all-downloads bundle - and the order
- * ledger both payment rails share.
+ * What পসরা sells - the all-downloads bundle and a year of the family plan -
+ * and the order ledger both payment rails share. The family plan goes through
+ * bKash only: it is one payment for one year, with no automatic renewal, because
+ * the bKash checkout here cannot charge again without the buyer.
  *
  * bKash and SSLCommerz differ only in how a payment is started and verified.
  * Once a rail has verified the money server-to-server it calls `fulfilOrder`,
@@ -13,14 +15,23 @@
  * files stay in the buyer's account, reached by the usual email code.
  */
 import { env } from 'cloudflare:workers';
-import { ensureMember, grantEntitlement, PLAN_DIGITAL_PACK } from './members';
+import { ensureMember, extendFamilyPlan, grantEntitlement, PLAN_DIGITAL_PACK } from './members';
 import { db, dbEnv, requireDb } from './db';
-import { bn } from './bn';
+import { bn, bnNum } from './bn';
 
 export const DIGITAL_PACK_SLUG = 'all-worlds-digital-pack';
 export const DIGITAL_PACK_AMOUNT = 249;
 export const DIGITAL_PACK_CURRENCY = 'BDT';
 export const DOWNLOAD_KEY_DAYS = 30;
+export const FAMILY_SLUG = 'family-annual';
+export const FAMILY_AMOUNT = 1200;
+export const FAMILY_DAYS = 365;
+
+export type Product = { slug: string; amount: number; name: string; ga: string };
+/** The amount a checkout charges comes from here and never from the browser. */
+export const BUNDLE_PRODUCT: Product = { slug: DIGITAL_PACK_SLUG, amount: DIGITAL_PACK_AMOUNT, name: 'পসরা সব-ডাউনলোড বান্ডল', ga: 'bundle' };
+export const FAMILY_PRODUCT: Product = { slug: FAMILY_SLUG, amount: FAMILY_AMOUNT, name: 'পসরা পরিবার, এক বছর', ga: 'family' };
+export const productBySlug = (slug?: string | null): Product => (slug === FAMILY_SLUG ? FAMILY_PRODUCT : BUNDLE_PRODUCT);
 
 export type Gateway = 'bkash' | 'sslcommerz';
 
@@ -56,6 +67,9 @@ export function usableGateways(): Gateway[] {
 /** Real money changes hands only in live mode; public copy about selling follows this. */
 export const digitalPackOnSale = (): boolean => digitalPackReady() && liveGateways().length > 0;
 
+/** The family plan includes the files and needs the bKash rail. */
+export const familyOnSale = (): boolean => digitalPackReady() && liveGateways().includes('bkash');
+
 const text = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
 
 export const newTranId = (): string => {
@@ -69,22 +83,26 @@ const newKey = (): string => [...crypto.getRandomValues(new Uint8Array(20))].map
 export type BuyerInput = { name: string; email: string; phone: string };
 export type Buyer = BuyerInput;
 
-/** Clean and check what the checkout form sent; null when it cannot be used. */
-export function cleanBuyer(input: BuyerInput): Buyer | null {
-  const name = text(input.name, 100), email = text(input.email, 254).toLowerCase();
+/**
+ * Clean and check what the checkout form sent; null when it cannot be used.
+ * bKash collects the wallet number on its own page, so for that rail the email
+ * is enough (`emailOnly`). SSLCommerz requires a name and a phone number.
+ */
+export function cleanBuyer(input: BuyerInput, emailOnly = false): Buyer | null {
+  const name = text(input.name, 100) || (emailOnly ? 'অভিভাবক' : ''), email = text(input.email, 254).toLowerCase();
   // Bangla digits typed on a phone keyboard are still a phone number.
   const phone = text(input.phone, 24).replace(/[০-৯]/g, (d) => String('০১২৩৪৫৬৭৮৯'.indexOf(d)));
-  if (name.length < 2 || !/^\S+@\S+\.\S{2,}$/.test(email) || phone.replace(/\D/g, '').length < 6) return null;
+  if (name.length < 2 || !/^\S+@\S+\.\S{2,}$/.test(email) || (!emailOnly && phone.replace(/\D/g, '').length < 6)) return null;
   return { name, email, phone };
 }
 
 /** Open a pending order and return its id and the buyer's download key. */
-export async function createOrder(buyer: Buyer, gateway: Gateway): Promise<{ tranId: string; key: string }> {
+export async function createOrder(buyer: Buyer, gateway: Gateway, product: Product = BUNDLE_PRODUCT): Promise<{ tranId: string; key: string }> {
   const tranId = newTranId(), key = newKey(), now = Date.now();
   await requireDb().prepare(
     `INSERT INTO orders (id, tran_id, product_slug, amount_bdt, currency, customer_name, customer_email, customer_phone, status, gateway, download_key, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
-  ).bind(crypto.randomUUID(), tranId, DIGITAL_PACK_SLUG, DIGITAL_PACK_AMOUNT, DIGITAL_PACK_CURRENCY, buyer.name, buyer.email, buyer.phone, gateway, key, now, now).run();
+  ).bind(crypto.randomUUID(), tranId, product.slug, product.amount, DIGITAL_PACK_CURRENCY, buyer.name, buyer.email, buyer.phone, gateway, key, now, now).run();
   return { tranId, key };
 }
 
@@ -105,7 +123,7 @@ export async function markOrder(tranId: string, status: 'failed' | 'cancelled', 
 }
 
 /**
- * Grant the bundle and mark a verified order paid. Call only after the rail
+ * Grant what the order bought and mark a verified order paid. Call only after the rail
  * has confirmed the amount and currency with the gateway itself.
  * The entitlement is granted before the order flips to paid, so a database
  * hiccup can leave a pending-but-entitled order (harmless, and retried) but
@@ -119,7 +137,8 @@ export async function fulfilOrder(tranId: string, proof: { bankTranId?: string |
   // A failed or cancelled mark can come from an unauthenticated callback; a
   // payment the gateway itself has just confirmed overrides it.
   const memberId = order.member_id ?? await ensureMember(order.customer_email, order.customer_name);
-  await grantEntitlement(memberId, PLAN_DIGITAL_PACK, null, `${order.gateway} ${tranId}`, order.gateway);
+  if (order.product_slug === FAMILY_SLUG) await extendFamilyPlan(memberId, FAMILY_DAYS, `${order.gateway} ${tranId}`, order.gateway);
+  else await grantEntitlement(memberId, PLAN_DIGITAL_PACK, null, `${order.gateway} ${tranId}`, order.gateway);
   const now = Date.now();
   const res = await d.prepare(
     `UPDATE orders SET status = 'paid', member_id = ?, bank_tran_id = COALESCE(?, bank_tran_id), validation_id = COALESCE(?, validation_id),
@@ -165,26 +184,31 @@ async function sendReceipt(order: OrderRow, origin: string): Promise<void> {
   if (!mail.EMAIL) return;
   const link = confirmationUrl(origin, order.tran_id, order.download_key);
   const via = order.gateway === 'bkash' ? 'বিকাশ' : 'SSLCommerz';
+  const family = order.product_slug === FAMILY_SLUG;
   const lines = [
-    `${order.customer_name}, ধন্যবাদ! আপনার পসরা সব-ডাউনলোড বান্ডলের পেমেন্ট (৳${bn(order.amount_bdt)}, ${via}) যাচাই হয়েছে।`,
+    family
+      ? `${order.customer_name}, ধন্যবাদ! আপনার পসরা পরিবারের এক বছরের পেমেন্ট (৳${bnNum(order.amount_bdt)}, ${via}) যাচাই হয়েছে, প্ল্যান চালু।`
+      : `${order.customer_name}, ধন্যবাদ! আপনার পসরা সব-ডাউনলোড বান্ডলের পেমেন্ট (৳${bnNum(order.amount_bdt)}, ${via}) যাচাই হয়েছে।`,
     '',
-    `এই লিংক থেকে এখনই সব ফাইল নামাতে পারবেন (${bn(DOWNLOAD_KEY_DAYS)} দিন কাজ করবে):`,
+    `${family ? 'প্ল্যানে পুরো ডাউনলোড বান্ডলও আছে। ' : ''}এই লিংক থেকে এখনই সব ফাইল নামাতে পারবেন (${bn(DOWNLOAD_KEY_DAYS)} দিন কাজ করবে):`,
     link,
     '',
-    `পরে যেকোনো সময় ${origin}/account/ পাতায় এই ইমেইল (${order.customer_email}) দিয়ে ঢুকলে আবার ডাউনলোড করা যাবে।`,
+    family
+      ? `সন্তানের প্রোফাইল যোগ করতে ${origin}/account/ পাতায় এই ইমেইল (${order.customer_email}) দিয়ে ঢুকুন। ফাইলগুলোও সেখানে পাবেন।`
+      : `পরে যেকোনো সময় ${origin}/account/ পাতায় এই ইমেইল (${order.customer_email}) দিয়ে ঢুকলে আবার ডাউনলোড করা যাবে।`,
     '',
     `অর্ডার: ${order.tran_id}${order.bank_tran_id ? ` · ট্রানজেকশন: ${order.bank_tran_id}` : ''}`,
-    'কোনো সমস্যা হলে এই অর্ডার নম্বরসহ support@posora.com-এ লিখুন।',
+    'কোনো সমস্যা হলে এই অর্ডার নম্বরসহ support@posora.com-এ লিখুন। কেমন লাগল, এক লাইনে জানালেও খুব কাজে লাগবে।',
   ];
   const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   const html = `<!doctype html><html lang="bn"><body style="margin:0;background:#e9edf2;font-family:'Noto Sans Bengali',system-ui,sans-serif;line-height:1.7">
   <div style="max-width:520px;margin:0 auto;padding:24px 16px">
     <div style="background:#fcfdfe;border:1px solid #e3e9f0;border-radius:16px;padding:22px">
       <p style="margin:0 0 6px;font-size:12px;color:#6b7987">পসরা · পেমেন্টের রসিদ</p>
-      <p style="margin:0 0 14px;font-size:22px;font-weight:800;color:#111820">আপনার ডাউনলোড তৈরি</p>
+      <p style="margin:0 0 14px;font-size:22px;font-weight:800;color:#111820">${family ? 'পসরা পরিবার চালু হয়েছে' : 'আপনার ডাউনলোড তৈরি'}</p>
       <p style="margin:0 0 18px;font-size:15px;color:#3c4854">${esc(lines[0]!)}</p>
       <p style="margin:0 0 18px"><a href="${esc(link)}" style="display:inline-block;background:#15544c;color:#f4fbf9;text-decoration:none;padding:11px 20px;border-radius:999px;font-weight:700;font-size:15px">সব ফাইল ডাউনলোড করো</a></p>
-      <p style="margin:0 0 8px;font-size:13px;color:#6b7987">লিংকটি ${bn(DOWNLOAD_KEY_DAYS)} দিন কাজ করবে। পরে <a href="${origin}/account/">অ্যাকাউন্ট</a> পাতায় ${esc(order.customer_email)} দিয়ে ঢুকলেও ফাইলগুলো পাবেন।</p>
+      <p style="margin:0 0 8px;font-size:13px;color:#6b7987">লিংকটি ${bn(DOWNLOAD_KEY_DAYS)} দিন কাজ করবে। পরে <a href="${origin}/account/">অ্যাকাউন্ট</a> পাতায় ${esc(order.customer_email)} দিয়ে ঢুকলেও ফাইলগুলো পাবেন${family ? ', আর সেখান থেকেই সন্তানের প্রোফাইল যোগ করবেন' : ''}।</p>
       <p style="margin:0;font-size:12px;color:#6b7987;font-family:ui-monospace,Menlo,monospace">${esc(lines[7]!)}</p>
     </div>
   </div>
@@ -192,7 +216,7 @@ async function sendReceipt(order: OrderRow, origin: string): Promise<void> {
   await mail.EMAIL.send({
     to: order.customer_email,
     from: { email: mail.CONTACT_FROM ?? 'no-reply@posora.com', name: 'পসরা' },
-    subject: 'পসরা: আপনার ডাউনলোড তৈরি',
+    subject: family ? 'পসরা: আপনার পরিবার প্ল্যান চালু হয়েছে' : 'পসরা: আপনার ডাউনলোড তৈরি',
     text: lines.join('\n'),
     html,
   });

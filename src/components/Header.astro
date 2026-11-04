@@ -2,12 +2,14 @@
 const path = Astro.url.pathname;
 const nav = [
   { href: '/#worlds', label: 'ভুবন' },
+  // Second on purpose: on a phone only the first few fit without scrolling, and
+  // this is the one thing here a parent can buy.
+  { href: '/digital-pack/', label: 'ছাপার বান্ডল ৳২৪৯', active: path.startsWith('/digital-pack') },
   { href: '/today/', label: 'আজ', active: path.startsWith('/today') },
   { href: '/collection/', label: 'সংগ্রহ', active: path.startsWith('/collection') },
   { href: '/ladder/', label: 'পড়ার সিঁড়ি', active: path.startsWith('/ladder') },
   { href: '/space/', label: 'মহাকাশ', active: path.startsWith('/space') },
   { href: '/printables/', label: 'ফ্রি শিট', active: path.startsWith('/printables') },
-  { href: '/digital-pack/', label: 'ডাউনলোড বান্ডল', active: path.startsWith('/digital-pack') },
   { href: '/blog/', label: 'লেখা', active: path.startsWith('/blog') },
   { href: '/family/', label: 'পরিবার', active: path.startsWith('/family') },
   { href: '/contact/', label: 'যোগাযোগ', active: path.startsWith('/contact') },

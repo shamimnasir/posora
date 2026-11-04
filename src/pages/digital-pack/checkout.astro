@@ -1,57 +1,82 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { digitalPackReady, usableGateways, liveGateways, DIGITAL_PACK_AMOUNT } from '../../lib/shop';
+import { digitalPackReady, usableGateways, liveGateways, familyOnSale, BUNDLE_PRODUCT, FAMILY_PRODUCT, FAMILY_DAYS } from '../../lib/shop';
+import { getMember } from '../../lib/members';
 import { library } from '../../lib/pack-files';
-import { bn } from '../../lib/bn';
+import { bn, bnNum } from '../../lib/bn';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'no-store');
-const rails = usableGateways();
+const family = Astro.url.searchParams.get('plan') === 'family';
+if (family && !familyOnSale()) return Astro.redirect('/family/');
+const product = family ? FAMILY_PRODUCT : BUNDLE_PRODUCT;
+// The family plan is sold through bKash alone: one payment for one year.
+const rails = usableGateways().filter((r) => !family || r === 'bkash');
 const filesReady = digitalPackReady();
 const ready = filesReady && rails.length > 0;
 // A rail in sandbox mode takes no real money; say so plainly on the page.
 const testMode = ready && liveGateways().length === 0;
 const lib = await library();
 const bkashError = Astro.url.searchParams.get('e') === 'bkash';
+// SSLCommerz insists on a name and a phone number. bKash asks for its own
+// wallet number on its own page, so on that rail the email is all we need.
+const emailOnly = !rails.includes('sslcommerz');
+const member = await getMember(Astro).catch(() => null);
+const backHref = family ? '/family/' : '/digital-pack/';
 ---
 
-<Base title="সব-ডাউনলোড বান্ডল চেকআউট" description="পসরা সব-ডাউনলোড বান্ডলের নিরাপদ চেকআউট: বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড।" noindex>
+<Base title={`${product.name} চেকআউট`} description="পসরার নিরাপদ চেকআউট: বিকাশে পেমেন্ট, সঙ্গে সঙ্গে চালু।" noindex>
   <div class="wrap page">
-    <p class="crumbs"><a href="/digital-pack/">সব-ডাউনলোড বান্ডল</a> <span>/</span> চেকআউট</p>
+    <p class="crumbs"><a href={backHref}>{product.name}</a> <span>/</span> চেকআউট</p>
     <div class="checkout-grid">
       <section class="card intro">
-        <p class="eyebrow">পসরা সব-ডাউনলোড বান্ডল</p>
-        <h1>চেকআউট</h1>
-        <p class="lede">১১টি ভুবনের অনুশীলনী প্যাক, তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র, সনদ আর অভিভাবকের গাইড, সব এক ডাউনলোডে।</p>
-        <div class="order"><span>একবারের দাম, কোনো সাবস্ক্রিপশন নয়</span><b>৳{bn(DIGITAL_PACK_AMOUNT)}</b></div>
+        <p class="eyebrow">{product.name}</p>
+        <div class="order"><span>{family ? `${bn(FAMILY_DAYS)} দিন, একবারের পেমেন্ট, নিজে থেকে আর টাকা কাটবে না` : 'একবারের দাম, কোনো সাবস্ক্রিপশন নয়'}</span><b>৳{bnNum(product.amount)}</b></div>
         <ul>
-          <li>পেমেন্টের সঙ্গে সঙ্গে এই পাতাতেই ডাউনলোড খুলবে, ফোনে বা কম্পিউটারে</li>
-          <li>{lib.totalPages ? `মোট ${bn(lib.totalPages)} পাতা, ` : ''}{bn(lib.files.length)}টি PDF, একটা ZIP-এও</li>
-          <li>ইমেইলেও ডাউনলোড লিংক যাবে; পরে অ্যাকাউন্ট থেকে আবার নামানো যাবে</li>
+          {family ? (
+            <>
+              <li>পেমেন্টের সঙ্গে সঙ্গে প্ল্যান চালু, এক অ্যাকাউন্টে {bn(6)} জন সন্তান পর্যন্ত</li>
+              <li>{lib.totalPages ? `${bn(lib.totalPages)} পাতার ` : ''}পুরো ডাউনলোড বান্ডলও সঙ্গে আসে</li>
+              <li>বারো মাসের মধ্যে কাজে না লাগলে এক লাইন লিখলেই পুরো টাকা ফেরত</li>
+            </>
+          ) : (
+            <>
+              <li>পেমেন্টের সঙ্গে সঙ্গে এই পাতাতেই ডাউনলোড খুলবে, ফোনে বা কম্পিউটারে</li>
+              <li>{lib.totalPages ? `মোট ${bn(lib.totalPages)} পাতা, ` : ''}{bn(lib.files.length)}টি PDF, একটা ZIP-এও</li>
+              <li>ফাইল না খুললে আমরা ঠিক করে দেব, না পারলে টাকা ফেরত</li>
+            </>
+          )}
           <li>বিকাশের পিন বা কার্ডের তথ্য পসরা কখনো দেখে না, জমাও রাখে না</li>
         </ul>
-        <a href="/digital-pack/">বান্ডলে কী কী আছে দেখো →</a>
+        <a href={backHref}>{family ? 'প্ল্যানে কী কী আছে দেখো →' : 'বান্ডলে কী কী আছে দেখো →'}</a>
       </section>
 
       {ready ? (
-        <form class="card form" id="checkout-form" novalidate>
+        <form class="card form" id="checkout-form" novalidate data-item={product.ga} data-name={product.name} data-price={product.amount}>
+          {family && <input type="hidden" name="plan" value="family" />}
           {testMode && <p class="test">পরীক্ষামূলক মোড: এখন কোনো আসল টাকা কাটা হবে না।</p>}
           {bkashError && <p class="msg">বিকাশ থেকে ফেরার সময় অর্ডারটি খুঁজে পাওয়া যায়নি। আবার চেষ্টা করুন।</p>}
-          <h2>আপনার তথ্য</h2>
-          <p class="note">ডাউনলোড লিংক আর রসিদ এই ইমেইলে যাবে, আর ফাইলগুলো এই ইমেইলের অ্যাকাউন্টে থাকবে।</p>
-          <label>আপনার নাম <input name="name" required minlength="2" maxlength="100" autocomplete="name" /></label>
-          <label>ইমেইল <input name="email" type="email" required maxlength="254" autocomplete="email" inputmode="email" /></label>
-          <label>বিকাশ / মোবাইল নম্বর <input name="phone" required minlength="6" maxlength="24" autocomplete="tel" inputmode="tel" placeholder="01XXXXXXXXX" /></label>
+          <h1>পেমেন্ট</h1>
+          <label>{family ? 'আপনার ইমেইল (অ্যাকাউন্ট এই ঠিকানায় হবে)' : 'আপনার ইমেইল (ফাইলের লিংক ও রসিদ এখানে যাবে)'}
+            <input name="email" type="email" required maxlength="254" autocomplete="email" inputmode="email" value={member?.email ?? ''} placeholder="you@gmail.com" />
+          </label>
+          <p class="hint" id="email-hint" hidden></p>
+          {!emailOnly && (
+            <>
+              <label>আপনার নাম <input name="name" required minlength="2" maxlength="100" autocomplete="name" /></label>
+              <label>মোবাইল নম্বর <input name="phone" required minlength="6" maxlength="24" autocomplete="tel" inputmode="tel" placeholder="01XXXXXXXXX" /></label>
+            </>
+          )}
           <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" tabindex="-1" autocomplete="off" /></div>
           {rails.includes('bkash') && (
-            <button class="btn btn-primary pay bkash" type="submit" data-rail="bkash">বিকাশে ৳{bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট করুন →</button>
+            <button class="btn btn-primary pay bkash" type="submit" data-rail="bkash">বিকাশে ৳{bnNum(product.amount)} পেমেন্ট করুন →</button>
           )}
           {rails.includes('sslcommerz') && (
-            <button class={`btn pay ${rails.includes('bkash') ? '' : 'btn-primary'}`} type="submit" data-rail="sslcommerz">{rails.includes('bkash') ? 'কার্ড, নগদ বা অন্য উপায়ে পেমেন্ট করুন' : `৳${bn(DIGITAL_PACK_AMOUNT)} পেমেন্ট করুন →`}</button>
+            <button class={`btn pay ${rails.includes('bkash') ? '' : 'btn-primary'}`} type="submit" data-rail="sslcommerz">{rails.includes('bkash') ? 'কার্ড, নগদ বা অন্য উপায়ে পেমেন্ট করুন' : `৳${bnNum(product.amount)} পেমেন্ট করুন →`}</button>
           )}
           <p class="msg" id="checkout-msg" role="status" aria-live="polite"></p>
-          {rails.includes('bkash') && <p class="fine">বোতাম চাপলে বিকাশের নিজের পাতা খুলবে। সেখানে বিকাশ নম্বর, ওটিপি আর পিন দিলেই পেমেন্ট হবে, তারপর আপনি এখানে ফিরে এসে ফাইল নামাবেন।</p>}
-          <p class="fine">পেমেন্ট বাতিল বা ব্যর্থ হলে কোনো টাকা নেওয়া হয় না। অর্ডার দিলে <a href="/terms/">ব্যবহারের শর্ত</a> আর <a href="/privacy/">গোপনীয়তা নীতি</a> মেনে নিচ্ছেন।</p>
+          {rails.includes('bkash') && <p class="fine">বোতাম চাপলে বিকাশের নিজের পাতা খুলবে। সেখানে বিকাশ নম্বর, ওটিপি আর পিন দিলেই পেমেন্ট হবে, তারপর আপনি এখানে ফিরে আসবেন।</p>}
+          <p class="fine">পেমেন্ট বাতিল বা ব্যর্থ হলে কোনো টাকা নেওয়া হয় না। সমস্যা হলে <a href={`https://wa.me/8801771553141?text=${encodeURIComponent('পসরার পেমেন্টে সাহায্য দরকার।')}`} rel="noopener">হোয়াটসঅ্যাপে জানান</a>। অর্ডার দিলে <a href="/terms/">ব্যবহারের শর্ত</a> আর <a href="/privacy/">গোপনীয়তা নীতি</a> মেনে নিচ্ছেন।</p>
         </form>
       ) : (
         <section class="card setup">
@@ -66,13 +91,30 @@ const bkashError = Astro.url.searchParams.get('e') === 'bkash';
 </Base>
 
 {ready && <script>
+  import { trackShop } from '../../lib/track';
   const form = document.getElementById('checkout-form') as HTMLFormElement;
   const msg = document.getElementById('checkout-msg')!;
   const buttons = [...form.querySelectorAll<HTMLButtonElement>('button.pay')];
+  const item = { id: form.dataset.item ?? '', name: form.dataset.name ?? '', price: Number(form.dataset.price) };
+  trackShop('begin_checkout', item);
+
+  // The files and the receipt go to this address, so catch the common slips
+  // on a phone keyboard before the money moves, not after.
+  const TYPO: Record<string, string> = { 'gmail.con': 'gmail.com', 'gmail.co': 'gmail.com', 'gmial.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmail.cm': 'gmail.com', 'yahoo.con': 'yahoo.com', 'yaho.com': 'yahoo.com', 'hotmail.con': 'hotmail.com', 'outlook.con': 'outlook.com' };
+  const email = form.elements.namedItem('email') as HTMLInputElement;
+  const hint = document.getElementById('email-hint')!;
+  email.addEventListener('blur', () => {
+    const [user, domain] = email.value.trim().toLowerCase().split('@');
+    const fix = domain ? TYPO[domain] : undefined;
+    hint.hidden = !fix;
+    if (fix) hint.textContent = `আপনি কি ${user}@${fix} লিখতে চেয়েছিলেন? ফাইলের লিংক এই ঠিকানাতেই যাবে।`;
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const rail = ((event as SubmitEvent).submitter as HTMLButtonElement | null)?.dataset.rail ?? buttons[0]?.dataset.rail ?? 'bkash';
     if (!form.reportValidity()) return;
+    trackShop('add_payment_info', item);
     msg.textContent = rail === 'bkash' ? 'বিকাশের পাতা খুলছে...' : 'চেকআউট তৈরি হচ্ছে...';
     buttons.forEach((b) => { b.disabled = true; });
     const body = Object.fromEntries(new FormData(form).entries());
@@ -82,7 +124,7 @@ const bkashError = Astro.url.searchParams.get('e') === 'bkash';
       });
       const data = await response.json() as { ok?: boolean; gatewayUrl?: string; error?: string };
       if (data.ok && data.gatewayUrl) { location.href = data.gatewayUrl; return; }
-      msg.textContent = data.error === 'invalid' ? 'নাম, ইমেইল আর মোবাইল নম্বর ঠিক করে দিন।' : 'পেমেন্ট এখন শুরু করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।';
+      msg.textContent = data.error === 'invalid' ? 'ইমেইল ঠিকানাটা আরেকবার দেখে নিন।' : 'পেমেন্ট এখন শুরু করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।';
     } catch { msg.textContent = 'যোগাযোগে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।'; }
     buttons.forEach((b) => { b.disabled = false; });
   });
@@ -94,8 +136,9 @@ const bkashError = Astro.url.searchParams.get('e') === 'bkash';
   .crumbs span { margin: 0 .35rem; }
   .checkout-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(300px, 1fr); gap: 1.2rem; align-items: start; max-width: 960px; margin: 0 auto; }
   .intro, .form, .setup { padding: 1.5rem; }
-  h1 { font-size: clamp(2.3rem, 5vw, 3.6rem); line-height: 1.1; }
+  h1 { font-size: 1.5rem; line-height: 1.2; }
   h2 { font-size: 1.35rem; }
+  .hint { margin: 0; font-size: 13px; color: var(--warn, #c9822f); font-weight: 600; }
   .lede, .intro li, .intro > a, .setup p, .note { color: var(--ink-2); line-height: 1.7; }
   .order { display: flex; justify-content: space-between; align-items: baseline; padding: .9rem 0; margin: .8rem 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
   .order b { font-family: var(--font-display); color: var(--brand-ink); font-size: 2rem; }
@@ -110,10 +153,11 @@ const bkashError = Astro.url.searchParams.get('e') === 'bkash';
   button:disabled { opacity: .6; cursor: wait; }
   .setup { background: var(--brand-soft); }
   .setup p { margin: .5rem 0 1rem; }
-  .pay { width: 100%; justify-content: center; }
+  .pay { width: 100%; justify-content: center; min-height: 3.2rem; font-size: 1.05rem; }
   .bkash { background: #e2136e; border-color: #e2136e; color: #fff; }
   .bkash:hover { background: #c40f5f; }
   .test { margin: 0; padding: .55rem .8rem; border-radius: 10px; background: color-mix(in oklab, var(--sun) 25%, transparent); color: var(--ink); font-size: 13px; }
   .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-  @media (max-width: 720px) { .checkout-grid { grid-template-columns: 1fr; } }
+  /* On a phone the form comes first: the buyer already chose, the summary can follow. */
+  @media (max-width: 720px) { .checkout-grid { grid-template-columns: 1fr; } .checkout-grid > .form { order: -1; } .crumbs { margin-bottom: 1rem; } }
 </style>

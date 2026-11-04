@@ -8,6 +8,7 @@
  * browser's own print-to-PDF is what every phone and laptop already has.
  */
 import Base from '../../layouts/Base.astro';
+import ShopOffer from '../../components/ShopOffer.astro';
 import { sheetBySlug, sheets } from '../../data/printables';
 import { FACTS } from '../../data/space';
 import { getBodies, getLanguage, getMath } from '../../lib/content';
@@ -35,6 +36,8 @@ Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=600, st
 const letters = [...vowels, ...consonants];
 const others = sheets.filter((s) => s.slug !== sheet.slug);
 const sheetUrl = `https://posora.com/printables/${sheet.slug}/`;
+// The pack that continues this sheet, for the offer below it.
+const sheetWorld = ({ sonkha: 'math', taka: 'math', sourojogot: 'space' } as Record<string, string>)[sheet.slug] ?? 'language';
 const schema = [
   {
     '@type': 'BreadcrumbList',
@@ -232,6 +235,7 @@ const skillLine: Record<typeof sheet.kind, string> = {
         ))}
       </div>
       <p class="back"><a href="/printables/">← সব ফ্রি শিট</a> · <a href="/family/">পসরা পরিবার কী</a></p>
+      <ShopOffer placement="printable" world={sheetWorld} />
     </section>
   </div>
 </Base>

@@ -293,6 +293,9 @@ export const digitalPacks: DigitalPack[] = [
   },
 ];
 
+/** Bump after regenerating the packs, so phones fetch the new preview pictures. */
+export const PREVIEW_VERSION = '20261103-audit';
+
 export const bundle = {
   title: 'পসরা ১১-ভুবন ডাউনলোড বান্ডল',
   priceBdt: 249,

@@ -7,8 +7,8 @@
  */
 import Base from '../../layouts/Base.astro';
 import PackDownloads from '../../components/PackDownloads.astro';
-import { orderByTran, orderForKey, DOWNLOAD_KEY_DAYS } from '../../lib/shop';
-import { bn } from '../../lib/bn';
+import { orderByTran, orderForKey, DOWNLOAD_KEY_DAYS, FAMILY_SLUG, productBySlug } from '../../lib/shop';
+import { bn, bnNum } from '../../lib/bn';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'no-store');
@@ -24,25 +24,29 @@ const state = paid ? 'paid'
   : status === 'cancelled' || order?.status === 'cancelled' ? 'cancelled'
   : status === 'pending' || order?.status === 'pending' ? 'pending'
   : 'failed';
-const title = { paid: 'পেমেন্ট সফল! ফাইল তৈরি', 'paid-nokey': 'পেমেন্ট সফল', review: 'অর্ডার যাচাই হচ্ছে', cancelled: 'পেমেন্ট বাতিল হয়েছে', pending: 'পেমেন্ট এখনো নিশ্চিত হয়নি', failed: 'পেমেন্ট সম্পূর্ণ হয়নি' }[state];
+const product = productBySlug(order?.product_slug);
+const family = order?.product_slug === FAMILY_SLUG;
+const retry = family ? '/digital-pack/checkout/?plan=family' : '/digital-pack/checkout/';
+const title = { paid: family ? 'পেমেন্ট সফল! পরিবার প্ল্যান চালু' : 'পেমেন্ট সফল! ফাইল তৈরি', 'paid-nokey': 'পেমেন্ট সফল', review: 'অর্ডার যাচাই হচ্ছে', cancelled: 'পেমেন্ট বাতিল হয়েছে', pending: 'পেমেন্ট এখনো নিশ্চিত হয়নি', failed: 'পেমেন্ট সম্পূর্ণ হয়নি' }[state];
 const via = order?.gateway === 'bkash' ? 'বিকাশ' : 'SSLCommerz';
 const query = paid ? `?order=${encodeURIComponent(paid.tran_id)}&k=${key}` : '';
 ---
 
-<Base title={title} description="পসরা সব-ডাউনলোড বান্ডলের অর্ডারের অবস্থা।" noindex>
+<Base title={title} description="পসরার অর্ডারের অবস্থা।" noindex>
   <div class="wrap page">
-    <section class={`card box ${paid ? 'wide' : ''}`}>
-      <p class="eyebrow">পসরা সব-ডাউনলোড বান্ডল</p>
+    <section class={`card box ${paid ? 'wide' : ''}`} id="order-box" data-paid={paid ? paid.tran_id : undefined} data-item={product.ga} data-name={product.name} data-price={product.amount}>
+      <p class="eyebrow">{product.name}</p>
       <h1>{title}</h1>
       {state === 'paid' && paid ? (
         <>
-          <p>আপনার ৳{bn(paid.amount_bdt)} পেমেন্ট {via} দিয়ে যাচাই হয়েছে{paid.bank_tran_id ? ` (ট্রানজেকশন ${paid.bank_tran_id})` : ''}। এখনই নিচ থেকে ফাইলগুলো এই ফোন বা কম্পিউটারে নামিয়ে নিন।</p>
+          <p>আপনার ৳{bnNum(paid.amount_bdt)} পেমেন্ট {via} দিয়ে যাচাই হয়েছে{paid.bank_tran_id ? ` (ট্রানজেকশন ${paid.bank_tran_id})` : ''}। {family ? 'প্ল্যান চালু হয়ে গেছে। এবার অ্যাকাউন্টে ঢুকে সন্তানের প্রোফাইল যোগ করুন। পুরো বান্ডলের ফাইলগুলোও নিচে আছে।' : 'এখনই নিচ থেকে ফাইলগুলো এই ফোন বা কম্পিউটারে নামিয়ে নিন।'}</p>
+          {family && <a class="btn btn-primary" href="/account/">সন্তানের প্রোফাইল যোগ করুন →</a>}
           <PackDownloads query={query} />
           <p class="note">এই পাতার লিংক {bn(DOWNLOAD_KEY_DAYS)} দিন কাজ করবে, আর একই লিংক {paid.customer_email}-এ ইমেইলেও পাঠানো হয়েছে। পরে যেকোনো সময় <a href="/account/">অ্যাকাউন্ট</a> পাতায় এই ইমেইল দিয়ে ঢুকলে আবার নামাতে পারবেন।</p>
         </>
       ) : state === 'paid-nokey' ? (
         <>
-          <p>এই অর্ডারের পেমেন্ট যাচাই হয়েছে। ফাইলগুলো পাবেন অর্ডারের ইমেইলে পাঠানো লিংকে, অথবা অর্ডারের ইমেইল দিয়ে অ্যাকাউন্টে ঢুকে।</p>
+          <p>এই অর্ডারের পেমেন্ট যাচাই হয়েছে। {family ? 'প্ল্যান চালু আছে; অর্ডারের ইমেইল দিয়ে অ্যাকাউন্টে ঢুকুন।' : 'ফাইলগুলো পাবেন অর্ডারের ইমেইলে পাঠানো লিংকে, অথবা অর্ডারের ইমেইল দিয়ে অ্যাকাউন্টে ঢুকে।'}</p>
           <a class="btn btn-primary" href="/account/">অ্যাকাউন্টে যাও →</a>
         </>
       ) : state === 'review' ? (
@@ -50,7 +54,7 @@ const query = paid ? `?order=${encodeURIComponent(paid.tran_id)}&k=${key}` : '';
       ) : state === 'cancelled' ? (
         <>
           <p>আপনি পেমেন্ট বন্ধ করেছেন। কোনো টাকা কাটা হয়নি, চাইলে আবার চেষ্টা করতে পারেন।</p>
-          <a class="btn btn-primary" href="/digital-pack/checkout/">আবার চেষ্টা করো →</a>
+          <a class="btn btn-primary" href={retry}>আবার চেষ্টা করো →</a>
         </>
       ) : state === 'pending' ? (
         <>
@@ -59,14 +63,20 @@ const query = paid ? `?order=${encodeURIComponent(paid.tran_id)}&k=${key}` : '';
       ) : (
         <>
           <p>পেমেন্ট সম্পূর্ণ হয়নি, তাই কোনো টাকা নেওয়া হয়নি। টাকা কাটা গেছে মনে হলে নিচের অর্ডার নম্বরসহ আমাদের <a href="/contact/">যোগাযোগ</a> করুন।</p>
-          <a class="btn btn-primary" href="/digital-pack/checkout/">আবার চেষ্টা করো →</a>
+          <a class="btn btn-primary" href={retry}>আবার চেষ্টা করো →</a>
         </>
       )}
       {tranId && <p class="fine">অর্ডার: {tranId}</p>}
-      <p class="back"><a href="/digital-pack/">বান্ডলে ফিরে যাও</a> · <a href="/">পসরার হোম</a></p>
+      <p class="back"><a href={family ? '/family/' : '/digital-pack/'}>{family ? 'প্ল্যানের পাতায় ফিরে যাও' : 'বান্ডলে ফিরে যাও'}</a> · <a href="/">পসরার হোম</a></p>
     </section>
   </div>
 </Base>
+
+<script>
+  import { trackShop } from '../../lib/track';
+  const box = document.getElementById('order-box');
+  if (box?.dataset.paid) trackShop('purchase', { id: box.dataset.item ?? '', name: box.dataset.name ?? '', price: Number(box.dataset.price) }, box.dataset.paid);
+</script>
 
 <style>
   .page { padding-block: 3rem 5rem; display: grid; place-items: center; }

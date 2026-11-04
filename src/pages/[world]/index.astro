@@ -25,6 +25,7 @@ import { sheets } from '../../data/printables';
 import MissionPanel from '../../components/explorer/MissionPanel.astro';
 import NatureCinema from '../../components/explorer/NatureCinema.astro';
 import RelatedReading from '../../components/RelatedReading.astro';
+import ShopOffer from '../../components/ShopOffer.astro';
 import { natureChapters } from '../../data/nature-cinema';
 import { referencePhotosFor } from '../../data/reference-photos';
 
@@ -717,6 +718,8 @@ const schema = [
       <span class="lbl num" id="log-text">০ / {bn(total)}</span>
     </div>
     <p class="back"><a href="/#worlds">← সব ভুবন</a> · <a href="/space/">মহাকাশ</a> · <a href="/contact/">প্রশ্ন বা পরামর্শ?</a></p>
+
+    <ShopOffer placement="world" world={w.slug} />
 
     <script is:inline type="application/json" id="world-data" set:html={JSON.stringify(payload)}></script>
   </div>

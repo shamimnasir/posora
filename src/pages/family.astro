@@ -5,10 +5,10 @@
  * This is the page that talks about money, so the honesty rules bind hardest
  * here. Three things are kept true on purpose:
  *
- *  1. The family plan cannot be bought. It has no payment rail, so the only
- *     action is joining the founding list, which is free and says so twice
- *     before the form. Once the digital pack goes on sale the copy says that
- *     one thing is for sale, and nothing more.
+ *  1. A year is sold as one bKash payment with no automatic renewal, and the
+ *     page says so beside the button. When bKash is not live the button becomes
+ *     the waiting list. Families abroad use the list too, until there is a way
+ *     to take a card.
  *  2. Every line in the stack is marked আছে or হবে. A reader can tell at a
  *     glance which half of the offer exists today.
  *  3. The comparison prices are real, published prices of real alternatives,
@@ -17,6 +17,7 @@
  * The scarcity is a genuine cap the founder can honour, not a countdown.
  */
 import Base from '../layouts/Base.astro';
+import BuyBar from '../components/BuyBar.astro';
 import { totals, worlds } from '../data/worlds';
 import { bn, bnNum } from '../lib/bn';
 import { COVERAGE } from '../lib/coverage';
@@ -24,7 +25,7 @@ import { sheets } from '../data/printables';
 import { bundle as digitalBundle } from '../data/digital-packs';
 import { catDetail, isReadable } from '../lib/explorers';
 import { buildWorksheet } from '../lib/worksheet';
-import { digitalPackOnSale, digitalPackReady, DIGITAL_PACK_AMOUNT } from '../lib/shop';
+import { digitalPackOnSale, digitalPackReady, familyOnSale, DIGITAL_PACK_AMOUNT, FAMILY_AMOUNT, FAMILY_PRODUCT } from '../lib/shop';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
@@ -49,19 +50,12 @@ for (const w of worlds) {
 const FOUNDING_SEATS = 100;
 const KIDS = 6;
 
-/**
- * One membership, two ways to pay. Kept as constants because the price is the
- * most likely thing to change and it must change in exactly one place.
- *
- * The annual price is ten months of the monthly one, so "দুই মাস ফ্রি" is a
- * fact rather than a slogan. Anything steeper would tell the reader the
- * monthly price is decoration.
- */
-const MONTHLY_BDT = 120;
-const YEARLY_BDT = 1200;
+/** One membership, one price, for the whole family. The amount lives in shop.ts. */
+const YEARLY_BDT = FAMILY_AMOUNT;
 const YEARLY_USD = 39;
 const perDay = (yearly: number) => (yearly / 365).toFixed(1);
-const monthsFree = Math.round(12 - YEARLY_BDT / MONTHLY_BDT);
+const buyable = familyOnSale();
+const buyHref = buyable ? '/digital-pack/checkout/?plan=family' : '#join';
 
 /**
  * The stack.
@@ -73,7 +67,7 @@ const monthsFree = Math.round(12 - YEARLY_BDT / MONTHLY_BDT);
  * false. On the page that asks for money, the honest answer is the third one.
  */
 type Have = true | false | 'testing';
-const stack: { t: string; d: string; have: Have; annual?: boolean }[] = [
+const stack: { t: string; d: string; have: Have }[] = [
   { have: true,  t: `${bn(COVERAGE.readable)}টি বিষয়ের পুরো পাঠ, তিন গভীরতায়`, d: `${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব আর ${bn(COVERAGE.missions)}টি খেলার মিশন আছে। মহাকাশ, পদার্থ, রসায়ন, প্রাণিজগৎ, প্রকৃতি, খাদ্য, গণিত, টাকা, ভাষা, সামাজিক দক্ষতা, আবিষ্কার - একই লেখা ছোট, মাঝারি আর বড়, তাই পাঁচ বছরের আর তেরো বছরের সন্তান একই পাতায় বসতে পারে।` },
   { have: true,  t: `${bn(COVERAGE.cats)}টি বিভাগে জীবন্ত থ্রিডি মডেল`, d: 'ঢালু তল, দোলক, কেলাস, ঋতুচক্র, বর্ণমালা - টেনে ঘোরানো যায়, স্লাইডারে বদলায়। ভিডিও নয়, সত্যিকারের চালু মডেল।' },
   { have: true,  t: 'যেকোনো বিভাগ এক চাপে ছেপে নেওয়া', d: '“ছাপাও” চাপলেই পুরো বিভাগ কাগজে নেমে আসে - মডেল আর মেনু বাদ দিয়ে, আপনার বেছে নেওয়া গভীরতায়।' },
@@ -81,27 +75,27 @@ const stack: { t: string; d: string; have: Have; annual?: boolean }[] = [
   { have: true,  t: `${bn(KIDS)} জন সন্তান পর্যন্ত, প্রত্যেকের নিজের প্রোফাইল`, d: 'নিজের নাম, নিজের বয়স, নিজের গভীরতা। ভাইবোন আর যে কাজিন ট্যাবটা ভাগ করে নেয় - সবার জায়গা হবে।' },
   { have: true,  t: 'যেকোনো ডিভাইসে অগ্রগতি', d: 'বাসার ফোন, স্কুলের ল্যাপটপ, দাদুর বাড়ির ট্যাব - একই সন্তানের হিসাব সব জায়গায় মিলে যায়। প্ল্যান ছাড়া হিসাবটা এক ব্রাউজারেই থাকে।' },
   { have: 'testing', t: 'প্রতি সপ্তাহে অভিভাবকের ইমেইল', d: 'কে কত দিন এসেছে, কী কী খুলেছে, কটা যাচাই দিয়েছে - আর রাতের খাবারে জিজ্ঞেস করার মতো কয়েকটা প্রশ্ন। যে সপ্তাহে কিছুই হয়নি, সে সপ্তাহে কোনো চিঠি যায় না।' },
-  { have: true,  annual: true, t: 'যাচাই ও সার্টিফিকেট', d: 'প্রতি বিভাগের শেষে আটটি প্রশ্ন, পড়ার লেখা থেকেই বানানো, ফল সন্তানের নামে জমা থাকে। সব বিষয় দেখা আর সব যাচাই পাশ হলে ভুবনের সার্টিফিকেট, নাম-তারিখ সহ, ছাপার মতো।' },
-  { have: true,  annual: true, t: 'অনুশীলনী প্যাক', d: `${bn(ws.worlds)}টি ভুবনের ${bn(ws.cats)}টি বিভাগের ছাপার অনুশীলনী - ${bn(ws.blanks)}টি শূন্যস্থান আর ${bn(ws.matches)}টি মিলানো, উত্তরপত্র আলাদা পাতায়। এক ভুবনের পুরোটা এক চাপে ছাপানো যায়, আগে সব প্রশ্ন তারপর সব উত্তর।` },
-  { have: digitalPackReady(), annual: true, t: 'সব-ডাউনলোড বান্ডল সঙ্গে', d: `আলাদা কিনলে যেটার দাম ৳${bn(DIGITAL_PACK_AMOUNT)}: ১১টি ভুবনের অনুশীলনী প্যাক, তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র আর সনদ, PDF আর ZIP-এ, ফোন বা কম্পিউটারে নামিয়ে রাখার মতো।` },
+  { have: true,t: 'যাচাই ও সার্টিফিকেট', d: 'প্রতি বিভাগের শেষে আটটি প্রশ্ন, পড়ার লেখা থেকেই বানানো, ফল সন্তানের নামে জমা থাকে। সব বিষয় দেখা আর সব যাচাই পাশ হলে ভুবনের সার্টিফিকেট, নাম-তারিখ সহ, ছাপার মতো।' },
+  { have: true,t: 'অনুশীলনী প্যাক', d: `${bn(ws.worlds)}টি ভুবনের ${bn(ws.cats)}টি বিভাগের ছাপার অনুশীলনী - ${bn(ws.blanks)}টি শূন্যস্থান আর ${bn(ws.matches)}টি মিলানো, উত্তরপত্র আলাদা পাতায়। এক ভুবনের পুরোটা এক চাপে ছাপানো যায়, আগে সব প্রশ্ন তারপর সব উত্তর।` },
+  { have: digitalPackReady(), t: 'সব-ডাউনলোড বান্ডল সঙ্গে', d: `আলাদা কিনলে যেটার দাম ৳${bn(DIGITAL_PACK_AMOUNT)}: ১১টি ভুবনের অনুশীলনী প্যাক, তথ্য-কার্ড, অনুশীলনী, কুইজ, উত্তরপত্র আর সনদ, PDF আর ZIP-এ, ফোন বা কম্পিউটারে নামিয়ে রাখার মতো।` },
   { have: false, t: 'পর্দা ছাড়া কার্ড', d: 'প্রতি বিষয়ে একটা কাজ যা পর্দা ছাড়াই করা যায় - ছায়া মাপা, ডিম ভাসানো, গাছের বয়স গোনা।' },
   { have: false, t: 'অফলাইন প্যাক', d: 'ইন্টারনেট দুর্বল হলেও মডেলগুলো চলবে। গ্রামের স্কুল আর যাত্রাপথের জন্য।' },
   { have: false, t: 'দাদু-দিদার সঙ্গে', d: 'প্রতি বিষয়ে একটা প্রশ্ন, যেটা সন্তান বাংলায় দাদু-দিদাকে জিজ্ঞেস করবে। দেশের বাইরের পরিবারের জন্য এটাই আসল কারণ।' },
 ];
 
 const haveCount = stack.filter((s) => s.have === true).length;
-const annualOnly = stack.filter((s) => s.annual);
+const nowItems = stack.filter((s) => s.have !== false);
+const nextItems = stack.filter((s) => s.have === false);
 
 const onSale = digitalPackOnSale();
 const faqs = [
-  { q: 'মাসিক না বার্ষিক, কোনটা নেব?', a: `যদি আগে দেখে নিতে চান, মাসিক নিন - এক মাস পরেই থামিয়ে দিতে পারবেন, কিছু জিজ্ঞেস করা হবে না। যদি জানেন সন্তান সারা বছর ব্যবহার করবে, বার্ষিকটাই সস্তা: ${bn(monthsFree)} মাসের টাকা বেঁচে যায়, আর ছাপার অনুশীলনী প্যাক আর সার্টিফিকেট বার্ষিকের সঙ্গেই আসে।` },
-  { q: 'এখন টাকা দিতে হবে?', a: (onSale ? 'না। পরিবার প্ল্যানের পেমেন্ট এখনো চালু হয়নি, তাই প্ল্যানটা কেনা যায় না (আলাদা ডাউনলোড বান্ডল অবশ্য কেনা যায়)। ' : 'না। পেমেন্ট গেটওয়ে এখনো বসানো হয়নি, তাই কেনার ব্যবস্থা নেই। ') + 'অ্যাকাউন্ট আছে - ইমেইলের লিংকে ঢোকা যায় - আর প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিই। নিচের তালিকায় নাম লেখালে কার্ড লাগে না, টাকাও কাটা যায় না।' },
-  { q: 'ডাউনলোড বান্ডল আর পরিবার প্ল্যানের পার্থক্য কী?', a: `ডাউনলোড বান্ডল ৳${bn(DIGITAL_PACK_AMOUNT)}-এর একবারের কেনা: ১১টি ভুবনের ছাপার PDF ও ZIP ফাইল, কোনো অ্যাকাউন্ট সুবিধা ছাড়া। পরিবার প্ল্যান মাসিক বা বার্ষিক সদস্যপদ: সন্তানের প্রোফাইল, অগ্রগতির হিসাব আর অভিভাবকের সাপ্তাহিক ইমেইল (এখনো পরীক্ষায়)। বার্ষিক প্ল্যানে এই পুরো বান্ডলও থাকে, মাসিকে থাকে না। তাই বার্ষিক প্ল্যান নিলে বান্ডল আলাদা কিনতে হয় না।` },
-  { q: 'তাহলে তালিকায় নাম লিখে লাভ কী?', a: 'দুটো। এক, প্রতিষ্ঠাতা দামটা আপনার জন্য আজীবন একই থাকবে। দুই, আমরা আগে আপনার কথা শুনে তারপর বানাবো - কোন জিনিসটা আগে দরকার, সেটা আপনিই বলবেন।' },
-  { q: 'যেগুলো এখন ফ্রি, সেগুলো কি পরে টাকার পেছনে চলে যাবে?', a: `না, কখনো না। আজ যে ${bn(COVERAGE.total)}টি বিষয়, থ্রিডি মডেল আর ছাপার শিট ফ্রি, সেগুলো ফ্রিই থাকবে - ${bn(COVERAGE.readable)}টি বিষয়ের পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব আর ${bn(COVERAGE.missions)}টি মিশনসহ। পরিবার প্ল্যান বিক্রি করে সেগুলোর চারপাশের জিনিস - প্রোফাইল, রিপোর্ট, অনুশীলনী। পুরোনো জিনিসের চারপাশে বেড়া দেওয়া হবে না।` },
+  { q: 'টাকা কীভাবে দেব?', a: buyable ? `বিকাশে, একবারে ৳${bnNum(YEARLY_BDT)}। পেমেন্টের সঙ্গে সঙ্গে প্ল্যান চালু হয়। ইমেইল ছাড়া আর কিছু দিতে হয় না, কার্ডও লাগে না।` : 'পেমেন্ট চালু হওয়ার আগে কিছু দিতে হবে না। নিচের তালিকায় নাম লেখালে আমরা জানাব।' },
+  { q: 'বছর শেষে নিজে থেকে টাকা কাটবে?', a: 'না। এটা একবারের পেমেন্ট। মেয়াদ শেষ হলে আপনি আবার নিলে তবেই চলবে, আগে নিলে বাকি দিনগুলোও যোগ হয়ে যায়।' },
+  { q: 'এক বছর পরে ভালো না লাগলে?', a: 'পুরো টাকা ফেরত। বারো মাসের মধ্যে এক লাইন লিখলেই হবে, কারণ জানতে চাইব না। যে জিনিস কাজে লাগল না, তার টাকা আমাদের রাখার কথা নয়।' },
+  { q: 'ডাউনলোড বান্ডল আর পরিবার প্ল্যানের পার্থক্য কী?', a: `ডাউনলোড বান্ডল ৳${bn(DIGITAL_PACK_AMOUNT)}-এর একবারের কেনা: ১১টি ভুবনের ছাপার PDF ও ZIP, কোনো অ্যাকাউন্ট সুবিধা ছাড়া। পরিবার প্ল্যানে সন্তানের প্রোফাইল, অগ্রগতির হিসাব, যাচাই ও সনদ আছে, আর এই পুরো বান্ডলও তার ভেতরে। তাই প্ল্যান নিলে বান্ডল আলাদা কিনতে হয় না।` },
+  { q: 'যেগুলো এখন ফ্রি, সেগুলো কি পরে টাকার পেছনে চলে যাবে?', a: `না, কখনো না। আজ যে ${bn(COVERAGE.total)}টি বিষয়, থ্রিডি মডেল আর ছাপার শিট ফ্রি, সেগুলো ফ্রিই থাকবে - ${bn(COVERAGE.readable)}টি বিষয়ের পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব আর ${bn(COVERAGE.missions)}টি মিশনসহ। পরিবার প্ল্যান বিক্রি করে সেগুলোর চারপাশের জিনিস - প্রোফাইল, রিপোর্ট, অনুশীলনী।` },
   { q: 'সন্তানের কোনো তথ্য নেবেন?', a: 'সন্তানের কোনো অ্যাকাউন্ট থাকবে না। অ্যাকাউন্ট থাকবে শুধু অভিভাবকের। সন্তানের জন্য যা লাগবে তা হলো আপনার দেওয়া একটা ডাকনাম আর একটা স্তর - নাম-ঠিকানা, ছবি, ইমেইল কিছুই নয়।' },
-  { q: 'দেশের বাইরে থাকি, টাকা দেব কীভাবে?', a: 'কার্ডে, ডলারে। দেশের ভেতরে বিকাশ, নগদ, রকেট বা কার্ড - দুই দিকের জন্য দুই ব্যবস্থা থাকবে।' },
-  { q: 'এক বছর পরে ভালো না লাগলে?', a: 'পুরো টাকা ফেরত। শর্ত নেই, প্রশ্ন নেই। যে জিনিস এক বছরেও কাজে লাগল না, তার টাকা আমাদের রাখার কথা নয়।' },
+  { q: 'দেশের বাইরে থাকি, টাকা দেব কীভাবে?', a: 'এখন পেমেন্ট শুধু বিকাশে। কার্ডে ডলারে নেওয়ার ব্যবস্থা হলে জানাতে চাইলে পাতার নিচের তালিকায় নাম লিখুন।' },
 ];
 
 // The questions parents actually ask, in a form an answer engine can quote
@@ -120,164 +114,81 @@ const schema = [
 ---
 <Base
   schema={schema}
-  title="পসরা সদস্যপদ"
-  description={`পসরা সদস্যপদ - একটাই প্ল্যান, মাসে ৳${bn(MONTHLY_BDT)} বা বছরে ৳${bnNum(YEARLY_BDT)}, ${bn(KIDS)} জন সন্তান পর্যন্ত। ${bn(COVERAGE.total)}টি বিষয় ফ্রিই থাকবে। এখন টাকা লাগবে না, তালিকায় নাম লেখালেই হয়।`}
+  title="পসরা পরিবার"
+  description={`পসরা পরিবার: বছরে ৳${bnNum(YEARLY_BDT)}, ${bn(KIDS)} জন সন্তান পর্যন্ত। প্রত্যেকের প্রোফাইল, যাচাই, সনদ আর পুরো ছাপার বান্ডল। ${bn(COVERAGE.total)}টি বিষয় ফ্রিই থাকবে।`}
 >
   <div class="wrap page">
-    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> পসরা সদস্যপদ</p>
+    <p class="crumbs"><a href="/">পসরা</a> <span>/</span> পসরা পরিবার</p>
 
     <header class="hero">
-      <p class="eyebrow">পসরা পরিবার · প্রতিষ্ঠাতা তালিকা</p>
+      <p class="eyebrow">পসরা পরিবার · অভিভাবকদের জন্য</p>
       <h1>আপনার সন্তান বাংলায় পড়বে, ভাববে, প্রশ্ন করবে</h1>
       <p class="lede">
-        পসরার {bn(totals.items)}টি বিষয় ওয়েবসাইটে ফ্রি, আর ফ্রিই থাকবে। পরিবার
-        প্ল্যান সেই পড়াটা বিক্রি করে না - বিক্রি করে তার চারপাশের জিনিসটা।
-        প্রত্যেক সন্তানের নিজের হিসাব, প্রতি সপ্তাহে আপনার হাতে একটা রিপোর্ট,
-        আর এমন কাজ যা পর্দা বন্ধ করেও করা যায়।
+        পড়া আর মডেল ফ্রি, ফ্রিই থাকবে। পরিবার প্ল্যানে আসে তার চারপাশের জিনিস:
+        প্রত্যেক সন্তানের নিজের হিসাব, যাচাই ও সনদ, আর ছাপার পুরো বান্ডল।
       </p>
 
-      <div class="statusbox">
-        <p><b>পরিষ্কার করে বলি:</b> {onSale
-          ? <>পরিবার প্ল্যান এখনো বিক্রি হচ্ছে না, কারণ এর পেমেন্টের ব্যবস্থা বসানো হয়নি (আলাদা <a href="/digital-pack/">৳{bn(DIGITAL_PACK_AMOUNT)} ডাউনলোড বান্ডল</a> কেনা যায়)।</>
-          : <>এখনো কিছু বিক্রি হচ্ছে না, কারণ পেমেন্টের ব্যবস্থা বসানো হয়নি।</>} প্রতিষ্ঠাতা পরিবারগুলোর প্ল্যান আমরা হাতে চালু করে দিচ্ছি। নিচে নাম লেখালে
-        <b>কার্ড লাগে না, এক পয়সাও কাটা যায় না।</b>
-        তালিকার {bn(haveCount)}টি জিনিস <em>আজই চালু</em>, বাকিগুলো হয় <em>পরীক্ষায় আছে</em>, নয়তো <em>এখনো বানানো হয়নি</em> -
-        কোনটা কী, প্রতিটা লাইনের পাশে লেখা আছে।</p>
-      </div>
-
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#join">প্রতিষ্ঠাতা তালিকায় নাম লেখাও</a>
-        <a class="btn" href="/printables/">আগে ফ্রি শিটগুলো নিয়ে যান →</a>
-        <a class="btn" href="/account/">আগেই সদস্য? ঢোকো</a>
-      </div>
-      <div class="digital-separate">
-        <p><b>ডাউনলোড বান্ডল আর পরিবার প্ল্যান কি একই?</b> না, তবে ছাপার অংশটা মেলে।</p>
-        <ul>
-          <li><b>ডাউনলোড বান্ডল:</b> ৳{bn(DIGITAL_PACK_AMOUNT)} একবার। ১১টি ভুবনের ছাপার PDF ও ZIP ফাইল, যা নামিয়ে রেখে দেওয়া যায়। সন্তানের প্রোফাইল বা অগ্রগতির হিসাব এতে নেই।{onSale ? ' এখনই কেনা যায়।' : ''}</li>
-          <li><b>পরিবার প্ল্যান:</b> মাসে ৳{bn(MONTHLY_BDT)} বা বছরে ৳{bnNum(YEARLY_BDT)}। সন্তানের নিজের প্রোফাইল, সব ডিভাইসে অগ্রগতি, অভিভাবকের সাপ্তাহিক ইমেইল (এখনো পরীক্ষায়)। যাচাই, সনদ, অনুশীলনী প্যাক আর এই পুরো ডাউনলোড বান্ডল শুধু <b>বার্ষিক</b> প্ল্যানে থাকে, মাসিকে নয়। এখনো কেনা যায় না।</li>
+      <div class="buybox">
+        <div class="price-line"><strong>৳{bnNum(YEARLY_BDT)}</strong><span>বছরে, পুরো পরিবারের জন্য</span></div>
+        <p class="unit">দিনে ৳{bn(perDay(YEARLY_BDT))} · {bn(KIDS)} জন সন্তান পর্যন্ত · অনলাইন কোচিংয়ের বছরে ২০-২৫ হাজারের বিশ ভাগের এক ভাগ</p>
+        <a class="btn btn-primary buy" data-buy-anchor href={buyHref}>{buyable ? `বিকাশে নিন · ৳${bnNum(YEARLY_BDT)} →` : 'প্রতিষ্ঠাতা তালিকায় নাম লেখাও →'}</a>
+        <ul class="assure">
+          <li><b>একবারের পেমেন্ট</b>, নিজে থেকে আর টাকা কাটবে না</li>
+          <li><b>বারো মাসের শর্তহীন ফেরত</b>, এক লাইন লিখলেই</li>
+          <li><b>{digitalPackOnSale() ? `৳${bn(DIGITAL_PACK_AMOUNT)}-এর ডাউনলোড বান্ডল` : 'ডাউনলোড বান্ডল'}</b> সঙ্গেই আসে</li>
         </ul>
-        <p>শুধু ছাপার জিনিস চাইলে বান্ডলই যথেষ্ট। বার্ষিক প্ল্যান নেওয়ার কথা ভাবলে বান্ডল আলাদা করে কেনার দরকার নেই, কারণ সেটা প্ল্যানের ভেতরেই আসে। <a href="/digital-pack/">বান্ডলের নমুনা দেখুন →</a></p>
+        <p class="ask"><a href="#compare">ফ্রি, বান্ডল আর প্ল্যানের তুলনা ↓</a> · <a href="/account/">আগেই সদস্য? ঢোকো</a></p>
       </div>
     </header>
 
-    <section class="sec">
-      <div class="sec-h">
-        <h2>প্রথমে যেটা বিনামূল্যে নিয়ে যাবেন</h2>
-        <p class="sec-note">কিছু না কিনেই, আজ, এই মুহূর্তে। ইমেইলও চাওয়া হবে না।</p>
+    <section class="sec" id="compare">
+      <div class="sec-h"><h2>কোনটা আপনার জন্য</h2></div>
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <thead><tr><th></th><th>ফ্রি</th><th>বান্ডল<small>৳{bn(DIGITAL_PACK_AMOUNT)} একবার</small></th><th class="pick">পরিবার<small>৳{bnNum(YEARLY_BDT)} বছরে</small></th></tr></thead>
+          <tbody>
+            <tr><th>সব পড়া, থ্রিডি মডেল, ল্যাব, মিশন</th><td>✓</td><td>✓</td><td class="pick">✓</td></tr>
+            <tr><th>{bn(sheets.length)}টি ফ্রি ছাপার শিট</th><td>✓</td><td>✓</td><td class="pick">✓</td></tr>
+            <tr><th>১১টি প্যাকের ছাপার PDF, উত্তরপত্রসহ</th><td>-</td><td>✓</td><td class="pick">✓</td></tr>
+            <tr><th>প্রত্যেক সন্তানের নিজের প্রোফাইল</th><td>-</td><td>-</td><td class="pick">✓</td></tr>
+            <tr><th>সব ডিভাইসে অগ্রগতি</th><td>-</td><td>-</td><td class="pick">✓</td></tr>
+            <tr><th>যাচাই, ফল জমা আর ভুবনের সনদ</th><td>-</td><td>-</td><td class="pick">✓</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="sgrid">
-        {sheets.map((s) => (
-          <a class="scard" href={`/printables/${s.slug}/`}>
-            <span class="semoji" aria-hidden="true">{s.emoji}</span>
-            <b>{s.bn}</b>
-            <span class="stag">{s.pages}</span>
-          </a>
-        ))}
-      </div>
-      <p class="sec-note">
-        এগুলো টোপ নয় - ছাপিয়ে নিয়ে চলে গেলে আমাদের কোনো আপত্তি নেই। যদি কাজে লাগে,
-        তখন নিচের কথাটা পড়ুন।
-      </p>
+      <p class="sec-note">শুধু কাগজের কাজ চাইলে <a href="/digital-pack/">বান্ডলই যথেষ্ট</a>। সন্তানের অগ্রগতিও দেখতে চাইলে পরিবার প্ল্যান।</p>
     </section>
 
     <section class="sec">
       <div class="sec-h">
-        <h2>সদস্যপদে কী কী আছে</h2>
-        <p class="sec-note">
-          {bn(stack.length)}টি জিনিস, তার {bn(haveCount)}টি আজই চালু। সবুজ মানে এখন কাজ করছে,
-          হলুদ মানে বানানো হয়ে গেছে কিন্তু এখনো পরীক্ষা চলছে, ধূসর মানে এখনো বানানো হয়নি।
-          প্রতিষ্ঠাতা পরিবারগুলোই ঠিক করবে ধূসরগুলোর কোনটা আগে বানানো হবে।
-        </p>
+        <h2>এখনই যা পাবেন</h2>
+        <p class="sec-note">সবুজ মানে আজই কাজ করছে। হলুদ মানে বানানো হয়ে গেছে, প্রথম চিঠি এখনো যায়নি।</p>
       </div>
       <ol class="stack">
-        {stack.map((s, i) => (
-          <li class={s.have === true ? 'on' : s.have === 'testing' ? 'mid' : 'off'}>
-            <span class="sn">{bn(i + 1)}</span>
-            <span class="sicon" aria-hidden="true">{s.have === true ? '✓' : s.have === 'testing' ? '◐' : '○'}</span>
+        {nowItems.map((s) => (
+          <li class={s.have === true ? 'on' : 'mid'}>
+            <span class="sicon" aria-hidden="true">{s.have === true ? '✓' : '◐'}</span>
             <div>
               <b>{s.t}</b>
               <p>{s.d}</p>
-              <span class={s.have === true ? 'badge yes' : s.have === 'testing' ? 'badge mid' : 'badge no'}>
-                {s.have === true ? 'আজই চালু' : s.have === 'testing' ? 'বানানো আছে, প্রথম চিঠি এখনো যায়নি' : 'এখনো বানানো হয়নি'}
-              </span>
-              {s.annual && <span class="badge ann">বার্ষিকের সঙ্গে</span>}
+              {s.have !== true && <span class="badge mid">বানানো আছে, প্রথম চিঠি এখনো যায়নি</span>}
             </div>
           </li>
         ))}
       </ol>
+      <div class="sec-h next-h">
+        <h3>পরে যা আসছে</h3>
+        <p class="sec-note">এগুলো এখনো বানানো হয়নি, তাই এগুলোর আশায় কিনবেন না। আজ যা আছে সেটা দেখেই ঠিক করুন।</p>
+      </div>
+      <ul class="next-list">
+        {nextItems.map((s) => <li><b>{s.t}:</b> {s.d}</li>)}
+      </ul>
+      <div class="again">
+        <a class="btn btn-primary" data-buy-anchor href={buyHref}>{buyable ? `বিকাশে নিন · ৳${bnNum(YEARLY_BDT)} →` : 'প্রতিষ্ঠাতা তালিকায় নাম লেখাও →'}</a>
+      </div>
     </section>
 
     <section class="sec">
-      <div class="sec-h">
-        <h2>দাম</h2>
-        <p class="sec-note">
-          একটাই সদস্যপদ, দুইভাবে দেওয়া যায়। এক পরিবার, {bn(KIDS)} জন সন্তান পর্যন্ত -
-          আলাদা প্ল্যান, আলাদা স্তর, আলাদা প্যাকেজ কিছু নেই।
-        </p>
-      </div>
-
-      <div class="prices">
-        <div class="price">
-          <span class="where">মাসিক</span>
-          <span class="big">৳{bn(MONTHLY_BDT)}</span>
-          <span class="per">মাসে, পুরো পরিবারের জন্য</span>
-          <span class="unit">দিনে ৳{bn((MONTHLY_BDT / 30).toFixed(1))}</span>
-          <ul>
-            <li>যেকোনো মাসে থামিয়ে দিতে পারবেন</li>
-            <li>বিকাশ, নগদ, রকেট বা কার্ড</li>
-            <li>আগে দেখে নিতে চাইলে এটাই</li>
-          </ul>
-        </div>
-        <div class="price best">
-          <span class="tagbest">{bn(monthsFree)} মাস ফ্রি</span>
-          <span class="where">বার্ষিক</span>
-          <span class="big">৳{bnNum(YEARLY_BDT)}</span>
-          <span class="per">বছরে, পুরো পরিবারের জন্য</span>
-          <span class="unit">দিনে ৳{bn(perDay(YEARLY_BDT))}, সন্তানপ্রতি মাসে প্রায় ৳{bn(Math.round(YEARLY_BDT / 12 / KIDS))}</span>
-          <ul>
-            <li>৳{bn(MONTHLY_BDT)} × ১২ = ৳{bnNum(MONTHLY_BDT * 12)}, বার্ষিকে ৳{bnNum(MONTHLY_BDT * 12 - YEARLY_BDT)} বেঁচে যায়</li>
-            <li>একজন গৃহশিক্ষকের এক মাসের বেতনেরও কম</li>
-            <li>অনলাইন কোচিংয়ের বছরে ২০-২৫ হাজারের তুলনায় বিশ ভাগের এক ভাগ</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="bonus">
-        <div class="bonus-h">
-          <span class="bemoji" aria-hidden="true">🎁</span>
-          <div>
-            <b>বার্ষিকের সঙ্গে যা এমনিতেই আসে</b>
-            <p>
-              মাসিকে সন্তানের প্রোফাইল, যেকোনো ডিভাইসে অগ্রগতি আর সাপ্তাহিক চিঠি -
-              সবই থাকে। নিচের দুটো জিনিস বছরের হিসাবের, তাই বার্ষিকের সঙ্গেই।
-            </p>
-          </div>
-        </div>
-        <ul class="bonus-list">
-          {annualOnly.map((s) => (
-            <li>
-              <b>{s.t}</b>
-              <p>{s.d}</p>
-            </li>
-          ))}
-        </ul>
-        <p class="sec-note">
-          কোনোটাই আজ ফ্রি নয় আর কোনোটাই ফ্রি থেকে তুলে নেওয়া হয়নি - দুটোই
-          সদস্যদের জন্য বানানো, আর বার্ষিকের সঙ্গে দাম ছাড়াই যাচ্ছে।
-        </p>
-      </div>
-
-      <div class="intlbox">
-        <div>
-          <b>দেশের বাইরে থাকলে</b>
-          <p>কার্ডে, ডলারে। বছরে <b>${bn(YEARLY_USD)}</b>, পুরো পরিবারের জন্য - বার্ষিকের সব কিছুসহ।</p>
-        </div>
-        <ul>
-          <li>অনলাইন বাংলা ক্লাসের মাসিক $২৫-এর সাত ভাগের এক ভাগ, বছরে</li>
-          <li>ডুয়োলিঙ্গোর পরিবার প্ল্যানের ($১১৯.৯৯) তিন ভাগের এক ভাগ</li>
-        </ul>
-      </div>
-
       <div class="guards">
         <div class="guard">
           <span class="gemoji" aria-hidden="true">🛡</span>
@@ -303,12 +214,28 @@ const schema = [
       </div>
     </section>
 
+    <section class="sec">
+      <div class="sec-h">
+        <h2>কিনতে না চাইলেও নিয়ে যান</h2>
+        <p class="sec-note">ফ্রি ছাপার শিট। ইমেইলও চাওয়া হবে না।</p>
+      </div>
+      <div class="sgrid">
+        {sheets.map((s) => (
+          <a class="scard" href={`/printables/${s.slug}/`}>
+            <span class="semoji" aria-hidden="true">{s.emoji}</span>
+            <b>{s.bn}</b>
+            <span class="stag">{s.pages}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
     <section class="sec" id="join">
       <div class="sec-h">
-        <h2>প্রতিষ্ঠাতা তালিকা</h2>
+        <h2>{buyable ? 'দেশের বাইরে থাকেন?' : 'প্রতিষ্ঠাতা তালিকা'}</h2>
         <p class="sec-note">
-          ফর্মটা অভিভাবকের জন্য - বড়দের জন্য। সন্তানের কোনো তথ্য চাওয়া হচ্ছে না,
-          কার্ডও লাগছে না। প্ল্যান তৈরি হলে আমরা আপনাকে লিখব, তার আগে নয়।
+          {buyable ? `পেমেন্ট এখন শুধু বিকাশে। কার্ডে ডলারে (বছরে $${bn(YEARLY_USD)}) নেওয়ার ব্যবস্থা হলে জানাতে চাইলে নাম লিখুন।` : 'পেমেন্ট চালু হলে আমরা আপনাকে লিখব, তার আগে নয়।'}
+          সন্তানের কোনো তথ্য চাওয়া হচ্ছে না, কার্ডও লাগছে না।
         </p>
       </div>
       <form class="card form" id="fform" novalidate>
@@ -320,7 +247,7 @@ const schema = [
           <label>কোথায় থাকেন <input name="place" maxlength="60" placeholder="যেমন: ঢাকা, বা লন্ডন" /></label>
           <label>সন্তানের বয়স <input name="ages" maxlength="40" placeholder="যেমন: ৬ আর ৯" /></label>
         </div>
-        <label>তালিকার কোন জিনিসটা আপনার সবচেয়ে আগে দরকার
+        <label>কোন জিনিসটা আপনার সবচেয়ে আগে দরকার
           <textarea name="message" required minlength="5" maxlength="2000" rows="4" placeholder="যেমন: অনুশীলনী প্যাক, কারণ বাচ্চা পর্দায় বেশি সময় কাটায়"></textarea>
         </label>
         <div class="hp"><label for="website-hp">Website</label><input id="website-hp" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
@@ -346,7 +273,10 @@ const schema = [
       </p>
     </section>
   </div>
+  {buyable && <BuyBar href={buyHref} title="পসরা পরিবার, এক বছর" price={`৳${bnNum(YEARLY_BDT)}`} />}
 </Base>
+
+<script is:inline data-item={FAMILY_PRODUCT.ga} data-name={FAMILY_PRODUCT.name} data-price={FAMILY_PRODUCT.amount} type="application/json" id="shop-item">{}</script>
 
 <style>
   .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 2.75rem; }
@@ -354,6 +284,28 @@ const schema = [
   .crumbs span { margin: 0 0.35rem; }
 
   .hero { display: flex; flex-direction: column; gap: 0.9rem; max-width: 64ch; }
+  .buybox { display: flex; flex-direction: column; gap: .55rem; padding: 1.2rem 1.3rem; border: 1px solid color-mix(in oklab, var(--brand) 55%, var(--line)); border-radius: 20px; background: linear-gradient(155deg, color-mix(in oklab, var(--brand) 16%, var(--panel)), var(--panel)); }
+  .price-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: .3rem .8rem; }
+  .price-line strong { font-family: var(--font-display); font-size: clamp(2.6rem, 7vw, 3.4rem); line-height: 1; color: var(--ink); }
+  .price-line span { color: var(--ink-2); font-size: 14px; }
+  .buybox .unit { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; font-family: inherit; }
+  .buy { justify-content: center; min-height: 3.2rem; font-size: 1.08rem; }
+  .assure { list-style: none; margin: .2rem 0 0; padding: 0; display: grid; gap: .25rem; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; }
+  .assure li::before { content: '✓ '; color: var(--ok); font-weight: 800; }
+  .assure b { color: var(--ink); }
+  .ask { margin: .2rem 0 0; color: var(--muted); font-size: 13px; }
+  .ask a, .sec-note a { color: var(--brand-ink); font-weight: 700; }
+  .cmp-wrap { overflow-x: auto; }
+  .cmp { width: 100%; min-width: 320px; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); font-size: 14px; }
+  .cmp th, .cmp td { padding: .65rem .6rem; border-bottom: 1px solid var(--line-soft); text-align: center; line-height: 1.4; }
+  .cmp tbody th { text-align: left; font-weight: 600; color: var(--ink-2); }
+  .cmp thead th { font-weight: 800; color: var(--ink); }
+  .cmp small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
+  .cmp .pick { background: color-mix(in oklab, var(--brand) 12%, transparent); color: var(--brand-ink); font-weight: 800; }
+  .next-h { margin-top: 1rem; }
+  .next-h h3 { font-size: 1.1rem; }
+  .next-list { margin: 0; padding-left: 1.2rem; display: grid; gap: .4rem; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+  .again { margin-top: .6rem; }
   h1 { font-size: clamp(2rem, 5vw, 3.3rem); font-weight: 800; line-height: 1.14; letter-spacing: -0.01em; }
   .lede { font-size: clamp(1.05rem, 2vw, 1.22rem); color: var(--ink-2); line-height: 1.72; }
   .statusbox { font-size: 14.5px; line-height: 1.72; color: var(--ink-2); background: color-mix(in oklab, var(--sun) 13%, var(--panel));
@@ -382,7 +334,7 @@ const schema = [
 
   /* the stack */
   .stack { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; counter-reset: none; }
-  .stack li { display: grid; grid-template-columns: 30px 26px minmax(0, 1fr); gap: 0 0.7rem; align-items: start;
+  .stack li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 0 0.7rem; align-items: start;
     background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: 0.9rem 1.1rem 1rem; }
   .stack li.off { background: transparent; border-style: dashed; }
   .sn { font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding-top: 0.3rem; }
@@ -470,11 +422,14 @@ const schema = [
   .back a { color: var(--brand-ink); font-weight: 600; }
   .back a:hover { text-decoration: underline; }
 
-  @media (max-width: 620px) { .two { grid-template-columns: 1fr; } .stack li { grid-template-columns: 24px minmax(0, 1fr); } .sicon { display: none; } }
+  @media (max-width: 620px) { .two { grid-template-columns: 1fr; } .stack li { padding-inline: .8rem; } }
 </style>
 
 <script>
-  import { track } from '../lib/track';
+  import { track, trackShop } from '../lib/track';
+
+  const shopItem = document.getElementById('shop-item')!.dataset;
+  trackShop('view_item', { id: shopItem.item ?? '', name: shopItem.name ?? '', price: Number(shopItem.price) });
 
   const form = document.getElementById('fform') as HTMLFormElement;
   const msg = document.getElementById('fmsg')!;
@@ -512,7 +467,7 @@ const schema = [
       if (data.ok) {
         form.reset();
         msg.className = 'msg ok';
-        msg.textContent = 'নাম উঠে গেছে। প্ল্যান তৈরি হলে আমরাই আপনাকে লিখব - তার আগে কোনো ইমেইল পাঠাবো না।';
+        msg.textContent = 'নাম উঠে গেছে। ব্যবস্থা হলে আমরাই আপনাকে লিখব - তার আগে কোনো ইমেইল পাঠাবো না।';
         track('family_waitlist');
         return;
       }

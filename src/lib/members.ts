@@ -805,6 +805,28 @@ export async function grantEntitlement(memberId: string, plan: string, days: num
     .bind(memberId, plan, 'active', now, days === null ? null : now + days * 86_400_000, note.slice(0, 200) || null, grantedBy.slice(0, 80), now).run();
 }
 
+/**
+ * Add paid time to the family plan, starting from whatever is left of it, so
+ * renewing early never loses days. A plan with no end date stays that way. The
+ * note carries the order id, so a retried payment callback cannot add the year
+ * twice.
+ */
+export async function extendFamilyPlan(memberId: string, days: number, note: string, grantedBy: string): Promise<void> {
+  const d = requireDb();
+  const now = Date.now();
+  const done = await d.prepare('SELECT id FROM entitlements WHERE member_id = ? AND plan = ? AND note = ? LIMIT 1').bind(memberId, PLAN_FAMILY, note).first();
+  if (done) return;
+  const current = await d.prepare(
+    `SELECT ends_at FROM entitlements WHERE member_id = ? AND plan = ? AND status = 'active'
+     AND (ends_at IS NULL OR ends_at > ?) ORDER BY ends_at IS NULL DESC, ends_at DESC LIMIT 1`,
+  ).bind(memberId, PLAN_FAMILY, now).first<{ ends_at: number | null }>();
+  if (current && current.ends_at === null) return;
+  const from = current?.ends_at ?? now;
+  await d.prepare("UPDATE entitlements SET status = 'ended' WHERE member_id = ? AND plan = ? AND status = 'active'").bind(memberId, PLAN_FAMILY).run();
+  await d.prepare('INSERT INTO entitlements (member_id, plan, status, starts_at, ends_at, note, granted_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(memberId, PLAN_FAMILY, 'active', now, from + days * 86_400_000, note.slice(0, 200), grantedBy.slice(0, 80), now).run();
+}
+
 export async function revokePlan(memberId: string): Promise<void> {
   await requireDb().prepare("UPDATE entitlements SET status = 'ended', ends_at = ? WHERE member_id = ? AND plan = ? AND status = 'active'")
     .bind(Date.now(), memberId, PLAN_FAMILY).run();

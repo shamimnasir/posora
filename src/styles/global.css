@@ -185,4 +185,7 @@ img, svg, canvas { display: block; max-width: 100%; }
 /* Inside the Android app (public/app-mode.js) nothing may lead to a purchase:
    Google Play allows digital goods to be sold only through its own billing. */
 html.in-app a[href^="/digital-pack"],
-html.in-app a[href^="/family"] { display: none !important; }
+html.in-app a[href^="/family"],
+html.in-app .shop-offer,
+html.in-app .buybar { display: none !important; }
+@media print { .shop-offer, .buybar { display: none !important; } }

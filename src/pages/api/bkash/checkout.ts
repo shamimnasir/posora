@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { sameOrigin, clientIp } from '../../../lib/auth';
 import { throttled } from '../../../lib/members';
 import { startBkash } from '../../../lib/bkash';
+import { BUNDLE_PRODUCT, FAMILY_PRODUCT, familyOnSale } from '../../../lib/shop';
 
 export const prerender = false;
 
@@ -19,7 +20,9 @@ export const POST: APIRoute = async ({ request, url }) => {
   // Each attempt is an order row and a call to the gateway; a buyer retrying
   // never needs more than a handful an hour.
   if (await throttled(`checkout:${clientIp(request)}`, 20, 60 * 60_000)) return json({ ok: false, error: 'throttled' }, 429);
-  const result = await startBkash({ name: String(body.name ?? ''), email: String(body.email ?? ''), phone: String(body.phone ?? '') }, url.origin);
+  const wantsFamily = body.plan === 'family';
+  if (wantsFamily && !familyOnSale()) return json({ ok: false, error: 'unavailable' }, 503);
+  const result = await startBkash({ name: String(body.name ?? ''), email: String(body.email ?? ''), phone: String(body.phone ?? '') }, url.origin, wantsFamily ? FAMILY_PRODUCT : BUNDLE_PRODUCT);
   if (result.ok) return json({ ok: true, gatewayUrl: result.url });
   return json(result, result.error === 'invalid' ? 422 : result.error === 'unavailable' ? 503 : 502);
 };

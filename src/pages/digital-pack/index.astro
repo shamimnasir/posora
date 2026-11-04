@@ -1,14 +1,15 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { bundle, digitalPacks } from '../../data/digital-packs';
-import { bn } from '../../lib/bn';
-import { digitalPackOnSale } from '../../lib/shop';
+import BuyBar from '../../components/BuyBar.astro';
+import { bundle, digitalPacks, PREVIEW_VERSION as previewVersion } from '../../data/digital-packs';
+import { bn, bnNum } from '../../lib/bn';
+import { digitalPackOnSale, familyOnSale, BUNDLE_PRODUCT, FAMILY_AMOUNT } from '../../lib/shop';
 import { library } from '../../lib/pack-files';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
 
-const schema = [
+const schema: Record<string, unknown>[] = [
   {
     '@type': 'BreadcrumbList',
     itemListElement: [
@@ -26,11 +27,36 @@ const schema = [
     })),
   },
 ];
-const previewVersion = '20261103-audit';
 const workPages = digitalPacks.reduce((n, p) => n + p.workPages, 0);
 const checkoutLive = digitalPackOnSale();
 // Page and file counts come from the uploaded library, so they match the download.
 const lib = await library();
+const familyLive = familyOnSale();
+const pagePaisa = lib.totalPages ? Math.round((bundle.priceBdt / lib.totalPages) * 100) : 0;
+const help = `https://wa.me/8801771553141?text=${encodeURIComponent('৳২৪৯ ডাউনলোড বান্ডল নিয়ে একটা প্রশ্ন আছে।')}`;
+
+// The doubts that stop a parent at this page, answered before they have to ask.
+const faqs = [
+  { q: 'প্রিন্টার নেই, তাহলে?', a: 'প্রিন্টার লাগবেই এমন নয়। ফাইল ফোনে রেখে কাছের কম্পিউটারের দোকান থেকে যে কটা পাতা দরকার সেগুলোই ছেপে নিতে পারেন। পুরোটা একসঙ্গে ছাপানোর দরকার নেই।' },
+  { q: 'রঙিন প্রিন্ট লাগবে?', a: 'না। পাতাগুলো A4, সাদা পাতায় হালকা রং, তাই কালি কম লাগে আর সাদা-কালোতেও ছাপা যায়।' },
+  { q: 'কোন বয়সের জন্য?', a: 'পাঁচ থেকে তেরো। প্রতিটি প্যাকের কার্ডে তার বয়স লেখা আছে: যেমন বাংলা শুরু ৫-৮, গণিত খেলাঘর ৫-১০, আর রসায়ন ৮-১৩।' },
+  { q: 'টাকা দেওয়ার পর ফাইল কীভাবে পাব?', a: 'বিকাশে পেমেন্ট হলেই এই সাইটের পাতায় ডাউনলোড খুলে যায়। একই লিংক আপনার ইমেইলেও যায়, আর পরে অ্যাকাউন্টে ঢুকে আবার নামাতে পারবেন।' },
+  { q: 'ফাইল না খুললে বা না পেলে?', a: 'জানালে আমরা ঠিক করে দেব। ঠিক করতে না পারলে টাকা ফেরত দেব। হোয়াটসঅ্যাপ ০১৭৭১-৫৫৩১৪১ বা support@posora.com।' },
+  { q: 'মাসে মাসে টাকা কাটবে?', a: 'না। একবারই ৳২৪৯, সাবস্ক্রিপশন নয়। ফাইলগুলো আপনার কাছেই থাকবে, যতবার খুশি ছাপুন।' },
+  { q: 'দেশের বাইরে থেকে কেনা যাবে?', a: 'এখন পেমেন্ট শুধু বিকাশে। বাংলাদেশের বিকাশ অ্যাকাউন্ট না থাকলে হোয়াটসঅ্যাপে জানান, আমরা উপায় বলে দেব।' },
+];
+schema.push({
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+});
+if (checkoutLive) schema.push({
+  '@type': 'Product',
+  name: bundle.title,
+  description: `${lib.totalPages ? `${lib.totalPages} পাতার ` : ''}ছাপার অনুশীলনী, কুইজ, তথ্য-কার্ড, উত্তরপত্র আর সনদ, ১১টি প্যাকে।`,
+  image: `https://posora.com/digital-pack-preview/math-play.png`,
+  brand: { '@type': 'Brand', name: 'পসরা' },
+  offers: { '@type': 'Offer', price: String(bundle.priceBdt), priceCurrency: 'BDT', availability: 'https://schema.org/InStock', url: 'https://posora.com/digital-pack/' },
+});
 ---
 
 <Base
@@ -43,33 +69,27 @@ const lib = await library();
 
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">ডাউনলোড বান্ডল · পরিবার ও শিক্ষক</p>
-        <h1>এক বান্ডলে <em>শেখার পুরো ঘর</em></h1>
-        <p class="lede">
-          পসরার ১১টি ভুবন এবার কাগজে। প্রতিটি পাতা সাইটের যাচাই করা পাঠ থেকে বানানো: কেটে রাখার
-          তথ্য-কার্ড, শূন্যস্থান আর মিলানোর অনুশীলনী, কুইজ, আর সবশেষে আলাদা উত্তরপত্র। একবার কিনে
-          ফোন বা কম্পিউটারে রেখে দিন, যতবার খুশি ছাপুন।
-        </p>
-        <div class="hero-actions">
-          {checkoutLive
-            ? <a class="btn btn-primary" href="/digital-pack/checkout/">বান্ডল নিন · ৳{bn(bundle.priceBdt)} →</a>
-            : <a class="btn btn-primary" href="/family/#join">বিক্রি শুরুর খবর নিন →</a>}
-          <a class="btn preview-cta" href="#preview">ভেতরের নমুনা দেখুন ↓</a>
-          <a class="btn" href="/printables/">ফ্রি শিট আগে দেখো</a>
-        </div>
-        <p class="fine">
-          {checkoutLive
-            ? <>একবারের মূল্য <b>৳{bn(bundle.priceBdt)}</b>, বিকাশে। পেমেন্টের সঙ্গে সঙ্গে ডাউনলোড, পরে অ্যাকাউন্ট থেকে আবার।</>
-            : <>প্রস্তাবিত এককালীন মূল্য <b>৳{bn(bundle.priceBdt)}</b>। ফাইল ও পেমেন্ট যাচাই শেষ না হওয়া পর্যন্ত এখনো অর্ডার নেওয়া হচ্ছে না।</>}
-        </p>
+        <p class="eyebrow">ছাপার বান্ডল · পরিবার ও শিক্ষক</p>
+        <h1>“আজ কী করাব?” এর উত্তর, <em>{lib.totalPages ? `${bn(lib.totalPages)} পাতায়` : 'এক বান্ডলে'}</em></h1>
+        <p class="lede">অনুশীলনী, কুইজ, তথ্য-কার্ড, ট্রেসিং আর সনদ, ১১টি বিষয়ে। শেষে উত্তরপত্র। একবার কিনে ফোন বা কম্পিউটারে রাখুন, যতবার খুশি ছাপুন।</p>
       </div>
-      <div class="price-card" aria-label="বান্ডলের সারাংশ">
-        <span class="price-kicker">১১ ভুবন · ১ বান্ডল</span>
-        <strong>৳{bn(bundle.priceBdt)}</strong>
-        <span>{checkoutLive ? 'বিকাশে পেমেন্ট · সঙ্গে সঙ্গে ডাউনলোড' : 'এখনো বিক্রি শুরু হয়নি · আগে নমুনা দেখে নিন'}</span>
-        {lib.totalPages && <div class="stat-row"><b>{bn(lib.totalPages)}</b><span>টি ছাপার পাতা</span></div>}
-        <div class="stat-row"><b>{bn(bundle.packs)}</b><span>টি ভুবনের প্যাক</span></div>
-        <div class="stat-row"><b>{bn(lib.files.length)}</b><span>টি PDF, একটা ZIP-এও</span></div>
+      <a class="gallery" href="#preview" aria-label="ভেতরের আসল পাতা দেখুন">
+        <img src={`/digital-pack-preview/space-explorer.png?v=${previewVersion}`} alt="মহাকাশ প্যাকের আসল পাতা" width="210" height="297" decoding="async" />
+        <img src={`/digital-pack-preview/bangla-starter.png?v=${previewVersion}`} alt="বাংলা শুরু প্যাকের আসল পাতা" width="210" height="297" decoding="async" />
+        <img src={`/digital-pack-preview/math-play.png?v=${previewVersion}`} alt="গণিত খেলাঘর প্যাকের আসল পাতা" width="210" height="297" decoding="async" />
+      </a>
+      <div class="buybox" aria-label="দাম ও কেনা">
+        <div class="price-line"><strong>৳{bn(bundle.priceBdt)}</strong><span>{checkoutLive ? 'একবারই, সাবস্ক্রিপশন নয়' : 'এখনো বিক্রি শুরু হয়নি'}</span></div>
+        {pagePaisa > 0 && <p class="per-page">পাতাপ্রতি প্রায় {bn(pagePaisa)} পয়সা</p>}
+        {checkoutLive
+          ? <a class="btn btn-primary buy" data-buy-anchor href="/digital-pack/checkout/">বিকাশে কিনুন · ৳{bn(bundle.priceBdt)} →</a>
+          : <a class="btn btn-primary buy" href="/family/#join">বিক্রি শুরুর খবর নিন →</a>}
+        <ul class="assure">
+          <li><b>সঙ্গে সঙ্গে ডাউনলোড</b>, ইমেইলেও লিংক যাবে</li>
+          <li><b>ফাইল না খুললে</b> ঠিক করে দেব, না পারলে টাকা ফেরত</li>
+          <li>{lib.totalPages ? `${bn(lib.totalPages)} পাতা · ` : ''}{bn(lib.files.length)}টি PDF · একটা ZIP-এও</li>
+        </ul>
+        <p class="ask"><a href="#preview">কেনার আগে ভেতরের পাতা দেখুন ↓</a> · <a href={help} rel="noopener">হোয়াটসঅ্যাপে জিজ্ঞেস করুন</a></p>
       </div>
     </section>
 
@@ -79,12 +99,6 @@ const lib = await library();
       <div><span aria-hidden="true">✓</span><b>উত্তরপত্রসহ</b><small>অভিভাবক ও শিক্ষক দুজনের জন্য</small></div>
       <div><span aria-hidden="true">↓</span><b>সঙ্গে সঙ্গে ডাউনলোড</b><small>ফোন বা কম্পিউটারে, পরে অ্যাকাউন্ট থেকে আবার</small></div>
     </section>
-
-    <aside class="free-worlds-note">
-      <span aria-hidden="true">✦</span>
-      <p><b>অনলাইন শেখার ভুবনগুলো আলাদা এবং ফ্রি।</b> মডেল দেখতে, বিষয় পড়তে ও ফ্রি ছাপার শিট ব্যবহার করতে কোনো কেনাকাটা লাগে না।</p>
-      <a href="/#worlds">ফ্রি ভুবন ঘুরে দেখুন →</a>
-    </aside>
 
     <section class="sec preview" id="preview">
       <div class="sec-h">
@@ -162,19 +176,31 @@ const lib = await library();
         <h2>আলাদা আলাদা নয় - সব ১১টি একসঙ্গে</h2>
         <p>আজ বাংলা লিখবে, কাল গাছ দেখবে, পরশু দোকান খেলবে। শিশুর আগ্রহ বদলালেও প্যাক বদলাতে হবে না।</p>
       </div>
-      <div class="bundle-price"><span>{checkoutLive ? 'একবারের মূল্য' : 'প্রস্তাবিত এককালীন মূল্য'}</span><b>৳{bn(bundle.priceBdt)}</b><small>{checkoutLive ? 'বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড' : 'বিক্রি শুরু হলে জানাব, নমুনা এখনই দেখুন'}</small>{checkoutLive ? <a class="btn btn-primary" href="/digital-pack/checkout/">নিরাপদ চেকআউট →</a> : <a class="btn btn-primary" href="/family/#join">বিক্রির খবর নিন →</a>}</div>
+      <div class="bundle-price"><span>{checkoutLive ? 'একবারের মূল্য' : 'প্রস্তাবিত এককালীন মূল্য'}</span><b>৳{bn(bundle.priceBdt)}</b><small>{checkoutLive ? 'বিকাশে পেমেন্ট, সঙ্গে সঙ্গে ডাউনলোড' : 'বিক্রি শুরু হলে জানাব, নমুনা এখনই দেখুন'}</small>{checkoutLive ? <a class="btn btn-primary" data-buy-anchor href="/digital-pack/checkout/">বিকাশে কিনুন →</a> : <a class="btn btn-primary" href="/family/#join">বিক্রির খবর নিন →</a>}</div>
+    </section>
+
+    <section class="sec faq" id="faq">
+      <div class="sec-h"><p class="eyebrow">কেনার আগে</p><h2>যা সবাই জিজ্ঞেস করে</h2></div>
+      <div class="faq-list">
+        {faqs.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
+      </div>
+      <p class="ask"><a href={help} rel="noopener">অন্য প্রশ্ন? হোয়াটসঅ্যাপে জিজ্ঞেস করুন →</a></p>
     </section>
 
     <section class="sec honest">
-      <h2>একটি জরুরি কথা</h2>
-      <p>ফ্রি শিট আর অনলাইন ভুবন ফ্রিই থাকবে। এই বান্ডলে আছে ১১টি ভুবনের অনুশীলনী প্যাক{lib.totalPages ? `, মোট ${bn(lib.totalPages)} পাতা` : ''}, প্রতিটির শেষে উত্তরপত্র, সঙ্গে সনদ, শুরু করার গাইড ও ৩০ দিনের পরিকল্পনা। প্রতিটি তথ্য সাইটের যাচাই করা পাঠ থেকে নেওয়া।{checkoutLive ? '' : ' বিক্রি এখনো শুরু হয়নি।'}</p>
-      <p><b>এটি পসরা পরিবারের সদস্যপদ নয়।</b> একবার কিনলে ফাইলগুলো আপনার, কিন্তু সন্তানের প্রোফাইল বা অগ্রগতি-হিসাব এর সঙ্গে আসে না। আর উল্টো দিকে: বার্ষিক পরিবার প্ল্যানে এই পুরো বান্ডল অন্তর্ভুক্ত (মাসিকে নয়), তাই বার্ষিক প্ল্যান নিতে চাইলে বান্ডল আলাদা কেনার দরকার নেই। পরিবার প্ল্যান এখনো বিক্রি শুরু হয়নি। সদস্যপদের বিষয়গুলো <a href="/family/">এখানে দেখুন</a>।</p>
-      {checkoutLive ? <a href="/digital-pack/checkout/">নিরাপদ চেকআউটে যান →</a> : <a href="/family/#join">বিক্রির খবর পেতে নাম লেখাও →</a>}
+      <h2>ফ্রি আর কেনার পার্থক্য</h2>
+      <p><b>অনলাইন ভুবনগুলো ফ্রি, আর ফ্রিই থাকবে।</b> মডেল দেখতে, বিষয় পড়তে ও <a href="/printables/">ফ্রি ছাপার শিট</a> নিতে কোনো কেনাকাটা লাগে না। এই বান্ডল কাগজে করার জন্য: প্রতিটি তথ্য সাইটের যাচাই করা পাঠ থেকে নেওয়া।</p>
+      <p><b>এটি পসরা পরিবারের সদস্যপদ নয়।</b> সন্তানের প্রোফাইল বা অগ্রগতির হিসাব এর সঙ্গে আসে না। {familyLive ? <>সেগুলোও চাইলে <a href="/family/">বছরে ৳{bnNum(FAMILY_AMOUNT)}-এর পরিবার প্ল্যান</a> নিন, এই পুরো বান্ডল তার ভেতরেই আছে।</> : <>সদস্যপদের বিষয়গুলো <a href="/family/">এখানে দেখুন</a>।</>}</p>
     </section>
   </div>
+  {checkoutLive && <BuyBar href="/digital-pack/checkout/" title="ছাপার বান্ডল" price={`৳${bn(bundle.priceBdt)}`} />}
 </Base>
 
+<script is:inline data-item={BUNDLE_PRODUCT.ga} data-name={BUNDLE_PRODUCT.name} data-price={BUNDLE_PRODUCT.amount} type="application/json" id="shop-item">{}</script>
 <script>
+  import { trackShop } from '../../lib/track';
+  const shopItem = document.getElementById('shop-item')!.dataset;
+  trackShop('view_item', { id: shopItem.item ?? '', name: shopItem.name ?? '', price: Number(shopItem.price) });
   const previewTabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
   const previewPanels = [...document.querySelectorAll<HTMLElement>('.preview-panel')];
   previewTabs.forEach((tab) => tab.addEventListener('click', () => {
@@ -187,9 +213,30 @@ const lib = await library();
   .page { padding-block: 1rem 4rem; display: flex; flex-direction: column; gap: 3rem; }
   .crumbs { font-size: 13px; color: var(--muted); }
   .crumbs span { margin: 0 .35rem; }
-  .hero { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, .7fr); gap: 2rem; align-items: center; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); grid-template-areas: 'copy gallery' 'buy gallery'; gap: 1.2rem 2.5rem; align-items: start; }
+  .hero-copy { grid-area: copy; }
+  .gallery { grid-area: gallery; position: relative; display: block; aspect-ratio: 1 / 1.05; min-height: 320px; }
+  .gallery img { position: absolute; width: 62%; height: auto; aspect-ratio: 210 / 297; object-fit: cover; object-position: top; border-radius: 8px; background: #fff; box-shadow: 0 16px 36px rgba(0, 0, 0, .3); }
+  .gallery img:nth-child(1) { left: 0; top: 7%; transform: rotate(-6deg); }
+  .gallery img:nth-child(2) { right: 0; top: 7%; transform: rotate(6deg); }
+  .gallery img:nth-child(3) { left: 19%; top: 0; }
+  .buybox { grid-area: buy; display: flex; flex-direction: column; gap: .55rem; padding: 1.2rem 1.3rem; border: 1px solid color-mix(in oklab, var(--brand) 55%, var(--line)); border-radius: 20px; background: linear-gradient(155deg, color-mix(in oklab, var(--brand) 16%, var(--panel)), var(--panel)); }
+  .price-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: .3rem .8rem; }
+  .price-line strong { font-family: var(--font-display); font-size: clamp(2.6rem, 7vw, 3.4rem); line-height: 1; color: var(--ink); }
+  .price-line span { color: var(--ink-2); font-size: 14px; }
+  .per-page { margin: 0; color: var(--muted); font-size: 13px; }
+  .buy { justify-content: center; min-height: 3.2rem; font-size: 1.08rem; }
+  .assure { list-style: none; margin: .2rem 0 0; padding: 0; display: grid; gap: .25rem; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; }
+  .assure li::before { content: '✓ '; color: var(--ok); font-weight: 800; }
+  .assure b { color: var(--ink); }
+  .ask { margin: .2rem 0 0; color: var(--muted); font-size: 13px; }
+  .ask a { color: var(--brand-ink); font-weight: 700; }
+  .faq-list { display: flex; flex-direction: column; gap: .5rem; max-width: 72ch; }
+  .faq-list details { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: .85rem 1.05rem; }
+  .faq-list summary { font-weight: 700; font-size: 15.5px; cursor: pointer; }
+  .faq-list p { margin: .5rem 0 0; font-size: 14.5px; color: var(--ink-2); line-height: 1.7; }
   .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: .85rem; }
-  h1 { font-size: clamp(2.35rem, 6vw, 4.5rem); line-height: 1.08; max-width: 12ch; }
+  h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.15; }
   h1 em { color: var(--brand); font-style: normal; }
   .lede { font-size: clamp(1.08rem, 2vw, 1.28rem); line-height: 1.72; color: var(--ink-2); max-width: 54ch; }
   .hero-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .2rem; }
@@ -297,7 +344,7 @@ const lib = await library();
   .honest { border-top: 1px solid var(--line-soft); padding-top: 1.4rem; max-width: 70ch; }
   .honest a { color: var(--brand-ink); font-weight: 700; }
   @media (max-width: 640px) { .free-worlds-note { grid-template-columns: auto 1fr; } .free-worlds-note > a { grid-column: 2; } }
-  @media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .value-strip, .signal-grid { grid-template-columns: repeat(2, 1fr); } .pack-grid { grid-template-columns: 1fr; } .bundle { grid-template-columns: 1fr; } .bundle-price { align-items: flex-start; } }
+  @media (max-width: 800px) { .hero { grid-template-columns: 1fr; grid-template-areas: 'copy' 'gallery' 'buy'; } .gallery { max-width: 340px; width: 100%; min-height: 0; margin-inline: auto; } .value-strip, .signal-grid { grid-template-columns: repeat(2, 1fr); } .pack-grid { grid-template-columns: 1fr; } .bundle { grid-template-columns: 1fr; } .bundle-price { align-items: flex-start; } }
   @media (max-width: 900px) { .preview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 640px) { .preview-panel { grid-template-columns: 1fr; } .preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .standard-grid { grid-template-columns: repeat(2, 1fr); } .bonus-preview { min-height: 260px; } .preview-all-head { align-items: flex-start; flex-direction: column; } }
   @media (max-width: 480px) { .value-strip { grid-template-columns: 1fr; } .pack ul { columns: 1; } h1 { max-width: none; } .preview-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: .8rem; } .preview-tab { white-space: nowrap; } .bonus-preview { grid-template-columns: 1fr; } .bonus-card { min-height: auto; } .preview-grid { gap: .55rem; } .pack-preview-info { padding: .5rem; } .pack-preview-info b { font-size: 11px; } .standard-grid { grid-template-columns: 1fr; } }

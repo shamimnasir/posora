@@ -20,7 +20,7 @@
 import { dbEnv, requireDb } from './db';
 import {
   cleanBuyer, createOrder, digitalPackReady, fulfilOrder, markOrder, orderByTran, confirmationUrl,
-  DIGITAL_PACK_AMOUNT, DIGITAL_PACK_CURRENCY, type BuyerInput,
+  BUNDLE_PRODUCT, DIGITAL_PACK_CURRENCY, type BuyerInput, type Product,
 } from './shop';
 
 const BASES = {
@@ -82,22 +82,22 @@ export type StartResult =
   | { ok: true; tranId: string; url: string }
   | { ok: false; error: 'unavailable' | 'invalid' | 'gateway-failed' };
 
-export async function startBkash(input: BuyerInput, origin: string): Promise<StartResult> {
+export async function startBkash(input: BuyerInput, origin: string, product: Product = BUNDLE_PRODUCT): Promise<StartResult> {
   const c = cfg();
   if (!c || !digitalPackReady()) return { ok: false, error: 'unavailable' };
-  const buyer = cleanBuyer(input);
+  const buyer = cleanBuyer(input, true);
   if (!buyer) return { ok: false, error: 'invalid' };
   const t = await token(c);
   if (!t) return { ok: false, error: 'gateway-failed' };
 
-  const { tranId } = await createOrder(buyer, 'bkash');
+  const { tranId } = await createOrder(buyer, 'bkash', product);
   const digits = buyer.phone.replace(/\D/g, '').replace(/^880/, '0');
   const r = await post(`${c.base}/tokenized/checkout/create`, authHeaders(c, t), {
     mode: '0011',
     // Pre-fills the wallet number on bKash's page when it looks like one.
     payerReference: /^01\d{9}$/.test(digits) ? digits : tranId,
     callbackURL: `${origin}/api/bkash/callback`,
-    amount: DIGITAL_PACK_AMOUNT.toFixed(2),
+    amount: product.amount.toFixed(2),
     currency: DIGITAL_PACK_CURRENCY,
     intent: 'sale',
     merchantInvoiceNumber: tranId,
@@ -128,13 +128,13 @@ async function logReply(step: string, tranId: string, r: BkashBody | null): Prom
 }
 
 /** True only for a completed payment that matches this order exactly. */
-function matches(r: BkashBody | null, tranId: string, paymentID: string): boolean {
+function matches(r: BkashBody | null, tranId: string, paymentID: string, expected: number): boolean {
   if (!r || r.transactionStatus !== 'Completed' || !r.trxID) return false;
   if (r.paymentID && r.paymentID !== paymentID) return false;
   if (r.merchantInvoiceNumber && r.merchantInvoiceNumber !== tranId) return false;
   if (r.currency && r.currency !== DIGITAL_PACK_CURRENCY) return false;
   const amount = Number(r.amount);
-  return Number.isFinite(amount) && Math.abs(amount - DIGITAL_PACK_AMOUNT) < 0.001;
+  return Number.isFinite(amount) && Math.abs(amount - expected) < 0.001;
 }
 
 /**
@@ -164,12 +164,12 @@ export async function finishBkash(paymentID: string, status: string, origin: str
 
   let r = await post(`${c.base}/tokenized/checkout/execute`, authHeaders(c, t), { paymentID });
   await logReply('execute', order.tran_id, r);
-  if (!matches(r, order.tran_id, paymentID)) {
+  if (!matches(r, order.tran_id, paymentID, order.amount_bdt)) {
     // Execute can time out after the money moved, or refuse because it already
     // ran. The status query is the source of truth in both cases.
     const q = await post(`${c.base}/tokenized/checkout/payment/status`, authHeaders(c, t), { paymentID });
     await logReply('status', order.tran_id, q);
-    if (matches(q, order.tran_id, paymentID)) r = q;
+    if (matches(q, order.tran_id, paymentID, order.amount_bdt)) r = q;
     else {
       // Only a terminal answer from the status query fails the order; anything
       // else (still Initiated, a timeout) stays pending for a later check.
@@ -199,9 +199,9 @@ export async function reconcileBkash(origin: string): Promise<{ checked: number;
   if (!c) return out;
   const now = Date.now();
   const { results } = await requireDb().prepare(
-    `SELECT tran_id, gateway_ref, created_at FROM orders WHERE gateway = 'bkash' AND status = 'pending' AND gateway_ref IS NOT NULL
+    `SELECT tran_id, gateway_ref, created_at, amount_bdt FROM orders WHERE gateway = 'bkash' AND status = 'pending' AND gateway_ref IS NOT NULL
        AND created_at < ? AND created_at > ? ORDER BY created_at LIMIT 25`,
-  ).bind(now - 3 * 60_000, now - 3 * 86_400_000).all<{ tran_id: string; gateway_ref: string; created_at: number }>();
+  ).bind(now - 3 * 60_000, now - 3 * 86_400_000).all<{ tran_id: string; gateway_ref: string; created_at: number; amount_bdt: number }>();
   if (!results.length) return out;
   const t = await token(c);
   if (!t) return out;
@@ -209,7 +209,7 @@ export async function reconcileBkash(origin: string): Promise<{ checked: number;
     out.checked++;
     const q = await post(`${c.base}/tokenized/checkout/payment/status`, authHeaders(c, t), { paymentID: o.gateway_ref });
     await logReply('reconcile', o.tran_id, q);
-    if (matches(q, o.tran_id, o.gateway_ref)) {
+    if (matches(q, o.tran_id, o.gateway_ref, o.amount_bdt)) {
       await fulfilOrder(o.tran_id, { bankTranId: q!.trxID, validationId: o.gateway_ref, gatewayStatus: 'Completed (reconciled)' }, origin);
       out.paid++;
     } else if (q?.transactionStatus && !['Initiated', 'Pending Authorized', 'Completed'].includes(q.transactionStatus)) {

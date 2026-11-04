@@ -45,6 +45,9 @@
   gtag('config', 'G-H4ESLZMRCW', {
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
+    // A confirmation link carries the order's download key, which opens paid
+    // files. It must not end up in Analytics as part of the page address.
+    page_location: location.href.replace(/([?&])k=[^&]*&?/, '$1').replace(/[?&]$/, ''),
   });
 
   // Analytics is useful after a page becomes usable, never before. Loading

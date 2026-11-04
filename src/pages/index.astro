@@ -1,12 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import HeroOrbit from '../components/HeroOrbit.astro';
+import ShopOffer from '../components/ShopOffer.astro';
 import WorldCard from '../components/WorldCard.astro';
 import { getWorlds, getBody, computeTotals } from '../lib/content';
 import { isLoggedIn } from '../lib/auth';
-import { bn } from '../lib/bn';
+import { bn, bnNum } from '../lib/bn';
 import { COVERAGE } from '../lib/coverage';
-import { digitalPackOnSale } from '../lib/shop';
+import { digitalPackOnSale, familyOnSale, FAMILY_AMOUNT } from '../lib/shop';
 
 // Content now comes from D1 at request time, so this route can't be prerendered.
 export const prerender = false;
@@ -42,7 +43,7 @@ const faqs = [
   },
   {
     q: 'টাকা লাগে?',
-    a: `না। ${bn(COVERAGE.readable)}টি বিষয়ের তিন গভীরতার পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব, ${bn(COVERAGE.missions)}টি মিশন, থ্রিডি মডেল আর ফ্রি ছাপার শিটগুলো সম্পূর্ণ ফ্রি, আর ফ্রিই থাকবে। পরিবার প্ল্যানে যোগ হবে অগ্রগতি সিঙ্ক, সাপ্তাহিক রিপোর্ট, পুরো ভুবনের অনুশীলনী প্যাক আর সার্টিফিকেট। ${onSale ? 'এখন কেনা যায় শুধু ডাউনলোড বান্ডল, একবারের দামে; পরিবার প্ল্যানের পেমেন্ট এখনো চালু হয়নি।' : 'এখন পেমেন্টের ব্যবস্থা নেই, তাই কিছু কেনারও উপায় নেই।'}`,
+    a: `না। ${bn(COVERAGE.readable)}টি বিষয়ের তিন গভীরতার পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব, ${bn(COVERAGE.missions)}টি মিশন, থ্রিডি মডেল আর ফ্রি ছাপার শিটগুলো সম্পূর্ণ ফ্রি, আর ফ্রিই থাকবে। যারা চান তাদের জন্য দুটো জিনিস কেনার আছে: ${onSale ? 'ছাপার ডাউনলোড বান্ডল, একবার ৳২৪৯' : 'ছাপার ডাউনলোড বান্ডল'}${familyOnSale() ? `, আর বছরে ৳${bnNum(FAMILY_AMOUNT)}-এর পরিবার প্ল্যান, যাতে আছে অগ্রগতির হিসাব, যাচাই, সনদ আর পুরো বান্ডল` : ', আর পরিবার প্ল্যান'}। না কিনলেও পড়ায় কিছু কমে না।`,
   },
   {
     q: 'বাচ্চার কোনো তথ্য লাগে?',
@@ -102,6 +103,7 @@ const homeSchema = [
         <a class="btn" href="#worlds">সব ভুবন</a>
       </div>
       <p class="hint">রোজ একটা নতুন জিনিস, পাঁচটা প্রশ্ন আর একটা খেলা - সবার জন্য একই।</p>
+      {onSale && <a class="parent-link" href="/digital-pack/" data-offer="home-hero">অভিভাবক? ছাপার পুরো বান্ডল, ৳২৪৯ →</a>}
     </div>
     <HeroOrbit />
   </section>
@@ -113,6 +115,8 @@ const homeSchema = [
       <div class="stat"><b class="num" data-count={n}>০</b><span class="lbl">{l}</span></div>
     ))}
   </section>
+
+  <div class="wrap"><ShopOffer placement="home" /></div>
 
   <section class="sec wrap" id="worlds">
     <div class="sec-h">
@@ -230,6 +234,7 @@ const homeSchema = [
   .lede { font-size: clamp(1.05rem, 1.6vw, 1.25rem); color: var(--ink-2); max-width: 34ch; }
   .cta { display: flex; flex-wrap: wrap; gap: 0.6rem; }
   .hint { font-size: 13px; color: var(--muted); }
+  .parent-link { font-size: 14px; font-weight: 700; color: var(--sun); text-decoration: underline; text-underline-offset: 3px; }
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 1rem; }
   .stat { position: relative; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.1rem; box-shadow: 4px 4px 0 color-mix(in oklab, var(--brand) 35%, transparent); }
   .stat:nth-child(2) { box-shadow-color: color-mix(in oklab, var(--pink) 45%, transparent); }
@@ -265,7 +270,7 @@ const homeSchema = [
 </style>
 
 <script>
-  import { bn } from '../lib/bn';
+  import { bn, bnNum } from '../lib/bn';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // count-up stats

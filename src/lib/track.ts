@@ -14,7 +14,7 @@
  * Every call is a no-op when Analytics has not loaded, which includes anyone
  * running a blocker. Measurement must never change what the page does.
  */
-type Params = Record<string, string | number | boolean>;
+type Params = Record<string, unknown>;
 
 export function track(event: string, params: Params = {}): void {
   try {
@@ -24,6 +24,18 @@ export function track(event: string, params: Params = {}): void {
     /* a failed count is not worth an exception */
   }
 }
+
+/**
+ * The sales funnel, in GA4's own ecommerce event names so its monetisation
+ * reports fill in by themselves. Only product and order ids and prices are
+ * sent, never the buyer's email or phone.
+ */
+export const trackShop = (event: 'view_item' | 'begin_checkout' | 'add_payment_info' | 'purchase', item: { id: string; name: string; price: number }, transactionId?: string) =>
+  track(event, {
+    currency: 'BDT', value: item.price,
+    items: [{ item_id: item.id, item_name: item.name, price: item.price, quantity: 1 }],
+    ...(transactionId ? { transaction_id: transactionId } : {}),
+  });
 
 /** Opening one item's reading sheet. `item` is the Bangla label as shown. */
 export const trackItem = (world: string, category: string, item: string) =>
