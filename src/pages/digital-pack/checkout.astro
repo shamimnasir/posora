@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { digitalPackReady, usableGateways, liveGateways, familyOnSale, BUNDLE_PRODUCT, FAMILY_PRODUCT, FAMILY_DAYS } from '../../lib/shop';
+import { digitalPackReady, usableGateways, liveGateways, familyOnSale, BUNDLE_PRODUCT, FAMILY_PRODUCT, FAMILY_DAYS, FAMILY_REFUND_DAYS } from '../../lib/shop';
 import { getMember } from '../../lib/members';
 import { library } from '../../lib/pack-files';
 import { bn, bnNum } from '../../lib/bn';
@@ -37,7 +37,7 @@ const backHref = family ? '/family/' : '/digital-pack/';
             <>
               <li>পেমেন্টের সঙ্গে সঙ্গে প্ল্যান চালু, এক অ্যাকাউন্টে {bn(6)} জন সন্তান পর্যন্ত</li>
               <li>{lib.totalPages ? `${bn(lib.totalPages)} পাতার ` : ''}পুরো ডাউনলোড বান্ডলও সঙ্গে আসে</li>
-              <li>বারো মাসের মধ্যে কাজে না লাগলে এক লাইন লিখলেই পুরো টাকা ফেরত</li>
+              <li>{bn(FAMILY_REFUND_DAYS)} দিনের মধ্যে কাজে না লাগলে এক লাইন লিখলেই পুরো টাকা ফেরত</li>
             </>
           ) : (
             <>

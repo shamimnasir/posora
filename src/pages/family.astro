@@ -25,7 +25,7 @@ import { sheets } from '../data/printables';
 import { bundle as digitalBundle } from '../data/digital-packs';
 import { catDetail, isReadable } from '../lib/explorers';
 import { buildWorksheet } from '../lib/worksheet';
-import { digitalPackOnSale, digitalPackReady, familyOnSale, DIGITAL_PACK_AMOUNT, FAMILY_AMOUNT, FAMILY_PRODUCT } from '../lib/shop';
+import { digitalPackOnSale, digitalPackReady, familyOnSale, DIGITAL_PACK_AMOUNT, FAMILY_AMOUNT, FAMILY_PRODUCT, FAMILY_REFUND_DAYS } from '../lib/shop';
 
 export const prerender = false;
 Astro.response.headers.set('cache-control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
@@ -91,7 +91,7 @@ const onSale = digitalPackOnSale();
 const faqs = [
   { q: 'টাকা কীভাবে দেব?', a: buyable ? `বিকাশে, একবারে ৳${bnNum(YEARLY_BDT)}। পেমেন্টের সঙ্গে সঙ্গে প্ল্যান চালু হয়। ইমেইল ছাড়া আর কিছু দিতে হয় না, কার্ডও লাগে না।` : 'পেমেন্ট চালু হওয়ার আগে কিছু দিতে হবে না। নিচের তালিকায় নাম লেখালে আমরা জানাব।' },
   { q: 'বছর শেষে নিজে থেকে টাকা কাটবে?', a: 'না। এটা একবারের পেমেন্ট। মেয়াদ শেষ হলে আপনি আবার নিলে তবেই চলবে, আগে নিলে বাকি দিনগুলোও যোগ হয়ে যায়।' },
-  { q: 'এক বছর পরে ভালো না লাগলে?', a: 'পুরো টাকা ফেরত। বারো মাসের মধ্যে এক লাইন লিখলেই হবে, কারণ জানতে চাইব না। যে জিনিস কাজে লাগল না, তার টাকা আমাদের রাখার কথা নয়।' },
+  { q: 'কিনে ভালো না লাগলে?', a: `পুরো টাকা ফেরত। পেমেন্টের ${bn(FAMILY_REFUND_DAYS)} দিনের মধ্যে এক লাইন লিখলেই হবে, কারণ জানতে চাইব না।` },
   { q: 'ডাউনলোড বান্ডল আর পরিবার প্ল্যানের পার্থক্য কী?', a: `ডাউনলোড বান্ডল ৳${bn(DIGITAL_PACK_AMOUNT)}-এর একবারের কেনা: ১১টি ভুবনের ছাপার PDF ও ZIP, কোনো অ্যাকাউন্ট সুবিধা ছাড়া। পরিবার প্ল্যানে সন্তানের প্রোফাইল, অগ্রগতির হিসাব, যাচাই ও সনদ আছে, আর এই পুরো বান্ডলও তার ভেতরে। তাই প্ল্যান নিলে বান্ডল আলাদা কিনতে হয় না।` },
   { q: 'যেগুলো এখন ফ্রি, সেগুলো কি পরে টাকার পেছনে চলে যাবে?', a: `না, কখনো না। আজ যে ${bn(COVERAGE.total)}টি বিষয়, থ্রিডি মডেল আর ছাপার শিট ফ্রি, সেগুলো ফ্রিই থাকবে - ${bn(COVERAGE.readable)}টি বিষয়ের পাঠ, ${bn(COVERAGE.labs)}টি হাতে-কলমে ল্যাব আর ${bn(COVERAGE.missions)}টি মিশনসহ। পরিবার প্ল্যান বিক্রি করে সেগুলোর চারপাশের জিনিস - প্রোফাইল, রিপোর্ট, অনুশীলনী।` },
   { q: 'সন্তানের কোনো তথ্য নেবেন?', a: 'সন্তানের কোনো অ্যাকাউন্ট থাকবে না। অ্যাকাউন্ট থাকবে শুধু অভিভাবকের। সন্তানের জন্য যা লাগবে তা হলো আপনার দেওয়া একটা ডাকনাম আর একটা স্তর - নাম-ঠিকানা, ছবি, ইমেইল কিছুই নয়।' },
@@ -134,7 +134,7 @@ const schema = [
         <a class="btn btn-primary buy" data-buy-anchor href={buyHref}>{buyable ? `বিকাশে নিন · ৳${bnNum(YEARLY_BDT)} →` : 'প্রতিষ্ঠাতা তালিকায় নাম লেখাও →'}</a>
         <ul class="assure">
           <li><b>একবারের পেমেন্ট</b>, নিজে থেকে আর টাকা কাটবে না</li>
-          <li><b>বারো মাসের শর্তহীন ফেরত</b>, এক লাইন লিখলেই</li>
+          <li><b>{bn(FAMILY_REFUND_DAYS)} দিনের শর্তহীন ফেরত</b>, এক লাইন লিখলেই</li>
           <li><b>{digitalPackOnSale() ? `৳${bn(DIGITAL_PACK_AMOUNT)}-এর ডাউনলোড বান্ডল` : 'ডাউনলোড বান্ডল'}</b> সঙ্গেই আসে</li>
         </ul>
         <p class="ask"><a href="#compare">ফ্রি, বান্ডল আর প্ল্যানের তুলনা ↓</a> · <a href="/account/">আগেই সদস্য? ঢোকো</a></p>
@@ -193,8 +193,8 @@ const schema = [
         <div class="guard">
           <span class="gemoji" aria-hidden="true">🛡</span>
           <div>
-            <b>এক বছরের শর্তহীন ফেরত</b>
-            <p>বারো মাস ব্যবহার করেও যদি মনে হয় কাজে লাগেনি, এক লাইন লিখলেই পুরো টাকা ফেরত। কারণ জানতে চাইব না।</p>
+            <b>{bn(FAMILY_REFUND_DAYS)} দিনের শর্তহীন ফেরত</b>
+            <p>পেমেন্টের {bn(FAMILY_REFUND_DAYS)} দিনের মধ্যে যদি মনে হয় কাজে লাগছে না, এক লাইন লিখলেই পুরো টাকা ফেরত। কারণ জানতে চাইব না।</p>
           </div>
         </div>
         <div class="guard">

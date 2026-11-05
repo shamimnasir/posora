@@ -26,6 +26,8 @@ export const DOWNLOAD_KEY_DAYS = 30;
 export const FAMILY_SLUG = 'family-annual';
 export const FAMILY_AMOUNT = 1200;
 export const FAMILY_DAYS = 365;
+/** The family plan's no-questions refund window, counted from the payment. */
+export const FAMILY_REFUND_DAYS = 30;
 
 export type Product = { slug: string; amount: number; name: string; ga: string };
 /** The amount a checkout charges comes from here and never from the browser. */
